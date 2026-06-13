@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://solar.local/schemas/phase0-verification-request.schema.json",
+  "title": "Solar Phase 0 Verification Request",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request_id",
+    "paper_source",
+    "repo_source",
+    "objective"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "solar.phase0.claim_verification.v0"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "paper_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repo_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_mode": {
+      "type": "string",
+      "minLength": 1,
+      "default": "replay_or_approved_execution"
+    },
+    "human_gate_required": {
+      "type": "boolean",
+      "default": true
+    },
+    "source_metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {}
+    }
+  }
+}
