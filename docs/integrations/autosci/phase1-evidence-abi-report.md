@@ -16,6 +16,8 @@ changed in this phase.
 |---|---:|---|
 | Evidence ABI schemas | 16 | `harness/schemas/evidence/*.schema.json` |
 | Passing fixtures | 16 | `harness/schemas/evidence/fixtures/sample_*.json` |
+| Failed-state fixtures | 4 | `harness/schemas/evidence/fixtures/sample_failed_*.json` |
+| Inconclusive-state fixtures | 4 | `harness/schemas/evidence/fixtures/sample_inconclusive_*.json` |
 | Completion report | 1 | `docs/integrations/autosci/phase1-evidence-abi-report.md` |
 
 ## Schema Coverage
@@ -38,6 +40,15 @@ changed in this phase.
 | `scientific_report.v1` | `sample_scientific_report.v1.json` | `ScientificReportPlanner` / `ScientificReportDrafter` |
 | `publication_bundle.v1` | `sample_publication_bundle.v1.json` | `ScientificPublicationProducer` |
 | `workflow_evolution.v1` | `sample_workflow_evolution.v1.json` | `ScientificWorkflowEvolver` |
+
+Additional failed/inconclusive fixtures cover the Phase 1 core schemas:
+
+| Schema | Failed fixture | Inconclusive fixture |
+|---|---|---|
+| `research_paper.v1` | `sample_failed_research_paper.v1.json` | `sample_inconclusive_research_paper.v1.json` |
+| `research_claims.v1` | `sample_failed_research_claims.v1.json` | `sample_inconclusive_research_claims.v1.json` |
+| `experiment_plan.v1` | `sample_failed_experiment_plan.v1.json` | `sample_inconclusive_experiment_plan.v1.json` |
+| `claim_verdict.v1` | `sample_failed_claim_verdict.v1.json` | `sample_inconclusive_claim_verdict.v1.json` |
 
 ## ABI Envelope
 
@@ -76,6 +87,7 @@ sha256 optional in Phase 1
 | Plan core pretty-print | `python -m json.tool schemas/evidence/fixtures/sample_claim_verdict.v1.json` | ok | Wrote `/tmp/sample_claim_verdict.pretty.json`. |
 | Plan core schema validation | `python -m jsonschema schemas/evidence/research_claims.v1.schema.json -i schemas/evidence/fixtures/sample_research_claims.v1.json` | ok | CLI emitted only deprecation warning. |
 | Plan core schema validation | `python -m jsonschema schemas/evidence/claim_verdict.v1.schema.json -i schemas/evidence/fixtures/sample_claim_verdict.v1.json` | ok | CLI emitted only deprecation warning. |
+| Failed/inconclusive fixture validation | `jsonschema.Draft202012Validator` using each fixture's `schema` field | ok | 8 additional failed/inconclusive fixtures validated. |
 
 ## Human Test Plan
 
