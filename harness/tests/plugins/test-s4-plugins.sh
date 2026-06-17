@@ -4,6 +4,7 @@
 set -euo pipefail
 
 HARNESS_DIR="${HARNESS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+export HARNESS_DIR
 LIB="$HARNESS_DIR/lib"
 PASS=0; FAIL=0
 

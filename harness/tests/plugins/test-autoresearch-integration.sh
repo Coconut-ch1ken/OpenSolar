@@ -2,7 +2,8 @@
 # test-autoresearch-integration.sh — smallnest/autoresearch safe local-issue integration.
 set -euo pipefail
 
-HARNESS_DIR="${HARNESS_DIR:-$HOME/.solar/harness}"
+HARNESS_DIR="${HARNESS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+export HARNESS_DIR
 PASS=0
 FAIL=0
 
@@ -82,9 +83,9 @@ assert d["providers"][0]["provider"] == "autoresearch"
 PY
 
 echo "A5 — planner/builder dispatch can see autoresearch but does not auto-execute"
-intent="$("$HARNESS_DIR/solar-harness.sh" intent match "Use autoresearch issue loop for this local issue with score gate" 2>/dev/null)"
+intent="$(python3 "$HARNESS_DIR/lib/intent_engine_adapter.py" match "Use autoresearch issue loop for this local issue with score gate" 2>/dev/null)"
 grep -q "autoresearch" <<<"$intent" && ok "autoresearch intent route" || fail "autoresearch intent route"
-plain_intent="$("$HARNESS_DIR/solar-harness.sh" intent match "请写一段普通总结，不要运行本地问题循环" 2>/dev/null)"
+plain_intent="$(python3 "$HARNESS_DIR/lib/intent_engine_adapter.py" match "请写一段普通总结，不要运行本地问题循环" 2>/dev/null)"
 if grep -q "autoresearch" <<<"$plain_intent"; then
   fail "negative intent should not route to autoresearch"
 else

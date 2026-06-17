@@ -2,8 +2,9 @@
 # S4 Extension Framework regression tests.
 set -euo pipefail
 
-HARNESS_DIR="${HARNESS_DIR:-$HOME/.solar/harness}"
-BIN="${BIN:-$HOME/.solar/bin/solar-harness}"
+HARNESS_DIR="${HARNESS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+export HARNESS_DIR
+BIN="${BIN:-$HARNESS_DIR/solar-harness.sh}"
 PASS=0
 FAIL=0
 PROBE_PLUGIN="$HARNESS_DIR/plugins/s4_probe"
