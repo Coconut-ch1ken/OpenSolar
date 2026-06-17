@@ -148,6 +148,281 @@
         "singleton": false
       }
     },
+    "ScientificPaperIngestor": {
+      "operator_type": "ScientificPaperIngestor",
+      "description": "Ingests research papers into Solar-native research paper evidence, preserving source metadata and provenance.",
+      "primary_role": "knowledge-extractor",
+      "required_capabilities": {
+        "cap.research-paper-ingest": 4,
+        "research_synthesis": 3,
+        "data_extraction": 3
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 3,
+        "singleton": false
+      }
+    },
+    "ScientificLiteratureDiscoverer": {
+      "operator_type": "ScientificLiteratureDiscoverer",
+      "description": "Discovers relevant literature and produces bounded, source-linked literature discovery evidence.",
+      "primary_role": "knowledge-extractor",
+      "required_capabilities": {
+        "cap.research-literature-discover": 4,
+        "research_synthesis": 4,
+        "data_extraction": 3
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificMemoryUpdater": {
+      "operator_type": "ScientificMemoryUpdater",
+      "description": "Updates research memory or wiki state through explicit Solar evidence artifacts and provenance.",
+      "primary_role": "builder",
+      "required_capabilities": {
+        "cap.research-memory-update": 4,
+        "research_synthesis": 3,
+        "code_impl": 2
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificGraphUpdater": {
+      "operator_type": "ScientificGraphUpdater",
+      "description": "Maintains citation, claim, method, idea, and experiment relationships as typed research graph update evidence.",
+      "primary_role": "builder",
+      "required_capabilities": {
+        "cap.research-graph-update": 4,
+        "data_extraction": 3,
+        "research_synthesis": 3
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificPaperAnalyzer": {
+      "operator_type": "ScientificPaperAnalyzer",
+      "description": "Analyzes research papers for structured scientific content while preserving source anchors and limitations.",
+      "primary_role": "knowledge-extractor",
+      "required_capabilities": {
+        "cap.research-paper-analyze": 4,
+        "research_synthesis": 4,
+        "academic_critique": 3
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificClaimExtractor": {
+      "operator_type": "ScientificClaimExtractor",
+      "description": "Extracts source-grounded scientific claims or hypotheses without marking them verified at extraction time.",
+      "primary_role": "knowledge-extractor",
+      "required_capabilities": {
+        "cap.research-claim-extract": 4,
+        "research_synthesis": 4,
+        "academic_critique": 3
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 3,
+        "singleton": false
+      }
+    },
+    "ScientificMethodExtractor": {
+      "operator_type": "ScientificMethodExtractor",
+      "description": "Extracts methods, protocols, assumptions, and reproducibility details into typed research method evidence.",
+      "primary_role": "knowledge-extractor",
+      "required_capabilities": {
+        "cap.research-method-extract": 4,
+        "research_synthesis": 4,
+        "data_extraction": 3
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 3,
+        "singleton": false
+      }
+    },
+    "ScientificCodeEvidenceMapper": {
+      "operator_type": "ScientificCodeEvidenceMapper",
+      "description": "Maps claims and methods to code paths, symbols, commands, and unknowns without fabricating unavailable links.",
+      "primary_role": "knowledge-extractor",
+      "required_capabilities": {
+        "cap.research-code-evidence-map": 4,
+        "code_impl": 3,
+        "data_extraction": 3
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 3,
+        "singleton": false
+      }
+    },
+    "ScientificIdeaGenerator": {
+      "operator_type": "ScientificIdeaGenerator",
+      "description": "Generates evidence-grounded research idea candidates from papers, claims, methods, and memory context.",
+      "primary_role": "planner",
+      "required_capabilities": {
+        "cap.research-idea-generate": 4,
+        "research_synthesis": 4,
+        "academic_critique": 2
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificIdeaEvaluator": {
+      "operator_type": "ScientificIdeaEvaluator",
+      "description": "Evaluates research idea novelty, feasibility, duplication risk, and evidence support before experiment planning.",
+      "primary_role": "evaluator",
+      "required_capabilities": {
+        "cap.research-idea-evaluate": 4,
+        "academic_critique": 4,
+        "research_synthesis": 3
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificExperimentDesigner": {
+      "operator_type": "ScientificExperimentDesigner",
+      "description": "Designs bounded scientific experiments with metrics, baseline, success criteria, and safety constraints.",
+      "primary_role": "planner",
+      "required_capabilities": {
+        "cap.research-experiment-design": 4,
+        "architecture_reasoning": 3,
+        "academic_critique": 3
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificExperimentRunner": {
+      "operator_type": "ScientificExperimentRunner",
+      "description": "Runs fixture, dry-run, sandboxed, or explicitly approved scientific experiments and records metrics, logs, and failures.",
+      "primary_role": "evaluator",
+      "required_capabilities": {
+        "cap.research-experiment-run": 4,
+        "test_execution": 4,
+        "code_impl": 3
+      },
+      "risk_constraints": {
+        "allowed_shell_scope": "bounded_or_human_approved",
+        "external_commands": "approval_required",
+        "fixture_mode": "allowed"
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 1,
+        "singleton": false
+      }
+    },
+    "ScientificExperimentMonitor": {
+      "operator_type": "ScientificExperimentMonitor",
+      "description": "Monitors, resumes, and classifies scientific experiment status using explicit status and log evidence.",
+      "primary_role": "evaluator",
+      "required_capabilities": {
+        "cap.research-experiment-monitor": 4,
+        "test_execution": 3,
+        "data_extraction": 3
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 1,
+        "singleton": false
+      }
+    },
+    "ScientificClaimVerifier": {
+      "operator_type": "ScientificClaimVerifier",
+      "description": "Produces evidence-linked claim verdicts without trusting backend self-report as final acceptance.",
+      "primary_role": "evaluator",
+      "required_capabilities": {
+        "cap.research-claim-verify": 4,
+        "academic_critique": 4,
+        "test_execution": 3
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificReportPlanner": {
+      "operator_type": "ScientificReportPlanner",
+      "description": "Plans evidence-linked scientific reports from claims, methods, experiments, verdicts, and limitations.",
+      "primary_role": "planner",
+      "required_capabilities": {
+        "cap.research-report-plan": 4,
+        "research_synthesis": 4,
+        "academic_critique": 3
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificReportDrafter": {
+      "operator_type": "ScientificReportDrafter",
+      "description": "Drafts scientific reports with section-level evidence references, limitations, and artifact links.",
+      "primary_role": "builder",
+      "required_capabilities": {
+        "cap.research-report-draft": 4,
+        "research_synthesis": 4,
+        "academic_critique": 3
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificPublicationProducer": {
+      "operator_type": "ScientificPublicationProducer",
+      "description": "Produces publication bundles such as report files, poster artifacts, rebuttal drafts, and publication metadata.",
+      "primary_role": "builder",
+      "required_capabilities": {
+        "cap.research-publication-produce": 4,
+        "research_synthesis": 3,
+        "data_extraction": 2
+      },
+      "cost_hint": "medium",
+      "concurrency": {
+        "max_parallel": 2,
+        "singleton": false
+      }
+    },
+    "ScientificWorkflowEvolver": {
+      "operator_type": "ScientificWorkflowEvolver",
+      "description": "Analyzes failed or incomplete research workflow runs and proposes bounded capsule, manual, gate, routing, or workflow improvements.",
+      "primary_role": "planner",
+      "required_capabilities": {
+        "cap.research-workflow-evolve": 4,
+        "architecture_reasoning": 3,
+        "research_synthesis": 3
+      },
+      "cost_hint": "high",
+      "concurrency": {
+        "max_parallel": 1,
+        "singleton": false
+      }
+    },
     "Critic": {
       "operator_type": "Critic",
       "description": "Critical review of designs, proposals, and plans. Applies academic_critique and adversarial questioning.",
