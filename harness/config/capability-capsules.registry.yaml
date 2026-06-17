@@ -137,6 +137,222 @@ capsules:
     - repositorytourbuilder
     owner: opensolar
     default_operator_profile: mini-understand-anything-pane-bridge
+  - capability_capsule_id: cap.scientific-paper-ingest
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-paper-ingest.yaml
+    tags:
+    - scientific
+    - paper
+    - ingest
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-literature-discover
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-literature-discover.yaml
+    tags:
+    - scientific
+    - literature
+    - discovery
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-memory-update
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-memory-update.yaml
+    tags:
+    - scientific
+    - memory
+    - update
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-graph-update
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-graph-update.yaml
+    tags:
+    - scientific
+    - graph
+    - update
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-paper-analyze
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-paper-analyze.yaml
+    tags:
+    - scientific
+    - paper
+    - analysis
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-claim-extract
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-claim-extract.yaml
+    tags:
+    - scientific
+    - claims
+    - extract
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-method-extract
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-method-extract.yaml
+    tags:
+    - scientific
+    - method
+    - extract
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-code-evidence-map
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-code-evidence-map.yaml
+    tags:
+    - scientific
+    - code
+    - evidence
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-idea-generate
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-idea-generate.yaml
+    tags:
+    - scientific
+    - idea
+    - generate
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-idea-evaluate
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-idea-evaluate.yaml
+    tags:
+    - scientific
+    - idea
+    - evaluate
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-experiment-design
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-experiment-design.yaml
+    tags:
+    - scientific
+    - experiment
+    - design
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-experiment-run
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-experiment-run.yaml
+    tags:
+    - scientific
+    - experiment
+    - run
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-experiment-monitor
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-experiment-monitor.yaml
+    tags:
+    - scientific
+    - experiment
+    - monitor
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-claim-verify
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-claim-verify.yaml
+    tags:
+    - scientific
+    - claims
+    - verification
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-report-plan
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-report-plan.yaml
+    tags:
+    - scientific
+    - report
+    - plan
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-report-draft
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-report-draft.yaml
+    tags:
+    - scientific
+    - report
+    - draft
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-publication-produce
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-publication-produce.yaml
+    tags:
+    - scientific
+    - publication
+    - produce
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
+  - capability_capsule_id: cap.scientific-workflow-evolve
+    version: 0.1.0
+    capsule_kind: capability
+    status: draft
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: ../capability-capsules/cap.scientific-workflow-evolve.yaml
+    tags:
+    - scientific
+    - workflow
+    - evolve
+    owner: opensolar
+    default_operator_profile: mini-claude-sonnet-builder
   guard:
   - capability_capsule_id: guard.secret-leak-guard
     version: 0.1.0
