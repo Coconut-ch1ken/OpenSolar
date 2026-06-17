@@ -1,7 +1,7 @@
 # AutoSci Phase 5 Progress Log
 
 Logged: 2026-06-17 14:51:59 EDT
-Updated: 2026-06-17 15:15:39 EDT
+Updated: 2026-06-17 15:49:46 EDT
 Branch: `feature/autosci-solar-native`
 
 ## Scope
@@ -34,6 +34,13 @@ Run operator-runtime submit checks from the project-local harness with
 PyYAML, and without `HARNESS_DIR=$PWD` the runtime may fall back to
 `~/.solar/harness` for capsule registry resolution.
 
+Scheduler-cleanliness caveat: the current AutoSci physical operators can execute
+through the local `backend: command` path, but their `owner_host` values are
+still the placeholder `solar@example-host` and they do not declare an explicit
+valid `host_id`. `operator_runtime.submit()` and `operatord` do not enforce
+`owner_host`, so successful local smoke runs prove bridge execution, not full
+Solar host-owned scheduling validity.
+
 ## Physical Operators
 
 | Physical operator | Bridge action | Status | Logical coverage |
@@ -58,6 +65,34 @@ PyYAML, and without `HARNESS_DIR=$PWD` the runtime may fall back to
 | Network | AutoSci physical operators are configured with `network: denied`. |
 | Writes | Operator policy limits writes to artifact output scope. |
 
+## Scheduler Cleanliness Issue
+
+| Issue | Status | Impact | Recommended fix |
+|---|---|---|---|
+| AutoSci physical operators use placeholder `owner_host: solar@example-host` and no explicit `host_id`. | warn | AutoSci-backed surfaces are locally runnable but not cleanly schedulable by Solar's host/actor contract. | Add a real project-local command host entry, then set each AutoSci physical operator to that `host_id` and replace `owner_host` with a non-placeholder local owner such as `localhost` or the new host id. |
+
+Recommended implementation shape:
+
+```text
+config/actor-hosts.json
+  hosts.autosci_local_command_host
+    host_type: local_command_worker
+    lifecycle.state: online
+    address.hostname: localhost
+    address.harness_dir: <OpenSolar>/harness or project-local relative policy
+
+config/physical-operators.json
+  autosci-*-worker
+    host_id: autosci_local_command_host
+    owner_host: localhost
+```
+
+Do not treat Phase 5 as scheduler-clean until a host-binding validation confirms
+the AutoSci physical operators resolve to a registered non-placeholder host. The
+existing actor registry may infer a host when `host_id` is missing, but that
+compatibility inference should not be the acceptance basis for AutoSci-backed
+scheduling.
+
 ## Checks Run
 
 | Check | Status | Note |
@@ -73,6 +108,9 @@ PyYAML, and without `HARNESS_DIR=$PWD` the runtime may fall back to
 | Phase 6 promotion check rerun | ok | Temporary envelope using `cap.research-claim-extract`, `HARNESS_DIR=$PWD`, and project `.venv` submitted `autosci-claim-extract-worker`; `artifacts/autosci/smoke/result.json` and `evidence.jsonl` were updated with `research_claims.v1`. |
 | Stale-token negative check | warn | The pasted `cap.scientific-claim-extract` envelope is obsolete and fails capsule resolution; this is expected after the Phase 2 rename to `cap.research-*`. |
 | Temporary envelope cleanup | ok | `harness/artifacts/autosci/smoke/envelope.claim_extract.json` was deleted after the smoke test and removed from git in `f4ff02b8`. |
+| Enabled physical worker execution probe | ok with caveat | Six enabled AutoSci command workers completed via local `operator_runtime.submit()` and emitted valid Evidence ABI, but this did not validate `owner_host` or `host_id`. |
+| Disabled placeholder rejection | ok | `autosci-memory-update-worker` and `autosci-idea-worker` reject dispatch with `state=disabled`. |
+| Host binding validation | warn | AutoSci workers still use placeholder `owner_host: solar@example-host` and no explicit `host_id`; fix before declaring scheduler-clean Phase 5. |
 
 ## Dispatch Smoke Evidence
 
@@ -138,6 +176,8 @@ rm artifacts/autosci/smoke/envelope.claim_extract.json
   local verification and are not intended as part of the Phase 5 commit.
 - Generated Phase 6 promotion-check outputs under `harness/artifacts/autosci/smoke/`
   are verification artifacts; do not recommit a persistent envelope fixture there.
+- The six enabled AutoSci workers are runnable only in the local command-backend
+  sense until the host-binding issue above is fixed.
 - `autosci-memory-update-worker` is intentionally disabled because the bridge
   action is planned for Phase 9; enabling it now would create a fake memory path.
 - `autosci-idea-worker` is intentionally disabled because idea generation and
@@ -147,7 +187,10 @@ rm artifacts/autosci/smoke/envelope.claim_extract.json
 
 ## Done State
 
-Phase 5 is complete when Solar can map native `Scientific*` logical operators to
-bounded AutoSci physical workers, submit at least one fixture-backed worker
-through the normal operator runtime, validate the resulting Evidence ABI output,
-and still has no hidden AutoSci-owned full workflow runner.
+Phase 5 is functionally demonstrated when Solar can map native `Scientific*`
+logical operators to bounded AutoSci physical workers, submit at least one
+fixture-backed worker through the normal operator runtime, validate the resulting
+Evidence ABI output, and still has no hidden AutoSci-owned full workflow runner.
+
+Phase 5 is scheduler-clean only after the AutoSci physical operators use explicit
+registered host bindings instead of placeholder `owner_host` values.
