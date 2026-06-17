@@ -1,6 +1,7 @@
 # AutoSci Phase 3 Progress Log
 
 Logged: 2026-06-17 14:44:36 EDT
+Updated: 2026-06-17 14:52:05 EDT
 Branch: `feature/autosci-solar-native`
 
 ## Scope
@@ -16,6 +17,8 @@ execution behavior were added in this phase.
 | Path or artifact | Operation | Commit | Note |
 |---|---|---|---|
 | `harness/config/logical-operators.json` | Modified | `9685dd9c` | Added 18 `Scientific*` logical operators using `cap.research-*` capability tokens. |
+| `harness/config/logical-operators.schema.json` | Modified | `f400f760` | Updated the registry schema enum/contract so `Scientific*` logical operator names validate. |
+| `harness/config/logical-operators.json` | Modified | `6bd9d803` | Tightened `ScientificExperimentDesigner` concurrency from 2 to 1 for conservative experiment-design scheduling. |
 | `docs/integrations/autosci/phase3-progress-log.md` | Added | this log commit | This audit log for Phase 3. |
 
 ## Operator Coverage
@@ -50,15 +53,21 @@ execution behavior were added in this phase.
 | Required operator presence | ok | Script confirmed all 18 `Scientific*` operators exist. |
 | Required field presence | ok | Script confirmed each added operator has `operator_type`, `description`, `primary_role`, `required_capabilities`, `cost_hint`, and `concurrency`. |
 | Capsule token naming | ok | Script confirmed every added operator references at least one `cap.research-*` token and no `cap.scientific-*` token. |
+| Registry schema contract | ok | `harness/config/logical-operators.schema.json` was updated so the new `Scientific*` operator enum values are accepted by schema validation. |
+| Conservative experiment concurrency | ok | `ScientificExperimentDesigner` now uses `max_parallel: 1`, matching the checklist requirement for experiment-running/design operators. |
 | Black-box guard | ok | `AutoSciRunner` was not added to `harness/config/logical-operators.json`. |
 | Whitespace check | ok | `git diff --check -- harness/config/logical-operators.json` passed. |
-| Commit and push | ok | Commit `9685dd9c` pushed to `origin/feature/autosci-solar-native`. |
+| Commit and push | ok | Commits `9685dd9c`, `f400f760`, and `6bd9d803` pushed to `origin/feature/autosci-solar-native`. |
 
 ## Notes
 
 - Existing unrelated dirty files were left untouched.
 - This phase intentionally did not bind logical operators to AutoSci physical workers; that is Phase 5.
 - Experiment-running operators use conservative `max_parallel: 1`.
+- The logical-operator registry schema is part of Phase 3 completion because the
+  registry file must validate after adding the scientific operator names.
+- Physical worker candidates and AutoSci backend bindings are not recorded here;
+  those belong to the later physical-operator binding phase.
 
 ## Done State
 
