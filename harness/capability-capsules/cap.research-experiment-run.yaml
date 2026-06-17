@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-experiment-run
+capability_capsule_id: cap.research-experiment-run
 capsule_kind: capability
 metadata:
   name: Scientific Experiment Run
@@ -50,11 +50,11 @@ composition:
     - schema_ref: schemas/evidence/experiment_status.v1.schema.json
       purpose: Optional run status evidence.
   compatible_with:
-    - cap.scientific-experiment-monitor
-    - cap.scientific-claim-verify
+    - cap.research-experiment-monitor
+    - cap.research-claim-verify
   incompatible_with: []
   requires_after:
-    - cap.scientific-experiment-design
+    - cap.research-experiment-design
 effects:
   read:
     - experiment plans and code artifacts

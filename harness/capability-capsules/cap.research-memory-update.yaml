@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-memory-update
+capability_capsule_id: cap.research-memory-update
 capsule_kind: capability
 metadata:
   name: Scientific Memory Update
@@ -48,8 +48,8 @@ composition:
     - schema_ref: schemas/evidence/research_memory_update.v1.schema.json
       purpose: Memory update evidence.
   compatible_with:
-    - cap.scientific-graph-update
-    - cap.scientific-paper-ingest
+    - cap.research-graph-update
+    - cap.research-paper-ingest
   incompatible_with: []
   requires_after: []
 effects:

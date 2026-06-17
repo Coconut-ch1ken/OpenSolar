@@ -5,7 +5,7 @@ Branch: `feature/autosci-solar-native`
 
 ## Scope
 
-Phase 2 created Solar-native declarative capability capsules for the scientific
+Phase 2 created Solar-native declarative capability capsules for the research
 workflow semantics discovered in Phase 0 and typed by the Phase 1 Evidence ABI
 schemas. This phase did not add logical operators, physical operators, workflow
 templates, evaluators, or AutoSci backend code.
@@ -14,43 +14,43 @@ templates, evaluators, or AutoSci backend code.
 
 | Path group | Operation | Count | Note |
 |---|---|---:|---|
-| `harness/capability-capsules/cap.scientific-*.yaml` | Added | 18 | Declarative scientific capability capsules. |
-| `harness/config/capability-capsules.registry.yaml` | Modified | 1 | Registered 18 draft scientific capsules. |
+| `harness/capability-capsules/cap.research-*.yaml` | Added | 18 | Declarative research capability capsules. |
+| `harness/config/capability-capsules.registry.yaml` | Modified | 1 | Registered 18 draft research capsules. |
 | `docs/integrations/autosci/phase2-capsule-report.md` | Added | 1 | Phase 2 completion report and human test plan. |
 
 ## Capsule Coverage
 
 | Capsule | Primary operator target | Evidence ABI |
 |---|---|---|
-| `cap.scientific-paper-ingest` | `ScientificPaperIngestor` | `research_paper.v1` |
-| `cap.scientific-literature-discover` | `ScientificLiteratureDiscoverer` | `literature_discovery.v1` |
-| `cap.scientific-memory-update` | `ScientificMemoryUpdater` | `research_memory_update.v1` |
-| `cap.scientific-graph-update` | `ScientificGraphUpdater` | `research_graph_update.v1` |
-| `cap.scientific-paper-analyze` | `ScientificPaperAnalyzer` | `research_paper.v1` |
-| `cap.scientific-claim-extract` | `ScientificClaimExtractor` | `research_claims.v1` |
-| `cap.scientific-method-extract` | `ScientificMethodExtractor` | `research_method.v1` |
-| `cap.scientific-code-evidence-map` | `ScientificCodeEvidenceMapper` | `code_evidence_map.v1` |
-| `cap.scientific-idea-generate` | `ScientificIdeaGenerator` | `idea_candidate.v1` |
-| `cap.scientific-idea-evaluate` | `ScientificIdeaEvaluator` | `idea_evaluation.v1` |
-| `cap.scientific-experiment-design` | `ScientificExperimentDesigner` | `experiment_plan.v1` |
-| `cap.scientific-experiment-run` | `ScientificExperimentRunner` | `experiment_result.v1`, `experiment_status.v1` |
-| `cap.scientific-experiment-monitor` | `ScientificExperimentMonitor` | `experiment_status.v1` |
-| `cap.scientific-claim-verify` | `ScientificClaimVerifier` | `claim_verdict.v1` |
-| `cap.scientific-report-plan` | `ScientificReportPlanner` | `scientific_report.v1` |
-| `cap.scientific-report-draft` | `ScientificReportDrafter` | `scientific_report.v1` |
-| `cap.scientific-publication-produce` | `ScientificPublicationProducer` | `publication_bundle.v1` |
-| `cap.scientific-workflow-evolve` | `ScientificWorkflowEvolver` | `workflow_evolution.v1` |
+| `cap.research-paper-ingest` | `ScientificPaperIngestor` | `research_paper.v1` |
+| `cap.research-literature-discover` | `ScientificLiteratureDiscoverer` | `literature_discovery.v1` |
+| `cap.research-memory-update` | `ScientificMemoryUpdater` | `research_memory_update.v1` |
+| `cap.research-graph-update` | `ScientificGraphUpdater` | `research_graph_update.v1` |
+| `cap.research-paper-analyze` | `ScientificPaperAnalyzer` | `research_paper.v1` |
+| `cap.research-claim-extract` | `ScientificClaimExtractor` | `research_claims.v1` |
+| `cap.research-method-extract` | `ScientificMethodExtractor` | `research_method.v1` |
+| `cap.research-code-evidence-map` | `ScientificCodeEvidenceMapper` | `code_evidence_map.v1` |
+| `cap.research-idea-generate` | `ScientificIdeaGenerator` | `idea_candidate.v1` |
+| `cap.research-idea-evaluate` | `ScientificIdeaEvaluator` | `idea_evaluation.v1` |
+| `cap.research-experiment-design` | `ScientificExperimentDesigner` | `experiment_plan.v1` |
+| `cap.research-experiment-run` | `ScientificExperimentRunner` | `experiment_result.v1`, `experiment_status.v1` |
+| `cap.research-experiment-monitor` | `ScientificExperimentMonitor` | `experiment_status.v1` |
+| `cap.research-claim-verify` | `ScientificClaimVerifier` | `claim_verdict.v1` |
+| `cap.research-report-plan` | `ScientificReportPlanner` | `scientific_report.v1` |
+| `cap.research-report-draft` | `ScientificReportDrafter` | `scientific_report.v1` |
+| `cap.research-publication-produce` | `ScientificPublicationProducer` | `publication_bundle.v1` |
+| `cap.research-workflow-evolve` | `ScientificWorkflowEvolver` | `workflow_evolution.v1` |
 
 ## Architectural Boundary
 
-The capsule files use generic scientific names and declare AutoSci only as an
+The capsule files use generic research capability ids and declare AutoSci only as an
 optional backend skill/effect path. No capsule is named `cap.autosci-*`, and no
 capsule delegates the full workflow to a single AutoSci runner.
 
 ```text
 TaskGraph node
   -> logical operator
-  -> cap.scientific-*
+  -> cap.research-*
   -> physical operator
   -> optional AutoSci backend adapter
   -> Evidence ABI
@@ -62,8 +62,8 @@ TaskGraph node
 | Check | Status | Note |
 |---|---|---|
 | YAML parse | ok | Parsed registry and all 18 capsule YAML files with PyYAML. |
-| Capsule schema and semantic validation | ok | `validate_capability_capsule` passed for all 18 `cap.scientific-*` manifests. |
-| Registry resolution | ok | `iter_registry_entries(include_draft=True)` found 18 scientific capsules and loaded each manifest. |
+| Capsule schema and semantic validation | ok | `validate_capability_capsule` passed for all 18 `cap.research-*` manifests. |
+| Registry resolution | ok | `iter_registry_entries(include_draft=True)` found 18 research capsules and loaded each manifest. |
 | Phase 2 required-capsule human test | ok | Required sample ids were present in `config/capability-capsules.registry.yaml`. |
 
 ## Human Test Plan
@@ -75,7 +75,7 @@ HARNESS_DIR="$PWD/harness" PYTHONPATH=harness/tools .venv/bin/python - <<'PY'
 from pathlib import Path
 from capability_capsules import iter_registry_entries, load_capability_capsule_manifest
 
-entries = [e for e in iter_registry_entries(include_draft=True) if e.capability_capsule_id.startswith("cap.scientific-")]
+entries = [e for e in iter_registry_entries(include_draft=True) if e.capability_capsule_id.startswith("cap.research-")]
 assert len(entries) == 18, len(entries)
 for entry in entries:
     manifest = load_capability_capsule_manifest(Path(entry.manifest_path))
@@ -99,11 +99,11 @@ Manual checklist:
 | Question | Current handling |
 |---|---|
 | Should these draft capsules be promoted to stable? | Leave as `draft` until logical operators, physical operators, and evaluator gates exist. |
-| Should `cap.scientific-knowledge-query` be added for `/ask` answer-only mode? | Not in Phase 2 deliverables; Phase 0 maps `/ask` support behavior to `scientific_report.v1` and crystallized writeback to memory update. |
-| Should capsule registry entries use scientific default operator profiles? | Deferred to Phase 3 logical operators and later physical operator binding. |
+| Should `cap.research-knowledge-query` be added for `/ask` answer-only mode? | Not in Phase 2 deliverables; Phase 0 maps `/ask` support behavior to `scientific_report.v1` and crystallized writeback to memory update. |
+| Should capsule registry entries use research default operator profiles? | Deferred to Phase 3 logical operators and later physical operator binding. |
 
 ## Done State
 
 Phase 2 is complete when a human can inspect all 18 capsule manifests, see the
 Evidence ABI contracts they govern, and verify that AutoSci remains a backend
-binding rather than the owner of the scientific workflow.
+binding rather than the owner of the research workflow.

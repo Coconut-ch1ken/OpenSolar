@@ -1,11 +1,11 @@
-# AutoSci Workflow Map for Solar-Native Scientific Runtime
+# AutoSci Workflow Map for Solar-Native Research Runtime
 
 Status: Phase 0 inventory only. This document does not define runtime behavior.
 
 ## Scope
 
 This map decomposes the locally inspected AutoSci `main` branch plus the
-`upstream/paper` / `arxiv-v1` research snapshot into Solar-native scientific
+`upstream/paper` / `arxiv-v1` research snapshot into Solar-native research
 workflow semantics. AutoSci remains a future backend implementation package.
 Solar owns the task graph, logical operators, capability capsules, Evidence ABI,
 gates, manuals, dispatch templates, and memory policy.
@@ -94,32 +94,32 @@ or parsers may implement some nodes, but the semantics stay in Solar.
 
 | Stage | AutoSci source | Solar logical operator | Solar capsule | Evidence ABI |
 |---|---|---|---|---|
-| Source and wiki setup | `/setup`, `/init`, `research_wiki.py init` | `ScientificMemoryUpdater` | `cap.scientific-memory-update` | `research_memory_update.v1` |
-| Foundation seeding | `/prefill`, foundations catalog | `ScientificMemoryUpdater` | `cap.scientific-memory-update` | `research_memory_update.v1` |
-| Literature discovery | `/discover`, `/daily-arxiv`, `discover.py`, `daily_arxiv.py` | `ScientificLiteratureDiscoverer` | `cap.scientific-literature-discover` | `literature_discovery.v1` |
-| Paper preparation and ingestion | `/ingest`, `/init`, `prepare_paper_source.py`, `init_discovery.py` | `ScientificPaperIngestor` | `cap.scientific-paper-ingest` | `research_paper.v1` |
-| Paper analysis | `/ingest`, `runtime/schema/entities.yaml` paper fields | `ScientificPaperAnalyzer` | `cap.scientific-paper-analyze` | `research_paper.v1` |
-| Method extraction | `/ingest`, method entity creation | `ScientificMethodExtractor` | `cap.scientific-method-extract` | `research_method.v1` |
-| Memory update | `/ingest`, `/edit`, `/check --fix`, `research_wiki.py set-meta` | `ScientificMemoryUpdater` | `cap.scientific-memory-update` | `research_memory_update.v1` |
-| Graph update | `/ingest`, `/ideate`, `/exp-design`, `/exp-eval`, `research_wiki.py add-edge` | `ScientificGraphUpdater` | `cap.scientific-graph-update` | `research_graph_update.v1` |
-| Claim extraction | derived from paper methods, results, hypotheses, idea hypotheses | `ScientificClaimExtractor` | `cap.scientific-claim-extract` | `research_claims.v1` |
-| Code evidence mapping | `/exp-run`, experiment code generation, `methods.code_repo`, paper code URLs | `ScientificCodeEvidenceMapper` | `cap.scientific-code-evidence-map` | `code_evidence_map.v1` |
-| Idea generation | `/ideate` | `ScientificIdeaGenerator` | `cap.scientific-idea-generate` | `idea_candidate.v1` |
-| Idea evaluation | `/novelty`, `/review`, `/ideate` validation | `ScientificIdeaEvaluator` | `cap.scientific-idea-evaluate` | `idea_evaluation.v1` |
-| Experiment design | `/exp-design`, `/ideate` pilot spec | `ScientificExperimentDesigner` | `cap.scientific-experiment-design` | `experiment_plan.v1` |
-| Experiment run and collect | `/exp-run`, `/exp-pilot-run` | `ScientificExperimentRunner` | `cap.scientific-experiment-run` | `experiment_result.v1` |
-| Experiment monitor | `/exp-status`, `/exp-run --collect` | `ScientificExperimentMonitor` | `cap.scientific-experiment-monitor` | `experiment_status.v1` |
-| Claim verdict | `/exp-eval`, `/exp-pilot-eval` | `ScientificClaimVerifier` | `cap.scientific-claim-verify` | `claim_verdict.v1` |
-| Report planning | `/survey`, `/paper-plan` | `ScientificReportPlanner` | `cap.scientific-report-plan` | `scientific_report.v1` |
-| Report drafting | `/paper-draft`, `/paper-compile` | `ScientificReportDrafter` | `cap.scientific-report-draft` | `scientific_report.v1` |
-| Publication bundle | `/poster`, `/rebuttal`, compiled paper artifacts | `ScientificPublicationProducer` | `cap.scientific-publication-produce` | `publication_bundle.v1` |
-| Lifecycle orchestration | `/research` | TaskGraph template, not a backend runner | scientific workflow templates | lifecycle evidence ledger |
-| Workflow improvement | `/check`, `/refine`, `/research` iteration, failed idea memory | `ScientificWorkflowEvolver` | `cap.scientific-workflow-evolve` | `workflow_evolution.v1` |
-| Wiki question answering | `/ask` | `ScientificKnowledgeQuerier` | `cap.scientific-knowledge-query` support-only | `scientific_report.v1` or `research_memory_update.v1` only when crystallized |
-| Manual source/content edit | `/edit` | `ScientificMemoryUpdater` | `cap.scientific-memory-update` | `research_memory_update.v1` |
-| Destructive project reset | `/reset`, `reset_wiki.py` | maintenance gate, excluded from scientific capability coverage | no scientific capsule | reset plan/report, not acceptance evidence |
-| SciDAG augmented stages | `/ideate-dag`, `/exp-design-dag`, `/paper-plan-dag`, `scidag/` | existing idea/design/report logical operators | existing scientific capsules | existing stage ABIs |
-| SciEvolve loops | `/dream`, `/forge`, `/morph`, `runtime/schema/scievolve.yaml` | `ScientificWorkflowEvolver` | `cap.scientific-workflow-evolve` | `workflow_evolution.v1` |
+| Source and wiki setup | `/setup`, `/init`, `research_wiki.py init` | `ScientificMemoryUpdater` | `cap.research-memory-update` | `research_memory_update.v1` |
+| Foundation seeding | `/prefill`, foundations catalog | `ScientificMemoryUpdater` | `cap.research-memory-update` | `research_memory_update.v1` |
+| Literature discovery | `/discover`, `/daily-arxiv`, `discover.py`, `daily_arxiv.py` | `ScientificLiteratureDiscoverer` | `cap.research-literature-discover` | `literature_discovery.v1` |
+| Paper preparation and ingestion | `/ingest`, `/init`, `prepare_paper_source.py`, `init_discovery.py` | `ScientificPaperIngestor` | `cap.research-paper-ingest` | `research_paper.v1` |
+| Paper analysis | `/ingest`, `runtime/schema/entities.yaml` paper fields | `ScientificPaperAnalyzer` | `cap.research-paper-analyze` | `research_paper.v1` |
+| Method extraction | `/ingest`, method entity creation | `ScientificMethodExtractor` | `cap.research-method-extract` | `research_method.v1` |
+| Memory update | `/ingest`, `/edit`, `/check --fix`, `research_wiki.py set-meta` | `ScientificMemoryUpdater` | `cap.research-memory-update` | `research_memory_update.v1` |
+| Graph update | `/ingest`, `/ideate`, `/exp-design`, `/exp-eval`, `research_wiki.py add-edge` | `ScientificGraphUpdater` | `cap.research-graph-update` | `research_graph_update.v1` |
+| Claim extraction | derived from paper methods, results, hypotheses, idea hypotheses | `ScientificClaimExtractor` | `cap.research-claim-extract` | `research_claims.v1` |
+| Code evidence mapping | `/exp-run`, experiment code generation, `methods.code_repo`, paper code URLs | `ScientificCodeEvidenceMapper` | `cap.research-code-evidence-map` | `code_evidence_map.v1` |
+| Idea generation | `/ideate` | `ScientificIdeaGenerator` | `cap.research-idea-generate` | `idea_candidate.v1` |
+| Idea evaluation | `/novelty`, `/review`, `/ideate` validation | `ScientificIdeaEvaluator` | `cap.research-idea-evaluate` | `idea_evaluation.v1` |
+| Experiment design | `/exp-design`, `/ideate` pilot spec | `ScientificExperimentDesigner` | `cap.research-experiment-design` | `experiment_plan.v1` |
+| Experiment run and collect | `/exp-run`, `/exp-pilot-run` | `ScientificExperimentRunner` | `cap.research-experiment-run` | `experiment_result.v1` |
+| Experiment monitor | `/exp-status`, `/exp-run --collect` | `ScientificExperimentMonitor` | `cap.research-experiment-monitor` | `experiment_status.v1` |
+| Claim verdict | `/exp-eval`, `/exp-pilot-eval` | `ScientificClaimVerifier` | `cap.research-claim-verify` | `claim_verdict.v1` |
+| Report planning | `/survey`, `/paper-plan` | `ScientificReportPlanner` | `cap.research-report-plan` | `scientific_report.v1` |
+| Report drafting | `/paper-draft`, `/paper-compile` | `ScientificReportDrafter` | `cap.research-report-draft` | `scientific_report.v1` |
+| Publication bundle | `/poster`, `/rebuttal`, compiled paper artifacts | `ScientificPublicationProducer` | `cap.research-publication-produce` | `publication_bundle.v1` |
+| Lifecycle orchestration | `/research` | TaskGraph template, not a backend runner | research workflow templates | lifecycle evidence ledger |
+| Workflow improvement | `/check`, `/refine`, `/research` iteration, failed idea memory | `ScientificWorkflowEvolver` | `cap.research-workflow-evolve` | `workflow_evolution.v1` |
+| Wiki question answering | `/ask` | `ScientificKnowledgeQuerier` | `cap.research-knowledge-query` support-only | `scientific_report.v1` or `research_memory_update.v1` only when crystallized |
+| Manual source/content edit | `/edit` | `ScientificMemoryUpdater` | `cap.research-memory-update` | `research_memory_update.v1` |
+| Destructive project reset | `/reset`, `reset_wiki.py` | maintenance gate, excluded from research capability coverage | no research capsule | reset plan/report, not acceptance evidence |
+| SciDAG augmented stages | `/ideate-dag`, `/exp-design-dag`, `/paper-plan-dag`, `scidag/` | existing idea/design/report logical operators | existing research capsules | existing stage ABIs |
+| SciEvolve loops | `/dream`, `/forge`, `/morph`, `runtime/schema/scievolve.yaml` | `ScientificWorkflowEvolver` | `cap.research-workflow-evolve` | `workflow_evolution.v1` |
 
 ## Stage Notes
 
@@ -262,7 +262,7 @@ that owns the whole workflow.
 Human test:
 
 ```text
-A full lifecycle TaskGraph lists each scientific node, dependency, read/write
+A full lifecycle TaskGraph lists each research node, dependency, read/write
 scope, required capability, evidence output, and gate. It does not contain a
 single "call AutoSci research" node.
 ```
@@ -301,10 +301,10 @@ updates:
 - `/edit` is a manual user-directed update path. It maps directly to
   `ScientificMemoryUpdater`; raw-source addition, deletion, and wiki edits must
   be reported as explicit memory update evidence.
-- `/reset` is destructive maintenance, not a scientific capability. It should
-  stay outside native scientific TaskGraphs unless a human explicitly invokes a
+- `/reset` is destructive maintenance, not a research capability. It should
+  stay outside native research TaskGraphs unless a human explicitly invokes a
   maintenance gate. The dry-run deletion plan is review evidence; it is not a
-  successful scientific workflow artifact.
+  successful research workflow artifact.
 
 Human test:
 

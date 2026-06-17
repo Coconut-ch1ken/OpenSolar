@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-workflow-evolve
+capability_capsule_id: cap.research-workflow-evolve
 capsule_kind: capability
 metadata:
   name: Scientific Workflow Evolve
@@ -48,8 +48,8 @@ composition:
     - schema_ref: schemas/evidence/workflow_evolution.v1.schema.json
       purpose: Workflow evolution proposal evidence.
   compatible_with:
-    - cap.scientific-memory-update
-    - cap.scientific-report-plan
+    - cap.research-memory-update
+    - cap.research-report-plan
   incompatible_with: []
   requires_after: []
 effects:

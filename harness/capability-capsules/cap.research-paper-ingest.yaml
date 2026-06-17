@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-paper-ingest
+capability_capsule_id: cap.research-paper-ingest
 capsule_kind: capability
 metadata:
   name: Scientific Paper Ingest
@@ -46,11 +46,11 @@ composition:
     - schema_ref: schemas/evidence/research_paper.v1.schema.json
       purpose: Normalized paper evidence.
   compatible_with:
-    - cap.scientific-paper-analyze
-    - cap.scientific-method-extract
-    - cap.scientific-claim-extract
+    - cap.research-paper-analyze
+    - cap.research-method-extract
+    - cap.research-claim-extract
   incompatible_with:
-    - cap.scientific-publication-produce
+    - cap.research-publication-produce
   requires_after: []
 effects:
   read:

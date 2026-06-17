@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-publication-produce
+capability_capsule_id: cap.research-publication-produce
 capsule_kind: capability
 metadata:
   name: Scientific Publication Produce
@@ -46,11 +46,11 @@ composition:
     - schema_ref: schemas/evidence/publication_bundle.v1.schema.json
       purpose: Publication bundle evidence.
   compatible_with:
-    - cap.scientific-report-draft
+    - cap.research-report-draft
   incompatible_with:
-    - cap.scientific-experiment-run
+    - cap.research-experiment-run
   requires_after:
-    - cap.scientific-report-draft
+    - cap.research-report-draft
 effects:
   read:
     - report artifacts and source evidence

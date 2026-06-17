@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-idea-evaluate
+capability_capsule_id: cap.research-idea-evaluate
 capsule_kind: capability
 metadata:
   name: Scientific Idea Evaluate
@@ -48,11 +48,11 @@ composition:
     - schema_ref: schemas/evidence/idea_evaluation.v1.schema.json
       purpose: Idea review evidence.
   compatible_with:
-    - cap.scientific-experiment-design
-    - cap.scientific-memory-update
+    - cap.research-experiment-design
+    - cap.research-memory-update
   incompatible_with: []
   requires_after:
-    - cap.scientific-idea-generate
+    - cap.research-idea-generate
 effects:
   read:
     - idea candidate evidence

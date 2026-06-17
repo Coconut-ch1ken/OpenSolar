@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-report-draft
+capability_capsule_id: cap.research-report-draft
 capsule_kind: capability
 metadata:
   name: Scientific Report Draft
@@ -47,8 +47,8 @@ composition:
     - schema_ref: schemas/evidence/scientific_report.v1.schema.json
       purpose: Draft report evidence.
   compatible_with:
-    - cap.scientific-publication-produce
-    - cap.scientific-memory-update
+    - cap.research-publication-produce
+    - cap.research-memory-update
   incompatible_with: []
   requires_after: []
 effects:

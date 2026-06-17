@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-method-extract
+capability_capsule_id: cap.research-method-extract
 capsule_kind: capability
 metadata:
   name: Scientific Method Extract
@@ -45,12 +45,12 @@ composition:
     - schema_ref: schemas/evidence/research_method.v1.schema.json
       purpose: Reusable method evidence.
   compatible_with:
-    - cap.scientific-code-evidence-map
-    - cap.scientific-claim-extract
-    - cap.scientific-graph-update
+    - cap.research-code-evidence-map
+    - cap.research-claim-extract
+    - cap.research-graph-update
   incompatible_with: []
   requires_after:
-    - cap.scientific-paper-ingest
+    - cap.research-paper-ingest
 effects:
   read:
     - normalized paper evidence

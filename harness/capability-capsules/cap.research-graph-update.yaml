@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-graph-update
+capability_capsule_id: cap.research-graph-update
 capsule_kind: capability
 metadata:
   name: Scientific Graph Update
@@ -47,8 +47,8 @@ composition:
     - schema_ref: schemas/evidence/research_graph_update.v1.schema.json
       purpose: Graph edge delta evidence.
   compatible_with:
-    - cap.scientific-memory-update
-    - cap.scientific-paper-analyze
+    - cap.research-memory-update
+    - cap.research-paper-analyze
   incompatible_with: []
   requires_after: []
 effects:

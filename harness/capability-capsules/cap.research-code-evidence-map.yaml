@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-code-evidence-map
+capability_capsule_id: cap.research-code-evidence-map
 capsule_kind: capability
 metadata:
   name: Scientific Code Evidence Map
@@ -48,9 +48,9 @@ composition:
     - schema_ref: schemas/evidence/code_evidence_map.v1.schema.json
       purpose: Claim-to-code or method-to-code mapping evidence.
   compatible_with:
-    - cap.scientific-experiment-design
-    - cap.scientific-experiment-run
-    - cap.scientific-claim-verify
+    - cap.research-experiment-design
+    - cap.research-experiment-run
+    - cap.research-claim-verify
   incompatible_with: []
   requires_after: []
 effects:

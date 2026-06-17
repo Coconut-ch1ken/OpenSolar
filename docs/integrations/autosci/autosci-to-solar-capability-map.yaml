@@ -26,11 +26,11 @@ source:
     - tools/daily_arxiv.py
 notes:
   - Phase 0 mapping only; no runtime binding is implemented here.
-  - Solar-native names are generic scientific capabilities.
+  - Solar-native capsule ids are generic research capabilities.
   - AutoSci names are reserved for future backend files under harness/plugins/autosci.
   - The inspected AutoSci main branch does not expose a standalone claim extraction command; claim extraction is derived from paper, idea, method, and experiment artifacts.
   - /ask is mapped explicitly as a support query path; only its crystallize mode becomes memory update.
-  - /reset is explicitly excluded from scientific capability coverage and requires a maintenance/human gate.
+  - /reset is explicitly excluded from research capability coverage and requires a maintenance/human gate.
 
 workflow_steps:
   - autosci_step: /setup
@@ -51,7 +51,7 @@ workflow_steps:
       - invalid provider configuration
       - workflow YAML missing expected blocks
     solar_logical_operator: ScientificMemoryUpdater
-    solar_capsule: cap.scientific-memory-update
+    solar_capsule: cap.research-memory-update
     solar_evidence_abi: research_memory_update.v1
     human_test: Review the setup report and confirm no research memory was modified without an explicit setup/config task.
 
@@ -73,7 +73,7 @@ workflow_steps:
       - catalog does not match domain
       - foundation content becomes stale
     solar_logical_operator: ScientificMemoryUpdater
-    solar_capsule: cap.scientific-memory-update
+    solar_capsule: cap.research-memory-update
     solar_evidence_abi: research_memory_update.v1
     human_test: Confirm the memory update lists created foundation pages and does not invent paper-derived claims.
 
@@ -108,7 +108,7 @@ workflow_steps:
       - one paper ingest fails
       - merge conflict during fan-in
     solar_logical_operator: ScientificMemoryUpdater
-    solar_capsule: cap.scientific-memory-update
+    solar_capsule: cap.research-memory-update
     solar_evidence_abi: research_memory_update.v1
     human_test: Review checkpoint manifests and memory update evidence; every ingested paper must also have separate paper evidence.
 
@@ -135,7 +135,7 @@ workflow_steps:
       - arXiv source fetch fails
       - invalid source archive
     solar_logical_operator: ScientificLiteratureDiscoverer
-    solar_capsule: cap.scientific-literature-discover
+    solar_capsule: cap.research-literature-discover
     solar_evidence_abi: literature_discovery.v1
     human_test: Inspect the discovery artifact for selected paper IDs, source paths, warnings, and no wiki mutation.
 
@@ -162,7 +162,7 @@ workflow_steps:
       - malformed anchor ID
       - duplicate candidates dominate shortlist
     solar_logical_operator: ScientificLiteratureDiscoverer
-    solar_capsule: cap.scientific-literature-discover
+    solar_capsule: cap.research-literature-discover
     solar_evidence_abi: literature_discovery.v1
     human_test: Verify the shortlist has candidate metadata, source channels, rationale, dedup status, and no auto-ingest side effect.
 
@@ -189,7 +189,7 @@ workflow_steps:
       - feed preparation rate-limited
       - accidental auto-ingest without explicit mode
     solar_logical_operator: ScientificLiteratureDiscoverer
-    solar_capsule: cap.scientific-literature-discover
+    solar_capsule: cap.research-literature-discover
     solar_evidence_abi: literature_discovery.v1
     human_test: Confirm inform mode produces only digest artifacts; auto-ingest mode must list exact /ingest calls and evidence.
 
@@ -224,10 +224,10 @@ workflow_steps:
       - answer uses pretraining instead of wiki evidence
       - crystallize requested but target is ambiguous
     solar_logical_operator: ScientificKnowledgeQuerier
-    solar_capsule: cap.scientific-knowledge-query
+    solar_capsule: cap.research-knowledge-query
     solar_evidence_abi: scientific_report.v1
     writeback_operator: ScientificMemoryUpdater
-    writeback_capsule: cap.scientific-memory-update
+    writeback_capsule: cap.research-memory-update
     writeback_evidence_abi: research_memory_update.v1
     human_test: Answer-only mode is read-only and cited; crystallize mode lists exact pages and graph edges to be created or edited.
 
@@ -255,7 +255,7 @@ workflow_steps:
       - target wiki page missing
       - bidirectional link update incomplete
     solar_logical_operator: ScientificMemoryUpdater
-    solar_capsule: cap.scientific-memory-update
+    solar_capsule: cap.research-memory-update
     solar_evidence_abi: research_memory_update.v1
     human_test: Memory update evidence distinguishes raw-source additions, confirmed raw deletions, and wiki content edits with exact paths.
 
@@ -283,8 +283,8 @@ workflow_steps:
     solar_logical_operator: MaintenanceResetOperator
     solar_capsule: excluded.admin-maintenance-reset
     solar_evidence_abi: maintenance_reset_plan.v1
-    capability_coverage: excluded_from_scientific_capabilities
-    human_test: Reset cannot be represented as successful scientific work; dry-run plan and explicit confirmation must be visible before mutation.
+    capability_coverage: excluded_from_research_capabilities
+    human_test: Reset cannot be represented as successful research work; dry-run plan and explicit confirmation must be visible before mutation.
 
   - autosci_step: /ingest
     purpose: Convert one paper source into a wired knowledge-base representation.
@@ -321,7 +321,7 @@ workflow_steps:
       - over-creation of duplicate concepts or methods
       - graph edge missing evidence or confidence
     solar_logical_operator: ScientificPaperIngestor
-    solar_capsule: cap.scientific-paper-ingest
+    solar_capsule: cap.research-paper-ingest
     solar_evidence_abi: research_paper.v1
     human_test: Inspect research_paper.v1 for source path, title, identifiers, sections, limitations, artifacts, and warnings before accepting memory writes.
 
@@ -347,7 +347,7 @@ workflow_steps:
       - missing reverse links
       - missing evidence text on edges
     solar_logical_operator: ScientificMethodExtractor
-    solar_capsule: cap.scientific-method-extract
+    solar_capsule: cap.research-method-extract
     solar_evidence_abi: research_method.v1
     human_test: Verify each extracted method is named, reusable, citable, and linked to source paper evidence.
 
@@ -372,7 +372,7 @@ workflow_steps:
       - claim is marked verified at extraction stage
       - non-testable claim is not explicitly labeled
     solar_logical_operator: ScientificClaimExtractor
-    solar_capsule: cap.scientific-claim-extract
+    solar_capsule: cap.research-claim-extract
     solar_evidence_abi: research_claims.v1
     human_test: Claims are source-grounded, unverified by default, and split into testable/non-testable groups.
 
@@ -405,7 +405,7 @@ workflow_steps:
       - pilot failure
       - duplicate idea slug
     solar_logical_operator: ScientificIdeaGenerator
-    solar_capsule: cap.scientific-idea-generate
+    solar_capsule: cap.research-idea-generate
     solar_evidence_abi: idea_candidate.v1
     human_test: Inspect candidate ideas, sources, generation path, gap links, feasibility, and failure reasons for eliminated ideas.
 
@@ -438,7 +438,7 @@ workflow_steps:
       - mock output mistaken for real evidence
       - downstream idea persistence fails
     solar_logical_operator: ScientificIdeaGenerator
-    solar_capsule: cap.scientific-idea-generate
+    solar_capsule: cap.research-idea-generate
     solar_evidence_abi: idea_candidate.v1
     human_test: Solar graph shows native idea-generation semantics; SciDAG is only an implementation strategy and the emitted idea artifact remains inspectable.
 
@@ -464,7 +464,7 @@ workflow_steps:
       - target idea slug not found
       - fabricated or untraceable prior work
     solar_logical_operator: ScientificIdeaEvaluator
-    solar_capsule: cap.scientific-idea-evaluate
+    solar_capsule: cap.research-idea-evaluate
     solar_evidence_abi: idea_evaluation.v1
     human_test: Novelty report lists closest prior work, differentiation, evidence sources, score rationale, and write side effects if any.
 
@@ -487,7 +487,7 @@ workflow_steps:
       - artifact too long
       - invalid Review LLM response
     solar_logical_operator: ScientificIdeaEvaluator
-    solar_capsule: cap.scientific-idea-evaluate
+    solar_capsule: cap.research-idea-evaluate
     solar_evidence_abi: idea_evaluation.v1
     human_test: Review report is read-only, includes score rationale, mapped entities, and concrete fixes.
 
@@ -514,7 +514,7 @@ workflow_steps:
       - remote connection fails
       - no result files produced
     solar_logical_operator: ScientificExperimentRunner
-    solar_capsule: cap.scientific-experiment-run
+    solar_capsule: cap.research-experiment-run
     solar_evidence_abi: experiment_result.v1
     human_test: Verify manual approval record, command/log paths, result JSON, and no wiki status update in the runner node.
 
@@ -541,7 +541,7 @@ workflow_steps:
       - pilot spec missing
       - vague failure reason
     solar_logical_operator: ScientificClaimVerifier
-    solar_capsule: cap.scientific-claim-verify
+    solar_capsule: cap.research-claim-verify
     solar_evidence_abi: claim_verdict.v1
     human_test: Confirm pilot verdict is pass/fail/inconclusive, cites metric/log evidence, and does not overstate support.
 
@@ -572,7 +572,7 @@ workflow_steps:
       - benchmark unavailable
       - success criteria not quantified
     solar_logical_operator: ScientificExperimentDesigner
-    solar_capsule: cap.scientific-experiment-design
+    solar_capsule: cap.research-experiment-design
     solar_evidence_abi: experiment_plan.v1
     human_test: Experiment plan lists hypothesis, metrics, baseline, run order, safety/approval needs, and pass/fail criteria.
 
@@ -603,7 +603,7 @@ workflow_steps:
       - mock output mistaken for real experiment evidence
       - downstream experiment persistence fails
     solar_logical_operator: ScientificExperimentDesigner
-    solar_capsule: cap.scientific-experiment-design
+    solar_capsule: cap.research-experiment-design
     solar_evidence_abi: experiment_plan.v1
     human_test: DAG augmentation still emits a normal experiment_plan.v1 with hypothesis, metrics, baseline, run order, and approval requirements.
 
@@ -638,7 +638,7 @@ workflow_steps:
       - experiment crashed
       - run exceeds expected time
     solar_logical_operator: ScientificExperimentRunner
-    solar_capsule: cap.scientific-experiment-run
+    solar_capsule: cap.research-experiment-run
     solar_evidence_abi: experiment_result.v1
     human_test: Confirm execution mode, approval record, command, environment, logs, metrics, and outcome classification.
 
@@ -663,7 +663,7 @@ workflow_steps:
       - anomalies detected
       - collect-ready fails for one experiment
     solar_logical_operator: ScientificExperimentMonitor
-    solar_capsule: cap.scientific-experiment-monitor
+    solar_capsule: cap.research-experiment-monitor
     solar_evidence_abi: experiment_status.v1
     human_test: Status artifact distinguishes alive, anomaly, completed-pending-collect, collected, and check-failed states.
 
@@ -695,7 +695,7 @@ workflow_steps:
       - idea modified by another experiment
       - vague failure reason
     solar_logical_operator: ScientificClaimVerifier
-    solar_capsule: cap.scientific-claim-verify
+    solar_capsule: cap.research-claim-verify
     solar_evidence_abi: claim_verdict.v1
     human_test: Verdict cites result artifacts, linked claim/idea, limitations, judge disagreement, and final status change.
 
@@ -721,7 +721,7 @@ workflow_steps:
       - BibTeX fetch fails
       - citation unconfirmed
     solar_logical_operator: ScientificReportPlanner
-    solar_capsule: cap.scientific-report-plan
+    solar_capsule: cap.research-report-plan
     solar_evidence_abi: scientific_report.v1
     human_test: Every citation maps to an existing paper page or is marked unconfirmed as a blocker.
 
@@ -749,7 +749,7 @@ workflow_steps:
       - Review LLM unavailable
       - unconfirmed citations
     solar_logical_operator: ScientificReportPlanner
-    solar_capsule: cap.scientific-report-plan
+    solar_capsule: cap.research-report-plan
     solar_evidence_abi: scientific_report.v1
     human_test: Paper plan has idea-section mapping, evidence map, figure plan, citation coverage, and limitations.
 
@@ -779,7 +779,7 @@ workflow_steps:
       - mock output mistaken for real planning evidence
       - unconfirmed citations hidden by polish step
     solar_logical_operator: ScientificReportPlanner
-    solar_capsule: cap.scientific-report-plan
+    solar_capsule: cap.research-report-plan
     solar_evidence_abi: scientific_report.v1
     human_test: DAG augmentation still emits a normal scientific_report.v1 with section plan, evidence map, figure plan, citation coverage, and limitations.
 
@@ -808,7 +808,7 @@ workflow_steps:
       - Review LLM unavailable
       - existing paper directory overwrite risk
     solar_logical_operator: ScientificReportDrafter
-    solar_capsule: cap.scientific-report-draft
+    solar_capsule: cap.research-report-draft
     solar_evidence_abi: scientific_report.v1
     human_test: Draft artifact links technical statements to wiki/evidence sources and flags unconfirmed citations.
 
@@ -834,7 +834,7 @@ workflow_steps:
       - unconfirmed citations remain
       - pdfinfo or pdffonts unavailable
     solar_logical_operator: ScientificReportDrafter
-    solar_capsule: cap.scientific-report-draft
+    solar_capsule: cap.research-report-draft
     solar_evidence_abi: scientific_report.v1
     human_test: Compile report separates blockers from warnings and does not treat unconfirmed citations as pass.
 
@@ -862,7 +862,7 @@ workflow_steps:
       - DOM overflow cannot be cleared
       - raw LaTeX leaks into poster
     solar_logical_operator: ScientificPublicationProducer
-    solar_capsule: cap.scientific-publication-produce
+    solar_capsule: cap.research-publication-produce
     solar_evidence_abi: publication_bundle.v1
     human_test: Poster bundle validates all images, no TODO/unconfirmed markers, rendered PNG exists or render limitation is explicit.
 
@@ -892,7 +892,7 @@ workflow_steps:
       - fabricated data or overpromise
       - incomplete concern coverage
     solar_logical_operator: ScientificPublicationProducer
-    solar_capsule: cap.scientific-publication-produce
+    solar_capsule: cap.research-publication-produce
     solar_evidence_abi: publication_bundle.v1
     human_test: Every concern ID has a response, evidence references are traceable, and unsupported ideas are not presented as supported.
 
@@ -921,7 +921,7 @@ workflow_steps:
       - canvas too large
       - malformed graph JSONL lines
     solar_logical_operator: ScientificGraphUpdater
-    solar_capsule: cap.scientific-graph-update
+    solar_capsule: cap.research-graph-update
     solar_evidence_abi: research_graph_update.v1
     human_test: Visualization artifact is derived from graph evidence and is never the source of truth.
 
@@ -948,7 +948,7 @@ workflow_steps:
       - required fields missing
       - failed idea lacks failure_reason
     solar_logical_operator: ScientificWorkflowEvolver
-    solar_capsule: cap.scientific-workflow-evolve
+    solar_capsule: cap.research-workflow-evolve
     solar_evidence_abi: workflow_evolution.v1
     human_test: Audit separates deterministic errors, recommendations, and optional improvements; fixes require explicit mode.
 
@@ -973,7 +973,7 @@ workflow_steps:
       - score does not improve
       - unsafe edit would alter unsupported claims
     solar_logical_operator: ScientificWorkflowEvolver
-    solar_capsule: cap.scientific-workflow-evolve
+    solar_capsule: cap.research-workflow-evolve
     solar_evidence_abi: workflow_evolution.v1
     human_test: Refinement report shows review issues, edits made, score movement, and residual risks.
 
@@ -1004,7 +1004,7 @@ workflow_steps:
       - low confidence proposal attempted as apply
       - yolo mutation requested without explicit flag
     solar_logical_operator: ScientificWorkflowEvolver
-    solar_capsule: cap.scientific-workflow-evolve
+    solar_capsule: cap.research-workflow-evolve
     solar_evidence_abi: workflow_evolution.v1
     human_test: Dream evidence separates observed memory cues, proposed changes, accepted applications, and downstream context rebuilds.
 
@@ -1037,7 +1037,7 @@ workflow_steps:
       - patch changes skill core purpose
       - archive or merge attempted without yolo
     solar_logical_operator: ScientificWorkflowEvolver
-    solar_capsule: cap.scientific-workflow-evolve
+    solar_capsule: cap.research-workflow-evolve
     solar_evidence_abi: workflow_evolution.v1
     human_test: Forge evidence includes target skill, cited signals, proposed patch, validation result, and exact changed paths.
 
@@ -1071,7 +1071,7 @@ workflow_steps:
       - operator reference missing
       - destructive template operation attempted without yolo
     solar_logical_operator: ScientificWorkflowEvolver
-    solar_capsule: cap.scientific-workflow-evolve
+    solar_capsule: cap.research-workflow-evolve
     solar_evidence_abi: workflow_evolution.v1
     human_test: Morph evidence shows proposed graph/prompt mutation separately from any applied change, and Solar does not treat SciDAG as a workflow owner.
 
@@ -1106,7 +1106,7 @@ workflow_steps:
     human_test: Solar should represent this as a native TaskGraph template, not as a physical AutoSci backend command.
 
 target_capabilities:
-  - solar_capsule: cap.scientific-paper-ingest
+  - solar_capsule: cap.research-paper-ingest
     main_operator: ScientificPaperIngestor
     autosci_sources:
       - /ingest
@@ -1114,7 +1114,7 @@ target_capabilities:
       - tools/prepare_paper_source.py
       - tools/init_discovery.py download
     evidence_abi: research_paper.v1
-  - solar_capsule: cap.scientific-literature-discover
+  - solar_capsule: cap.research-literature-discover
     main_operator: ScientificLiteratureDiscoverer
     autosci_sources:
       - /discover
@@ -1123,7 +1123,7 @@ target_capabilities:
       - tools/daily_arxiv.py
       - tools/init_discovery.py plan
     evidence_abi: literature_discovery.v1
-  - solar_capsule: cap.scientific-memory-update
+  - solar_capsule: cap.research-memory-update
     main_operator: ScientificMemoryUpdater
     autosci_sources:
       - /init
@@ -1133,7 +1133,7 @@ target_capabilities:
       - /prefill
       - tools/research_wiki.py set-meta
     evidence_abi: research_memory_update.v1
-  - solar_capsule: cap.scientific-graph-update
+  - solar_capsule: cap.research-graph-update
     main_operator: ScientificGraphUpdater
     autosci_sources:
       - /ingest
@@ -1144,27 +1144,27 @@ target_capabilities:
       - /visualize
       - tools/research_wiki.py add-edge
     evidence_abi: research_graph_update.v1
-  - solar_capsule: cap.scientific-paper-analyze
+  - solar_capsule: cap.research-paper-analyze
     main_operator: ScientificPaperAnalyzer
     autosci_sources:
       - /ingest
       - tools/fetch_s2.py
       - tools/fetch_deepxiv.py
     evidence_abi: research_paper.v1
-  - solar_capsule: cap.scientific-claim-extract
+  - solar_capsule: cap.research-claim-extract
     main_operator: ScientificClaimExtractor
     autosci_sources:
       - implicit paper hypotheses/results
       - implicit idea hypotheses
       - implicit experiment hypotheses
     evidence_abi: research_claims.v1
-  - solar_capsule: cap.scientific-method-extract
+  - solar_capsule: cap.research-method-extract
     main_operator: ScientificMethodExtractor
     autosci_sources:
       - /ingest
       - runtime/schema/entities.yaml methods
     evidence_abi: research_method.v1
-  - solar_capsule: cap.scientific-code-evidence-map
+  - solar_capsule: cap.research-code-evidence-map
     main_operator: ScientificCodeEvidenceMapper
     autosci_sources:
       - /exp-run
@@ -1172,45 +1172,45 @@ target_capabilities:
       - methods.code_repo
       - papers.code_url
     evidence_abi: code_evidence_map.v1
-  - solar_capsule: cap.scientific-idea-generate
+  - solar_capsule: cap.research-idea-generate
     main_operator: ScientificIdeaGenerator
     autosci_sources:
       - /ideate
       - /ideate-dag
     evidence_abi: idea_candidate.v1
-  - solar_capsule: cap.scientific-idea-evaluate
+  - solar_capsule: cap.research-idea-evaluate
     main_operator: ScientificIdeaEvaluator
     autosci_sources:
       - /novelty
       - /review
       - /ideate Phase 3
     evidence_abi: idea_evaluation.v1
-  - solar_capsule: cap.scientific-experiment-design
+  - solar_capsule: cap.research-experiment-design
     main_operator: ScientificExperimentDesigner
     autosci_sources:
       - /exp-design
       - /exp-design-dag
       - /ideate pilot spec
     evidence_abi: experiment_plan.v1
-  - solar_capsule: cap.scientific-experiment-run
+  - solar_capsule: cap.research-experiment-run
     main_operator: ScientificExperimentRunner
     autosci_sources:
       - /exp-run
       - /exp-pilot-run
     evidence_abi: experiment_result.v1
-  - solar_capsule: cap.scientific-experiment-monitor
+  - solar_capsule: cap.research-experiment-monitor
     main_operator: ScientificExperimentMonitor
     autosci_sources:
       - /exp-status
       - /exp-run --collect
     evidence_abi: experiment_status.v1
-  - solar_capsule: cap.scientific-claim-verify
+  - solar_capsule: cap.research-claim-verify
     main_operator: ScientificClaimVerifier
     autosci_sources:
       - /exp-eval
       - /exp-pilot-eval
     evidence_abi: claim_verdict.v1
-  - solar_capsule: cap.scientific-report-plan
+  - solar_capsule: cap.research-report-plan
     main_operator: ScientificReportPlanner
     autosci_sources:
       - /survey
@@ -1218,19 +1218,19 @@ target_capabilities:
       - /paper-plan-dag
       - /ask answer-only report
     evidence_abi: scientific_report.v1
-  - solar_capsule: cap.scientific-report-draft
+  - solar_capsule: cap.research-report-draft
     main_operator: ScientificReportDrafter
     autosci_sources:
       - /paper-draft
       - /paper-compile
     evidence_abi: scientific_report.v1
-  - solar_capsule: cap.scientific-publication-produce
+  - solar_capsule: cap.research-publication-produce
     main_operator: ScientificPublicationProducer
     autosci_sources:
       - /poster
       - /rebuttal
     evidence_abi: publication_bundle.v1
-  - solar_capsule: cap.scientific-workflow-evolve
+  - solar_capsule: cap.research-workflow-evolve
     main_operator: ScientificWorkflowEvolver
     autosci_sources:
       - /check
@@ -1242,7 +1242,7 @@ target_capabilities:
     evidence_abi: workflow_evolution.v1
 
 support_capabilities:
-  - solar_capsule: cap.scientific-knowledge-query
+  - solar_capsule: cap.research-knowledge-query
     main_operator: ScientificKnowledgeQuerier
     autosci_sources:
       - /ask answer-only
@@ -1251,5 +1251,5 @@ support_capabilities:
 
 excluded_utilities:
   - autosci_source: /reset
-    reason: Destructive project maintenance is not a scientific capability and must remain behind an explicit maintenance gate.
+    reason: Destructive project maintenance is not a research capability and must remain behind an explicit maintenance gate.
     evidence_abi: maintenance_reset_plan.v1

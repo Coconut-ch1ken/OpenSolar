@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-idea-generate
+capability_capsule_id: cap.research-idea-generate
 capsule_kind: capability
 metadata:
   name: Scientific Idea Generate
@@ -48,10 +48,10 @@ composition:
     - schema_ref: schemas/evidence/idea_candidate.v1.schema.json
       purpose: Idea candidate evidence.
   compatible_with:
-    - cap.scientific-idea-evaluate
-    - cap.scientific-experiment-design
+    - cap.research-idea-evaluate
+    - cap.research-experiment-design
   incompatible_with:
-    - cap.scientific-claim-verify
+    - cap.research-claim-verify
   requires_after: []
 effects:
   read:

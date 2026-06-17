@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-claim-verify
+capability_capsule_id: cap.research-claim-verify
 capsule_kind: capability
 metadata:
   name: Scientific Claim Verify
@@ -50,12 +50,12 @@ composition:
     - schema_ref: schemas/evidence/claim_verdict.v1.schema.json
       purpose: Claim verdict evidence.
   compatible_with:
-    - cap.scientific-report-plan
-    - cap.scientific-report-draft
-    - cap.scientific-memory-update
+    - cap.research-report-plan
+    - cap.research-report-draft
+    - cap.research-memory-update
   incompatible_with: []
   requires_after:
-    - cap.scientific-claim-extract
+    - cap.research-claim-extract
 effects:
   read:
     - claim, experiment, code, and paper evidence

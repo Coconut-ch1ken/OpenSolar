@@ -1,4 +1,4 @@
-capability_capsule_id: cap.scientific-claim-extract
+capability_capsule_id: cap.research-claim-extract
 capsule_kind: capability
 metadata:
   name: Scientific Claim Extract
@@ -48,11 +48,11 @@ composition:
     - schema_ref: schemas/evidence/research_claims.v1.schema.json
       purpose: Source-anchored claims.
   compatible_with:
-    - cap.scientific-claim-verify
-    - cap.scientific-experiment-design
-    - cap.scientific-code-evidence-map
+    - cap.research-claim-verify
+    - cap.research-experiment-design
+    - cap.research-code-evidence-map
   incompatible_with:
-    - cap.scientific-publication-produce
+    - cap.research-publication-produce
   requires_after: []
 effects:
   read:
