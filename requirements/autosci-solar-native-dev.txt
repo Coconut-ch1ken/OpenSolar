@@ -1,6 +1,6 @@
 # AutoSci Solar-native validation environment.
 # Rebuild from the repo root with:
-#   UV_CACHE_DIR="$PWD/.uv-cache" uv pip sync --python .venv/bin/python requirements/autosci-solar-native-dev.txt
+#   UV_CACHE_DIR=/Users/jamesyuan/Library/Caches/uv uv pip sync --python .venv/bin/python requirements/autosci-solar-native-dev.txt
 annotated-types==0.7.0
 attrs==26.1.0
 beautifulsoup4==4.15.0
