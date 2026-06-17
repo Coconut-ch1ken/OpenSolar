@@ -3,7 +3,7 @@
 # Tests: plugin manifests, capability_registry, plugin_loader, scope enforcement, CLI routing
 set -euo pipefail
 
-HARNESS_DIR="${HARNESS_DIR:-$HOME/.solar/harness}"
+HARNESS_DIR="${HARNESS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 LIB="$HARNESS_DIR/lib"
 PASS=0; FAIL=0
 

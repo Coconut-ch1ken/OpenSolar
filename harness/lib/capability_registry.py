@@ -20,8 +20,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
-HOME = Path.home()
-HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", HOME / ".solar" / "harness"))
+DEFAULT_HARNESS_DIR = Path(__file__).resolve().parents[1]
+HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", DEFAULT_HARNESS_DIR))
 STATE_DB = Path(os.environ.get("HARNESS_STATE_DB", str(HARNESS_DIR / "run" / "state.db")))
 EVENTS_FILE = HARNESS_DIR / "events.jsonl"
 
