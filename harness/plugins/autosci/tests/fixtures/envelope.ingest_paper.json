@@ -1,0 +1,10 @@
+{
+  "task_id": "task-autosci-ingest-fixture",
+  "sprint_id": "sprint-autosci-phase4",
+  "node_id": "node-ingest-paper",
+  "mode": "fixture",
+  "output_dir": "artifacts/autosci/ingest_paper",
+  "inputs": {
+    "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "task_id": "task-autosci-experiment-plan-fixture",
+  "sprint_id": "sprint-autosci-phase4",
+  "node_id": "node-design-experiment",
+  "mode": "fixture",
+  "output_dir": "artifacts/autosci/design_experiment",
+  "inputs": {
+    "claim_id": "claim-001"
+  }
+}

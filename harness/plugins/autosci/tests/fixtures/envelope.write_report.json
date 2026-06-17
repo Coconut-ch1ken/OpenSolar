@@ -1,0 +1,11 @@
+{
+  "task_id": "task-autosci-report-fixture",
+  "sprint_id": "sprint-autosci-phase4",
+  "node_id": "node-write-report",
+  "mode": "fixture",
+  "output_dir": "artifacts/autosci/write_report",
+  "inputs": {
+    "claim_id": "claim-001",
+    "experiment_id": "exp-001"
+  }
+}

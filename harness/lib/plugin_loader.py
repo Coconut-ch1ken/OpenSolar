@@ -58,7 +58,7 @@ REQUIRED_FIELDS = {
 
 
 def _now() -> str:
-    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _emit_event(event: str, plugin_id: str, payload: dict) -> None:
@@ -86,31 +86,70 @@ def _load_yaml_manifest(path: Path) -> "dict | None":
             return yaml.safe_load(f)
     except ImportError:
         pass
-    # Fallback: line-by-line parser for simple key: value and list items
+
+    def parse_scalar(value: str) -> Any:
+        value = value.strip().strip('"').strip("'")
+        if value == "true":
+            return True
+        if value == "false":
+            return False
+        if value.isdigit():
+            return int(value)
+        try:
+            return json.loads(value)
+        except Exception:
+            return value
+
+    # Fallback: line-by-line parser for simple top-level keys, lists, and
+    # one-level nested objects. This keeps plugin validation usable on systems
+    # where PyYAML is not installed.
     result: dict[str, Any] = {}
     current_key: "str | None" = None
-    current_list: "list | None" = None
+    current_container: Any = None
+    current_nested_key: "str | None" = None
     with open(path) as f:
         for raw_line in f:
             line = raw_line.rstrip()
             if not line or line.startswith("#") or line.startswith("---"):
                 continue
+            if line.startswith("    - ") and isinstance(current_container, dict) and current_nested_key:
+                item = line.lstrip("- ").strip().strip('"')
+                nested = current_container.setdefault(current_nested_key, [])
+                if not isinstance(nested, list):
+                    nested = []
+                    current_container[current_nested_key] = nested
+                nested.append(parse_scalar(item))
             if line.startswith("  - ") or line.startswith("- "):
                 item = line.lstrip("- ").strip().strip('"')
-                if current_list is not None:
-                    current_list.append(item)
+                if current_key is not None:
+                    if not isinstance(current_container, list):
+                        current_container = []
+                        result[current_key] = current_container
+                    current_container.append(parse_scalar(item))
+            elif line.startswith("  ") and ":" in line and current_key is not None:
+                k, _, v = line.strip().partition(":")
+                if not isinstance(current_container, dict):
+                    current_container = {}
+                    result[current_key] = current_container
+                nested_key = k.strip()
+                if v.strip() == "":
+                    current_container[nested_key] = []
+                else:
+                    current_container[nested_key] = parse_scalar(v)
+                current_nested_key = nested_key
             elif ":" in line and not line.startswith(" "):
                 k, _, v = line.partition(":")
                 k = k.strip()
-                v = v.strip().strip('"')
+                v = v.strip()
                 if v == "":
-                    current_list = []
-                    result[k] = current_list
+                    current_container = None
+                    result[k] = current_container
                     current_key = k
                 else:
-                    result[k] = v
+                    result[k] = parse_scalar(v)
                     current_key = k
-                    current_list = None
+                    current_container = result[k]
+                current_nested_key = None
     return result
 
 

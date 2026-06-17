@@ -1,0 +1,10 @@
+{
+  "task_id": "task-autosci-claims-fixture",
+  "sprint_id": "sprint-autosci-phase4",
+  "node_id": "node-extract-claims",
+  "mode": "fixture",
+  "output_dir": "artifacts/autosci/extract_claims",
+  "inputs": {
+    "raw_claims": "plugins/autosci/tests/fixtures/sample_autosci_raw_claims.json"
+  }
+}

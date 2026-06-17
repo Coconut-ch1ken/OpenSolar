@@ -1,0 +1,10 @@
+{
+  "task_id": "task-autosci-experiment-run-fixture",
+  "sprint_id": "sprint-autosci-phase4",
+  "node_id": "node-run-experiment",
+  "mode": "fixture",
+  "output_dir": "artifacts/autosci/run_experiment",
+  "inputs": {
+    "experiment_result": "plugins/autosci/tests/fixtures/sample_autosci_raw_experiment_result.json"
+  }
+}

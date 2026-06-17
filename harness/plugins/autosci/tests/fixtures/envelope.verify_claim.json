@@ -1,0 +1,11 @@
+{
+  "task_id": "task-autosci-verdict-fixture",
+  "sprint_id": "sprint-autosci-phase4",
+  "node_id": "node-verify-claim",
+  "mode": "fixture",
+  "output_dir": "artifacts/autosci/verify_claim",
+  "inputs": {
+    "claim_id": "claim-001",
+    "experiment_result": "plugins/autosci/tests/fixtures/sample_autosci_raw_experiment_result.json"
+  }
+}
