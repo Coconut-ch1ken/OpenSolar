@@ -1,7 +1,7 @@
 # AutoSci Solar-Native Dependency Installation Record
 
 Status: current dependency setup for AutoSci Solar-native validation.
-Last verified: 2026-06-17 10:37:00 EDT.
+Last verified: 2026-06-17 10:48:00 EDT.
 
 This file records the dependency installation state created during the
 AutoSci-to-Solar-native implementation so it is rebuildable and removable under
@@ -77,6 +77,44 @@ The install is self-contained. Remove the validation environment with:
 rm -rf .venv
 ```
 
+## Global Jsonschema CLI Tool
+
+`jsonschema` is exposed as a global developer CLI through `pipx`, while the
+OpenSolar project `.venv` still retains the `jsonschema` Python library because
+first-party harness code and tests import it directly.
+
+| Field | Value |
+|---|---|
+| Package manager | `pipx` |
+| Package | `jsonschema==4.26.0` |
+| Python runtime | mise Python 3.14.2 |
+| Global tool environment | `/Users/jamesyuan/.local/pipx/venvs/jsonschema` |
+| Executable link | `/Users/jamesyuan/.local/bin/jsonschema` |
+| Log path | `/Users/jamesyuan/Library/Logs/pipx` |
+| Man page path | `/Users/jamesyuan/.local/pipx/man` |
+| Package cache | disabled via `PIP_NO_CACHE_DIR=1` for this install |
+
+Install or rebuild:
+
+```bash
+PIPX_HOME=/Users/jamesyuan/.local/pipx \
+PIPX_BIN_DIR=/Users/jamesyuan/.local/bin \
+PIPX_LOG_DIR=/Users/jamesyuan/Library/Logs/pipx \
+PIPX_MAN_DIR=/Users/jamesyuan/.local/pipx/man \
+PIP_NO_CACHE_DIR=1 \
+pipx install --python /Users/jamesyuan/.local/share/mise/installs/python/3.14.2/bin/python3 'jsonschema==4.26.0'
+```
+
+Remove:
+
+```bash
+PIPX_HOME=/Users/jamesyuan/.local/pipx \
+PIPX_BIN_DIR=/Users/jamesyuan/.local/bin \
+PIPX_LOG_DIR=/Users/jamesyuan/Library/Logs/pipx \
+PIPX_MAN_DIR=/Users/jamesyuan/.local/pipx/man \
+pipx uninstall jsonschema
+```
+
 ## Corrective Changes
 
 | Previous state | Correction | Reason |
@@ -87,6 +125,7 @@ rm -rf .venv
 | AutoSci `.venv/` used Homebrew Python 3.14.5 | Rebuilt AutoSci `.venv/` with mise Python 3.14.2 | Matches the updated skill preference for mise-managed runtimes. |
 | AutoSci `.pip-cache/` held earlier local pip cache state | Removed `.pip-cache/` after uv install succeeded | Removes obsolete ad hoc cache state. |
 | uv defaulted to `/Users/jamesyuan/.cache/uv` | Removed `/Users/jamesyuan/.cache/uv` and set `UV_CACHE_DIR=/Users/jamesyuan/Library/Caches/uv` in commands | Avoids an unapproved uv cache path. |
+| `jsonschema` CLI was only available under OpenSolar `.venv/bin` | Installed `jsonschema==4.26.0` with `pipx` into approved global tool paths | Makes `which jsonschema` work without activating the project venv. |
 
 ## After-Install Report Fields
 
@@ -95,7 +134,7 @@ rm -rf .venv
 | Packages installed | See `requirements/autosci-solar-native-dev.txt` |
 | Manifest or lockfile changed | `requirements/autosci-solar-native-dev.txt` added |
 | Project-local paths written | OpenSolar `.venv/`; AutoSci `.venv/` |
-| Global store or cache paths touched | mise runtime store already present; Homebrew uv binary already present; `/Users/jamesyuan/Library/Caches/uv` |
+| Global store or cache paths touched | mise runtime store already present; Homebrew uv/pipx binaries already present; `/Users/jamesyuan/Library/Caches/uv`; `/Users/jamesyuan/.local/pipx`; `/Users/jamesyuan/.local/bin`; `/Users/jamesyuan/Library/Logs/pipx` |
 | Rebuild command | See `Rebuild Command` |
 | Removal command | See `Removal Command` |
 
@@ -109,6 +148,7 @@ rm -rf .venv
 | AutoSci manifest install | ok | `UV_CACHE_DIR=/Users/jamesyuan/Library/Caches/uv uv pip install --python .venv/bin/python -r requirements.txt` installed direct and transitive requirements. |
 | AutoSci package compatibility | ok | `UV_CACHE_DIR=/Users/jamesyuan/Library/Caches/uv uv pip check --python .venv/bin/python` reported all installed packages compatible. |
 | AutoSci import smoke | ok | `requests`, `yaml`, `fitz`, `feedparser`, `markdownify`, `playwright`, and `urllib3` imported from `.venv`. |
+| Global jsonschema CLI | ok | `which jsonschema` resolves to `/Users/jamesyuan/.local/bin/jsonschema`; `jsonschema --version` reports `4.26.0`. |
 | Obsolete OpenSolar userbase | ok | `.test-home/` removed. |
 | Obsolete AutoSci pip cache | ok | `/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.pip-cache/` removed. |
 | Unapproved uv cache | ok | `/Users/jamesyuan/.cache/uv` removed. |
