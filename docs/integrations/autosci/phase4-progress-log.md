@@ -1,6 +1,7 @@
 # AutoSci Phase 4 Progress Log
 
 Logged: 2026-06-17 14:44:36 EDT
+Updated: 2026-06-17 14:48:49 EDT
 Branch: `feature/autosci-solar-native`
 
 ## Scope
@@ -26,6 +27,8 @@ the workflow authority.
 | Tests | 2 | Added | `ac5869c6` | `harness/plugins/autosci/tests/test_*.py` |
 | Eval pack | 1 | Added | `ac5869c6` | `harness/plugins/autosci/eval_packs/autosci_adapter_smoke.yaml` |
 | Phase log | 1 | Added | this log commit | `docs/integrations/autosci/phase4-progress-log.md` |
+| Plugin test harness path hardening | 4 | Modified | `62cd8650` | `harness/tests/plugins/test-s4-plugins.sh`, `test-s4-extension-framework.sh`, `test-autoresearch-integration.sh`, `test-ruflo-integration.sh` |
+| Registry warning cleanup | 1 | Modified | `62cd8650` | `harness/lib/capability_registry.py` |
 
 ## Bridge Actions
 
@@ -56,6 +59,13 @@ the workflow authority.
 | Plugin tests | ok | `../.venv/bin/python -m pytest plugins/autosci/tests` passed: 5 tests. |
 | Existing manifest fallback smoke | ok | System `python3` without PyYAML validated existing `empirical-research` and `autoresearch` manifests after fallback parser fix. |
 | Commit and push | ok | Commit `ac5869c6` pushed to `origin/feature/autosci-solar-native`. |
+| Plugin test path grep | ok | No `harness/tests/plugins` script still defaults to `$HOME/.solar/harness` or `$HOME/.solar/bin/solar-harness`. |
+| Plugin test shell syntax | ok | `bash -n` passed for `test-s4-plugins.sh`, `test-s4-extension-framework.sh`, `test-autoresearch-integration.sh`, and `test-ruflo-integration.sh`. |
+| S4 plugin regression | ok | `bash tests/plugins/test-s4-plugins.sh` passed: `PASS=30 FAIL=0`. |
+| S4 extension framework regression | ok | `bash tests/plugins/test-s4-extension-framework.sh` passed: `PASS=23 FAIL=0`. |
+| Autoresearch integration regression | ok | `bash tests/plugins/test-autoresearch-integration.sh` passed: `PASS=17 FAIL=0`. |
+| AutoSci human-testable plan rerun | ok | `validate --id autosci`, allowed scope, illegal scope rejection, bridge `--help`, and bridge `smoke` all behaved as expected from repo-local `harness/`. |
+| Repo-local harness follow-up commit and push | ok | Commit `62cd8650` pushed to `origin/feature/autosci-solar-native`. |
 
 ## Environment Notes
 
@@ -67,6 +77,16 @@ the workflow authority.
 - Smoke output under `harness/artifacts/autosci/*` was generated for local
   verification and was not committed.
 - Existing unrelated dirty files were left untouched.
+- Follow-up commit `62cd8650` made plugin tests default to the project-local
+  harness directory and export `HARNESS_DIR` so child processes do not fall back
+  to `~/.solar/harness`.
+- `test-autoresearch-integration.sh` now invokes the repo-local
+  `lib/intent_engine_adapter.py` for the A5 intent check because the current
+  `solar-harness.sh intent` alias is routed to `intent_gateway.py`, whose
+  public subcommands are `capture` and `bind`.
+- `test-ruflo-integration.sh` now uses the project-local harness path. Its full
+  run still needs `harness/vendor/ruflo`; the observed failure was `source
+  missing`, not a global harness fallback.
 
 ## Done State
 
