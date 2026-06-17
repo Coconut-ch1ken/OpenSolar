@@ -1446,6 +1446,138 @@
       ],
       "selection_policy": "priority_first",
       "fallback_policy": "queue"
+    },
+    "ScientificPaperIngestor": {
+      "operator_type": "ScientificPaperIngestor",
+      "candidates": [
+        {
+          "actor_id": "autosci-paper-ingest-worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificClaimExtractor": {
+      "operator_type": "ScientificClaimExtractor",
+      "candidates": [
+        {
+          "actor_id": "autosci-claim-extract-worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificMemoryUpdater": {
+      "operator_type": "ScientificMemoryUpdater",
+      "candidates": [
+        {
+          "actor_id": "autosci-memory-update-worker",
+          "priority": 20,
+          "condition": "backend_action_pending"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificIdeaGenerator": {
+      "operator_type": "ScientificIdeaGenerator",
+      "candidates": [
+        {
+          "actor_id": "autosci-idea-worker",
+          "priority": 20,
+          "condition": "backend_action_pending"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificIdeaEvaluator": {
+      "operator_type": "ScientificIdeaEvaluator",
+      "candidates": [
+        {
+          "actor_id": "autosci-idea-worker",
+          "priority": 20,
+          "condition": "backend_action_pending"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificExperimentDesigner": {
+      "operator_type": "ScientificExperimentDesigner",
+      "candidates": [
+        {
+          "actor_id": "autosci-experiment-design-worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificExperimentRunner": {
+      "operator_type": "ScientificExperimentRunner",
+      "candidates": [
+        {
+          "actor_id": "autosci-experiment-run-worker",
+          "priority": 1,
+          "condition": "fixture_or_human_approved"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificClaimVerifier": {
+      "operator_type": "ScientificClaimVerifier",
+      "candidates": [
+        {
+          "actor_id": "autosci-claim-verify-worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificReportPlanner": {
+      "operator_type": "ScientificReportPlanner",
+      "candidates": [
+        {
+          "actor_id": "autosci-report-worker",
+          "priority": 2,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificReportDrafter": {
+      "operator_type": "ScientificReportDrafter",
+      "candidates": [
+        {
+          "actor_id": "autosci-report-worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificPublicationProducer": {
+      "operator_type": "ScientificPublicationProducer",
+      "candidates": [
+        {
+          "actor_id": "autosci-report-worker",
+          "priority": 2,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
     }
   }
 }
