@@ -1,6 +1,7 @@
 # AutoSci Phase 0 Progress Log
 
 Logged: 2026-06-16 15:52:53 EDT
+Updated: 2026-06-17 14:53:26 EDT
 Branch: `feature/autosci-solar-native`
 
 | Path or artifact | Operation | Operation time | Note |
@@ -10,6 +11,7 @@ Branch: `feature/autosci-solar-native`
 | `docs/integrations/autosci/autosci-artifact-map.yaml` | Added | 2026-06-16T15:36:26-04:00 | AutoSci artifact-to-Solar Evidence ABI coverage, including `/ask`, `/reset`, and SciEvolve artifacts. |
 | `.test-home/python-userbase/` | Local dependency install, ignored | 2026-06-16 15:52:53 EDT | Installed `pytest` for the active OpenSolar `python3` with dependencies stored inside the repo-local ignored `.test-home/` tree. |
 | `.venv/` | Local dependency install, ignored | 2026-06-16 16:30:24 EDT | Rebuilt OpenSolar-local venv from mise Python 3.14.2 and installed pytest plus required third-party packages inside the project directory. |
+| `docs/integrations/autosci/dependency-installation.md` | Added/modified | 2026-06-16 to 2026-06-17 EDT | Tracks rebuildable OpenSolar and AutoSci dependency environments, approved uv cache usage, and the global `jsonschema` CLI install. |
 | `docs/integrations/autosci/phase0-progress-log.md` | Added | 2026-06-16 15:52:53 EDT | Brief progress log for Phase 0 files, notes, dependency install, and checks. |
 
 ## Checks
@@ -20,6 +22,7 @@ Branch: `feature/autosci-solar-native`
 | AutoSci dependency smoke | ok | AutoSci `.venv` imports and tool `--help` checks passed. |
 | YAML parse | ok | Phase 0 YAML files parsed with Ruby YAML. |
 | Whitespace check | ok | `git diff --check -- docs/integrations/autosci` passed. |
+| Dependency install record | ok | OpenSolar `.venv`, AutoSci `.venv`, approved uv cache, and global `jsonschema==4.26.0` CLI state are recorded in `dependency-installation.md`. |
 | OpenSolar pytest startup | warn | `pytest` and third-party imports are installed in `.venv`; full harness collection still fails on 51 unrelated first-party import/path/API issues listed below. |
 
 ## Harness-Wide Pytest Collection Notes
@@ -98,3 +101,8 @@ Blocked collection modules:
 | Commit | Time | Summary |
 |---|---|---|
 | `5473c019` | 2026-06-16T15:36:26-04:00 | Document AutoSci Solar-native phase 0 mapping. |
+| `1397285c` | 2026-06-16T15:52:53-04:00 | Add Phase 0 progress log. |
+| `06e0d72e` | 2026-06-16T16:30:24-04:00 | Document harness-wide pytest collection blockers for Phase 0 validation context. |
+| `07d620e6` | 2026-06-16 | Track AutoSci validation dependencies. |
+| `e0c78c40` | 2026-06-17 | Align dependency installs with updated install-dependencies skill guidance. |
+| `275a8b63` | 2026-06-17 | Document global `jsonschema` CLI install. |

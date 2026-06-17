@@ -1,6 +1,7 @@
 # AutoSci Phase 1 Evidence ABI Completion Report
 
 Logged: 2026-06-16 16:39:17 EDT
+Updated: 2026-06-17 14:53:26 EDT
 Branch: `feature/autosci-solar-native`
 
 ## Scope
@@ -19,6 +20,15 @@ changed in this phase.
 | Failed-state fixtures | 4 | `harness/schemas/evidence/fixtures/sample_failed_*.json` |
 | Inconclusive-state fixtures | 4 | `harness/schemas/evidence/fixtures/sample_inconclusive_*.json` |
 | Completion report | 1 | `docs/integrations/autosci/phase1-evidence-abi-report.md` |
+
+## Commit Coverage
+
+| Commit | Scope | Note |
+|---|---|---|
+| `72fa1178` | Initial Evidence ABI schemas and passing fixtures | Added 16 Solar-native scientific Evidence ABI schema files, 16 matching passing fixtures, and the initial completion report. |
+| `9cd32b79` | Claim verdict wording correction | Aligned claim verdict evidence labels without changing runtime behavior or schema ownership. |
+| `894ea941` | Failed and inconclusive fixtures | Added 4 failed fixtures and 4 inconclusive fixtures for `research_paper.v1`, `research_claims.v1`, `experiment_plan.v1`, and `claim_verdict.v1`. |
+| `275a8b63` | Validation dependency availability | Recorded the global `jsonschema==4.26.0` CLI install used for human-testable schema validation outside the project venv. |
 
 ## Schema Coverage
 

@@ -1,6 +1,7 @@
 # AutoSci Phase 2 Capability Capsule Completion Report
 
 Logged: 2026-06-17 10:57:28 EDT
+Updated: 2026-06-17 14:53:26 EDT
 Branch: `feature/autosci-solar-native`
 
 ## Scope
@@ -17,6 +18,13 @@ templates, evaluators, or AutoSci backend code.
 | `harness/capability-capsules/cap.research-*.yaml` | Added | 18 | Declarative research capability capsules. |
 | `harness/config/capability-capsules.registry.yaml` | Modified | 1 | Registered 18 draft research capsules. |
 | `docs/integrations/autosci/phase2-capsule-report.md` | Added | 1 | Phase 2 completion report and human test plan. |
+
+## Commit Coverage
+
+| Commit | Scope | Note |
+|---|---|---|
+| `4bb21ee0` | Initial capability capsules | Added 18 declarative `cap.scientific-*` capsule manifests and registry entries as the first Phase 2 capsule pass. |
+| `3ff701db` | Research-token rename | Renamed capsules and registry entries from `cap.scientific-*` to `cap.research-*` so capability ids describe research work rather than the science domain label. |
 
 ## Capsule Coverage
 
@@ -65,6 +73,7 @@ TaskGraph node
 | Capsule schema and semantic validation | ok | `validate_capability_capsule` passed for all 18 `cap.research-*` manifests. |
 | Registry resolution | ok | `iter_registry_entries(include_draft=True)` found 18 research capsules and loaded each manifest. |
 | Phase 2 required-capsule human test | ok | Required sample ids were present in `config/capability-capsules.registry.yaml`. |
+| Research-token rename check | ok | Phase 2 capsule report and registry use `cap.research-*`; no `cap.scientific-*` capsule ids remain as the active contract. |
 
 ## Human Test Plan
 
