@@ -309,7 +309,7 @@
       },
       "cost_hint": "high",
       "concurrency": {
-        "max_parallel": 2,
+        "max_parallel": 1,
         "singleton": false
       }
     },
