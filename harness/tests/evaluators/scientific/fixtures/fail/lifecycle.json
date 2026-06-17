@@ -1,0 +1,50 @@
+{
+  "schema": "scientific_lifecycle.v1",
+  "nodes": [
+    {
+      "id": "paper_ingest",
+      "logical_operator": "ScientificPaperIngestor",
+      "required_capabilities": [
+        "cap.research-paper-ingest"
+      ],
+      "read_scope": [
+        "dispatch/envelope.json"
+      ],
+      "write_scope": [
+        "artifacts/scientific/paper_ingest/research_paper.v1.json"
+      ],
+      "gate": "G_PAPER",
+      "depends_on": []
+    },
+    {
+      "id": "experiment_run",
+      "logical_operator": "ScientificExperimentRunner",
+      "required_capabilities": [
+        "cap.research-experiment-run"
+      ],
+      "read_scope": [
+        "artifacts/scientific/experiment_plan/experiment_plan.v1.json"
+      ],
+      "write_scope": [
+        "artifacts/scientific/experiment_run/experiment_result.v1.json"
+      ],
+      "gate": "G_EXPERIMENT_RESULT",
+      "depends_on": [
+        "paper_ingest"
+      ]
+    },
+    {
+      "id": "black_box",
+      "logical_operator": "AutoSciRunner",
+      "required_capabilities": [
+        "cap.research-claim-verify"
+      ],
+      "read_scope": [],
+      "write_scope": [],
+      "gate": "G_BAD",
+      "depends_on": [
+        "missing_node"
+      ]
+    }
+  ]
+}

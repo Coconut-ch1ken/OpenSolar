@@ -1,0 +1,38 @@
+{
+  "schema": "workflow_evolution.v1",
+  "task_id": "task.phase1.sample.workflow_evolution",
+  "sprint_id": "sprint.autosci.phase1",
+  "node_id": "node.workflow_evolve",
+  "status": "completed",
+  "inputs": {
+    "trigger": "fixture postmortem"
+  },
+  "outputs": {
+    "evolution": {
+      "proposal_id": "proposal.sample.001",
+      "scope": "scientific claim verification fixture flow",
+      "change_type": "workflow_template",
+      "rationale": "Make claim extraction explicit before verification.",
+      "expected_effect": "Improves auditability of fixture verdicts.",
+      "approval_state": "proposed",
+      "evidence_ids": [
+        "claim.sample.001",
+        "report.sample.001"
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "type": "workflow_evolution_proposal",
+      "path": "artifacts/autosci/fixtures/workflow_evolution.json"
+    }
+  ],
+  "provenance": {
+    "operator_id": "ScientificWorkflowEvolver",
+    "implementation_package": "fixture.local",
+    "timestamp": "2026-06-16T20:30:00Z"
+  },
+  "limitations": [
+    "Fixture proposal is not applied."
+  ]
+}
