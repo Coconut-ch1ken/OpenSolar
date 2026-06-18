@@ -30,7 +30,8 @@
     "G_RESUME_CLAIM_VERIFY",
     "G_RESUME_REPORT_DRAFT",
     "G_RESUME_MEMORY_UPDATE",
-    "G_RESUME_WORKFLOW_EVOLVE"
+    "G_RESUME_WORKFLOW_EVOLVE",
+    "G_SCIENTIFIC_RESUME_LIFECYCLE"
   ],
   "nodes": [
     {
@@ -44,10 +45,12 @@
         "data_extraction"
       ],
       "read_scope": [
-        "dispatch/envelope.json"
+        "dispatch/envelope.json",
+        "artifacts/scientific/scientific_research_resume_v1/lifecycle_summary.json",
+        "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_gap_scan/literature_discovery.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/01_paper/literature_discovery.v1.json"
       ],
       "gate": "G_RESUME_GAP_SCAN",
       "acceptance": [
@@ -80,7 +83,26 @@
           "autosci-black-box-runner"
         ]
       },
-      "status": "pending"
+      "status": "pending",
+      "lifecycle_artifact_slot": "01_paper",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/01_paper/literature_discovery.v1.json",
+        "expected_schema": "literature_discovery.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
+      }
     },
     {
       "id": "resume_claim_extract",
@@ -95,10 +117,10 @@
         "academic_critique"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_gap_scan/"
+        "artifacts/scientific/scientific_research_resume_v1/01_paper/literature_discovery.v1.json"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_claim_extract/research_claims.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/02_claims/research_claims.v1.json"
       ],
       "gate": "G_RESUME_CLAIM_EXTRACT",
       "acceptance": [
@@ -131,7 +153,26 @@
           "autosci-black-box-runner"
         ]
       },
-      "status": "pending"
+      "status": "pending",
+      "lifecycle_artifact_slot": "02_claims",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/02_claims/research_claims.v1.json",
+        "expected_schema": "research_claims.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
+      }
     },
     {
       "id": "resume_method_extract",
@@ -146,10 +187,10 @@
         "data_extraction"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_claim_extract/"
+        "artifacts/scientific/scientific_research_resume_v1/02_claims/research_claims.v1.json"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_method_extract/research_method.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/03_methods/research_method.v1.json"
       ],
       "gate": "G_RESUME_METHOD_EXTRACT",
       "acceptance": [
@@ -182,7 +223,26 @@
           "autosci-black-box-runner"
         ]
       },
-      "status": "pending"
+      "status": "pending",
+      "lifecycle_artifact_slot": "03_methods",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/03_methods/research_method.v1.json",
+        "expected_schema": "research_method.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
+      }
     },
     {
       "id": "resume_experiment_design",
@@ -197,10 +257,10 @@
         "academic_critique"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_method_extract/"
+        "artifacts/scientific/scientific_research_resume_v1/03_methods/research_method.v1.json"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_experiment_design/experiment_plan.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/06_experiment_plan/experiment_plan.v1.json"
       ],
       "gate": "G_RESUME_EXPERIMENT_DESIGN",
       "acceptance": [
@@ -244,6 +304,25 @@
           "long_running_job"
         ],
         "default": "require_human_approval"
+      },
+      "lifecycle_artifact_slot": "06_experiment_plan",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/06_experiment_plan/experiment_plan.v1.json",
+        "expected_schema": "experiment_plan.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
       }
     },
     {
@@ -259,10 +338,10 @@
         "test_execution"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_experiment_design/"
+        "artifacts/scientific/scientific_research_resume_v1/06_experiment_plan/experiment_plan.v1.json"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_claim_verify/claim_verdict.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/08_verdict/claim_verdict.v1.json"
       ],
       "gate": "G_RESUME_CLAIM_VERIFY",
       "acceptance": [
@@ -295,7 +374,26 @@
           "autosci-black-box-runner"
         ]
       },
-      "status": "pending"
+      "status": "pending",
+      "lifecycle_artifact_slot": "08_verdict",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/08_verdict/claim_verdict.v1.json",
+        "expected_schema": "claim_verdict.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
+      }
     },
     {
       "id": "resume_report_draft",
@@ -310,10 +408,10 @@
         "academic_critique"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_claim_verify/"
+        "artifacts/scientific/scientific_research_resume_v1/08_verdict/claim_verdict.v1.json"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_report_draft/scientific_report.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/09_report/scientific_report.v1.json"
       ],
       "gate": "G_RESUME_REPORT_DRAFT",
       "acceptance": [
@@ -346,7 +444,26 @@
           "autosci-black-box-runner"
         ]
       },
-      "status": "pending"
+      "status": "pending",
+      "lifecycle_artifact_slot": "09_report",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/09_report/scientific_report.v1.json",
+        "expected_schema": "scientific_report.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
+      }
     },
     {
       "id": "resume_memory_update",
@@ -361,10 +478,10 @@
         "code_impl"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_report_draft/"
+        "artifacts/scientific/scientific_research_resume_v1/09_report/scientific_report.v1.json"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_memory_update/research_memory_update.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/10_memory_update/research_memory_update.v1.json"
       ],
       "gate": "G_RESUME_MEMORY_UPDATE",
       "acceptance": [
@@ -408,6 +525,25 @@
           "long_running_job"
         ],
         "default": "require_human_approval"
+      },
+      "lifecycle_artifact_slot": "10_memory_update",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/10_memory_update/research_memory_update.v1.json",
+        "expected_schema": "research_memory_update.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
       }
     },
     {
@@ -423,10 +559,10 @@
         "research_synthesis"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_memory_update/"
+        "artifacts/scientific/scientific_research_resume_v1/10_memory_update/research_memory_update.v1.json"
       ],
       "write_scope": [
-        "artifacts/scientific/scientific_research_resume_v1/resume_workflow_evolve/workflow_evolution.v1.json"
+        "artifacts/scientific/scientific_research_resume_v1/10_memory_update/workflow_evolution.v1.json"
       ],
       "gate": "G_RESUME_WORKFLOW_EVOLVE",
       "acceptance": [
@@ -470,6 +606,25 @@
           "long_running_job"
         ],
         "default": "require_human_approval"
+      },
+      "lifecycle_artifact_slot": "10_memory_update",
+      "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_resume_v1/10_memory_update/workflow_evolution.v1.json",
+        "expected_schema": "workflow_evolution.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
       }
     }
   ],
@@ -478,5 +633,125 @@
     "Dependencies are explicit and acyclic.",
     "No node calls a full AutoSci black-box workflow.",
     "Experiment-running nodes require bounded mode or human approval."
-  ]
+  ],
+  "parent_gate": {
+    "id": "G_SCIENTIFIC_RESUME_LIFECYCLE",
+    "evaluator": "evaluators/scientific/lifecycle_gate.py",
+    "summary_artifact": "artifacts/scientific/scientific_research_resume_v1/lifecycle_summary.json",
+    "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+    "requires_node_gates": true,
+    "requires_inspectable_artifact_tree": true,
+    "accepted_statuses": [
+      "passed",
+      "failed",
+      "inconclusive"
+    ]
+  },
+  "artifact_contract": {
+    "root_template": "artifacts/scientific/<job_id>",
+    "root": "artifacts/scientific/scientific_research_resume_v1",
+    "required_entries": [
+      "01_paper/",
+      "02_claims/",
+      "03_methods/",
+      "04_code_evidence/",
+      "05_ideas/",
+      "06_experiment_plan/",
+      "07_experiment_result/",
+      "08_verdict/",
+      "09_report/",
+      "10_memory_update/",
+      "lifecycle_summary.json",
+      "evidence.jsonl"
+    ],
+    "summary_artifact": "artifacts/scientific/scientific_research_resume_v1/lifecycle_summary.json",
+    "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+    "node_artifacts": {
+      "resume_gap_scan": {
+        "slot": "01_paper",
+        "path": "artifacts/scientific/scientific_research_resume_v1/01_paper/literature_discovery.v1.json",
+        "schema": "literature_discovery.v1"
+      },
+      "resume_claim_extract": {
+        "slot": "02_claims",
+        "path": "artifacts/scientific/scientific_research_resume_v1/02_claims/research_claims.v1.json",
+        "schema": "research_claims.v1"
+      },
+      "resume_method_extract": {
+        "slot": "03_methods",
+        "path": "artifacts/scientific/scientific_research_resume_v1/03_methods/research_method.v1.json",
+        "schema": "research_method.v1"
+      },
+      "resume_experiment_design": {
+        "slot": "06_experiment_plan",
+        "path": "artifacts/scientific/scientific_research_resume_v1/06_experiment_plan/experiment_plan.v1.json",
+        "schema": "experiment_plan.v1"
+      },
+      "resume_claim_verify": {
+        "slot": "08_verdict",
+        "path": "artifacts/scientific/scientific_research_resume_v1/08_verdict/claim_verdict.v1.json",
+        "schema": "claim_verdict.v1"
+      },
+      "resume_report_draft": {
+        "slot": "09_report",
+        "path": "artifacts/scientific/scientific_research_resume_v1/09_report/scientific_report.v1.json",
+        "schema": "scientific_report.v1"
+      },
+      "resume_memory_update": {
+        "slot": "10_memory_update",
+        "path": "artifacts/scientific/scientific_research_resume_v1/10_memory_update/research_memory_update.v1.json",
+        "schema": "research_memory_update.v1"
+      },
+      "resume_workflow_evolve": {
+        "slot": "10_memory_update",
+        "path": "artifacts/scientific/scientific_research_resume_v1/10_memory_update/workflow_evolution.v1.json",
+        "schema": "workflow_evolution.v1"
+      }
+    }
+  },
+  "resume_contract": {
+    "mode": "resume_from_existing_artifact_tree",
+    "skip_completed_nodes": true,
+    "completed_statuses": [
+      "passed",
+      "skipped_parent_passed"
+    ],
+    "rerun_statuses": [
+      "failed",
+      "inconclusive",
+      "missing_artifact",
+      "schema_invalid"
+    ],
+    "state_sources": [
+      "task_dag.state.json",
+      "lifecycle_summary.json",
+      "evidence.jsonl"
+    ],
+    "completed_node_detection": [
+      "node_results[node_id].status is passed",
+      "gate_results[node.gate].status is passed",
+      "typed evidence artifact exists and matches node.evidence_policy.expected_schema"
+    ],
+    "summary_artifact": "artifacts/scientific/scientific_research_resume_v1/lifecycle_summary.json",
+    "evidence_log": "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl",
+    "do_not_rerun_completed_nodes": true
+  },
+  "lifecycle_artifacts": {
+    "expected_tree": [
+      "artifacts/scientific/scientific_research_resume_v1/01_paper/",
+      "artifacts/scientific/scientific_research_resume_v1/02_claims/",
+      "artifacts/scientific/scientific_research_resume_v1/03_methods/",
+      "artifacts/scientific/scientific_research_resume_v1/04_code_evidence/",
+      "artifacts/scientific/scientific_research_resume_v1/05_ideas/",
+      "artifacts/scientific/scientific_research_resume_v1/06_experiment_plan/",
+      "artifacts/scientific/scientific_research_resume_v1/07_experiment_result/",
+      "artifacts/scientific/scientific_research_resume_v1/08_verdict/",
+      "artifacts/scientific/scientific_research_resume_v1/09_report/",
+      "artifacts/scientific/scientific_research_resume_v1/10_memory_update/",
+      "artifacts/scientific/scientific_research_resume_v1/lifecycle_summary.json",
+      "artifacts/scientific/scientific_research_resume_v1/evidence.jsonl"
+    ],
+    "human_inspection_root": "artifacts/scientific/scientific_research_resume_v1",
+    "node_result_contract": "Each node writes a typed evidence artifact and appends one evidence.jsonl entry."
+  }
 }
