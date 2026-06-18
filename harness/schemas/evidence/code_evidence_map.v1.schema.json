@@ -48,7 +48,7 @@
     },
     "mapping": {
       "type": "object",
-      "required": ["mapping_id", "claim_id", "repo_or_path", "files", "evidence_ids"],
+      "required": ["mapping_id", "claim_id", "repo_or_path", "files", "mapping_status", "relevance_label", "relevance_reason", "evidence_ids"],
       "additionalProperties": true,
       "properties": {
         "mapping_id": {"type": "string", "minLength": 1},
@@ -56,6 +56,9 @@
         "repo_or_path": {"type": "string", "minLength": 1},
         "files": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "execution_entrypoint": {"type": "string"},
+        "mapping_status": {"type": "string", "enum": ["mapped", "unknown"]},
+        "relevance_label": {"type": "string", "enum": ["direct", "indirect", "related", "unknown"]},
+        "relevance_reason": {"type": "string", "minLength": 1},
         "evidence_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
       }
     }
