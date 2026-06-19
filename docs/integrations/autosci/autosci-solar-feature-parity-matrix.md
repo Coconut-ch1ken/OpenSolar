@@ -33,10 +33,15 @@ TaskGraph node
 Evidence:
 
 - Route config: `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- Operator binding config: `harness/plugins/autosci/config/feature_operator_bindings.v1.json`
 - Bridge: `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- Operator smoke bridge: `harness/plugins/autosci/bin/autosci_operator_smoke.py`
 - Evidence ABI: `harness/schemas/evidence/autosci_feature_parity.v1.schema.json`
+- Operator smoke ABI: `harness/schemas/evidence/autosci_operator_smoke.v1.schema.json`
 - Gate: `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- Operator smoke gate: `harness/evaluators/scientific/autosci_operator_smoke_gate.py`
 - Local evidence: `harness/artifacts/autosci/phase19/parity_inventory.json`
+- Local operator smoke evidence: `harness/artifacts/autosci/operator-smoke/skillgen/autosci_operator_smoke.json`
 
 ## Coverage Semantics
 
@@ -93,6 +98,55 @@ fully executed without live evidence:
 - Browser-backed poster rendering and local web UI serving.
 - LaTeX compile and environment-specific publication checks.
 
+## Real Operator Smoke
+
+Phase 19 now includes a SkillGen-backed operator smoke that exercises real
+`autosci_bridge.py run --action ...` physical operator paths, then maps every
+native AutoSci skill to either executed local operator evidence, partial local
+evidence, or an approval-gated operator.
+
+Smoke input:
+
+- `harness/plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md`
+
+Core actions executed:
+
+| Action | Evidence schema | Gate state |
+|---|---|---|
+| `ingest_paper` | `research_paper.v1` | `passed` |
+| `analyze_paper` | `research_paper.v1` | `passed` |
+| `update_memory` | `research_memory_update.v1` | `passed` |
+| `update_graph` | `research_graph_update.v1` | `schema_only` |
+| `discover_literature` | `literature_discovery.v1` | `schema_only` |
+| `extract_claims` | `research_claims.v1` | `passed` |
+| `extract_methods` | `research_method.v1` | `passed` |
+| `map_code_evidence` | `code_evidence_map.v1` | `passed` |
+| `generate_ideas` | `idea_candidate.v1` | `passed` |
+| `evaluate_ideas` | `idea_evaluation.v1` | `passed` |
+| `design_experiment` | `experiment_plan.v1` | `passed` |
+| `run_experiment` | `experiment_result.v1` | `passed` |
+| `monitor_experiment` | `experiment_status.v1` | `passed` |
+| `verify_claim` | `claim_verdict.v1` | `passed` |
+| `write_report` | `scientific_report.v1` | `passed` |
+| `evolve_workflow` | `workflow_evolution.v1` | `passed` |
+
+Operator smoke result:
+
+| Metric | Value |
+|---|---:|
+| Native skill routes | 28 |
+| Physical operator bindings | 28 |
+| Completed route checks | 7 |
+| Partial route checks | 11 |
+| Approval-gated route checks | 10 |
+| Failed route checks | 0 |
+| Unbound route checks | 0 |
+| Core bridge actions executed | 16 |
+
+`research_graph_update.v1` and `literature_discovery.v1` are currently
+schema-only in this smoke because no dedicated deterministic gate exists for
+those two schemas yet.
+
 ## Verification
 
 ```bash
@@ -103,10 +157,19 @@ python3 harness/evaluators/scientific/autosci_feature_parity_gate.py \
 env PYTHONPATH=harness harness/bin/python3 -m pytest \
   harness/plugins/autosci/tests/test_phase19_parity_bridge.py \
   harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py
+harness/bin/python3 harness/plugins/autosci/bin/autosci_operator_smoke.py skillgen \
+  --out artifacts/autosci/operator-smoke/skillgen/autosci_operator_smoke.json
+python3 harness/evaluators/scientific/autosci_operator_smoke_gate.py \
+  harness/artifacts/autosci/operator-smoke/skillgen/autosci_operator_smoke.json
+env PYTHONPATH=harness harness/bin/python3 -m pytest \
+  harness/plugins/autosci/tests \
+  harness/tests/evaluators/scientific
 ```
 
 Observed result:
 
 - Bridge inventory: `native_skill_count=28`, `routed_count=28`, `missing_route_count=0`.
 - Gate: `passed` with warning that non-full routes must respect limitations.
-- Tests: `6 passed`.
+- Operator smoke: `bound_count=28`, `failed_count=0`, `unbound_count=0`, `core_action_count=16`.
+- Operator smoke gate: `passed` with warning that approval-gated operators were not externally executed.
+- Tests: `63 passed`.

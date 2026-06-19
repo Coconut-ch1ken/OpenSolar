@@ -38,6 +38,8 @@ model-driven or evidence-driven paths with unsupported deterministic guesses.
 | Phase 19 route parity config | ok | Added `harness/plugins/autosci/config/feature_parity_routes.v1.json` covering all 28 native AutoSci English skills. |
 | Phase 19 parity bridge | ok | Added `harness/plugins/autosci/bin/autosci_parity_bridge.py` to scan native skills and emit `autosci_feature_parity.v1` evidence. |
 | Phase 19 parity ABI/gate | ok | Added `harness/schemas/evidence/autosci_feature_parity.v1.schema.json` and `harness/evaluators/scientific/autosci_feature_parity_gate.py`. |
+| Phase 19 real operator binding | ok | Added `harness/plugins/autosci/config/feature_operator_bindings.v1.json` mapping every native skill to a physical operator binding. |
+| Phase 19 skillgen operator smoke | ok | Added `harness/plugins/autosci/bin/autosci_operator_smoke.py`, `autosci_operator_smoke.v1`, and smoke gate/tests. |
 | Phase 19 tests | ok | Added bridge and gate tests; targeted suite passes `6 passed`. |
 | Phase 19 matrix | ok | Added `docs/integrations/autosci/autosci-solar-feature-parity-matrix.md`. |
 
@@ -103,11 +105,18 @@ model-driven or evidence-driven paths with unsupported deterministic guesses.
 | File | Status | Purpose |
 |---|---|---|
 | `harness/plugins/autosci/config/feature_parity_routes.v1.json` | ok | Declarative Solar route map for every native AutoSci English skill. |
+| `harness/plugins/autosci/config/feature_operator_bindings.v1.json` | ok | Physical operator binding map for every native AutoSci English skill. |
 | `harness/plugins/autosci/bin/autosci_parity_bridge.py` | ok | Discovers AutoSci native skills and emits route parity evidence. |
+| `harness/plugins/autosci/bin/autosci_operator_smoke.py` | ok | Runs real AutoSci bridge actions against the SkillGen smoke paper and summarizes route/operator status. |
 | `harness/schemas/evidence/autosci_feature_parity.v1.schema.json` | ok | Evidence ABI for route parity inventory. |
+| `harness/schemas/evidence/autosci_operator_smoke.v1.schema.json` | ok | Evidence ABI for SkillGen-backed operator smoke results. |
 | `harness/evaluators/scientific/autosci_feature_parity_gate.py` | ok | Gate that fails on missing routes, bad counts, or false full-coverage claims. |
+| `harness/evaluators/scientific/autosci_operator_smoke_gate.py` | ok | Gate that fails on unbound/failed operator routes and enforces gated side-effect honesty. |
+| `harness/plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md` | ok | Committed SkillGen smoke paper fixture. |
 | `harness/plugins/autosci/tests/test_phase19_parity_bridge.py` | ok | Tests full inventory, single-skill route output, and unmapped future-skill failure. |
+| `harness/plugins/autosci/tests/test_phase19_operator_smoke.py` | ok | Tests SkillGen smoke execution, all operator bindings, and generated smoke gate acceptance. |
 | `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py` | ok | Tests honest mixed coverage, missing route rejection, and full+approval misreport rejection. |
+| `harness/tests/evaluators/scientific/test_autosci_operator_smoke_gate.py` | ok | Tests mixed completed/partial/gated smoke acceptance and unbound rejection. |
 | `docs/integrations/autosci/autosci-solar-feature-parity-matrix.md` | ok | Human-readable matrix and verification record. |
 
 ## Phase 19 Verification
@@ -118,13 +127,19 @@ model-driven or evidence-driven paths with unsupported deterministic guesses.
 | `python3 -m json.tool harness/schemas/evidence/autosci_feature_parity.v1.schema.json` | ok |
 | `python3 harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out artifacts/autosci/phase19/parity_inventory.json` | ok: 28 native, 28 routed, 0 missing, 7 full, 11 partial, 10 gated |
 | `python3 harness/evaluators/scientific/autosci_feature_parity_gate.py harness/artifacts/autosci/phase19/parity_inventory.json` | ok: passed with non-full route warning |
-| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_phase19_parity_bridge.py harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py` | ok: 6 passed |
+| `harness/bin/python3 harness/plugins/autosci/bin/autosci_operator_smoke.py skillgen --out artifacts/autosci/operator-smoke/skillgen/autosci_operator_smoke.json` | ok: 28 bound, 0 failed, 0 unbound, 16 core actions |
+| `python3 harness/evaluators/scientific/autosci_operator_smoke_gate.py harness/artifacts/autosci/operator-smoke/skillgen/autosci_operator_smoke.json` | ok: passed with approval-gated warning |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_phase19_parity_bridge.py harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py` | ok: 6 passed before operator-smoke expansion |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_phase19_operator_smoke.py harness/tests/evaluators/scientific/test_autosci_operator_smoke_gate.py` | ok: 4 passed |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests harness/tests/evaluators/scientific` | ok: 63 passed |
 
 ## Phase 19 Acceptance State
 
 | Criterion | Status | Evidence |
 |---|---|---|
 | Every discovered AutoSci native English skill has a Solar route | ok | `missing_route_count=0` in `harness/artifacts/autosci/phase19/parity_inventory.json`. |
+| Every discovered AutoSci native English skill has a physical operator binding | ok | `bound_count=28`, `unbound_count=0` in `harness/artifacts/autosci/operator-smoke/skillgen/autosci_operator_smoke.json`. |
+| SkillGen paper runs through real core bridge operators | ok | 16 core actions executed; 14 gate-passed and 2 schema-only where no deterministic gate exists. |
 | Route status is truthful, not overclaimed | ok | Gate rejects `full` routes that still require approval and warns on partial/gated routes. |
 | Side effects remain governed | ok | Config marks reset/edit/setup/remote/email/browser/GitHub Actions/compile paths as approval-gated. |
 | Future AutoSci skill drift is detectable | ok | Bridge test adds `new-native-skill` and verifies missing-route failure. |
