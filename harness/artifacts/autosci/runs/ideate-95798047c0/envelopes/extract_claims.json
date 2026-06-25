@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "paper_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+  },
+  "mode": "fixture",
+  "node_id": "node-extract-claims",
+  "output_dir": "artifacts/autosci/runs/ideate-95798047c0",
+  "outputs": {
+    "evidence_jsonl": "artifacts/autosci/runs/ideate-95798047c0/evidence.jsonl",
+    "evidence_payload_path": "artifacts/autosci/runs/ideate-95798047c0/research_claims.json",
+    "result_path": "artifacts/autosci/runs/ideate-95798047c0/extract_claims.result.json"
+  },
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "task_id": "task-autosci-skillgen-extract_claims"
+}

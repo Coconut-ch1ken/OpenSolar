@@ -1,0 +1,64 @@
+{
+  "action": "compile_paper",
+  "after_artifacts": [],
+  "after_ready": false,
+  "allowlist_evidence": [],
+  "allowlist_ready": false,
+  "approval_ref": "",
+  "approval_state": "approval_required",
+  "approved": false,
+  "before_artifacts": [],
+  "before_ready": false,
+  "execution_verified": false,
+  "missing": [
+    "approval_ref",
+    "allowlist_evidence",
+    "before_artifacts",
+    "runtime_evidence",
+    "after_artifacts"
+  ],
+  "ready_for_execution": false,
+  "runtime_evidence": [],
+  "runtime_ready": false,
+  "schema": "autosci_approval_contract.v1",
+  "semantic_runtime": {
+    "action": "compile_paper",
+    "checks": [
+      {
+        "check": "approval_contract_execution_verified",
+        "detail": "Approval contract path-level verification is incomplete.",
+        "status": "error"
+      },
+      {
+        "check": "runtime_records_loaded",
+        "detail": "0 runtime record(s) loaded.",
+        "status": "error"
+      },
+      {
+        "check": "compile_exit_ok",
+        "detail": "False",
+        "status": "error"
+      },
+      {
+        "check": "compiled_pdf_verified",
+        "detail": "False",
+        "status": "error"
+      }
+    ],
+    "detail": {
+      "compile_exit_ok": false,
+      "compiled_pdf_verified": false,
+      "errors": [],
+      "evidence_ids": [],
+      "records_loaded": 0
+    },
+    "schema": "autosci_runtime_semantic_verification.v1",
+    "status": "incomplete",
+    "verified": false
+  },
+  "side_effects": [
+    "tex_executor_execution",
+    "source_auto_fix",
+    "pdf_generation"
+  ]
+}

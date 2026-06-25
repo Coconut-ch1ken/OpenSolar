@@ -660,6 +660,21 @@ def operator_score(operator: dict[str, Any], node: dict[str, Any], selector: Any
     tier_bias = {"low": 3, "medium": 2, "high": 1}
     score += tier_bias.get(str(operator.get("cost_tier") or "").lower(), 0)
     score += tier_bias.get(str(operator.get("latency_tier") or "").lower(), 0)
+    pool = operator.get("builder_pool") if isinstance(operator.get("builder_pool"), dict) else {}
+    group = str(pool.get("group") or "").strip()
+    if group:
+        try:
+            if str(HARNESS_DIR / "lib") not in sys.path:
+                sys.path.insert(0, str(HARNESS_DIR / "lib"))
+            import concurrency_policy  # type: ignore
+
+            score += max(0, min(100, int(concurrency_policy.pool_group_priority(group)))) // 4
+        except Exception:
+            pass
+        try:
+            score += max(0, min(100, int(pool.get("priority") or 0))) // 3
+        except Exception:
+            pass
     return score
 
 

@@ -21,6 +21,12 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
         reasons.append("outputs.result must be an object")
         return finish(payload, reasons, warnings, path=path)
     require_non_empty_list(result.get("metrics"), "outputs.result.metrics", reasons)
+    if not str(result.get("execution_mode") or payload.get("inputs", {}).get("execution_mode") or "").strip():
+        reasons.append("outputs.result.execution_mode must be present")
+    if not str(result.get("command_run") or result.get("command") or "").strip():
+        reasons.append("outputs.result.command_run must record the executed or simulated command")
+    if not isinstance(result.get("logs"), list) or not result.get("logs"):
+        reasons.append("outputs.result.logs must capture run logs or diagnostics")
     if not has_any_evidence_ids(result.get("evidence_ids")):
         reasons.append("outputs.result.evidence_ids must contain at least one id")
     if result.get("outcome") in {"failed", "inconclusive"} and not limitations(payload):

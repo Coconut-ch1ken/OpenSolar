@@ -1,7 +1,7 @@
 {
   "schema": "research_graph_update.v1",
   "task_id": "task.phase1.sample.graph",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.graph_update",
   "status": "completed",
   "inputs": {
@@ -21,7 +21,7 @@
   "artifacts": [
     {
       "type": "graph_delta",
-      "path": "artifacts/autosci/fixtures/research_graph_update.json"
+      "path": "artifacts/scientific/fixtures/research_graph_update.json"
     }
   ],
   "provenance": {

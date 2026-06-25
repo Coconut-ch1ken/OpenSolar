@@ -1,0 +1,87 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.txt",
+      "type": "extracted_pdf_text"
+    },
+    {
+      "path": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+      "type": "synthetic_latex"
+    },
+    {
+      "path": "artifacts/autosci/runs/solar-pdf-ingest-smoke-2/research_paper.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "paper_path": "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf"
+  },
+  "limitations": [
+    "arXiv source fetch skipped for 2401.00003: network fetch disabled"
+  ],
+  "node_id": "node-ingest-paper",
+  "outputs": {
+    "paper": {
+      "abstract": "This PDF verifies Solar harness offline source preparation.",
+      "identifiers": {
+        "arxiv": "2401.00003",
+        "source_fetch_status": "skipped_network_disabled",
+        "source_prepare_status": "completed"
+      },
+      "paper_id": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "parse_status": "parsed",
+      "preparation": {
+        "abstract_excerpt": "This PDF verifies Solar harness offline source preparation.",
+        "artifacts": [
+          {
+            "path": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.txt",
+            "type": "extracted_pdf_text"
+          },
+          {
+            "path": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+            "type": "synthetic_latex"
+          }
+        ],
+        "arxiv_id": "2401.00003",
+        "canonical_ingest_path": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+        "extracted_text_path": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.txt",
+        "ingest_format": "tex",
+        "original_format": "pdf",
+        "prepared_path": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+        "source_fetch_status": "skipped_network_disabled",
+        "source_path": "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf",
+        "status": "completed",
+        "title": "Solar Harness PDF Smoke",
+        "warnings": [
+          "arXiv source fetch skipped for 2401.00003: network fetch disabled"
+        ]
+      },
+      "sections": [
+        {
+          "section_id": "abstract",
+          "source_anchor": "2401-00003.tex#abstract",
+          "text": "This PDF verifies Solar harness offline source preparation.",
+          "title": "Abstract"
+        },
+        {
+          "section_id": "recovered-text",
+          "source_anchor": "2401-00003.tex#recovered-text",
+          "text": "Solar Harness PDF Smoke arXiv: 2401.00003 Abstract This PDF verifies Solar harness offline source preparation. 1. Method The pipeline writes synthetic TeX fallback artifacts.",
+          "title": "Recovered Text"
+        }
+      ],
+      "source_ref": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+      "source_type": "latex",
+      "title": "Solar Harness PDF Smoke"
+    }
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-22T19:28:53Z"
+  },
+  "schema": "research_paper.v1",
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "status": "completed",
+  "task_id": "task-autosci-skillgen-ingest_paper"
+}

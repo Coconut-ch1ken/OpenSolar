@@ -1,0 +1,336 @@
+[
+  {
+    "path": "/Users/jamesyuan/.codex/worktrees/05ae/OpenSolar",
+    "exists": true,
+    "status": [
+      "## HEAD (no branch)",
+      " M .gitignore",
+      " M AGENTS.md",
+      " M README.md",
+      " M core/agent-daemon/mail-agent.sh",
+      " M core/listeners/message-executor.ts",
+      " M harness/config/physical-operators.json",
+      " M harness/lib/multi_task_runner.py",
+      " M harness/lib/unified_selector.py",
+      " M harness/tests/test_physical_operator_logical_selector.py",
+      " M harness/tests/test_pm_dispatch.py",
+      " M harness/tests/test_unified_selector_binding_policy.py",
+      " M harness/tools/multi_task_runner.py",
+      " M harness/tools/pm_dispatch.py",
+      "?? core/harness/",
+      "?? docs/codex-core-entrypoints.md",
+      "?? scripts/solar-codex-intake.sh",
+      "?? tests/core-harness-client.test.ts"
+    ],
+    "modified": [
+      ".gitignore",
+      "AGENTS.md",
+      "README.md",
+      "core/agent-daemon/mail-agent.sh",
+      "core/listeners/message-executor.ts",
+      "harness/config/physical-operators.json",
+      "harness/lib/multi_task_runner.py",
+      "harness/lib/unified_selector.py",
+      "harness/tests/test_physical_operator_logical_selector.py",
+      "harness/tests/test_pm_dispatch.py",
+      "harness/tests/test_unified_selector_binding_policy.py",
+      "harness/tools/multi_task_runner.py",
+      "harness/tools/pm_dispatch.py"
+    ],
+    "untracked": [
+      "core/harness/harness-client.ts",
+      "core/harness/index.ts",
+      "core/harness/markdown-envelope.ts",
+      "core/harness/types.ts",
+      "docs/codex-core-entrypoints.md",
+      "scripts/solar-codex-intake.sh",
+      "tests/core-harness-client.test.ts"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/.codex/worktrees/a0ad/OpenSolar",
+    "exists": true,
+    "status": [
+      "## codex/openjiuwen-solar-local-snapshot-20260609",
+      "?? codex-recovery/"
+    ],
+    "modified": [],
+    "untracked": [
+      "codex-recovery/AI4Research-B-threads.md"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/builder",
+    "exists": true,
+    "status": [
+      "## harness-builder-20260609-111128",
+      " M .DS_Store",
+      " M harness/lib/ai_influence_youtube_report/pane_surface.py",
+      " M harness/lib/ai_influence_youtube_report/status_surface.py",
+      " M harness/scripts/tech_hotspot_radar.py",
+      " M harness/tests/test_ai_influence_youtube_report_pane_surface.py",
+      " M harness/tests/test_ai_influence_youtube_report_status_surface.py",
+      " M harness/tests/test_report_validation.py",
+      " M harness/tools/report_evidence.py",
+      " M harness/tools/report_validation.py",
+      "?? .worktrees/",
+      "?? harness/lib/ai_influence_youtube_report/__pycache__/",
+      "?? harness/tests/test_report_deep_verifier_repair.py",
+      "?? harness/tools/__pycache__/"
+    ],
+    "modified": [
+      ".DS_Store",
+      "harness/lib/ai_influence_youtube_report/pane_surface.py",
+      "harness/lib/ai_influence_youtube_report/status_surface.py",
+      "harness/scripts/tech_hotspot_radar.py",
+      "harness/tests/test_ai_influence_youtube_report_pane_surface.py",
+      "harness/tests/test_ai_influence_youtube_report_status_surface.py",
+      "harness/tests/test_report_validation.py",
+      "harness/tools/report_evidence.py",
+      "harness/tools/report_validation.py"
+    ],
+    "untracked": [
+      ".worktrees/builder/",
+      "harness/lib/ai_influence_youtube_report/__pycache__/pane_surface.cpython-314.pyc",
+      "harness/lib/ai_influence_youtube_report/__pycache__/status_surface.cpython-314.pyc",
+      "harness/tests/test_report_deep_verifier_repair.py",
+      "harness/tools/__pycache__/report_evidence.cpython-314.pyc",
+      "harness/tools/__pycache__/report_ir.cpython-314.pyc",
+      "harness/tools/__pycache__/report_synthesis.cpython-314.pyc",
+      "harness/tools/__pycache__/report_validation.cpython-314.pyc"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/builder/.worktrees/builder",
+    "exists": true,
+    "status": [
+      "## harness-builder-20260619-123528",
+      " M .DS_Store",
+      "?? .worktrees/"
+    ],
+    "modified": [
+      ".DS_Store"
+    ],
+    "untracked": [
+      ".worktrees/builder/"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/builder/.worktrees/builder/.worktrees/builder",
+    "exists": true,
+    "status": [
+      "## harness-builder-20260619-123638",
+      " M .DS_Store"
+    ],
+    "modified": [
+      ".DS_Store"
+    ],
+    "untracked": []
+  },
+  {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/lab-builder-1",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-1-20260622-113319",
+      " M .DS_Store",
+      " M library/.DS_Store",
+      "?? .agents/"
+    ],
+    "modified": [
+      ".DS_Store",
+      "library/.DS_Store"
+    ],
+    "untracked": [
+      ".agents/skills/ask/SKILL.md",
+      ".agents/skills/check/SKILL.md",
+      ".agents/skills/daily-arxiv/SKILL.md",
+      ".agents/skills/discover/SKILL.md",
+      ".agents/skills/edit/SKILL.md",
+      ".agents/skills/exp-design/SKILL.md",
+      ".agents/skills/exp-eval/SKILL.md",
+      ".agents/skills/exp-pilot-eval/SKILL.md",
+      ".agents/skills/exp-pilot-run/SKILL.md",
+      ".agents/skills/exp-run/SKILL.md",
+      ".agents/skills/exp-status/SKILL.md",
+      ".agents/skills/ideate/SKILL.md",
+      ".agents/skills/ingest/SKILL.md",
+      ".agents/skills/init/SKILL.md",
+      ".agents/skills/novelty/SKILL.md",
+      ".agents/skills/paper-compile/SKILL.md",
+      ".agents/skills/paper-draft/SKILL.md",
+      ".agents/skills/paper-plan/SKILL.md",
+      ".agents/skills/poster/SKILL.md",
+      ".agents/skills/prefill/SKILL.md",
+      ".agents/skills/rebuttal/SKILL.md",
+      ".agents/skills/refine/SKILL.md",
+      ".agents/skills/research/SKILL.md",
+      ".agents/skills/reset/SKILL.md",
+      ".agents/skills/review/SKILL.md",
+      ".agents/skills/setup/SKILL.md",
+      ".agents/skills/survey/SKILL.md",
+      ".agents/skills/visualize/SKILL.md"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/lab-builder-2",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-2-20260622-113319",
+      " M .DS_Store",
+      "?? .agents/"
+    ],
+    "modified": [
+      ".DS_Store"
+    ],
+    "untracked": [
+      ".agents/skills/ask/SKILL.md",
+      ".agents/skills/check/SKILL.md",
+      ".agents/skills/daily-arxiv/SKILL.md",
+      ".agents/skills/discover/SKILL.md",
+      ".agents/skills/edit/SKILL.md",
+      ".agents/skills/exp-design/SKILL.md",
+      ".agents/skills/exp-eval/SKILL.md",
+      ".agents/skills/exp-pilot-eval/SKILL.md",
+      ".agents/skills/exp-pilot-run/SKILL.md",
+      ".agents/skills/exp-run/SKILL.md",
+      ".agents/skills/exp-status/SKILL.md",
+      ".agents/skills/ideate/SKILL.md",
+      ".agents/skills/ingest/SKILL.md",
+      ".agents/skills/init/SKILL.md",
+      ".agents/skills/novelty/SKILL.md",
+      ".agents/skills/paper-compile/SKILL.md",
+      ".agents/skills/paper-draft/SKILL.md",
+      ".agents/skills/paper-plan/SKILL.md",
+      ".agents/skills/poster/SKILL.md",
+      ".agents/skills/prefill/SKILL.md",
+      ".agents/skills/rebuttal/SKILL.md",
+      ".agents/skills/refine/SKILL.md",
+      ".agents/skills/research/SKILL.md",
+      ".agents/skills/reset/SKILL.md",
+      ".agents/skills/review/SKILL.md",
+      ".agents/skills/setup/SKILL.md",
+      ".agents/skills/survey/SKILL.md",
+      ".agents/skills/visualize/SKILL.md"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/lab-builder-3",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-3-20260622-113319",
+      " M .DS_Store",
+      "?? .agents/"
+    ],
+    "modified": [
+      ".DS_Store"
+    ],
+    "untracked": [
+      ".agents/skills/ask/SKILL.md",
+      ".agents/skills/check/SKILL.md",
+      ".agents/skills/daily-arxiv/SKILL.md",
+      ".agents/skills/discover/SKILL.md",
+      ".agents/skills/edit/SKILL.md",
+      ".agents/skills/exp-design/SKILL.md",
+      ".agents/skills/exp-eval/SKILL.md",
+      ".agents/skills/exp-pilot-eval/SKILL.md",
+      ".agents/skills/exp-pilot-run/SKILL.md",
+      ".agents/skills/exp-run/SKILL.md",
+      ".agents/skills/exp-status/SKILL.md",
+      ".agents/skills/ideate/SKILL.md",
+      ".agents/skills/ingest/SKILL.md",
+      ".agents/skills/init/SKILL.md",
+      ".agents/skills/novelty/SKILL.md",
+      ".agents/skills/paper-compile/SKILL.md",
+      ".agents/skills/paper-draft/SKILL.md",
+      ".agents/skills/paper-plan/SKILL.md",
+      ".agents/skills/poster/SKILL.md",
+      ".agents/skills/prefill/SKILL.md",
+      ".agents/skills/rebuttal/SKILL.md",
+      ".agents/skills/refine/SKILL.md",
+      ".agents/skills/research/SKILL.md",
+      ".agents/skills/reset/SKILL.md",
+      ".agents/skills/review/SKILL.md",
+      ".agents/skills/setup/SKILL.md",
+      ".agents/skills/survey/SKILL.md",
+      ".agents/skills/visualize/SKILL.md"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/lab-builder-4",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-4-20260622-113319",
+      " M .DS_Store",
+      "?? .agents/"
+    ],
+    "modified": [
+      ".DS_Store"
+    ],
+    "untracked": [
+      ".agents/skills/ask/SKILL.md",
+      ".agents/skills/check/SKILL.md",
+      ".agents/skills/daily-arxiv/SKILL.md",
+      ".agents/skills/discover/SKILL.md",
+      ".agents/skills/edit/SKILL.md",
+      ".agents/skills/exp-design/SKILL.md",
+      ".agents/skills/exp-eval/SKILL.md",
+      ".agents/skills/exp-pilot-eval/SKILL.md",
+      ".agents/skills/exp-pilot-run/SKILL.md",
+      ".agents/skills/exp-run/SKILL.md",
+      ".agents/skills/exp-status/SKILL.md",
+      ".agents/skills/ideate/SKILL.md",
+      ".agents/skills/ingest/SKILL.md",
+      ".agents/skills/init/SKILL.md",
+      ".agents/skills/novelty/SKILL.md",
+      ".agents/skills/paper-compile/SKILL.md",
+      ".agents/skills/paper-draft/SKILL.md",
+      ".agents/skills/paper-plan/SKILL.md",
+      ".agents/skills/poster/SKILL.md",
+      ".agents/skills/prefill/SKILL.md",
+      ".agents/skills/rebuttal/SKILL.md",
+      ".agents/skills/refine/SKILL.md",
+      ".agents/skills/research/SKILL.md",
+      ".agents/skills/reset/SKILL.md",
+      ".agents/skills/review/SKILL.md",
+      ".agents/skills/setup/SKILL.md",
+      ".agents/skills/survey/SKILL.md",
+      ".agents/skills/visualize/SKILL.md"
+    ]
+  },
+  {
+    "path": "/Users/jamesyuan/.codex/worktrees/a0ad/OpenSolar/.worktrees/lab-builder-1",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-1-20260608-224644"
+    ],
+    "modified": [],
+    "untracked": []
+  },
+  {
+    "path": "/Users/jamesyuan/.codex/worktrees/a0ad/OpenSolar/.worktrees/lab-builder-2",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-2-20260608-224644"
+    ],
+    "modified": [],
+    "untracked": []
+  },
+  {
+    "path": "/Users/jamesyuan/.codex/worktrees/a0ad/OpenSolar/.worktrees/lab-builder-3",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-3-20260608-224644"
+    ],
+    "modified": [],
+    "untracked": []
+  },
+  {
+    "path": "/Users/jamesyuan/.codex/worktrees/a0ad/OpenSolar/.worktrees/lab-builder-4",
+    "exists": true,
+    "status": [
+      "## harness-lab-builder-4-20260608-224644"
+    ],
+    "modified": [],
+    "untracked": []
+  }
+]

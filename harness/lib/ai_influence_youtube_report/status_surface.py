@@ -22,8 +22,16 @@ def build_status_surface(run: dict[str, Any]) -> dict[str, Any]:
         "validator": run.get("validator", {}),
         "archive": run.get("archive", {}),
         "blocked_reason": run.get("blocked_reason", ""),
+        "blocked_reasons": run.get("blocked_reasons") or ([run.get("blocked_reason")] if run.get("blocked_reason") else []),
         "capability_usage": run.get("capability_usage", []),
         "artifacts": run.get("artifacts", []),
+        "epic": run.get("epic", {}),
+        "child_sprints": run.get("child_sprints", []),
+        "chapter_state": run.get("chapter_state", {}),
+        "proof": run.get("proof", {}),
+        "repair": run.get("repair", {}),
+        "quality": run.get("quality") or run.get("quality_score", {}),
+        "sidecar_refs": run.get("sidecar_refs") or run.get("validation_sidecars", []),
     }
     _assert_no_forbidden(payload)
     return payload

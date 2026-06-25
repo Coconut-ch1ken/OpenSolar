@@ -1,0 +1,42 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/verify_claim/verify_claim.evidence.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "claim_id": "claim-001",
+    "experiment_result": "plugins/autosci/tests/fixtures/sample_autosci_raw_experiment_result.json"
+  },
+  "limitations": [
+    "fixture-mode verdict; not a real scientific claim verification"
+  ],
+  "node_id": "node-verify-claim",
+  "outputs": {
+    "verdicts": [
+      {
+        "basis": "Fixture run wrote the expected bridge artifacts.",
+        "claim_id": "claim-001",
+        "confidence": 0.8,
+        "evidence_ids": [
+          "evidence:autosci-fixture-result",
+          "evidence:autosci-fixture-ledger"
+        ],
+        "limitations": [
+          "fixture-mode verdict; not a real scientific claim verification"
+        ],
+        "verdict": "supported"
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-17T16:13:41Z"
+  },
+  "schema": "claim_verdict.v1",
+  "sprint_id": "sprint-autosci-phase4",
+  "status": "completed",
+  "task_id": "task-autosci-verdict-fixture"
+}

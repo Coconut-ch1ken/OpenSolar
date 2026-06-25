@@ -25,10 +25,34 @@ TaskGraph node
 | Native AutoSci skills scanned | 28 |
 | Solar routes configured | 28 |
 | Missing routes | 0 |
-| Full route coverage | 7 |
-| Partial route coverage | 11 |
+| Full route coverage | 0 |
+| Partial route coverage | 18 |
 | Approval-gated route coverage | 10 |
 | Blocked routes | 0 |
+
+## Audit-Adjusted Runtime Completion
+
+The 2026-06-25 migrated runtime audit at
+`docs/integrations/autosci/audit/migrated-autosci-parity-audit-2026-06-25.md`
+found that the migrated runtime is **not full parity**. In particular, SkillGen
+PDF ingestion failed semantic validation, integrated `$research` did not run an
+end-to-end lifecycle, experiment deploy used fixture evidence, and paper compile
+did not produce a PDF.
+
+| Runtime metric | Value |
+|---|---:|
+| Final runtime verdict | failed |
+| Native full runtime stages | 0 |
+| Native partial runtime stages | 5 |
+| Gated unexecuted stages | 4 |
+| Fixture-only stages | 1 |
+| Schema-only stages | 5 |
+| Failed stages | 4 |
+| Missing stages | 4 |
+
+Consequently, `coverage_status=full` is currently not used in the route config.
+Routes remain configured and bound, but all non-gated routes are classified as
+`partial` until source-grounded, non-fixture runtime evidence proves otherwise.
 
 Evidence:
 
@@ -59,28 +83,28 @@ Evidence:
 | `/ask` | `cap.research-memory-update` | `ScientificMemoryUpdater` | `ask_wiki` | `research_memory_update.v1` | `partial` | `none` |
 | `/check` | `cap.research-workflow-evolve` | `ScientificWorkflowEvolver` | `check_wiki_health` | `workflow_evolution.v1` | `partial` | `none` |
 | `/daily-arxiv` | `cap.research-literature-discover` | `ScientificLiteratureDiscoverer` | `daily_arxiv_prepare_finalize` | `literature_discovery.v1` | `gated` | `approval_required` |
-| `/discover` | `cap.research-literature-discover` | `ScientificLiteratureDiscoverer` | `discover_literature` | `literature_discovery.v1` | `full` | `none` |
+| `/discover` | `cap.research-literature-discover` | `ScientificLiteratureDiscoverer` | `discover_literature` | `literature_discovery.v1` | `partial` | `none` |
 | `/edit` | `cap.research-memory-update` | `ScientificMemoryUpdater` | `edit_wiki_plan` | `research_memory_update.v1` | `gated` | `approval_required` |
-| `/exp-design` | `cap.research-experiment-design` | `ScientificExperimentDesigner` | `design_experiment` | `experiment_plan.v1` | `full` | `none` |
+| `/exp-design` | `cap.research-experiment-design` | `ScientificExperimentDesigner` | `design_experiment` | `experiment_plan.v1` | `partial` | `dry_run_only` |
 | `/exp-eval` | `cap.research-claim-verify` | `ScientificClaimVerifier` | `verify_claim` | `claim_verdict.v1` | `partial` | `dry_run_only` |
 | `/exp-pilot-eval` | `cap.research-claim-verify` | `ScientificClaimVerifier` | `evaluate_pilot_result` | `claim_verdict.v1` | `partial` | `dry_run_only` |
 | `/exp-pilot-run` | `cap.research-experiment-run` | `ScientificExperimentRunner` | `run_pilot_experiment` | `experiment_result.v1` | `gated` | `approval_required` |
 | `/exp-run` | `cap.research-experiment-run` | `ScientificExperimentRunner` | `run_experiment` | `experiment_result.v1` | `gated` | `approval_required` |
-| `/exp-status` | `cap.research-experiment-monitor` | `ScientificExperimentMonitor` | `monitor_experiment` | `experiment_status.v1` | `full` | `none` |
-| `/ideate` | `cap.research-idea-generate` | `ScientificIdeaGenerator` | `generate_ideas` | `idea_candidate.v1` | `full` | `dry_run_only` |
-| `/ingest` | `cap.research-paper-ingest` | `ScientificPaperIngestor` | `ingest_paper` | `research_paper.v1` | `full` | `dry_run_only` |
+| `/exp-status` | `cap.research-experiment-monitor` | `ScientificExperimentMonitor` | `monitor_experiment` | `experiment_status.v1` | `partial` | `none` |
+| `/ideate` | `cap.research-idea-generate` | `ScientificIdeaGenerator` | `generate_ideas` | `idea_candidate.v1` | `partial` | `dry_run_only` |
+| `/ingest` | `cap.research-paper-ingest` | `ScientificPaperIngestor` | `ingest_paper` | `research_paper.v1` | `partial` | `dry_run_only` |
 | `/init` | `cap.research-literature-discover` | `ScientificLiteratureDiscoverer` | `init_sources` | `literature_discovery.v1` | `partial` | `dry_run_only` |
 | `/novelty` | `cap.research-idea-evaluate` | `ScientificIdeaEvaluator` | `evaluate_ideas` | `idea_evaluation.v1` | `partial` | `dry_run_only` |
 | `/paper-compile` | `cap.research-publication-produce` | `ScientificPublicationProducer` | `compile_paper` | `publication_bundle.v1` | `gated` | `approval_required` |
-| `/paper-draft` | `cap.research-report-draft` | `ScientificReportDrafter` | `write_report` | `scientific_report.v1` | `full` | `dry_run_only` |
-| `/paper-plan` | `cap.research-report-plan` | `ScientificReportPlanner` | `plan_report` | `scientific_report.v1` | `full` | `dry_run_only` |
+| `/paper-draft` | `cap.research-report-draft` | `ScientificReportDrafter` | `write_report` | `scientific_report.v1` | `partial` | `dry_run_only` |
+| `/paper-plan` | `cap.research-report-plan` | `ScientificReportPlanner` | `plan_report` | `scientific_report.v1` | `partial` | `dry_run_only` |
 | `/poster` | `cap.research-publication-produce` | `ScientificPublicationProducer` | `build_poster` | `publication_bundle.v1` | `gated` | `approval_required` |
 | `/prefill` | `cap.research-memory-update` | `ScientificMemoryUpdater` | `prefill_foundations` | `research_memory_update.v1` | `partial` | `dry_run_only` |
 | `/rebuttal` | `cap.research-publication-produce` | `ScientificPublicationProducer` | `draft_rebuttal` | `publication_bundle.v1` | `partial` | `dry_run_only` |
 | `/refine` | `cap.research-workflow-evolve` | `ScientificWorkflowEvolver` | `refine_artifact` | `workflow_evolution.v1` | `gated` | `approval_required` |
 | `/research` | `cap.research-workflow-evolve` | `ScientificWorkflowEvolver` | `run_research_lifecycle` | `workflow_evolution.v1` | `partial` | `approval_required` |
 | `/reset` | `cap.research-workflow-evolve` | `ScientificWorkflowEvolver` | `reset_plan` | `workflow_evolution.v1` | `gated` | `approval_required` |
-| `/review` | `cap.research-claim-verify` | `ScientificClaimVerifier` | `review_artifact` | `claim_verdict.v1` | `partial` | `dry_run_only` |
+| `/review` | `cap.research-artifact-review` | `ScientificArtifactReviewer` | `review_artifact` | `artifact_review.v1` | `partial` | `dry_run_only` |
 | `/setup` | `cap.research-workflow-evolve` | `ScientificWorkflowEvolver` | `setup_status` | `workflow_evolution.v1` | `gated` | `approval_required` |
 | `/survey` | `cap.research-report-plan` | `ScientificReportPlanner` | `write_survey` | `scientific_report.v1` | `partial` | `dry_run_only` |
 | `/visualize` | `cap.research-graph-update` | `ScientificGraphUpdater` | `visualize_graph` | `research_graph_update.v1` | `gated` | `approval_required` |
@@ -136,8 +160,8 @@ Operator smoke result:
 |---|---:|
 | Native skill routes | 28 |
 | Physical operator bindings | 28 |
-| Completed route checks | 7 |
-| Partial route checks | 11 |
+| Completed route checks | 0 |
+| Partial route checks | 18 |
 | Approval-gated route checks | 10 |
 | Failed route checks | 0 |
 | Unbound route checks | 0 |
@@ -170,6 +194,6 @@ Observed result:
 
 - Bridge inventory: `native_skill_count=28`, `routed_count=28`, `missing_route_count=0`.
 - Gate: `passed` with warning that non-full routes must respect limitations.
-- Operator smoke: `bound_count=28`, `failed_count=0`, `unbound_count=0`, `core_action_count=16`.
+- Operator smoke: `bound_count=28`, `completed_count=0`, `partial_count=18`, `gated_count=10`, `failed_count=0`, `unbound_count=0`, `core_action_count=16`.
 - Operator smoke gate: `passed` with warning that approval-gated operators were not externally executed.
-- Tests: `63 passed`.
+- Latest focused regression after the audit update: `harness/plugins/autosci/tests` passes 74 tests and `harness/tests/evaluators/scientific` passes 52 tests.

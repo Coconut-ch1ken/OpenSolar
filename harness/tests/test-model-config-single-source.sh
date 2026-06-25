@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HARNESS_DIR="${HARNESS_DIR:-$HOME/.solar/harness}"
+SOURCE_HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$SOURCE_HARNESS_DIR}}"
 
 pass=0
 fail=0
@@ -30,6 +31,7 @@ assert_eq() {
   fi
 }
 
+assert_eq "$(python3 "$HARNESS_DIR/lib/model_registry.py" normalize codex)" "codex-gpt-5.5" "registry resolves codex to Codex GPT-5.5"
 assert_eq "$(python3 "$HARNESS_DIR/lib/model_registry.py" normalize opus)" "claude-opus" "registry resolves opus to Claude Opus"
 assert_eq "$(python3 "$HARNESS_DIR/lib/model_registry.py" normalize anthropic-sonnet)" "claude-sonnet" "registry resolves explicit Anthropic Sonnet"
 assert_eq "$(python3 "$HARNESS_DIR/lib/model_registry.py" normalize sonnet)" "zhipu-glm-4.7" "registry preserves bare sonnet as Zhipu lab alias"
@@ -40,25 +42,25 @@ else
 fi
 
 matrix="$(solar_lab_builder_matrix)"
-assert_contains "$matrix" "anthropic-sonnet" "config-backed matrix includes explicit Anthropic Sonnet alias"
+assert_eq "$matrix" "codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5" "config-backed matrix defaults to Codex GPT-5.5"
 
 label="$(solar_lab_builder_matrix_label "$matrix")"
-assert_contains "$label" "GLM-5.1" "matrix label shows GLM"
-assert_contains "$label" "Claude Sonnet" "matrix label shows Claude Sonnet"
+assert_contains "$label" "Codex GPT-5.5" "matrix label shows Codex GPT-5.5"
 
 slot4="$(
   SOLAR_BUILDER_SLOT=lab-builder-4 \
   bash "$HARNESS_DIR/lib/persona-config.sh" --print-config lab-builder
 )"
-assert_contains "$slot4" "DISPLAY_MODEL='Claude Sonnet (Anthropic, lab-builder-4)'" "slot 4 reads config and resolves to native Claude Sonnet"
-assert_contains "$slot4" "BASE_URL=''" "native Claude Sonnet does not use Zhipu/DeepSeek gateway"
-assert_contains "$slot4" "MODEL_ID='claude-sonnet'" "slot 4 exposes registry model id"
+assert_contains "$slot4" "DISPLAY_MODEL='Codex GPT-5.5 (Codex) (lab-builder-4)'" "slot 4 reads config and resolves to Codex GPT-5.5"
+assert_contains "$slot4" "BASE_URL=''" "Codex does not use Zhipu/DeepSeek gateway"
+assert_contains "$slot4" "MODEL_ID='codex-gpt-5.5'" "slot 4 exposes registry model id"
+assert_contains "$slot4" "MODEL_PROVIDER='codex'" "slot 4 exposes Codex provider"
 
 slot1="$(
   SOLAR_BUILDER_SLOT=lab-builder-1 \
   bash "$HARNESS_DIR/lib/persona-config.sh" --print-config lab-builder
 )"
-assert_contains "$slot1" "MODEL_ID='zhipu-glm-5.1'" "slot 1 exposes GLM registry model id"
+assert_contains "$slot1" "MODEL_ID='codex-gpt-5.5'" "slot 1 exposes Codex GPT-5.5 registry model id"
 
 override="$(
   SOLAR_LAB_BUILDER_MODEL_MATRIX=glm,anthropic-sonnet \

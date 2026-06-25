@@ -1,7 +1,7 @@
 {
   "schema": "research_paper.v1",
   "task_id": "task.phase1.sample.paper",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.paper_ingest",
   "status": "completed",
   "inputs": {
@@ -31,7 +31,7 @@
   "artifacts": [
     {
       "type": "normalized_paper",
-      "path": "artifacts/autosci/fixtures/research_paper.json"
+      "path": "artifacts/scientific/fixtures/research_paper.json"
     }
   ],
   "provenance": {

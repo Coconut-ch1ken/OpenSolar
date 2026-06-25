@@ -1,0 +1,40 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/skillgen-phase9-redo-check/memory_update.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "paper_id": "paper-skillgen-redo",
+    "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+  },
+  "limitations": [
+    "Fixture proposes a memory update; it does not mutate wiki state."
+  ],
+  "node_id": "node-phase9-redo-memory-update",
+  "outputs": {
+    "changes": [
+      {
+        "confidence": 0.9,
+        "entity_id": "paper-skillgen-redo",
+        "entity_type": "paper",
+        "evidence_ids": [
+          "paper-skillgen-redo"
+        ],
+        "operation": "propose",
+        "path": "knowledge/research/papers/paper-skillgen-redo.md",
+        "summary": "Propose recording normalized metadata for SKILLGEN: Verified Inference-Time Agent Skill Synthesis."
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-18T18:48:13Z"
+  },
+  "schema": "research_memory_update.v1",
+  "sprint_id": "sprint-autosci-phase9-redo-check",
+  "status": "completed",
+  "task_id": "task-phase9-redo-memory-update"
+}

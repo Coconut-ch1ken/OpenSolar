@@ -83,6 +83,15 @@ def test_route_writes_single_skill_parity_evidence(tmp_path: Path) -> None:
     assert items[0]["side_effect_policy"] == "approval_required"
 
 
+def test_overclaimed_smoke_routes_are_marked_partial() -> None:
+    config = json.loads(ROUTE_CONFIG.read_text(encoding="utf-8"))
+    routes = {item["native_skill"]: item for item in config["routes"]}
+    for skill in ["exp-design", "exp-status", "ideate", "paper-draft", "paper-plan"]:
+        assert routes[skill]["coverage_status"] == "partial"
+        assert routes[skill]["backend_mode"] == "route_plan"
+        assert routes[skill]["limitations"]
+
+
 def test_inventory_fails_when_autosci_adds_unmapped_native_skill(tmp_path: Path) -> None:
     autosci_repo = make_autosci_fixture(tmp_path, extra_skill="new-native-skill")
     out = "artifacts/autosci/phase19/parity_missing.json"

@@ -1,0 +1,77 @@
+{
+  "action": "verify_claim",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/scientific/smoke/claim_verdict.partially_supported.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "claim_id": "claim-001",
+      "claims_evidence": "artifacts/scientific/smoke/research_claims.json",
+      "code_evidence": "artifacts/scientific/smoke/code_evidence_map.json",
+      "experiment_result": "plugins/autosci/tests/fixtures/partially_supported_experiment_result.json"
+    },
+    "limitations": [
+      "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation."
+    ],
+    "node_id": "node-verify-claim-partial",
+    "outputs": {
+      "verdicts": [
+        {
+          "basis": "Verdict derived from raw fixture experiment outcome `partially_supports` for `exp-partial-001`. Claim text: The fixture path should produce a `result.json` file and an `evidence.jsonl` ledger entry without invoking a monolithic AutoSci workflow owner.",
+          "claim_evidence_ids": [
+            "claim-001",
+            "paper-sample-paper",
+            "sample_paper.md#results"
+          ],
+          "claim_id": "claim-001",
+          "code_evidence_ids": [
+            "task-autosci-code-evidence-fixture",
+            "map-001",
+            "plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py",
+            "claim-001"
+          ],
+          "confidence": 0.58,
+          "evidence_ids": [
+            "claim-001",
+            "paper-sample-paper",
+            "sample_paper.md#results",
+            "exp-partial-001",
+            "experiment.partial.001",
+            "metric.coverage_partial",
+            "task-autosci-code-evidence-fixture",
+            "map-001",
+            "plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py"
+          ],
+          "evidence_outcome": "partially_supports",
+          "experiment_evidence_ids": [
+            "exp-partial-001",
+            "experiment.partial.001",
+            "metric.coverage_partial"
+          ],
+          "limitations": [
+            "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation."
+          ],
+          "verdict": "partially_supported"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-18T21:22:23Z"
+    },
+    "schema": "claim_verdict.v1",
+    "sprint_id": "sprint-autosci-phase13",
+    "status": "completed",
+    "task_id": "task-autosci-verdict-partial-fixture"
+  },
+  "evidence_jsonl": "artifacts/scientific/smoke/evidence.jsonl",
+  "evidence_path": "artifacts/scientific/smoke/claim_verdict.partially_supported.json",
+  "ok": true,
+  "result_path": "artifacts/scientific/smoke/verify_claim.partially_supported.result.json",
+  "schema": "claim_verdict.v1",
+  "status": "completed"
+}

@@ -107,3 +107,15 @@ def test_autosci_feature_parity_gate_rejects_full_route_with_approval_gate() -> 
     assert result.ok is False
     assert result.status == "failed"
     assert "cannot claim full coverage" in " ".join(result.reasons)
+
+
+def test_autosci_feature_parity_gate_rejects_full_route_with_fixture_limitation() -> None:
+    item = base_item("exp-design", coverage_status="full", side_effect_policy="none")
+    item["limitations"] = ["Fixture experiment plan is bounded to local evidence."]
+    payload = payload_with_items([item])
+
+    result = autosci_feature_parity_gate.evaluate(payload)
+
+    assert result.ok is False
+    assert result.status == "failed"
+    assert "full coverage cannot describe fixture" in " ".join(result.reasons)

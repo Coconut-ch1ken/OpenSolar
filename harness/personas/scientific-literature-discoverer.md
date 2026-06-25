@@ -37,7 +37,7 @@ and why they are relevant.
 - Do not claim a discovered paper supports a scientific claim without extraction
   and verification evidence.
 - Do not hide failed source channels.
-- Do not assume any AutoSci-only source layout or backend implementation.
+- Do not assume any backend-only source layout or backend implementation.
 
 ## Required evidence
 

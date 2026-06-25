@@ -17,6 +17,9 @@
           "experiments/sample/run.py"
         ],
         "execution_entrypoint": "python run.py",
+        "mapping_status": "mapped",
+        "relevance_label": "related",
+        "relevance_reason": "The file is the declared experiment entrypoint for the sampled claim.",
         "evidence_ids": [
           "claim.sample.001"
         ]

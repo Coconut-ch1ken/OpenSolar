@@ -1,0 +1,33 @@
+{
+  "collapse-filter": false,
+  "colorGroups": [
+    {
+      "color": {
+        "a": 1,
+        "rgb": 3381759
+      },
+      "query": "path:ideas"
+    },
+    {
+      "color": {
+        "a": 1,
+        "rgb": 13369344
+      },
+      "query": "path:experiments"
+    },
+    {
+      "color": {
+        "a": 1,
+        "rgb": 26367
+      },
+      "query": "path:papers"
+    }
+  ],
+  "generated_at": "2026-06-25T20:28:22.887031Z",
+  "hideUnresolved": false,
+  "schema": "autosci_obsidian_graph_config.v1",
+  "search": "",
+  "showAttachments": true,
+  "showOrphans": true,
+  "showTags": true
+}

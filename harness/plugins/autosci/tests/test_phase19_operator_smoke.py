@@ -10,6 +10,8 @@ HARNESS = Path(__file__).resolve().parents[3]
 SMOKE = HARNESS / "plugins" / "autosci" / "bin" / "autosci_operator_smoke.py"
 GATE = HARNESS / "evaluators" / "scientific" / "autosci_operator_smoke_gate.py"
 PAPER = HARNESS / "plugins" / "autosci" / "tests" / "fixtures" / "skillgen_operator_smoke_paper.md"
+ROUTE_CONFIG = HARNESS / "plugins" / "autosci" / "config" / "feature_parity_routes.v1.json"
+BINDING_CONFIG = HARNESS / "plugins" / "autosci" / "config" / "feature_operator_bindings.v1.json"
 
 
 def run_smoke(tmp_path: Path) -> subprocess.CompletedProcess[str]:
@@ -46,9 +48,9 @@ def test_skillgen_operator_smoke_binds_every_native_skill_and_runs_core_actions(
 
     payload = json.loads((tmp_path / "artifacts/autosci/operator-smoke/skillgen/autosci_operator_smoke.json").read_text(encoding="utf-8"))
     smoke = payload["outputs"]["smoke"]
-    assert smoke["completed_count"] == 7
-    assert smoke["partial_count"] == 11
-    assert smoke["gated_count"] == 10
+    assert smoke["completed_count"] == 0
+    assert smoke["partial_count"] == 17
+    assert smoke["gated_count"] == 11
     core_statuses = {item["action"]: item["status"] for item in smoke["core_actions"]}
     for action in [
         "ingest_paper",
@@ -63,13 +65,26 @@ def test_skillgen_operator_smoke_binds_every_native_skill_and_runs_core_actions(
         "verify_claim",
         "write_report",
         "evolve_workflow",
+        "update_graph",
     ]:
         assert core_statuses[action] == "passed"
-    assert core_statuses["discover_literature"] == "schema_only"
-    assert core_statuses["update_graph"] == "schema_only"
+    assert core_statuses["discover_literature"] == "passed"
 
     paper_evidence = json.loads((tmp_path / "artifacts/autosci/operator-smoke/skillgen/research_paper.json").read_text(encoding="utf-8"))
     assert "SKILLGEN" in paper_evidence["outputs"]["paper"]["title"]
+
+
+def test_phase19_route_and_operator_statuses_stay_in_sync() -> None:
+    routes = json.loads(ROUTE_CONFIG.read_text(encoding="utf-8"))["routes"]
+    bindings = json.loads(BINDING_CONFIG.read_text(encoding="utf-8"))["bindings"]
+    binding_status_by_skill = {binding["native_skill"]: binding["operator_status"] for binding in bindings}
+
+    assert {route["native_skill"] for route in routes} == set(binding_status_by_skill)
+    assert {
+        route["native_skill"]: (route["coverage_status"], binding_status_by_skill[route["native_skill"]])
+        for route in routes
+        if route["coverage_status"] != binding_status_by_skill[route["native_skill"]]
+    } == {}
 
 
 def test_skillgen_operator_smoke_gate_accepts_generated_evidence(tmp_path: Path) -> None:

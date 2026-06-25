@@ -12,6 +12,17 @@ if str(TOOLS) not in sys.path:
 from report_validation import build_quality_score, run_chapter_verifier, write_validation_sidecars  # noqa: E402
 
 
+def _deep_proof(tmp_path: Path) -> dict:
+    request_dir = tmp_path / "deep-request"
+    request_dir.mkdir()
+    (request_dir / "deep-research-state.json").write_text('{"ok": true}\n', encoding="utf-8")
+    (request_dir / "report-operator-request.json").write_text(
+        '{"operator_kind":"deep_writer","model_mode":"pro","reasoning_effort":"deep_research","tool_mode":"deep_research"}\n',
+        encoding="utf-8",
+    )
+    return {"request_dir": str(request_dir)}
+
+
 def _pack() -> dict:
     return {
         "chapter_id": "ch_01",
@@ -22,7 +33,7 @@ def _pack() -> dict:
     }
 
 
-def test_chapter_verifier_requires_evidence_and_deep_proof() -> None:
+def test_chapter_verifier_requires_evidence_and_deep_proof(tmp_path: Path) -> None:
     markdown = (
         "## Runtime Shift\n\n"
         "判断：V001 显示 agent runtime 正在从演示走向可执行工作流。"
@@ -38,7 +49,7 @@ def test_chapter_verifier_requires_evidence_and_deep_proof() -> None:
         {"chapter_id": "ch_01", "deep_writer_required": True},
         markdown,
         _pack(),
-        {"deep_proof_path": "proof/ch_01.deep.proof.json"},
+        _deep_proof(tmp_path),
     )
     assert passed["status"] == "passed"
     assert passed["checks"]["uses_required_evidence"] is True

@@ -1,0 +1,56 @@
+{
+  "action": "update_graph",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/scientific/skillgen-phase9-redo-check/research_graph_update.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "paper_id": "paper-skillgen-redo",
+      "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+    },
+    "limitations": [
+      "Fixture graph update records explicit proposed edges only."
+    ],
+    "node_id": "node-phase9-redo-graph-update",
+    "outputs": {
+      "edges": [
+        {
+          "evidence_ids": [
+            "paper-skillgen-redo"
+          ],
+          "operation": "propose",
+          "relation": "describes",
+          "source": "paper-skillgen-redo",
+          "target": "concept.solar_evidence_abi"
+        },
+        {
+          "evidence_ids": [
+            "paper-skillgen-redo"
+          ],
+          "operation": "confirm",
+          "relation": "has_source",
+          "source": "paper-skillgen-redo",
+          "target": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-18T18:48:13Z"
+    },
+    "schema": "research_graph_update.v1",
+    "sprint_id": "sprint-autosci-phase9-redo-check",
+    "status": "completed",
+    "task_id": "task-phase9-redo-graph-update"
+  },
+  "evidence_jsonl": "artifacts/scientific/skillgen-phase9-redo-check/evidence.jsonl",
+  "evidence_path": "artifacts/scientific/skillgen-phase9-redo-check/research_graph_update.json",
+  "ok": true,
+  "result_path": "artifacts/scientific/skillgen-phase9-redo-check/runtime_graph.result.json",
+  "schema": "research_graph_update.v1",
+  "status": "completed"
+}

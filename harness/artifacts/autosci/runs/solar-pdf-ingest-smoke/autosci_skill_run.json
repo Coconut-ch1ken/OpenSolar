@@ -1,0 +1,138 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    }
+  ],
+  "inputs": {
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "paper_path": "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "solar-pdf-ingest-smoke",
+    "skill": "ingest",
+    "skill_args": [],
+    "target": "",
+    "topic": "",
+    "work_dir": "artifacts/autosci/runs/solar-pdf-ingest-smoke"
+  },
+  "limitations": [
+    "PDF and arXiv source preparation writes explicit raw/tmp artifacts; set allow_network_fetch=false for offline synthetic-TeX fallback.",
+    "Skillgen smoke uses local markdown paper input."
+  ],
+  "node_id": "autosci-skill-ingest",
+  "outputs": {
+    "skill_run": {
+      "action_count": 2,
+      "actions": [
+        {
+          "action": "ingest_paper",
+          "evidence_ids": [
+            "artifacts/autosci/runs/solar-pdf-ingest-smoke/research_paper.json",
+            "solar_evidence_json",
+            "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf",
+            "PyMuPDF unavailable; cannot decode PDF during prepare",
+            "arXiv source fetch skipped for 2401.00003: network fetch disabled",
+            "PDF source could not be prepared because no text was extracted",
+            "node-ingest-paper",
+            "2401.00003",
+            "skipped_network_disabled",
+            "completed",
+            "paper-solar-autosci-pdf-smoke-2401.00003",
+            "failed",
+            "pdf",
+            "solar autosci pdf smoke 2401.00003",
+            "sec-abstract",
+            "sample_paper.md#abstract",
+            "Fixture abstract.",
+            "Abstract",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-22T19:28:01Z",
+            "research_paper.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-ingest_paper"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-pdf-ingest-smoke/research_paper.json",
+          "gate_status": "failed",
+          "reasons": [
+            "paper parse_status is failed"
+          ],
+          "schema": "research_paper.v1",
+          "status": "failed",
+          "warnings": []
+        },
+        {
+          "action": "analyze_paper",
+          "evidence_ids": [
+            "artifacts/autosci/runs/solar-pdf-ingest-smoke/research_paper.analyzed.json",
+            "solar_evidence_json",
+            "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf",
+            "PyMuPDF unavailable; cannot decode PDF during prepare",
+            "arXiv source fetch skipped for 2401.00003: network fetch disabled",
+            "PDF source could not be prepared because no text was extracted",
+            "node-analyze-paper",
+            "paper-solar-autosci-pdf-smoke-2401.00003",
+            "paper source preparation",
+            "arXiv source recovery",
+            "Solar Evidence ABI",
+            "Prepared and parsed solar autosci pdf smoke 2401.00003 through the Solar AutoSci paper preparation backend and emitted Solar Evidence ABI paper evidence.",
+            "2401.00003",
+            "skipped_network_disabled",
+            "completed",
+            "failed",
+            "pdf",
+            "solar autosci pdf smoke 2401.00003",
+            "sec-abstract",
+            "sample_paper.md#abstract",
+            "Fixture abstract.",
+            "Abstract",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-22T19:28:01Z",
+            "research_paper.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-analyze_paper"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-pdf-ingest-smoke/research_paper.analyzed.json",
+          "gate_status": "failed",
+          "reasons": [
+            "paper parse_status is failed"
+          ],
+          "schema": "research_paper.v1",
+          "status": "failed",
+          "warnings": []
+        }
+      ],
+      "autosci_command": "/ingest",
+      "execution_status": "failed",
+      "failed_count": 2,
+      "passed_count": 0,
+      "route": {
+        "backend_mode": "solar_native",
+        "coverage_status": "full",
+        "evidence_schema": "research_paper.v1",
+        "physical_operator": "AutoSciBridgePaperIngestor",
+        "solar_backend_action": "ingest_paper",
+        "solar_capability": "cap.research-paper-ingest",
+        "solar_logical_operator": "ScientificPaperIngestor"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "ingest",
+      "side_effect_policy": "dry_run_only"
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-22T19:28:01.865366Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "solar-pdf-ingest-smoke",
+  "status": "failed",
+  "task_id": "autosci-skill-ingest"
+}

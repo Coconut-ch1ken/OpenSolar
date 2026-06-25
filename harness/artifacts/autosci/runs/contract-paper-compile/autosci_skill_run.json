@@ -1,0 +1,89 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    }
+  ],
+  "inputs": {
+    "anchors": [],
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "from_wiki": false,
+    "limit": 0,
+    "native_options": {
+      "auto": false,
+      "checklist": true,
+      "collect": false,
+      "difficulty": "",
+      "env": "",
+      "fix": false,
+      "focus": "",
+      "full": false,
+      "max_ideas": 0,
+      "quick": false,
+      "review": false,
+      "skip_pilot": false,
+      "skip_validation": false,
+      "title": "",
+      "verbose": false,
+      "write": false
+    },
+    "negative_ids": [],
+    "paper_path": "",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "contract-paper-compile",
+    "skill": "paper-compile",
+    "skill_args": [
+      "paper/"
+    ],
+    "smoke": false,
+    "target": "paper/",
+    "topic": "",
+    "venue": "",
+    "work_dir": "artifacts/autosci/runs/contract-paper-compile",
+    "year": ""
+  },
+  "limitations": [
+    "latexmk/browser/toolchain execution is environment-dependent; failures must produce compile diagnostics rather than successful publication evidence.",
+    "LaTeX compile and PDF checks are not executed without toolchain approval.",
+    "Approval-gated external effects were not executed by the shim.",
+    "No source paper/artifact resolver is available for this native route yet; fixture bridge actions require explicit --smoke.",
+    "Fixture bridge fallback is disabled unless --smoke is passed explicitly."
+  ],
+  "node_id": "autosci-skill-paper-compile",
+  "outputs": {
+    "skill_run": {
+      "action_count": 0,
+      "actions": [],
+      "autosci_command": "/paper-compile",
+      "execution_status": "gated",
+      "failed_count": 0,
+      "passed_count": 0,
+      "route": {
+        "backend_mode": "side_effect_gated",
+        "coverage_status": "gated",
+        "evidence_schema": "publication_bundle.v1",
+        "physical_operator": "ApprovalGatedPaperCompileOperator",
+        "solar_backend_action": "compile_paper",
+        "solar_capability": "cap.research-publication-produce",
+        "solar_logical_operator": "ScientificPublicationProducer"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "paper-compile",
+      "side_effect_policy": "approval_required"
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-24T17:27:26.713368Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "contract-paper-compile",
+  "status": "completed",
+  "task_id": "autosci-skill-paper-compile"
+}

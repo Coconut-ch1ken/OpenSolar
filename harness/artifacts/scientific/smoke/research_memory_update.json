@@ -1,0 +1,40 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/smoke/research_memory_update.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md",
+    "source_evidence": "artifacts/scientific/smoke/research_paper.json"
+  },
+  "limitations": [
+    "Fixture proposes a memory update; it does not mutate wiki state."
+  ],
+  "node_id": "node-update-memory",
+  "outputs": {
+    "changes": [
+      {
+        "confidence": 0.9,
+        "entity_id": "paper-sample-paper",
+        "entity_type": "paper",
+        "evidence_ids": [
+          "paper-sample-paper"
+        ],
+        "operation": "propose",
+        "path": "knowledge/research/papers/paper-sample-paper.md",
+        "summary": "Propose recording normalized metadata for AutoSci Adapter Fixture Paper."
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-19T03:16:03Z"
+  },
+  "schema": "research_memory_update.v1",
+  "sprint_id": "sprint-autosci-phase9",
+  "status": "completed",
+  "task_id": "task-autosci-memory-update-fixture"
+}

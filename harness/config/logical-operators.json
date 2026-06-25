@@ -847,48 +847,58 @@
       "operator_type": "ImplementationWorker",
       "candidates": [
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-1",
+          "actor_id": "mini-codex-gpt55-medium-builder-1",
           "priority": 1,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "actor_id": "mini-codex-gpt55-medium-builder-2",
           "priority": 2,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "actor_id": "mini-codex-gpt53-spark-builder-1",
           "priority": 3,
-          "condition": "always"
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "priority": 4,
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "priority": 5,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-4",
-          "priority": 4,
-          "condition": "always"
+          "priority": 6,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-5",
-          "priority": 5,
-          "condition": "always"
+          "priority": 7,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-6",
-          "priority": 6,
-          "condition": "always"
+          "priority": 8,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-claude-sonnet-builder",
-          "priority": 7,
+          "priority": 9,
           "condition": "always"
         },
         {
           "actor_id": "mini-claude-sonnet-builder-print",
-          "priority": 8,
+          "priority": 10,
           "condition": "quota_ok"
         },
         {
           "actor_id": "mini-antigravity-gemini31-pro",
-          "priority": 9,
+          "priority": 11,
           "condition": "quota_ok"
         }
       ],
@@ -899,48 +909,58 @@
       "operator_type": "PatchWorker",
       "candidates": [
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-1",
+          "actor_id": "mini-codex-gpt55-medium-builder-1",
           "priority": 1,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "actor_id": "mini-codex-gpt55-medium-builder-2",
           "priority": 2,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "actor_id": "mini-codex-gpt53-spark-builder-1",
           "priority": 3,
-          "condition": "always"
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "priority": 4,
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "priority": 5,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-4",
-          "priority": 4,
-          "condition": "always"
+          "priority": 6,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-5",
-          "priority": 5,
-          "condition": "always"
+          "priority": 7,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-6",
-          "priority": 6,
-          "condition": "always"
+          "priority": 8,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-claude-sonnet-builder",
-          "priority": 7,
+          "priority": 9,
           "condition": "always"
         },
         {
           "actor_id": "mini-antigravity-gemini35-flash-high",
-          "priority": 8,
+          "priority": 10,
           "condition": "always"
         },
         {
           "actor_id": "mini-claude-sonnet-builder-print",
-          "priority": 9,
+          "priority": 11,
           "condition": "quota_ok"
         }
       ],
@@ -951,43 +971,53 @@
       "operator_type": "TestDesigner",
       "candidates": [
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-1",
+          "actor_id": "mini-codex-gpt55-medium-builder-1",
           "priority": 1,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "actor_id": "mini-codex-gpt55-medium-builder-2",
           "priority": 2,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "actor_id": "mini-codex-gpt53-spark-builder-1",
           "priority": 3,
-          "condition": "always"
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "priority": 4,
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "priority": 5,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-4",
-          "priority": 4,
-          "condition": "always"
+          "priority": 6,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-5",
-          "priority": 5,
-          "condition": "always"
+          "priority": 7,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-6",
-          "priority": 6,
-          "condition": "always"
+          "priority": 8,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-claude-sonnet-builder",
-          "priority": 7,
+          "priority": 9,
           "condition": "always"
         },
         {
           "actor_id": "mini-claude-opus-evaluator",
-          "priority": 8,
+          "priority": 10,
           "condition": "quota_ok"
         }
       ],
@@ -1020,43 +1050,53 @@
       "operator_type": "BenchmarkRunner",
       "candidates": [
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-1",
+          "actor_id": "mini-codex-gpt55-medium-builder-1",
           "priority": 1,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "actor_id": "mini-codex-gpt55-medium-builder-2",
           "priority": 2,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "actor_id": "mini-codex-gpt53-spark-builder-1",
           "priority": 3,
-          "condition": "always"
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "priority": 4,
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "priority": 5,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-4",
-          "priority": 4,
-          "condition": "always"
+          "priority": 6,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-5",
-          "priority": 5,
-          "condition": "always"
+          "priority": 7,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-6",
-          "priority": 6,
-          "condition": "always"
+          "priority": 8,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-claude-sonnet-builder",
-          "priority": 7,
+          "priority": 9,
           "condition": "always"
         },
         {
           "actor_id": "mini-claude-opus-evaluator",
-          "priority": 8,
+          "priority": 10,
           "condition": "quota_ok"
         }
       ],
@@ -1192,43 +1232,53 @@
       "operator_type": "VerifierLite",
       "candidates": [
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-1",
+          "actor_id": "mini-codex-gpt55-medium-builder-1",
           "priority": 1,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "actor_id": "mini-codex-gpt55-medium-builder-2",
           "priority": 2,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "actor_id": "mini-codex-gpt53-spark-builder-1",
           "priority": 3,
-          "condition": "always"
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "priority": 4,
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "priority": 5,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-4",
-          "priority": 4,
-          "condition": "always"
+          "priority": 6,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-5",
-          "priority": 5,
-          "condition": "always"
+          "priority": 7,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-6",
-          "priority": 6,
-          "condition": "always"
+          "priority": 8,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-claude-sonnet-builder",
-          "priority": 7,
+          "priority": 9,
           "condition": "always"
         },
         {
           "actor_id": "mini-claude-opus-evaluator",
-          "priority": 8,
+          "priority": 10,
           "condition": "quota_ok"
         }
       ],
@@ -1290,43 +1340,53 @@
       "operator_type": "ArtifactCurator",
       "candidates": [
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-1",
+          "actor_id": "mini-codex-gpt55-medium-builder-1",
           "priority": 1,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "actor_id": "mini-codex-gpt55-medium-builder-2",
           "priority": 2,
           "condition": "always"
         },
         {
-          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "actor_id": "mini-codex-gpt53-spark-builder-1",
           "priority": 3,
-          "condition": "always"
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-2",
+          "priority": 4,
+          "condition": "explicit_spark_or_fallback"
+        },
+        {
+          "actor_id": "mini-codex-gpt53-spark-builder-3",
+          "priority": 5,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-4",
-          "priority": 4,
-          "condition": "always"
+          "priority": 6,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-5",
-          "priority": 5,
-          "condition": "always"
+          "priority": 7,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-codex-gpt53-spark-builder-6",
-          "priority": 6,
-          "condition": "always"
+          "priority": 8,
+          "condition": "explicit_spark_or_fallback"
         },
         {
           "actor_id": "mini-claude-sonnet-builder",
-          "priority": 7,
+          "priority": 9,
           "condition": "always"
         },
         {
           "actor_id": "mini-antigravity-gemini35-flash-high",
-          "priority": 8,
+          "priority": 10,
           "condition": "always"
         }
       ],
@@ -1499,7 +1559,7 @@
       "operator_type": "ScientificIdeaEvaluator",
       "candidates": [
         {
-          "actor_id": "autosci-idea-worker",
+          "actor_id": "autosci-idea-evaluate-worker",
           "priority": 20,
           "condition": "backend_action_pending"
         }
@@ -1526,6 +1586,18 @@
           "actor_id": "autosci-experiment-run-worker",
           "priority": 1,
           "condition": "fixture_or_human_approved"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "queue"
+    },
+    "ScientificExperimentMonitor": {
+      "operator_type": "ScientificExperimentMonitor",
+      "candidates": [
+        {
+          "actor_id": "autosci-experiment-monitor-worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
         }
       ],
       "selection_policy": "priority_first",

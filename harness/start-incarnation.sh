@@ -46,9 +46,11 @@ WORKTREE_DIR=""
 ORIGINAL_WORK_DIR="$WORK_DIR"
 if [[ "$PERSONA" == "builder" || "$PERSONA" == "lab-builder" || "$PERSONA" == "second-builder" ]]; then
   source "$HARNESS_DIR/lib/worktree.sh"
-  WORKTREE_DIR=$(setup_builder_worktree "$WORK_DIR")
-  if [[ -n "$WORKTREE_DIR" ]]; then
-    WORK_DIR="$WORKTREE_DIR"
+  if solar_builder_worktrees_enabled; then
+    WORKTREE_DIR=$(setup_builder_worktree "$WORK_DIR")
+    if [[ -n "$WORKTREE_DIR" ]]; then
+      WORK_DIR="$WORKTREE_DIR"
+    fi
   fi
 fi
 

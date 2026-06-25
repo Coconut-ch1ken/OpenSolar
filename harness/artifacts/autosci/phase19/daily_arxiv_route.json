@@ -1,0 +1,83 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "daily-arxiv",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json"
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated."
+  ],
+  "node_id": "autosci-feature-parity-daily-arxiv",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "full_count": 0,
+      "gated_count": 1,
+      "items": [
+        {
+          "autosci_command": "/daily-arxiv",
+          "autosci_feature": "/daily-arxiv",
+          "backend_mode": "side_effect_gated",
+          "coverage_status": "gated",
+          "evidence_ids": [
+            "route:daily-arxiv",
+            "native:daily-arxiv"
+          ],
+          "evidence_schema": "literature_discovery.v1",
+          "feature_kind": "skill",
+          "limitations": [
+            "Network fetches, SMTP delivery, GitHub Actions scheduling, and auto-ingest are side effects that require explicit approval and runtime evidence."
+          ],
+          "native_paths": [
+            "i18n/en/skills/daily-arxiv/SKILL.md",
+            "tools/daily_arxiv.py",
+            "config/daily-arxiv.yml.example"
+          ],
+          "native_skill": "daily-arxiv",
+          "primary_tools": [
+            "tools/daily_arxiv.py prepare",
+            "tools/daily_arxiv.py finalize",
+            "tools/send_email.py"
+          ],
+          "required_capabilities": [
+            "arXiv feed collection",
+            "Semantic Scholar enrichment",
+            "LLM ranking",
+            "email digest",
+            "optional ingest"
+          ],
+          "side_effect_policy": "approval_required",
+          "solar_backend_action": "daily_arxiv_prepare_finalize",
+          "solar_capability": "cap.research-literature-discover",
+          "solar_logical_operator": "ScientificLiteratureDiscoverer"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "daily-arxiv"
+      ],
+      "partial_count": 0,
+      "routed_count": 1
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-06-19T04:27:53.385108Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

@@ -1,7 +1,7 @@
 # AutoSci Solar-Native Dependency Installation Record
 
 Status: current dependency setup for AutoSci Solar-native validation.
-Last verified: 2026-06-17 10:48:00 EDT.
+Last verified: 2026-06-18 11:45:00 EDT.
 
 This file records the dependency installation state created during the
 AutoSci-to-Solar-native implementation so it is rebuildable and removable under
@@ -40,6 +40,16 @@ rm -rf .venv
 
 The active rebuild command does not use the legacy project-local `.uv-cache/`
 directory. That directory predates this correction and was left untouched.
+
+## OpenSolar Harness Python Wrapper
+
+`harness/bin/python3` is a project-local wrapper that executes
+`../.venv/bin/python` from inside the harness directory. Use it for harness
+Python checks that need project dependencies such as `jsonschema` without
+installing those libraries into the mise-managed bare `python3` runtime.
+
+Remove the wrapper by deleting `harness/bin/python3`; it contains no package
+state.
 
 ## AutoSci Package Manager Decision
 
@@ -126,6 +136,7 @@ pipx uninstall jsonschema
 | AutoSci `.pip-cache/` held earlier local pip cache state | Removed `.pip-cache/` after uv install succeeded | Removes obsolete ad hoc cache state. |
 | uv defaulted to `/Users/jamesyuan/.cache/uv` | Removed `/Users/jamesyuan/.cache/uv` and set `UV_CACHE_DIR=/Users/jamesyuan/Library/Caches/uv` in commands | Avoids an unapproved uv cache path. |
 | `jsonschema` CLI was only available under OpenSolar `.venv/bin` | Installed `jsonschema==4.26.0` with `pipx` into approved global tool paths | Makes `which jsonschema` work without activating the project venv. |
+| Harness checks used ambiguous `python3` | Added `harness/bin/python3` wrapper to repo `.venv/bin/python` | Keeps validation imports on the project dependency environment without mutating mise Python. |
 
 ## After-Install Report Fields
 
@@ -133,7 +144,7 @@ pipx uninstall jsonschema
 |---|---|
 | Packages installed | See `requirements/autosci-solar-native-dev.txt` |
 | Manifest or lockfile changed | `requirements/autosci-solar-native-dev.txt` added |
-| Project-local paths written | OpenSolar `.venv/`; AutoSci `.venv/` |
+| Project-local paths written | OpenSolar `.venv/`; AutoSci `.venv/`; `harness/bin/python3` |
 | Global store or cache paths touched | mise runtime store already present; Homebrew uv/pipx binaries already present; `/Users/jamesyuan/Library/Caches/uv`; `/Users/jamesyuan/.local/pipx`; `/Users/jamesyuan/.local/bin`; `/Users/jamesyuan/Library/Logs/pipx` |
 | Rebuild command | See `Rebuild Command` |
 | Removal command | See `Removal Command` |

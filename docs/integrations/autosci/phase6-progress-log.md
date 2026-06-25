@@ -1,6 +1,7 @@
 # AutoSci Phase 6 Progress Log
 
 Logged: 2026-06-17 15:28:45 EDT
+Updated: 2026-06-17 17:18:52 EDT
 Branch: `feature/autosci-solar-native`
 
 ## Scope
@@ -17,8 +18,9 @@ fallback behavior, scoring, routing, quota, leases, or model selection.
 | Artifact group | Count | Operation | Commit | Paths |
 |---|---:|---|---|---|
 | Scientific personas/manuals | 9 | Added | this phase commit | `harness/personas/scientific-*.md` |
-| Dispatch templates | 7 | Added | this phase commit | `harness/templates/dispatch/scientific-*.dispatch.md` |
-| Phase log | 1 | Added | this phase commit | `docs/integrations/autosci/phase6-progress-log.md` |
+| Dispatch templates | 11 | Added/updated | this phase commit + follow-up wiring | `harness/templates/dispatch/scientific-*.dispatch.md` |
+| Physical operator registry wiring | 1 | Updated | follow-up wiring | `harness/config/physical-operators.json` |
+| Phase log | 1 | Added/updated | this phase commit + follow-up wiring | `docs/integrations/autosci/phase6-progress-log.md` |
 
 ## Manual Coverage
 
@@ -45,6 +47,23 @@ fallback behavior, scoring, routing, quota, leases, or model selection.
 | `scientific-experiment-run.dispatch.md` | `experiment_result.v1` | Run only approved commands. |
 | `scientific-claim-verify.dispatch.md` | `claim_verdict.v1` | Use only supplied evidence ids. |
 | `scientific-report-write.dispatch.md` | `scientific_report.v1` | No fabricated citations or hidden verification. |
+| `scientific-literature-discover.dispatch.md` | `literature_discovery.v1` | Search only approved channels. |
+| `scientific-memory-update.dispatch.md` | `research_memory_update.v1` | No intuition-based memory writes. |
+| `scientific-graph-update.dispatch.md` | `research_graph_update.v1` | No unapproved broad graph rewrites. |
+| `scientific-workflow-evolve.dispatch.md` | `workflow_evolution.v1` | No silent scheduler, routing, quota, lease, scoring, or model-selection changes. |
+
+## AutoSci Operator Wiring
+
+| AutoSci operator | Manual | Dispatch | Registry binding |
+|---|---|---|---|
+| `autosci-paper-ingest-worker` | `scientific-paper-ingestor.md` | `scientific-paper-ingest.dispatch.md` | ok |
+| `autosci-claim-extract-worker` | `scientific-claim-extractor.md` | `scientific-claim-extract.dispatch.md` | ok |
+| `autosci-memory-update-worker` | `scientific-memory-updater.md` | `scientific-memory-update.dispatch.md` | ok; operator remains disabled until backend action is implemented |
+| `autosci-idea-worker` | `scientific-experiment-designer.md` | `scientific-experiment-design.dispatch.md` | ok; operator remains disabled until backend action is implemented |
+| `autosci-experiment-design-worker` | `scientific-experiment-designer.md` | `scientific-experiment-design.dispatch.md` | ok |
+| `autosci-experiment-run-worker` | `scientific-experiment-runner.md` | `scientific-experiment-run.dispatch.md` | ok |
+| `autosci-claim-verify-worker` | `scientific-claim-verifier.md` | `scientific-claim-verify.dispatch.md` | ok |
+| `autosci-report-worker` | `scientific-report-writer.md` | `scientific-report-write.dispatch.md` | ok |
 
 ## Checks Run
 
@@ -58,6 +77,26 @@ fallback behavior, scoring, routing, quota, leases, or model selection.
 | Scientific operator coverage | ok | Script verified all 18 `Scientific*` logical operators from Phase 3 are named in manuals/templates. |
 | Failure and approval behavior | ok | Script verified manuals and templates document failure/inconclusive behavior and approval gates. |
 | AutoSci-only assumption guard | ok | Script verified manuals/templates contain no positive AutoSci-only backend assumption. |
+
+## Follow-up Wiring Checks
+
+| Check | Status | Note |
+|---|---|---|
+| Missing dispatch templates | ok | Added dispatch templates for literature discovery, memory update, graph update, and workflow evolution. |
+| AutoSci persona bindings | ok | All 8 `autosci-*` physical operators resolve to a `scientific-*` persona file. |
+| AutoSci dispatch template bindings | ok | All 8 `autosci-*` physical operators declare an existing `templates/dispatch/scientific-*.dispatch.md` path. |
+| Scientific operator dispatch coverage | ok | All 18 `Scientific*` logical operator types are named in dispatch templates. |
+| Full physical registry schema validation | warn | Existing non-AutoSci registry entries still fail schema validation (`mini-glm51-*` missing `billing_surface`; `mini-reasonix-deepseek-v4-builder` uses `AdvisoryReview`). |
+
+## Follow-up Tweaks and Fixes
+
+| Item | Status | Fix |
+|---|---|---|
+| Dispatch template gaps | ok | Added the missing scientific dispatch templates for literature discovery, memory update, graph update, and workflow evolution so every `Scientific*` logical operator has template coverage. |
+| Generic AutoSci personas | ok | Replaced generic `builder`, `planner`, and `evaluator` persona bindings on `autosci-*` physical operators with the appropriate `scientific-*` personas. |
+| Missing registry template binding | ok | Added `dispatch_template` metadata to every `autosci-*` physical operator so scheduler/runtime follow-up work has an explicit template path to consume. |
+| Disabled placeholder operators | ok | Kept `autosci-memory-update-worker` and `autosci-idea-worker` disabled because their backend bridge actions are intentionally not implemented yet; the fix only added guidance bindings. |
+| Non-AutoSci schema warnings | noted | Left existing non-AutoSci physical registry schema warnings out of scope for this Phase 6 AutoSci wiring fix. |
 
 ## Notes
 

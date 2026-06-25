@@ -26,5 +26,5 @@ Parallel Builder Lab 四分屏。你的具体槽位由 `SOLAR_BUILDER_SLOT` 决�
 
 ## 配置
 
-模型: 默认 `lab-builder-1/2/3` 使用 GLM-5.1，`lab-builder-4` 使用 DeepSeek V4 Pro；如需覆盖，可通过 `SOLAR_LAB_BUILDER_MODEL_MATRIX` 调整。若要真 Anthropic Sonnet，请显式使用 `anthropic-sonnet`。
+模型: 默认由 Solar 模型矩阵配置驱动，当前默认四个 lab builder 均使用 Codex GPT-5.5；如需覆盖，可通过 `SOLAR_LAB_BUILDER_MODEL_MATRIX` 调整。若要使用 Spark、GLM、DeepSeek 或 Anthropic Sonnet，必须显式指定对应模型别名。
 工具: 全部 (无限制)

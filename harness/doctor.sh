@@ -11,7 +11,10 @@
 # ================================================================
 set -eu
 
-HARNESS_DIR="$HOME/.solar/harness"
+SOURCE_HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$SOURCE_HARNESS_DIR}}"
+export HARNESS_DIR
+export SOLAR_HARNESS_DIR="$HARNESS_DIR"
 SESSION_NAME="solar-harness"
 LAB_SESSION_NAME="solar-harness-lab"
 
@@ -23,7 +26,7 @@ from pathlib import Path
 
 SESSION_NAME = "solar-harness"
 LAB_SESSION_NAME = "solar-harness-lab"
-HARNESS_DIR = os.path.expanduser("~/.solar/harness")
+HARNESS_DIR = os.environ.get("SOLAR_HARNESS_DIR") or os.environ.get("HARNESS_DIR") or os.path.expanduser("~/.solar/harness")
 sys.path.insert(0, os.path.join(HARNESS_DIR, "lib"))
 try:
     from qmd_resolver import resolve_qmd_bin
@@ -113,9 +116,41 @@ if os.path.isfile(layout_path):
 required_hints = {
     "python3": "macOS: brew install python; Ubuntu/Debian: sudo apt-get install python3",
     "tmux": "macOS: brew install tmux; Ubuntu/Debian: sudo apt-get install tmux",
+    "codex": "Install the Codex CLI and confirm 'codex --version' works before launching panes",
     "claude": "Install the Claude Code CLI and confirm 'claude --version' works before launching panes",
     "jq": "macOS: brew install jq; Ubuntu/Debian: sudo apt-get install jq",
 }
+
+def load_json(path, fallback):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return fallback
+
+def model_alias_map(reg):
+    out = {}
+    for model_id, item in (reg.get("models") or {}).items():
+        out[str(model_id).lower()] = model_id
+        for alias in item.get("aliases") or []:
+            out[str(alias).lower()] = model_id
+    return out
+
+def required_pane_runtimes():
+    reg = load_json(os.path.join(HARNESS_DIR, "config", "model-registry.json"), {})
+    user = load_json(os.path.join(HARNESS_DIR, "config", "solar-user-config.json"), {})
+    amap = model_alias_map(reg)
+    default_model = (reg.get("defaults") or {}).get("main_model") or "codex"
+    models = user.get("models") or {}
+    seen = []
+    for persona in ("pm", "planner", "builder", "evaluator"):
+        configured = str(models.get(persona) or default_model).lower()
+        model_id = amap.get(configured, configured)
+        provider = ((reg.get("models") or {}).get(model_id) or {}).get("provider") or "codex"
+        runtime = "codex" if provider == "codex" else "claude"
+        if runtime not in seen:
+            seen.append(runtime)
+    return seen or ["codex"]
 
 # bash version
 bash_candidates = [
@@ -151,7 +186,7 @@ else:
     detail = f"{result['bash_path']} ({result['bash_version']})" if result["bash_path"] else "not found"
     add_check("required_checks", "bash>=4", "fail", detail, "macOS: brew install bash; Ubuntu/Debian: sudo apt-get install bash")
 
-for cmd in ["python3", "tmux", "claude", "jq"]:
+for cmd in ["python3", "tmux", "jq"] + required_pane_runtimes():
     path = command_path(cmd)
     if path:
         add_check("required_checks", cmd, "ok", path)
@@ -194,6 +229,18 @@ if os.path.isfile(pidfile):
         result["warnings"].append(f"coordinator pidfile stale: {pidfile}")
     except PermissionError:
         result["coordinator_alive"] = True
+if not result["coordinator_alive"]:
+    try:
+        r = run_quiet(["ps", "ax", "-o", "pid=", "-o", "args="])
+        needle = os.path.join(HARNESS_DIR, "coordinator.sh")
+        for line in r.stdout.splitlines():
+            if needle in line and re.search(r"(^|\s)(bash|/[^ ]*/bash)\s+", line):
+                parts = line.strip().split(None, 1)
+                result["coordinator_pid"] = int(parts[0])
+                result["coordinator_alive"] = True
+                break
+    except Exception:
+        pass
 if result["coordinator_alive"]:
     add_check("required_checks", "coordinator", "ok", f"pid={result['coordinator_pid']}")
 elif result["tmux_session_alive"]:
@@ -243,8 +290,8 @@ def scan_session(session):
                 "persona": "",
                 "persona_source": "",
                 "layout_persona": layout_personas.get(f"{parts[0]}:{parts[1]}", ""),
-                "claude_alive": False,
-                "claude_state": "unknown"
+                "agent_alive": False,
+                "agent_state": "unknown"
             }
             # Prefer the launch wrapper argv. Pane scrollback can lose the
             # Persona header after long conversations; argv remains reliable.
@@ -260,8 +307,8 @@ def scan_session(session):
                         ["ps", "-p", str(pid), "-o", "args="],
                         capture_output=True, text=True, timeout=2
                     ).stdout.strip()
-                    if re.search(r"(^|/)(claude|claude\.exe)(\s|$)", args):
-                        pane["claude_alive"] = True
+                    if re.search(r"(^|/)(claude|claude\.exe|codex)(\s|$)", args):
+                        pane["agent_alive"] = True
                     m = re.search(r"start-(?:incarnation|launcher)\.sh\s+([A-Za-z0-9_-]+)", args)
                     if m and not pane["persona"]:
                         pane["persona"] = m.group(1)
@@ -293,10 +340,10 @@ def scan_session(session):
                 tail = run_quiet(["tmux", "capture-pane", "-t", pane["target"], "-p", "-S", "-80"]).stdout
             except Exception:
                 tail = ""
-            if pane["claude_alive"]:
-                pane["claude_state"] = "live_child_present"
+            if pane["agent_alive"]:
+                pane["agent_state"] = "live_child_present"
             else:
-                pane["claude_state"] = classify_claude_tail(tail)
+                pane["agent_state"] = classify_claude_tail(tail)
             panes.append(pane)
     except Exception as e:
         result["warnings"].append(f"pane scan failed for {session}: {e}")
@@ -318,22 +365,22 @@ for p in result["panes"]:
         result["warnings"].append(
             f"pane {p['target']} persona mismatch: layout={layout_persona}, actual={actual_persona}, source={p.get('persona_source','?')}"
         )
-    if layout_persona and not p.get("claude_alive"):
-        state = p.get("claude_state") or "manual_pending"
+    if layout_persona and not p.get("agent_alive"):
+        state = p.get("agent_state") or "manual_pending"
         add_check(
             "manual_checks",
-            f"pane {p['target']} claude",
+            f"pane {p['target']} agent",
             state,
             f"layout={layout_persona}, actual={actual_persona or '?'}",
-            "press Enter in the pane and resolve Claude trust/auth/quota prompts",
+            "resolve Codex/agent runtime trust/auth/quota prompts in the pane",
         )
-    elif layout_persona and p.get("claude_alive"):
+    elif layout_persona and p.get("agent_alive"):
         add_check(
             "manual_checks",
-            f"pane {p['target']} claude",
+            f"pane {p['target']} agent",
             "live_child_present",
             f"layout={layout_persona}, actual={actual_persona or '?'}",
-            "child process is present; real Claude response/delegation still requires owner manual verification",
+            "child process is present; real agent response/delegation still requires owner manual verification",
         )
 
 # repairs available
@@ -560,7 +607,7 @@ if manual:
         if c.get("hint"):
             print(f"  │      {c.get('hint')}"[:140])
 else:
-    print("  │   [MANUAL-PENDING] live Claude panes are not verified until the owner starts Claude and observes a response")
+    print("  │   [MANUAL-PENDING] live agent panes are not verified until the selected runtime starts and observes a response")
 
 print("  │ optional:")
 for c in optional[:12]:
@@ -571,7 +618,7 @@ if len(optional) > 12:
 print(f"  │ panes: {len(d.get('panes', []))}")
 print(f"  │ task-graph gates: {d.get('task_graph_gate_audit', {}).get('summary', 'N/A')}")
 print("  └──────────────────────────────────────────────────")
-print("  deterministic status only; real Claude response/delegation remains owner-manual until quota/auth allows it.")
+print("  deterministic status only; real agent response/delegation remains owner-manual until quota/auth allows it.")
 
 for w in d.get("warnings", []):
     print(f"  warning: {w}")

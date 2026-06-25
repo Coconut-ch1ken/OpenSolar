@@ -16,4 +16,9 @@ def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict
         "source_papers": ["paper-autosci-fixture"],
         "evidence_ids": ["paper:sample#method"],
     }])
-    return evidence_base("research_method.v1", envelope, {"methods": methods})
+    return evidence_base(
+        "research_method.v1",
+        envelope,
+        {"methods": methods},
+        limitations=list(raw.get("limitations") or ["Fixture method extraction uses local paper sections only."]),
+    )

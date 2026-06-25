@@ -2627,7 +2627,7 @@
         "enabled": true,
         "group": "codex-gpt-5.5-medium",
         "slot": 1,
-        "priority": 5
+        "priority": 9
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -2716,7 +2716,7 @@
         "enabled": true,
         "group": "codex-gpt-5.5-medium",
         "slot": 2,
-        "priority": 4
+        "priority": 8
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -2781,7 +2781,8 @@
       ],
       "avoid_for": [
         "bulk-extraction",
-        "critical-security-review"
+        "critical-security-review",
+        "default-routing"
       ],
       "cost_tier": "low",
       "latency_tier": "medium",
@@ -2806,7 +2807,7 @@
         "enabled": true,
         "group": "codex-gpt-5.3-spark",
         "slot": 1,
-        "priority": 9
+        "priority": 1
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -2871,7 +2872,8 @@
       ],
       "avoid_for": [
         "bulk-extraction",
-        "critical-security-review"
+        "critical-security-review",
+        "default-routing"
       ],
       "cost_tier": "low",
       "latency_tier": "medium",
@@ -2896,7 +2898,7 @@
         "enabled": true,
         "group": "codex-gpt-5.3-spark",
         "slot": 2,
-        "priority": 9
+        "priority": 1
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -2961,7 +2963,8 @@
       ],
       "avoid_for": [
         "bulk-extraction",
-        "critical-security-review"
+        "critical-security-review",
+        "default-routing"
       ],
       "cost_tier": "low",
       "latency_tier": "medium",
@@ -2986,7 +2989,7 @@
         "enabled": true,
         "group": "codex-gpt-5.3-spark",
         "slot": 3,
-        "priority": 9
+        "priority": 1
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -3051,7 +3054,8 @@
       ],
       "avoid_for": [
         "bulk-extraction",
-        "critical-security-review"
+        "critical-security-review",
+        "default-routing"
       ],
       "cost_tier": "low",
       "latency_tier": "medium",
@@ -3076,7 +3080,7 @@
         "enabled": true,
         "group": "codex-gpt-5.3-spark",
         "slot": 4,
-        "priority": 9
+        "priority": 1
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -3141,7 +3145,8 @@
       ],
       "avoid_for": [
         "bulk-extraction",
-        "critical-security-review"
+        "critical-security-review",
+        "default-routing"
       ],
       "cost_tier": "low",
       "latency_tier": "medium",
@@ -3166,7 +3171,7 @@
         "enabled": true,
         "group": "codex-gpt-5.3-spark",
         "slot": 5,
-        "priority": 9
+        "priority": 1
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -3231,7 +3236,8 @@
       ],
       "avoid_for": [
         "bulk-extraction",
-        "critical-security-review"
+        "critical-security-review",
+        "default-routing"
       ],
       "cost_tier": "low",
       "latency_tier": "medium",
@@ -3256,7 +3262,7 @@
         "enabled": true,
         "group": "codex-gpt-5.3-spark",
         "slot": 6,
-        "priority": 9
+        "priority": 1
       },
       "compat_alias_for": "codex_worktree",
       "compat_maps_to": {
@@ -4152,6 +4158,85 @@
       },
       "deprecated": true
     },
+    "autosci-literature-discover-worker": {
+      "display_name": "AutoSci literature discovery backend worker",
+      "plane": "local_backend",
+      "owner_host": "solar@example-host",
+      "pane": "N/A",
+      "profile": "autosci-backend",
+      "role": "builder",
+      "persona": "scientific-literature-discoverer",
+      "dispatch_template": "templates/dispatch/scientific-literature-discover.dispatch.md",
+      "provider": "local",
+      "vendor": "AutoSci",
+      "backend": "command",
+      "model": "autosci-adapter-fixture",
+      "model_config": "plugins/autosci fixture-mode bridge; Solar owns workflow semantics",
+      "base_url": "local",
+      "auth_mode": "none",
+      "key_ref": "none",
+      "quota_cycle": "none",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
+      "roles": [
+        "builder"
+      ],
+      "task_classes": [
+        "scientific-literature-discover",
+        "research-literature-discover"
+      ],
+      "strengths": [
+        "literature-discovery",
+        "local-fixture-shortlist",
+        "solar-evidence-abi"
+      ],
+      "preferred_for": [
+        "cap.research-literature-discover",
+        "ScientificLiteratureDiscoverer"
+      ],
+      "avoid_for": [
+        "hidden-backend-full-workflow",
+        "unbounded-external-execution"
+      ],
+      "cost_tier": "low",
+      "latency_tier": "low",
+      "context_tier": "low",
+      "max_concurrency": 1,
+      "fallback_profile": "builder",
+      "policy": {
+        "write_files": "artifact_dir_only",
+        "run_shell": "restricted_operator_command",
+        "network": "denied",
+        "external_commands": "fixture_or_explicit_envelope_only",
+        "git_commit": "denied"
+      },
+      "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" run --action discover_literature --envelope \"$SOLAR_OPERATOR_ENVELOPE_JSON\"",
+      "launch_cmd_kind": "print_once",
+      "health_check": {
+        "type": "command",
+        "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "cache_seconds": 300
+      },
+      "state": {
+        "availability": "enabled",
+        "runtime_state": "idle",
+        "cooldown_until": null
+      },
+      "compat_alias_for": "local_command_worker",
+      "compat_maps_to": {
+        "host_type": "local_command_worker",
+        "carrier_hint": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "action": "discover_literature"
+        }
+      },
+      "deprecated": false
+    },
     "autosci-paper-ingest-worker": {
       "display_name": "AutoSci paper ingest backend worker",
       "plane": "local_backend",
@@ -4159,7 +4244,8 @@
       "pane": "N/A",
       "profile": "autosci-backend",
       "role": "builder",
-      "persona": "builder",
+      "persona": "scientific-paper-ingestor",
+      "dispatch_template": "templates/dispatch/scientific-paper-ingest.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4192,7 +4278,7 @@
         "ScientificPaperIngestor"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",
@@ -4230,6 +4316,85 @@
       },
       "deprecated": false
     },
+    "autosci-paper-analyze-worker": {
+      "display_name": "AutoSci paper analyze backend worker",
+      "plane": "local_backend",
+      "owner_host": "solar@example-host",
+      "pane": "N/A",
+      "profile": "autosci-backend",
+      "role": "builder",
+      "persona": "scientific-paper-ingestor",
+      "dispatch_template": "templates/dispatch/scientific-paper-ingest.dispatch.md",
+      "provider": "local",
+      "vendor": "AutoSci",
+      "backend": "command",
+      "model": "autosci-adapter-fixture",
+      "model_config": "plugins/autosci fixture-mode bridge; Solar owns workflow semantics",
+      "base_url": "local",
+      "auth_mode": "none",
+      "key_ref": "none",
+      "quota_cycle": "none",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
+      "roles": [
+        "builder"
+      ],
+      "task_classes": [
+        "scientific-paper-analyze",
+        "research-paper-analyze"
+      ],
+      "strengths": [
+        "research-paper-analysis",
+        "solar-evidence-abi",
+        "fixture-mode"
+      ],
+      "preferred_for": [
+        "cap.research-paper-analyze",
+        "ScientificPaperAnalyzer"
+      ],
+      "avoid_for": [
+        "hidden-backend-full-workflow",
+        "unbounded-external-execution"
+      ],
+      "cost_tier": "low",
+      "latency_tier": "low",
+      "context_tier": "low",
+      "max_concurrency": 1,
+      "fallback_profile": "builder",
+      "policy": {
+        "write_files": "artifact_dir_only",
+        "run_shell": "restricted_operator_command",
+        "network": "denied",
+        "external_commands": "fixture_or_explicit_envelope_only",
+        "git_commit": "denied"
+      },
+      "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" run --action analyze_paper --envelope \"$SOLAR_OPERATOR_ENVELOPE_JSON\"",
+      "launch_cmd_kind": "print_once",
+      "health_check": {
+        "type": "command",
+        "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "cache_seconds": 300
+      },
+      "state": {
+        "availability": "enabled",
+        "runtime_state": "idle",
+        "cooldown_until": null
+      },
+      "compat_alias_for": "local_command_worker",
+      "compat_maps_to": {
+        "host_type": "local_command_worker",
+        "carrier_hint": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "action": "analyze_paper"
+        }
+      },
+      "deprecated": false
+    },
     "autosci-claim-extract-worker": {
       "display_name": "AutoSci claim extract backend worker",
       "plane": "local_backend",
@@ -4237,7 +4402,8 @@
       "pane": "N/A",
       "profile": "autosci-backend",
       "role": "builder",
-      "persona": "builder",
+      "persona": "scientific-claim-extractor",
+      "dispatch_template": "templates/dispatch/scientific-claim-extract.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4270,7 +4436,7 @@
         "ScientificClaimExtractor"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",
@@ -4308,14 +4474,15 @@
       },
       "deprecated": false
     },
-    "autosci-memory-update-worker": {
-      "display_name": "AutoSci memory update backend worker",
+    "autosci-method-extract-worker": {
+      "display_name": "AutoSci method extract backend worker",
       "plane": "local_backend",
       "owner_host": "solar@example-host",
       "pane": "N/A",
       "profile": "autosci-backend",
       "role": "builder",
-      "persona": "builder",
+      "persona": "scientific-claim-extractor",
+      "dispatch_template": "templates/dispatch/scientific-claim-extract.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4327,10 +4494,168 @@
       "quota_cycle": "none",
       "quota_refresh_at": null,
       "quota_guard_state": "ok",
-      "enabled": false,
-      "enabled_at": "N/A",
-      "available": false,
-      "health_status": "pending_backend_action",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
+      "roles": [
+        "builder"
+      ],
+      "task_classes": [
+        "scientific-method-extract",
+        "research-method-extract"
+      ],
+      "strengths": [
+        "method-extraction",
+        "source-grounded-methods",
+        "solar-evidence-abi"
+      ],
+      "preferred_for": [
+        "cap.research-method-extract",
+        "ScientificMethodExtractor"
+      ],
+      "avoid_for": [
+        "hidden-backend-full-workflow",
+        "unbounded-external-execution"
+      ],
+      "cost_tier": "low",
+      "latency_tier": "low",
+      "context_tier": "low",
+      "max_concurrency": 1,
+      "fallback_profile": "builder",
+      "policy": {
+        "write_files": "artifact_dir_only",
+        "run_shell": "restricted_operator_command",
+        "network": "denied",
+        "external_commands": "fixture_or_explicit_envelope_only",
+        "git_commit": "denied"
+      },
+      "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" run --action extract_methods --envelope \"$SOLAR_OPERATOR_ENVELOPE_JSON\"",
+      "launch_cmd_kind": "print_once",
+      "health_check": {
+        "type": "command",
+        "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "cache_seconds": 300
+      },
+      "state": {
+        "availability": "enabled",
+        "runtime_state": "idle",
+        "cooldown_until": null
+      },
+      "compat_alias_for": "local_command_worker",
+      "compat_maps_to": {
+        "host_type": "local_command_worker",
+        "carrier_hint": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "action": "extract_methods"
+        }
+      },
+      "deprecated": false
+    },
+    "autosci-code-evidence-map-worker": {
+      "display_name": "AutoSci code evidence map backend worker",
+      "plane": "local_backend",
+      "owner_host": "solar@example-host",
+      "pane": "N/A",
+      "profile": "autosci-backend",
+      "role": "builder",
+      "persona": "scientific-code-evidence-mapper",
+      "dispatch_template": "templates/dispatch/scientific-code-evidence-map.dispatch.md",
+      "provider": "local",
+      "vendor": "AutoSci",
+      "backend": "command",
+      "model": "autosci-adapter-fixture",
+      "model_config": "plugins/autosci fixture-mode bridge; Solar owns workflow semantics",
+      "base_url": "local",
+      "auth_mode": "none",
+      "key_ref": "none",
+      "quota_cycle": "none",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
+      "roles": [
+        "builder"
+      ],
+      "task_classes": [
+        "scientific-code-evidence-map",
+        "research-code-evidence-map"
+      ],
+      "strengths": [
+        "code-evidence-mapping",
+        "explicit-file-symbol-mapping",
+        "solar-evidence-abi"
+      ],
+      "preferred_for": [
+        "cap.research-code-evidence-map",
+        "ScientificCodeEvidenceMapper"
+      ],
+      "avoid_for": [
+        "hidden-backend-full-workflow",
+        "unbounded-external-execution"
+      ],
+      "cost_tier": "low",
+      "latency_tier": "low",
+      "context_tier": "low",
+      "max_concurrency": 1,
+      "fallback_profile": "builder",
+      "policy": {
+        "write_files": "artifact_dir_only",
+        "run_shell": "restricted_operator_command",
+        "network": "denied",
+        "external_commands": "fixture_or_explicit_envelope_only",
+        "git_commit": "denied"
+      },
+      "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" run --action map_code_evidence --envelope \"$SOLAR_OPERATOR_ENVELOPE_JSON\"",
+      "launch_cmd_kind": "print_once",
+      "health_check": {
+        "type": "command",
+        "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "cache_seconds": 300
+      },
+      "state": {
+        "availability": "enabled",
+        "runtime_state": "idle",
+        "cooldown_until": null
+      },
+      "compat_alias_for": "local_command_worker",
+      "compat_maps_to": {
+        "host_type": "local_command_worker",
+        "carrier_hint": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "action": "map_code_evidence"
+        }
+      },
+      "deprecated": false
+    },
+    "autosci-memory-update-worker": {
+      "display_name": "AutoSci memory update backend worker",
+      "plane": "local_backend",
+      "owner_host": "solar@example-host",
+      "pane": "N/A",
+      "profile": "autosci-backend",
+      "role": "builder",
+      "persona": "scientific-memory-updater",
+      "dispatch_template": "templates/dispatch/scientific-memory-update.dispatch.md",
+      "provider": "local",
+      "vendor": "AutoSci",
+      "backend": "command",
+      "model": "autosci-adapter-fixture",
+      "model_config": "plugins/autosci fixture-mode bridge; Solar owns workflow semantics",
+      "base_url": "local",
+      "auth_mode": "none",
+      "key_ref": "none",
+      "quota_cycle": "none",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
       "roles": [
         "builder"
       ],
@@ -4347,7 +4672,7 @@
         "ScientificMemoryUpdater"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",
@@ -4370,8 +4695,8 @@
         "cache_seconds": 300
       },
       "state": {
-        "availability": "disabled",
-        "runtime_state": "disabled",
+        "availability": "enabled",
+        "runtime_state": "idle",
         "cooldown_until": null
       },
       "compat_alias_for": "local_command_worker",
@@ -4383,17 +4708,17 @@
           "action": "update_memory"
         }
       },
-      "deprecated": false,
-      "disabled_reason": "Phase 5 registry placeholder; bridge action lands in Phase 9 to avoid fake memory updates."
+      "deprecated": false
     },
-    "autosci-idea-worker": {
-      "display_name": "AutoSci idea backend worker",
+    "autosci-graph-update-worker": {
+      "display_name": "AutoSci graph update backend worker",
       "plane": "local_backend",
       "owner_host": "solar@example-host",
       "pane": "N/A",
       "profile": "autosci-backend",
-      "role": "planner",
-      "persona": "planner",
+      "role": "builder",
+      "persona": "scientific-memory-updater",
+      "dispatch_template": "templates/dispatch/scientific-graph-update.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4405,30 +4730,107 @@
       "quota_cycle": "none",
       "quota_refresh_at": null,
       "quota_guard_state": "ok",
-      "enabled": false,
-      "enabled_at": "N/A",
-      "available": false,
-      "health_status": "pending_backend_action",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
+      "roles": [
+        "builder"
+      ],
+      "task_classes": [
+        "scientific-graph-update",
+        "research-graph-update"
+      ],
+      "strengths": [
+        "research-graph-update",
+        "explicit-relationship-edges",
+        "solar-evidence-abi"
+      ],
+      "preferred_for": [
+        "cap.research-graph-update",
+        "ScientificGraphUpdater"
+      ],
+      "avoid_for": [
+        "hidden-backend-full-workflow",
+        "unbounded-external-execution"
+      ],
+      "cost_tier": "low",
+      "latency_tier": "low",
+      "context_tier": "low",
+      "max_concurrency": 1,
+      "fallback_profile": "builder",
+      "policy": {
+        "write_files": "artifact_dir_only",
+        "run_shell": "restricted_operator_command",
+        "network": "denied",
+        "external_commands": "fixture_or_explicit_envelope_only",
+        "git_commit": "denied"
+      },
+      "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" run --action update_graph --envelope \"$SOLAR_OPERATOR_ENVELOPE_JSON\"",
+      "launch_cmd_kind": "print_once",
+      "health_check": {
+        "type": "command",
+        "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "cache_seconds": 300
+      },
+      "state": {
+        "availability": "enabled",
+        "runtime_state": "idle",
+        "cooldown_until": null
+      },
+      "compat_alias_for": "local_command_worker",
+      "compat_maps_to": {
+        "host_type": "local_command_worker",
+        "carrier_hint": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "action": "update_graph"
+        }
+      },
+      "deprecated": false
+    },
+    "autosci-idea-worker": {
+      "display_name": "AutoSci idea generate backend worker",
+      "plane": "local_backend",
+      "owner_host": "solar@example-host",
+      "pane": "N/A",
+      "profile": "autosci-backend",
+      "role": "planner",
+      "persona": "scientific-experiment-designer",
+      "dispatch_template": "templates/dispatch/scientific-experiment-design.dispatch.md",
+      "provider": "local",
+      "vendor": "AutoSci",
+      "backend": "command",
+      "model": "autosci-adapter-fixture",
+      "model_config": "plugins/autosci fixture-mode bridge; Solar owns workflow semantics",
+      "base_url": "local",
+      "auth_mode": "none",
+      "key_ref": "none",
+      "quota_cycle": "none",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
       "roles": [
         "planner"
       ],
       "task_classes": [
         "scientific-idea-generate",
-        "scientific-idea-evaluate"
+        "research-idea-generate"
       ],
       "strengths": [
         "research-ideation",
-        "idea-evaluation",
+        "evidence-grounded-idea-candidates",
         "solar-evidence-abi"
       ],
       "preferred_for": [
         "cap.research-idea-generate",
-        "cap.research-idea-evaluate",
-        "ScientificIdeaGenerator",
-        "ScientificIdeaEvaluator"
+        "ScientificIdeaGenerator"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",
@@ -4451,8 +4853,8 @@
         "cache_seconds": 300
       },
       "state": {
-        "availability": "disabled",
-        "runtime_state": "disabled",
+        "availability": "enabled",
+        "runtime_state": "idle",
         "cooldown_until": null
       },
       "compat_alias_for": "local_command_worker",
@@ -4464,8 +4866,86 @@
           "action": "generate_ideas"
         }
       },
-      "deprecated": false,
-      "disabled_reason": "Phase 5 registry placeholder; bridge idea actions land in Phase 11 to avoid fake ideation."
+      "deprecated": false
+    },
+    "autosci-idea-evaluate-worker": {
+      "display_name": "AutoSci idea evaluate backend worker",
+      "plane": "local_backend",
+      "owner_host": "solar@example-host",
+      "pane": "N/A",
+      "profile": "autosci-backend",
+      "role": "planner",
+      "persona": "scientific-experiment-designer",
+      "dispatch_template": "templates/dispatch/scientific-experiment-design.dispatch.md",
+      "provider": "local",
+      "vendor": "AutoSci",
+      "backend": "command",
+      "model": "autosci-adapter-fixture",
+      "model_config": "plugins/autosci fixture-mode bridge; Solar owns workflow semantics",
+      "base_url": "local",
+      "auth_mode": "none",
+      "key_ref": "none",
+      "quota_cycle": "none",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
+      "roles": [
+        "planner"
+      ],
+      "task_classes": [
+        "scientific-idea-evaluate",
+        "research-idea-evaluate"
+      ],
+      "strengths": [
+        "idea-evaluation",
+        "novelty-feasibility-filtering",
+        "solar-evidence-abi"
+      ],
+      "preferred_for": [
+        "cap.research-idea-evaluate",
+        "ScientificIdeaEvaluator"
+      ],
+      "avoid_for": [
+        "hidden-backend-full-workflow",
+        "unbounded-external-execution"
+      ],
+      "cost_tier": "low",
+      "latency_tier": "low",
+      "context_tier": "low",
+      "max_concurrency": 1,
+      "fallback_profile": "planner",
+      "policy": {
+        "write_files": "artifact_dir_only",
+        "run_shell": "restricted_operator_command",
+        "network": "denied",
+        "external_commands": "fixture_or_explicit_envelope_only",
+        "git_commit": "denied"
+      },
+      "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" run --action evaluate_ideas --envelope \"$SOLAR_OPERATOR_ENVELOPE_JSON\"",
+      "launch_cmd_kind": "print_once",
+      "health_check": {
+        "type": "command",
+        "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "cache_seconds": 300
+      },
+      "state": {
+        "availability": "enabled",
+        "runtime_state": "idle",
+        "cooldown_until": null
+      },
+      "compat_alias_for": "local_command_worker",
+      "compat_maps_to": {
+        "host_type": "local_command_worker",
+        "carrier_hint": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "action": "evaluate_ideas"
+        }
+      },
+      "deprecated": false
     },
     "autosci-experiment-design-worker": {
       "display_name": "AutoSci experiment design backend worker",
@@ -4474,7 +4954,8 @@
       "pane": "N/A",
       "profile": "autosci-backend",
       "role": "planner",
-      "persona": "planner",
+      "persona": "scientific-experiment-designer",
+      "dispatch_template": "templates/dispatch/scientific-experiment-design.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4507,7 +4988,7 @@
         "ScientificExperimentDesigner"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",
@@ -4552,7 +5033,8 @@
       "pane": "N/A",
       "profile": "autosci-backend",
       "role": "evaluator",
-      "persona": "evaluator",
+      "persona": "scientific-experiment-runner",
+      "dispatch_template": "templates/dispatch/scientific-experiment-run.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4585,7 +5067,7 @@
         "ScientificExperimentRunner"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",
@@ -4623,6 +5105,85 @@
       },
       "deprecated": false
     },
+    "autosci-experiment-monitor-worker": {
+      "display_name": "AutoSci experiment monitor backend worker",
+      "plane": "local_backend",
+      "owner_host": "solar@example-host",
+      "pane": "N/A",
+      "profile": "autosci-backend",
+      "role": "evaluator",
+      "persona": "scientific-experiment-runner",
+      "dispatch_template": "templates/dispatch/scientific-experiment-run.dispatch.md",
+      "provider": "local",
+      "vendor": "AutoSci",
+      "backend": "command",
+      "model": "autosci-adapter-fixture",
+      "model_config": "plugins/autosci fixture-mode bridge; Solar owns workflow semantics",
+      "base_url": "local",
+      "auth_mode": "none",
+      "key_ref": "none",
+      "quota_cycle": "none",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
+      "enabled": true,
+      "enabled_at": "2026-06-18T00:00:00Z",
+      "available": true,
+      "health_status": "ok",
+      "roles": [
+        "evaluator"
+      ],
+      "task_classes": [
+        "scientific-experiment-monitor",
+        "research-experiment-monitor"
+      ],
+      "strengths": [
+        "fixture-experiment-monitor",
+        "experiment-status-evidence",
+        "solar-evidence-abi"
+      ],
+      "preferred_for": [
+        "cap.research-experiment-monitor",
+        "ScientificExperimentMonitor"
+      ],
+      "avoid_for": [
+        "hidden-backend-full-workflow",
+        "unbounded-external-execution"
+      ],
+      "cost_tier": "low",
+      "latency_tier": "low",
+      "context_tier": "low",
+      "max_concurrency": 1,
+      "fallback_profile": "evaluator",
+      "policy": {
+        "write_files": "artifact_dir_only",
+        "run_shell": "restricted_operator_command",
+        "network": "denied",
+        "external_commands": "fixture_or_explicit_envelope_only",
+        "git_commit": "denied"
+      },
+      "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" run --action monitor_experiment --envelope \"$SOLAR_OPERATOR_ENVELOPE_JSON\"",
+      "launch_cmd_kind": "print_once",
+      "health_check": {
+        "type": "command",
+        "command": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "cache_seconds": 300
+      },
+      "state": {
+        "availability": "enabled",
+        "runtime_state": "idle",
+        "cooldown_until": null
+      },
+      "compat_alias_for": "local_command_worker",
+      "compat_maps_to": {
+        "host_type": "local_command_worker",
+        "carrier_hint": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "action": "monitor_experiment"
+        }
+      },
+      "deprecated": false
+    },
     "autosci-claim-verify-worker": {
       "display_name": "AutoSci claim verify backend worker",
       "plane": "local_backend",
@@ -4630,7 +5191,8 @@
       "pane": "N/A",
       "profile": "autosci-backend",
       "role": "evaluator",
-      "persona": "evaluator",
+      "persona": "scientific-claim-verifier",
+      "dispatch_template": "templates/dispatch/scientific-claim-verify.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4663,7 +5225,7 @@
         "ScientificClaimVerifier"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",
@@ -4708,7 +5270,8 @@
       "pane": "N/A",
       "profile": "autosci-backend",
       "role": "builder",
-      "persona": "builder",
+      "persona": "scientific-report-writer",
+      "dispatch_template": "templates/dispatch/scientific-report-write.dispatch.md",
       "provider": "local",
       "vendor": "AutoSci",
       "backend": "command",
@@ -4744,7 +5307,7 @@
         "ScientificReportDrafter"
       ],
       "avoid_for": [
-        "hidden-autosci-full-workflow",
+        "hidden-backend-full-workflow",
         "unbounded-external-execution"
       ],
       "cost_tier": "low",

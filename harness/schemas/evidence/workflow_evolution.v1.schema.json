@@ -57,7 +57,50 @@
         "rationale": {"type": "string", "minLength": 1},
         "expected_effect": {"type": "string", "minLength": 1},
         "approval_state": {"type": "string", "enum": ["proposed", "approved", "rejected", "applied", "rolled_back"]},
-        "evidence_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        "evidence_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "collected": {"$ref": "#/$defs/collected"},
+        "proposed_changes": {"type": "array", "items": {"$ref": "#/$defs/proposed_change"}},
+        "review": {"$ref": "#/$defs/review"},
+        "recommended_changes_path": {"type": "string", "minLength": 1},
+        "patch_candidates_path": {"type": "string", "minLength": 1}
+      }
+    },
+    "collected": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "failed_nodes": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "gate_rejection_reasons": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "ambiguous_manuals_or_prompts": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "insufficient_schemas": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "poor_operator_bindings": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "human_intervention_points": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "runtime_errors": {"type": "array", "items": {"type": "object", "additionalProperties": true}}
+      }
+    },
+    "proposed_change": {
+      "type": "object",
+      "required": ["change_id", "category", "target", "description", "evidence_ids", "review_required", "application_state"],
+      "additionalProperties": true,
+      "properties": {
+        "change_id": {"type": "string", "minLength": 1},
+        "category": {"type": "string", "enum": ["capsule", "manual", "routing", "gate", "schema", "workflow_template", "adapter", "other"]},
+        "target": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "evidence_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "review_required": {"type": "boolean"},
+        "application_state": {"type": "string", "enum": ["proposed_only", "not_applied", "applied"]}
+      }
+    },
+    "review": {
+      "type": "object",
+      "required": ["human_accept_reject_required", "protected_core_edits_applied", "application_state"],
+      "additionalProperties": true,
+      "properties": {
+        "human_accept_reject_required": {"type": "boolean"},
+        "protected_core_edits_applied": {"type": "boolean"},
+        "application_state": {"type": "string", "enum": ["proposed_only", "not_applied", "applied"]},
+        "approval_ref": {"type": "string"}
       }
     }
   }

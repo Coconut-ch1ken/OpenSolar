@@ -399,7 +399,7 @@ pane_footer_label() {
 }
 
 configure_product_delivery_labels() {
-  tmux has-session -t "$SESSION_NAME" 2>/dev/null || return 0
+  tmux has-session -t "=${SESSION_NAME}" 2>/dev/null || return 0
   tmux rename-window -t "$SESSION_NAME:0" "Product Delivery" 2>/dev/null || true
   configure_role_footer_style "$SESSION_NAME" "#89b4fa"
   tmux select-pane -t "$SESSION_NAME:0.0" -T "$(pane_footer_label pm "PM 产品经理")" 2>/dev/null || true
@@ -409,12 +409,12 @@ configure_product_delivery_labels() {
 }
 
 product_delivery_pane_count() {
-  tmux has-session -t "$SESSION_NAME" 2>/dev/null || { printf '0\n'; return 1; }
+  tmux has-session -t "=${SESSION_NAME}" 2>/dev/null || { printf '0\n'; return 1; }
   tmux list-panes -t "$SESSION_NAME:Product Delivery" 2>/dev/null | wc -l | tr -d ' '
 }
 
 warn_if_product_delivery_layout_incomplete() {
-  tmux has-session -t "$SESSION_NAME" 2>/dev/null || return 0
+  tmux has-session -t "=${SESSION_NAME}" 2>/dev/null || return 0
   local panes_count
   panes_count="$(product_delivery_pane_count 2>/dev/null || printf '0')"
   if [[ "$panes_count" != "$EXPECTED_PRODUCT_DELIVERY_PANES" ]]; then
@@ -426,7 +426,7 @@ warn_if_product_delivery_layout_incomplete() {
 }
 
 apply_product_delivery_models() {
-  tmux has-session -t "$SESSION_NAME" 2>/dev/null || { warn "主屏未运行: $SESSION_NAME"; return 0; }
+  tmux has-session -t "=${SESSION_NAME}" 2>/dev/null || { warn "主屏未运行: $SESSION_NAME"; return 0; }
   local personas=(pm planner builder evaluator)
   local panes=("$SESSION_NAME:Product Delivery.0" "$SESSION_NAME:Product Delivery.1" "$SESSION_NAME:Product Delivery.2" "$SESSION_NAME:Product Delivery.3")
   local i target persona pane_id work_dir _esc_harness _esc_work
@@ -494,6 +494,9 @@ install_hint_for_required_dep() {
     claude)
       printf '%s\n' "Install the Claude Code CLI and confirm 'claude --version' works before launching panes"
       ;;
+    codex)
+      printf '%s\n' "Install the Codex CLI and confirm 'codex --version' works before launching panes"
+      ;;
     jq)
       printf '%s\n' "macOS: brew install jq; Ubuntu/Debian: sudo apt-get install jq"
       ;;
@@ -501,6 +504,24 @@ install_hint_for_required_dep() {
       printf '%s\n' "Install '$1' and ensure it is on PATH"
       ;;
   esac
+}
+
+harness_required_pane_runtimes() {
+  local personas=(pm planner builder evaluator)
+  local seen="" persona configured provider runtime
+  for persona in "${personas[@]}"; do
+    configured="$(solar_persona_model "$persona" 2>/dev/null || printf '%s' "${SOLAR_DEFAULT_MAIN_MODEL:-codex}")"
+    provider="$(solar_model_provider "$configured" 2>/dev/null || true)"
+    case "$provider" in
+      codex) runtime="codex" ;;
+      anthropic|zhipu|deepseek) runtime="claude" ;;
+      *) runtime="codex" ;;
+    esac
+    case " $seen " in
+      *" $runtime "*) ;;
+      *) seen="$seen $runtime"; printf '%s\n' "$runtime" ;;
+    esac
+  done
 }
 
 harness_launch_preflight() {
@@ -517,7 +538,7 @@ harness_launch_preflight() {
     failed=$((failed + 1))
   fi
 
-  for cmd in python3 tmux claude jq; do
+  for cmd in python3 tmux jq $(harness_required_pane_runtimes); do
     if path=$(command -v "$cmd" 2>/dev/null); then
       echo "required ok: ${cmd} path=${path}"
     else
@@ -536,7 +557,7 @@ harness_launch_preflight() {
   fi
 
   if (( failed == 0 )); then
-    echo "manual-pending: live Claude pane behavior is not verified by preflight; after tmux opens, press Enter in each pane and resolve Claude trust/auth/quota prompts."
+    echo "manual-pending: live pane behavior is not verified by preflight; after tmux opens, resolve Codex/agent runtime trust/auth prompts."
     return 0
   fi
 
@@ -631,7 +652,7 @@ do_doctor() {
 
   if (( failed == 0 )); then
     echo "Solar Harness doctor: required checks passed"
-    echo "manual-pending: live Claude panes and real delegation are verified only after Claude starts and responds in the tmux panes."
+    echo "manual-pending: live panes and real delegation are verified only after the selected agent runtime starts and responds in tmux."
     return 0
   else
     echo "Solar Harness doctor: ${failed} required check group(s) failed"
@@ -792,7 +813,13 @@ start_harness() {
   fi
 
   command -v tmux &>/dev/null || { err "tmux 未安装: brew install tmux"; exit 1; }
-  command -v claude &>/dev/null || { err "claude 未安装"; exit 1; }
+  local required_runtime
+  for required_runtime in $(harness_required_pane_runtimes); do
+    command -v "$required_runtime" &>/dev/null || {
+      err "$required_runtime 未安装: $(install_hint_for_required_dep "$required_runtime")"
+      exit 1
+    }
+  done
 
   if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     # 安全优先: pane_current_command 经常是 bash/zsh，因为 Claude TUI 是子进程。
@@ -923,8 +950,8 @@ start_harness() {
   echo ""
   log "使用方法:"
   echo "  1. 切到化身 pane (Ctrl+B → 方向键 / 鼠标点击)"
-  echo "  2. 按 Enter 启动该化身的 Claude"
-  echo "  3. 处理 Claude 的确认提示 (信任文件夹等)"
+  echo "  2. 等待该化身的 Codex/agent runtime 启动"
+  echo "  3. 处理 Codex/agent runtime 的确认提示 (信任文件夹等)"
   echo ""
 
   # ── 同步拉 Coordinator + Watchdog (SIGHUP 隔离) ──
@@ -1084,6 +1111,7 @@ write_parallel_lab_state() {
 
 ensure_parallel_builder_lab() {
   local work_dir="${1:-$(pwd)}"
+  local force_respawn="${2:-0}"
   tmux has-session -t "$LAB_SESSION_NAME" 2>/dev/null || return 0
   local state_file="$HARNESS_DIR/state/parallel-builder-lab.env"
   local desired_matrix matrix_label
@@ -1097,6 +1125,10 @@ ensure_parallel_builder_lab() {
   if [[ "$current_matrix" != "$desired_matrix" ]]; then
     rebuild_for_model_matrix=1
     warn "Parallel Builder Lab 模型矩阵变化: ${current_matrix:-N/A} -> ${desired_matrix}; 将 respawn 四个 builder"
+  fi
+  if [[ "$force_respawn" == "1" ]]; then
+    rebuild_for_model_matrix=1
+    warn "Parallel Builder Lab 显式 apply；将 respawn 四个 builder"
   fi
   write_parallel_lab_state "$work_dir"
 
@@ -1477,13 +1509,16 @@ print(next((m.group(1) for p in patterns for m in [re.search(p,text)] if m), "")
   fi
 
   if [[ "$json" == "1" ]]; then
-    python3 - "$rc" "$raw_file" "$dispatch" "$autopilot_rc" "$intent_rc" "$intent_id" <<'PY'
+    python3 - "$rc" "$raw_file" "$dispatch" "$autopilot_rc" "$intent_rc" "$intent_id" "$sid_from_out" "$consumer_status" "$planner_handoff_status" <<'PY'
 import json, sys
 print(json.dumps({
     "ok": int(sys.argv[1]) == 0,
     "raw_record": sys.argv[2],
     "dispatch_requested": sys.argv[3] == "1",
     "autopilot_returncode": int(sys.argv[4]),
+    "sprint_id": sys.argv[7],
+    "consumer_status": sys.argv[8],
+    "planner_handoff_status": sys.argv[9],
     "intent_gateway": {
         "ok": int(sys.argv[5]) == 0,
         "intent_id": sys.argv[6],
@@ -2755,7 +2790,7 @@ models_live_route_check() {
     printf 'skipped: tmux unavailable\n'
     return 2
   fi
-  if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+  if ! tmux has-session -t "=${SESSION_NAME}" 2>/dev/null; then
     printf 'skipped: session %s unavailable\n' "$SESSION_NAME"
     return 2
   fi
@@ -2857,7 +2892,7 @@ do_models_command() {
       ;;
     set-main)
       local alias="${1:-}"
-      [[ -n "$alias" ]] || { err "用法: $0 models set-main <opus|anthropic-sonnet> [--apply]"; exit 1; }
+      [[ -n "$alias" ]] || { err "用法: $0 models set-main <codex|codex-gpt-5.5|opus|anthropic-sonnet> [--apply]"; exit 1; }
       solar_set_main_model "$alias"
       ok "已写入主屏模型: pm/planner/builder/evaluator -> $alias"
       if [[ "${2:-}" == "--apply" ]]; then
@@ -2883,7 +2918,7 @@ do_models_command() {
       fi
       ;;
     apply-lab)
-      ensure_parallel_builder_lab "$(pwd)"
+      ensure_parallel_builder_lab "$(pwd)" 1
       ;;
     refresh-labels)
       configure_product_delivery_labels
@@ -2934,9 +2969,11 @@ do_models_command() {
       echo "Usage:"
       echo "  $0 models show"
       echo "  $0 models doctor"
+      echo "  $0 models set-main codex-gpt-5.5 [--apply]"
       echo "  $0 models set-main opus [--apply]"
       echo "  $0 models set-main anthropic-sonnet [--apply]"
       echo "  $0 models apply-main"
+      echo "  $0 models set-lab-matrix codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5 [--apply]"
       echo "  $0 models set-lab-matrix glm,glm,glm,anthropic-sonnet [--apply]"
       echo "  $0 models apply-lab"
       echo "  $0 models refresh-labels"
@@ -3022,6 +3059,17 @@ print(json.dumps({
   research)
     shift || true
     python3 "$HARNESS_DIR/lib/research/cli.py" "$@"
+    ;;
+  autosci)
+    shift || true
+    _autosci_python="$HARNESS_DIR/bin/python3"
+    [[ -x "$_autosci_python" ]] || _autosci_python=python3
+    "$_autosci_python" "$HARNESS_DIR/plugins/autosci/bin/autosci_skill_shim.py" "$@"
+    ;;
+  '$skills'|'$skill'|'$'*)
+    _autosci_python="$HARNESS_DIR/bin/python3"
+    [[ -x "$_autosci_python" ]] || _autosci_python=python3
+    "$_autosci_python" "$HARNESS_DIR/plugins/autosci/bin/autosci_skill_shim.py" "$@"
     ;;
   browser)
     shift || true
@@ -3174,6 +3222,18 @@ print(json.dumps({
     _SS_PORT_FILE="$HARNESS_DIR/run/status-server.port"
     _SS_TMUX_SESSION="solar-harness-status-server"
     mkdir -p "$HARNESS_DIR/run"
+    _SS_PYTHON="${SOLAR_STATUS_SERVER_PYTHON:-}"
+    if [[ -z "$_SS_PYTHON" ]]; then
+      if [[ -x "$HARNESS_DIR/bin/python3" ]]; then
+        _SS_PYTHON="$HARNESS_DIR/bin/python3"
+      else
+        _SS_PYTHON="$(command -v python3)"
+      fi
+    fi
+    _SS_PATH_PREFIX="$HARNESS_DIR/bin"
+    if [[ -x "$HARNESS_DIR/../.venv/bin/python" ]]; then
+      _SS_PATH_PREFIX="$HARNESS_DIR/../.venv/bin:$_SS_PATH_PREFIX"
+    fi
     _status_server_live_pids() {
       ps ax -o pid= -o args= | awk -v script="$HARNESS_DIR/lib/symphony/status-server.py" '
         index($0, script) && $0 !~ /awk -v script/ { print $1 }
@@ -3215,10 +3275,10 @@ print(json.dumps({
           rm -f "$_SS_PID" "$_SS_PORT_FILE"
           if command -v tmux >/dev/null 2>&1; then
             tmux new-session -d -s "$_SS_TMUX_SESSION" \
-              "cd '$HARNESS_DIR' && exec python3 '$HARNESS_DIR/lib/symphony/status-server.py' >> '$_SS_LOG' 2>&1"
+              "cd '$HARNESS_DIR' && PATH='$_SS_PATH_PREFIX':\"\$PATH\" exec '$_SS_PYTHON' '$HARNESS_DIR/lib/symphony/status-server.py' >> '$_SS_LOG' 2>&1"
             echo "tmux:${_SS_TMUX_SESSION}" > "$_SS_PID"
           else
-            nohup python3 "$HARNESS_DIR/lib/symphony/status-server.py" >> "$_SS_LOG" 2>&1 &
+            PATH="${_SS_PATH_PREFIX}:$PATH" nohup "$_SS_PYTHON" "$HARNESS_DIR/lib/symphony/status-server.py" >> "$_SS_LOG" 2>&1 &
             echo $! > "$_SS_PID"
           fi
           sleep 0.5
@@ -4113,6 +4173,11 @@ PY
     echo "  $0 扩展 | extend       启动独立第二四分屏 (solar-harness-lab)"
     echo "  $0 intake \"需求\"       默认需求入口：创建 sprint/epic + raw 记录 + 触发 autopilot"
     echo "  $0 bg \"任务\"           在 tmux 后台窗口执行任务；支持 status/logs/attach/cancel"
+    echo "  $0 autosci skills list  列出 AutoSci slash-skill 的确定性 Solar routes"
+    echo "  $0 autosci skill <name> [--paper PATH] [--topic TEXT] [--run-id ID]  运行 AutoSci skill shim"
+    echo "  $0 '\$skills'           AutoSci 兼容入口：列出所有 \$skills"
+    echo "  $0 '\$skill' <name> ... AutoSci 兼容入口：运行指定 skill"
+    echo "  $0 '\$ingest' ...       AutoSci 兼容入口：直接运行对应 native skill route"
     echo "  $0 tvs render < payload.json  使用 TVS 确定性渲染结构化输出"
     echo "  $0 multi-task [screen|start|status|profiles|doctor|logs|attach|foreground|cancel]  tmux 后台 DAG worker 池"
     echo "  $0 monitor [--host HOST] [--apply|--dry-run] [--json|--loop]  远端 Mac mini multi-task 巡检/安全推进"

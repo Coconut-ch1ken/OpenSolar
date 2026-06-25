@@ -21,8 +21,7 @@
       "expected_artifacts": [
         "coverage.json",
         "comparison.md"
-      ],
-      "execution_mode": "fixture"
+      ]
     }
   },
   "artifacts": [

@@ -975,7 +975,7 @@ def _model_registry() -> dict[str, Any]:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return {
-            "defaults": {"main_model": "opus", "lab_builder_matrix": "glm,glm,glm,anthropic-sonnet"},
+            "defaults": {"main_model": "codex-gpt-5.5", "lab_builder_matrix": "codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5"},
             "models": {},
         }
 
@@ -989,6 +989,14 @@ def _normalize_model_alias(alias: str) -> str:
             pass
     value = str(alias or "").strip().lower()
     fallback = {
+        "codex": "codex-gpt-5.5",
+        "gpt-5.5": "codex-gpt-5.5",
+        "gpt55": "codex-gpt-5.5",
+        "codex-gpt-5.5": "codex-gpt-5.5",
+        "codex-medium": "codex-gpt-5.5",
+        "codex-spark": "codex-gpt-5.3-spark",
+        "gpt-5.3-codex-spark": "codex-gpt-5.3-spark",
+        "gpt53-spark": "codex-gpt-5.3-spark",
         "opus": "claude-opus",
         "claude-opus": "claude-opus",
         "anthropic-sonnet": "claude-sonnet",
@@ -1031,7 +1039,7 @@ def _configured_main_model(role: str) -> str:
     reg = _model_registry()
     cfg = _load_user_config()
     models = cfg.get("models") if isinstance(cfg.get("models"), dict) else {}
-    default = (reg.get("defaults") or {}).get("main_model") or "opus"
+    default = (reg.get("defaults") or {}).get("main_model") or "codex"
     return str(models.get(role) or default)
 
 
@@ -1039,10 +1047,10 @@ def _configured_lab_model_for_pane(pane: str) -> str:
     reg = _model_registry()
     cfg = _load_user_config()
     models = cfg.get("models") if isinstance(cfg.get("models"), dict) else {}
-    matrix = str(models.get("lab_builder_matrix") or (reg.get("defaults") or {}).get("lab_builder_matrix") or "glm,glm,glm,anthropic-sonnet")
+    matrix = str(models.get("lab_builder_matrix") or (reg.get("defaults") or {}).get("lab_builder_matrix") or "codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5")
     items = _matrix_items(matrix)
     if not items:
-        return "anthropic-sonnet"
+        return "codex-gpt-5.5"
     try:
         index = int(str(pane).rsplit(".", 1)[1])
     except Exception:
@@ -1066,7 +1074,7 @@ def _models_for_pane(pane: str, title: str = "") -> list[str]:
         return _model_alias_set("opus")
     if "sonnet" in title_lower:
         return _model_alias_set("anthropic-sonnet")
-    return _model_alias_set("anthropic-sonnet")
+    return _model_alias_set("codex")
 
 
 def _quota_models_for_provider(provider: str) -> list[str]:

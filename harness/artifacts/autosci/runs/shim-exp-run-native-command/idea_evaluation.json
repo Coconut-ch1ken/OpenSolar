@@ -1,0 +1,297 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/runs/shim-exp-run-native-command/wiki_state_resolver.json",
+      "type": "wiki_state_resolver_json"
+    },
+    {
+      "path": "artifacts/autosci/runs/shim-exp-run-native-command/idea_evaluation.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "after_artifacts": [
+      "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-run-debug-wd9ofzxv/after.json"
+    ],
+    "allowlist_evidence": [
+      "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-run-debug-wd9ofzxv/allow.json"
+    ],
+    "approval_ref": "approval-exp-native-001",
+    "before_artifacts": [
+      "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-run-debug-wd9ofzxv/before.json"
+    ],
+    "claims_evidence": "artifacts/autosci/runs/shim-exp-run-native-command/research_claims.json",
+    "execute_approved_side_effect": true,
+    "ideas_evidence": "artifacts/autosci/runs/shim-exp-run-native-command/idea_candidate.json",
+    "memory_evidence": "artifacts/autosci/runs/shim-exp-run-native-command/research_memory_update.json",
+    "method_evidence": "artifacts/autosci/runs/shim-exp-run-native-command/research_method.json",
+    "native_options": {
+      "after_artifacts": [
+        "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-run-debug-wd9ofzxv/after.json"
+      ],
+      "all": false,
+      "allowlist_evidence": [
+        "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-run-debug-wd9ofzxv/allow.json"
+      ],
+      "approval_ref": "approval-exp-native-001",
+      "auto": false,
+      "before_artifacts": [
+        "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-run-debug-wd9ofzxv/before.json"
+      ],
+      "checklist": false,
+      "claims_evidence": [],
+      "code_evidence": [],
+      "collect": false,
+      "collect_ready": false,
+      "difficulty": "",
+      "discover": false,
+      "env": "local",
+      "execute_approved": true,
+      "experiment_result_evidence": [],
+      "fix": false,
+      "focus": "",
+      "format": "",
+      "full": false,
+      "max_ideas": 0,
+      "max_rounds": 0,
+      "model_command": "",
+      "model_evidence": [],
+      "no_introduction": false,
+      "novelty_evidence": [],
+      "online": false,
+      "pipeline": "",
+      "quick": false,
+      "review": true,
+      "review_llm_command": "",
+      "review_llm_endpoint": "",
+      "review_llm_evidence": [],
+      "review_llm_model": "",
+      "review_llm_provider": "",
+      "runtime_evidence": [],
+      "skip_paper": false,
+      "skip_pilot": false,
+      "skip_validation": false,
+      "start_from": "",
+      "target_score": 0.0,
+      "title": "",
+      "verbose": false,
+      "visualize": false,
+      "write": false
+    },
+    "review_llm_requested": true,
+    "smoke_mode": false,
+    "topic": "exp-native-001"
+  },
+  "limitations": [
+    "Novelty/review signals are derived from local wiki/discovery evidence.",
+    "Independent Review LLM and live external search are still required before promotion.",
+    "Resolver is read-only; it does not mutate wiki state, add graph edges, or rebuild wiki indexes.",
+    "Frontmatter parsing supports scalar values and simple lists only; complex YAML is reported through missing fields."
+  ],
+  "node_id": "node-evaluate-ideas",
+  "outputs": {
+    "evaluations": [
+      {
+        "closest_prior_work": [
+          {
+            "kind": "idea",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-wiki-discovery-001.md",
+            "similarity": 0.462,
+            "source_id": "wiki:ideas/idea-wiki-discovery-001",
+            "title": "Close the evidence gap around exp-native-001"
+          },
+          {
+            "kind": "idea",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-wiki-discovery-002.md",
+            "similarity": 0.412,
+            "source_id": "wiki:ideas/idea-wiki-discovery-002",
+            "title": "Stress-test method transfer from CoEvoSkills: Self-Evolving Agent Skills via Co-E"
+          },
+          {
+            "kind": "paper",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+            "similarity": 0.25,
+            "source_id": "wiki:papers/paper-sample-paper",
+            "title": "AutoSci Adapter Fixture Paper"
+          },
+          {
+            "kind": "paper",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+            "similarity": 0.25,
+            "source_id": "wiki:papers/paper-skillgen-extracted",
+            "title": "SkillGen PDF Extracted Text"
+          },
+          {
+            "kind": "paper",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+            "similarity": 0.25,
+            "source_id": "wiki:papers/paper-solar-autosci-pdf-smoke-2401-00003",
+            "title": "Solar Harness PDF Smoke"
+          }
+        ],
+        "duplicate_status": "new",
+        "evidence_ids": [
+          "idea-wiki-discovery-001",
+          "discovery:CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification",
+          "discovery:Trace2Skill: Distill Trajectory-Local Lessons into Transferable Agent Skills",
+          "wiki:ideas/idea-wiki-discovery-001",
+          "wiki:ideas/idea-wiki-discovery-002",
+          "wiki:papers/paper-sample-paper",
+          "wiki:papers/paper-skillgen-extracted",
+          "wiki:papers/paper-solar-autosci-pdf-smoke-2401-00003"
+        ],
+        "external_novelty": {
+          "checked_paths": [],
+          "provenance": {
+            "checked_source_count": 0,
+            "completed_provider_count": 0,
+            "issues": [
+              "No Web/Semantic Scholar/DeepXiv novelty evidence path was supplied and online novelty fetch was not requested."
+            ],
+            "status": "unavailable"
+          },
+          "provider_statuses": [],
+          "query": "",
+          "reason": "No Web/Semantic Scholar/DeepXiv novelty evidence path was supplied and online novelty fetch was not requested.",
+          "source_count": 0,
+          "status": "unavailable"
+        },
+        "external_source_count": 0,
+        "failed_overlap": "",
+        "feasibility": 0.681,
+        "feasibility_rationale": "Local review checks source grounding, failed-idea overlap, and closest-prior similarity; independent Review LLM evidence is still required.",
+        "idea_id": "idea-wiki-discovery-001",
+        "local_source_count": 27,
+        "novelty": 0.572,
+        "novelty_label": "source-grounded",
+        "novelty_rationale": "Novelty is estimated from overlap against local wiki/discovery evidence and supplied external novelty evidence. Closest similarity=0.462; source_count=27; external_source_count=0.",
+        "recommendation": "revise",
+        "review_available": false,
+        "review_llm": {
+          "checked_paths": [],
+          "endpoint": "https://api.openai.com/v1/chat/completions",
+          "invocation_mode": "provider",
+          "model": "gpt-5.5",
+          "provider": "openai",
+          "reason": "Review LLM provider invocation failed: HTTP Error 401: Unauthorized",
+          "status": "failed",
+          "tool": "mcp__llm-review__chat"
+        },
+        "review_mode": "local_surrogate",
+        "review_score": 0.681,
+        "risks": [
+          "Review LLM cross-verify is not connected; this is a local conservative review signal.",
+          "Run /novelty with live search and /review with Review LLM before promotion.",
+          "External Web/Semantic Scholar/DeepXiv novelty evidence is unavailable or invalid."
+        ],
+        "source_count": 27,
+        "source_mode": "mixed"
+      },
+      {
+        "closest_prior_work": [
+          {
+            "kind": "idea",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-wiki-discovery-002.md",
+            "similarity": 0.471,
+            "source_id": "wiki:ideas/idea-wiki-discovery-002",
+            "title": "Stress-test method transfer from CoEvoSkills: Self-Evolving Agent Skills via Co-E"
+          },
+          {
+            "kind": "paper",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+            "similarity": 0.333,
+            "source_id": "wiki:papers/paper-skillgen",
+            "title": "SKILLGEN: Verified Inference-Time Agent Skill"
+          },
+          {
+            "kind": "paper",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+            "similarity": 0.286,
+            "source_id": "wiki:papers/paper-skillgen-operator-smoke-paper",
+            "title": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis"
+          },
+          {
+            "kind": "paper",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+            "similarity": 0.25,
+            "source_id": "wiki:papers/paper-sample-paper",
+            "title": "AutoSci Adapter Fixture Paper"
+          },
+          {
+            "kind": "paper",
+            "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+            "similarity": 0.25,
+            "source_id": "wiki:papers/paper-skillgen-extracted",
+            "title": "SkillGen PDF Extracted Text"
+          }
+        ],
+        "duplicate_status": "new",
+        "evidence_ids": [
+          "idea-wiki-discovery-002",
+          "discovery:CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification",
+          "discovery:EvoSkill: Automated Skill Discovery for Multi-Agent Systems",
+          "wiki:ideas/idea-wiki-discovery-002",
+          "wiki:papers/paper-skillgen",
+          "wiki:papers/paper-skillgen-operator-smoke-paper",
+          "wiki:papers/paper-sample-paper",
+          "wiki:papers/paper-skillgen-extracted"
+        ],
+        "external_novelty": {
+          "checked_paths": [],
+          "provenance": {
+            "checked_source_count": 0,
+            "completed_provider_count": 0,
+            "issues": [
+              "No Web/Semantic Scholar/DeepXiv novelty evidence path was supplied and online novelty fetch was not requested."
+            ],
+            "status": "unavailable"
+          },
+          "provider_statuses": [],
+          "query": "",
+          "reason": "No Web/Semantic Scholar/DeepXiv novelty evidence path was supplied and online novelty fetch was not requested.",
+          "source_count": 0,
+          "status": "unavailable"
+        },
+        "external_source_count": 0,
+        "failed_overlap": "",
+        "feasibility": 0.679,
+        "feasibility_rationale": "Local review checks source grounding, failed-idea overlap, and closest-prior similarity; independent Review LLM evidence is still required.",
+        "idea_id": "idea-wiki-discovery-002",
+        "local_source_count": 27,
+        "novelty": 0.568,
+        "novelty_label": "source-grounded",
+        "novelty_rationale": "Novelty is estimated from overlap against local wiki/discovery evidence and supplied external novelty evidence. Closest similarity=0.471; source_count=27; external_source_count=0.",
+        "recommendation": "revise",
+        "review_available": false,
+        "review_llm": {
+          "checked_paths": [],
+          "endpoint": "https://api.openai.com/v1/chat/completions",
+          "invocation_mode": "provider",
+          "model": "gpt-5.5",
+          "provider": "openai",
+          "reason": "Review LLM provider invocation failed: HTTP Error 401: Unauthorized",
+          "status": "failed",
+          "tool": "mcp__llm-review__chat"
+        },
+        "review_mode": "local_surrogate",
+        "review_score": 0.679,
+        "risks": [
+          "Review LLM cross-verify is not connected; this is a local conservative review signal.",
+          "Run /novelty with live search and /review with Review LLM before promotion.",
+          "External Web/Semantic Scholar/DeepXiv novelty evidence is unavailable or invalid."
+        ],
+        "source_count": 27,
+        "source_mode": "mixed"
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-25T20:47:37Z"
+  },
+  "schema": "idea_evaluation.v1",
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "status": "completed",
+  "task_id": "task-autosci-skillgen-evaluate_ideas"
+}

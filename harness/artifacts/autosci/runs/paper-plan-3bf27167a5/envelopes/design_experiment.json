@@ -1,0 +1,19 @@
+{
+  "inputs": {
+    "claim_id": "claim-001",
+    "execution_mode": "fixture",
+    "idea_id": "idea-001",
+    "target": "idea-001",
+    "topic": "Skill Generation for Inference-Time Agents"
+  },
+  "mode": "fixture",
+  "node_id": "node-design-experiment",
+  "output_dir": "artifacts/autosci/runs/paper-plan-3bf27167a5",
+  "outputs": {
+    "evidence_jsonl": "artifacts/autosci/runs/paper-plan-3bf27167a5/evidence.jsonl",
+    "evidence_payload_path": "artifacts/autosci/runs/paper-plan-3bf27167a5/experiment_plan.json",
+    "result_path": "artifacts/autosci/runs/paper-plan-3bf27167a5/design_experiment.result.json"
+  },
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "task_id": "task-autosci-skillgen-design_experiment"
+}

@@ -1,0 +1,63 @@
+{
+  "action": "map_code_evidence",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/scientific/skillgen-phase10-check/handoff.md",
+        "type": "handoff_markdown"
+      },
+      {
+        "path": "artifacts/scientific/skillgen-phase10-check/code_evidence_map.unknown.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "claim_id": "claim-001",
+      "claims_evidence": "artifacts/scientific/skillgen-phase10-check/research_claims.json",
+      "method_evidence": "artifacts/scientific/skillgen-phase10-check/research_method.json",
+      "paper_id": "paper-skillgen-phase10",
+      "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md",
+      "repo_path": "artifacts/scientific/skillgen-phase10-check/missing_repo_fixture"
+    },
+    "limitations": [
+      "Code evidence mapping is unknown because the repository path was unavailable."
+    ],
+    "node_id": "node-phase10-code-map-unknown",
+    "outputs": {
+      "mappings": [
+        {
+          "claim_id": "claim-001",
+          "evidence_ids": [
+            "claim-001"
+          ],
+          "execution_entrypoint": "fixture-mode",
+          "files": [
+            "N/A"
+          ],
+          "mapping_id": "map-001",
+          "mapping_status": "unknown",
+          "relevance_label": "unknown",
+          "relevance_reason": "Repository path not available: artifacts/scientific/skillgen-phase10-check/missing_repo_fixture",
+          "repo_or_path": "artifacts/scientific/skillgen-phase10-check/missing_repo_fixture",
+          "unknown_reason": "Repository path not available: artifacts/scientific/skillgen-phase10-check/missing_repo_fixture"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-18T20:09:40Z"
+    },
+    "schema": "code_evidence_map.v1",
+    "sprint_id": "sprint-autosci-phase10-skillgen-check",
+    "status": "completed",
+    "task_id": "task-phase10-skillgen-code-map-unknown"
+  },
+  "evidence_jsonl": "artifacts/scientific/skillgen-phase10-check/evidence.jsonl",
+  "evidence_path": "artifacts/scientific/skillgen-phase10-check/code_evidence_map.unknown.json",
+  "handoff_path": "artifacts/scientific/skillgen-phase10-check/handoff.md",
+  "ok": true,
+  "result_path": "artifacts/scientific/skillgen-phase10-check/runtime_code_unknown.result.json",
+  "schema": "code_evidence_map.v1",
+  "status": "completed"
+}

@@ -1,7 +1,7 @@
 {
   "schema": "experiment_result.v1",
   "task_id": "task.phase1.sample.experiment_result",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.experiment_run",
   "status": "completed",
   "inputs": {
@@ -24,7 +24,7 @@
   "artifacts": [
     {
       "type": "experiment_result",
-      "path": "artifacts/autosci/fixtures/experiment_result.json"
+      "path": "artifacts/scientific/fixtures/experiment_result.json"
     }
   ],
   "provenance": {

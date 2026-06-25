@@ -53,13 +53,57 @@ def route_items(routes: list[dict[str, Any]], native_skills: list[str]) -> list[
     for route in sorted(routes, key=lambda item: str(item.get("native_skill") or "")):
         skill = str(route.get("native_skill") or "")
         item = dict(route)
+        tool_status = primary_tool_statuses(item.get("primary_tools") or [])
+        missing_tools = [entry for entry in tool_status if entry["status"] == "missing"]
         item["autosci_feature"] = route.get("autosci_command") or f"/{skill}"
         item["evidence_ids"] = [
             f"route:{skill}",
             f"native:{skill}" if skill in native_set else f"config-only:{skill}",
         ]
+        item["tool_abi_status"] = "missing" if missing_tools else "ok"
+        item["primary_tool_statuses"] = tool_status
+        item["missing_primary_tools"] = missing_tools
         items.append(item)
     return items
+
+
+def primary_tool_statuses(primary_tools: list[Any]) -> list[dict[str, Any]]:
+    statuses: list[dict[str, Any]] = []
+    for raw in primary_tools:
+        ref = str(raw or "").strip()
+        token = ref.split()[0] if ref else ""
+        if not token or token == "N/A":
+            continue
+        candidates = local_tool_candidates(token)
+        if not candidates:
+            statuses.append({"ref": ref, "token": token, "status": "external"})
+            continue
+        existing = next((path for path in candidates if path.exists()), None)
+        statuses.append(
+            {
+                "ref": ref,
+                "token": token,
+                "status": "ok" if existing else "missing",
+                "path": str(existing or candidates[0]),
+            }
+        )
+    return statuses
+
+
+def local_tool_candidates(token: str) -> list[Path]:
+    if token.startswith("tools/"):
+        return [REPO_ROOT / token]
+    if token.startswith("plugins/"):
+        return [REPO_HARNESS / token]
+    if token.startswith("harness/"):
+        return [REPO_ROOT / token]
+    if token.startswith("config/"):
+        return [REPO_HARNESS / "plugins" / "autosci" / token, REPO_ROOT / token]
+    if token == ".env.example":
+        return [REPO_HARNESS / "plugins" / "autosci" / "config" / token, REPO_ROOT / token]
+    if token.endswith((".py", ".md", ".json", ".yml", ".yaml")):
+        return [REPO_ROOT / token, REPO_HARNESS / token]
+    return []
 
 
 def add_missing_items(items: list[dict[str, Any]], native_skills: list[str]) -> list[dict[str, Any]]:
@@ -123,6 +167,7 @@ def build_evidence(
     limitations = [
         "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
         "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+        "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements.",
     ]
     limitations.extend(discovery_warnings)
     return {

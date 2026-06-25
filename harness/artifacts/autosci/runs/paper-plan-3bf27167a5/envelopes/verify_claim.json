@@ -1,0 +1,19 @@
+{
+  "inputs": {
+    "claim_id": "claim-001",
+    "claims_evidence": "artifacts/autosci/runs/paper-plan-3bf27167a5/research_claims.json",
+    "code_evidence": "artifacts/autosci/runs/paper-plan-3bf27167a5/code_evidence_map.json",
+    "experiment_result_evidence": "artifacts/autosci/runs/paper-plan-3bf27167a5/experiment_result.json",
+    "target": "idea-001"
+  },
+  "mode": "fixture",
+  "node_id": "node-verify-claim",
+  "output_dir": "artifacts/autosci/runs/paper-plan-3bf27167a5",
+  "outputs": {
+    "evidence_jsonl": "artifacts/autosci/runs/paper-plan-3bf27167a5/evidence.jsonl",
+    "evidence_payload_path": "artifacts/autosci/runs/paper-plan-3bf27167a5/claim_verdict.json",
+    "result_path": "artifacts/autosci/runs/paper-plan-3bf27167a5/verify_claim.result.json"
+  },
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "task_id": "task-autosci-skillgen-verify_claim"
+}

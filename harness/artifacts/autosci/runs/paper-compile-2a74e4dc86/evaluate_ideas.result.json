@@ -1,0 +1,93 @@
+{
+  "action": "evaluate_ideas",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/autosci/runs/paper-compile-2a74e4dc86/idea_evaluation.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "claims_evidence": "artifacts/autosci/runs/paper-compile-2a74e4dc86/research_claims.json",
+      "ideas_evidence": "artifacts/autosci/runs/paper-compile-2a74e4dc86/idea_candidate.json",
+      "memory_evidence": "artifacts/autosci/runs/paper-compile-2a74e4dc86/research_memory_update.json",
+      "method_evidence": "artifacts/autosci/runs/paper-compile-2a74e4dc86/research_method.json"
+    },
+    "limitations": [
+      "Fixture evaluation uses local evidence and does not update idea status directly."
+    ],
+    "node_id": "node-evaluate-ideas",
+    "outputs": {
+      "evaluations": [
+        {
+          "duplicate_status": "new",
+          "evidence_ids": [
+            "idea-001",
+            "claim-003",
+            "method-001",
+            "task-autosci-skillgen-ingest_paper",
+            "task-autosci-skillgen-extract_claims",
+            "claim-001",
+            "claim-002",
+            "claim-003",
+            "task-autosci-skillgen-extract_methods",
+            "method-001",
+            "paper-skillgen-operator-smoke-paper"
+          ],
+          "feasibility": 0.76,
+          "feasibility_rationale": "The required inputs already exist as Solar Evidence ABI artifacts.",
+          "idea_id": "idea-001",
+          "novelty": 0.68,
+          "novelty_rationale": "The idea combines claim, method, and code evidence at a shared artifact grain.",
+          "recommendation": "advance",
+          "risks": [
+            "External novelty is unverified because fixture mode does not search live literature."
+          ]
+        },
+        {
+          "duplicate_status": "duplicate",
+          "evidence_ids": [
+            "idea-duplicate-001",
+            "claim-003",
+            "method-001",
+            "task-autosci-skillgen-ingest_paper",
+            "task-autosci-skillgen-extract_claims",
+            "claim-001",
+            "claim-002",
+            "claim-003",
+            "task-autosci-skillgen-extract_methods",
+            "method-001",
+            "paper-skillgen-operator-smoke-paper"
+          ],
+          "feasibility": 0.8,
+          "feasibility_rationale": "It is easy to run but does not add meaningful evidence.",
+          "idea_id": "idea-duplicate-001",
+          "novelty": 0.15,
+          "novelty_rationale": "The idea duplicates known fixture validation rather than adding a new research question.",
+          "recommendation": "reject",
+          "risks": [
+            "Marked duplicate of an existing fixture smoke path."
+          ]
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-22T21:27:49Z"
+    },
+    "schema": "idea_evaluation.v1",
+    "sprint_id": "phase19-skillgen-operator-smoke",
+    "status": "completed",
+    "task_id": "task-autosci-skillgen-evaluate_ideas"
+  },
+  "evidence_jsonl": "artifacts/autosci/runs/paper-compile-2a74e4dc86/evidence.jsonl",
+  "evidence_path": "artifacts/autosci/runs/paper-compile-2a74e4dc86/idea_evaluation.json",
+  "ok": true,
+  "result_path": "artifacts/autosci/runs/paper-compile-2a74e4dc86/evaluate_ideas.result.json",
+  "schema": "idea_evaluation.v1",
+  "sidecar_evidence_paths": [
+    "artifacts/autosci/runs/paper-compile-2a74e4dc86/research_memory_update.ideas.json"
+  ],
+  "status": "completed"
+}

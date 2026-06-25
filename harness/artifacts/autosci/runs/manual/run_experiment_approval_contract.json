@@ -1,0 +1,53 @@
+{
+  "action": "run_experiment",
+  "after_artifacts": [
+    {
+      "artifact_path": "/tmp/doesnotexist3.json",
+      "exists": false,
+      "kind": "missing",
+      "path": "/tmp/doesnotexist3.json",
+      "verifiable": true
+    }
+  ],
+  "after_ready": false,
+  "allowlist_evidence": [
+    {
+      "artifact_path": "/tmp/doesnotexist.json",
+      "exists": false,
+      "kind": "missing",
+      "path": "/tmp/doesnotexist.json",
+      "verifiable": true
+    }
+  ],
+  "allowlist_ready": false,
+  "approval_ref": "approval-exp-native-001",
+  "approval_state": "approved_missing_preflight",
+  "approved": true,
+  "before_artifacts": [
+    {
+      "artifact_path": "/tmp/doesnotexist2.json",
+      "exists": false,
+      "kind": "missing",
+      "path": "/tmp/doesnotexist2.json",
+      "verifiable": true
+    }
+  ],
+  "before_ready": false,
+  "execution_verified": false,
+  "missing": [
+    "allowlist_evidence:/tmp/doesnotexist.json",
+    "before_artifacts:/tmp/doesnotexist2.json",
+    "runtime_evidence",
+    "after_artifacts:/tmp/doesnotexist3.json"
+  ],
+  "ready_for_execution": false,
+  "runtime_evidence": [],
+  "runtime_ready": false,
+  "schema": "autosci_approval_contract.v1",
+  "side_effects": [
+    "local_process_launch",
+    "remote_execution",
+    "result_collection",
+    "wiki_state_mutation"
+  ]
+}

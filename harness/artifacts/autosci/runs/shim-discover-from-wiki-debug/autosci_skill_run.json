@@ -1,0 +1,99 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    }
+  ],
+  "inputs": {
+    "anchors": [],
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "from_wiki": true,
+    "limit": 10,
+    "negative_ids": [],
+    "paper_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "shim-discover-from-wiki-debug",
+    "skill": "discover",
+    "skill_args": [],
+    "target": "",
+    "topic": "",
+    "venue": "",
+    "work_dir": "artifacts/autosci/runs/shim-discover-from-wiki-debug",
+    "year": ""
+  },
+  "limitations": [
+    "Live API failures must be represented as incomplete source evidence rather than synthetic recommendations.",
+    "Skillgen smoke uses local fixture discovery, not live API ranking."
+  ],
+  "node_id": "autosci-skill-discover",
+  "outputs": {
+    "skill_run": {
+      "action_count": 1,
+      "actions": [
+        {
+          "action": "discover_literature",
+          "evidence_ids": [
+            "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+            "wiki_seed_paper",
+            "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+            "artifacts/autosci/runs/shim-discover-from-wiki-debug/literature_discovery.json",
+            "solar_evidence_json",
+            "wiki",
+            "SkillGen verified inference-time agent skill synthesis",
+            "Network discovery disabled; no synthetic literature candidates were emitted.",
+            "node-discover-literature",
+            "2605.10999",
+            "2401.00003",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-22T19:59:54Z",
+            "literature_discovery.v1",
+            "phase19-skillgen-operator-smoke",
+            "inconclusive",
+            "task-autosci-skillgen-discover_literature"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/shim-discover-from-wiki-debug/literature_discovery.json",
+          "gate_status": "inconclusive",
+          "reasons": [],
+          "schema": "literature_discovery.v1",
+          "status": "failed",
+          "warnings": [
+            "literature discovery is inconclusive; do not treat as a complete shortlist",
+            "evidence status is inconclusive"
+          ]
+        }
+      ],
+      "autosci_command": "/discover",
+      "execution_status": "failed",
+      "failed_count": 1,
+      "passed_count": 0,
+      "route": {
+        "backend_mode": "solar_native",
+        "coverage_status": "full",
+        "evidence_schema": "literature_discovery.v1",
+        "physical_operator": "AutoSciBridgeLiteratureOperator",
+        "solar_backend_action": "discover_literature",
+        "solar_capability": "cap.research-literature-discover",
+        "solar_logical_operator": "ScientificLiteratureDiscoverer"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "discover",
+      "side_effect_policy": "none"
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-22T19:59:54.606437Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "shim-discover-from-wiki-debug",
+  "status": "failed",
+  "task_id": "autosci-skill-discover"
+}

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-28T21:05:00Z",
+  "updated_at": "2026-06-22T14:27:06Z",
   "providers": {
     "claude_cli": {
       "label": "Claude CLI / Subscription",
@@ -26,7 +26,7 @@
       "key_env": "",
       "key_ref": "codex_cli_session",
       "base_url": "local-cli",
-      "default_model": "gpt-5.5-codex",
+      "default_model": "gpt-5.5",
       "notes": "Use the local codex CLI session/subscription for repo/code architecture analysis, implementation review, and coding-heavy premium reasoning. No OpenAI API key is required here."
     },
     "deepseek": {

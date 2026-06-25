@@ -1,7 +1,7 @@
 {
   "schema": "claim_verdict.v1",
   "task_id": "task.phase1.sample.claim_verdict",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.claim_verify",
   "status": "completed",
   "inputs": {
@@ -23,7 +23,7 @@
   "artifacts": [
     {
       "type": "claim_verdict",
-      "path": "artifacts/autosci/fixtures/claim_verdict.json"
+      "path": "artifacts/scientific/fixtures/claim_verdict.json"
     }
   ],
   "provenance": {

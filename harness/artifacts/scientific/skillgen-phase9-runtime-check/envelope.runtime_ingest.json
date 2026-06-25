@@ -1,0 +1,24 @@
+{
+  "capability_capsule_id": "cap.research-paper-ingest",
+  "inputs": {
+    "paper_id": "paper-skillgen-runtime",
+    "paper_path": "artifacts/scientific/skillgen-phase9-runtime-check/skillgen_paper.md",
+    "source_pdf_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AI4Research-B/docs/SkillGen.pdf"
+  },
+  "lease_ttl_seconds": 120,
+  "mode": "fixture",
+  "node_id": "node-skillgen-runtime-ingest",
+  "objective": "Runtime dispatch autosci-paper-ingest-worker on SkillGen paper fixture.",
+  "operator_id": "autosci-paper-ingest-worker",
+  "output_dir": "artifacts/scientific/skillgen-phase9-runtime-check",
+  "outputs": {
+    "evidence_jsonl": "artifacts/scientific/skillgen-phase9-runtime-check/evidence.jsonl",
+    "evidence_payload_path": "artifacts/scientific/skillgen-phase9-runtime-check/research_paper.json",
+    "graph_update_path": "artifacts/scientific/skillgen-phase9-runtime-check/research_graph_update.from_ingest.json",
+    "memory_update_path": "artifacts/scientific/skillgen-phase9-runtime-check/memory_update.from_ingest.json",
+    "result_path": "artifacts/scientific/skillgen-phase9-runtime-check/runtime_ingest.result.json"
+  },
+  "sprint_id": "sprint-autosci-phase9-runtime-check",
+  "task_id": "task-skillgen-runtime-ingest",
+  "task_type": "SCIENCE_PAPER_INGEST"
+}

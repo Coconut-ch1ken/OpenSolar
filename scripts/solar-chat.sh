@@ -107,6 +107,25 @@ else
 fi
 [[ -n "${message//[[:space:]]/}" ]] || die "message is empty"
 
+direct_autosci=0
+if python3 - "$message" <<'PY'
+import shlex
+import sys
+
+raw = sys.argv[1].strip()
+try:
+    parts = shlex.split(raw)
+except ValueError:
+    raise SystemExit(1)
+first = parts[0] if parts else ""
+if first in {"$skills", "$skill"} or (first.startswith("$") and len(first) > 1):
+    raise SystemExit(0)
+raise SystemExit(1)
+PY
+then
+  direct_autosci=1
+fi
+
 declare -a intake_args=(--source "$source_channel" --actor "$actor" --json)
 [[ "$dispatch" == "0" ]] && intake_args+=(--no-dispatch)
 
@@ -133,6 +152,11 @@ fi
 printf '%s\n' "$intake_output"
 
 if [[ "$trace" != "1" ]]; then
+  exit 0
+fi
+
+if [[ "$direct_autosci" == "1" ]]; then
+  printf '\n[solar-chat trace] direct AutoSci $ command; no sprint DAG trace is created.\n'
   exit 0
 fi
 

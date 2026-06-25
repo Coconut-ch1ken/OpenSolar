@@ -1,0 +1,47 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/skillgen-phase10-check/research_graph_update.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "paper_id": "paper-skillgen-phase10",
+    "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+  },
+  "limitations": [
+    "Fixture graph update records explicit proposed edges only."
+  ],
+  "node_id": "node-phase10-paper-ingest",
+  "outputs": {
+    "edges": [
+      {
+        "evidence_ids": [
+          "paper-skillgen-phase10"
+        ],
+        "operation": "propose",
+        "relation": "describes",
+        "source": "paper-skillgen-phase10",
+        "target": "concept.solar_evidence_abi"
+      },
+      {
+        "evidence_ids": [
+          "paper-skillgen-phase10"
+        ],
+        "operation": "confirm",
+        "relation": "has_source",
+        "source": "paper-skillgen-phase10",
+        "target": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-18T20:09:38Z"
+  },
+  "schema": "research_graph_update.v1",
+  "sprint_id": "sprint-autosci-phase10-skillgen-check",
+  "status": "completed",
+  "task_id": "task-phase10-skillgen-paper-ingest"
+}

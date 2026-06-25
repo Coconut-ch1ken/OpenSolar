@@ -21,6 +21,14 @@
             "claim.sample.001",
             "experiment.sample.001"
           ]
+        },
+        {
+          "section_id": "sec.limitations",
+          "title": "Limitations",
+          "evidence_ids": [
+            "claim.sample.001",
+            "experiment.sample.001"
+          ]
         }
       ],
       "evidence_ids": [

@@ -1,0 +1,51 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/smoke/extract_claims.evidence.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md",
+    "source_evidence": "plugins/autosci/tests/fixtures/sample_paper.md"
+  },
+  "limitations": [
+    "fixture-mode adapter output; not a production AutoSci run"
+  ],
+  "node_id": "n1_claim_extract",
+  "outputs": {
+    "claims": [
+      {
+        "claim_id": "claim-001",
+        "claim_type": "result",
+        "evidence_ids": [
+          "paper:sample#results"
+        ],
+        "source_anchor": "sample_paper.md#results",
+        "testability": "testable",
+        "text": "The fixture adapter path produces schema-shaped Solar evidence.",
+        "verification_status": "unverified"
+      },
+      {
+        "claim_id": "claim-002",
+        "claim_type": "architecture",
+        "evidence_ids": [
+          "paper:sample#method"
+        ],
+        "source_anchor": "sample_paper.md#method",
+        "testability": "partially_testable",
+        "text": "The bridge does not own the research workflow.",
+        "verification_status": "unverified"
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-17T19:04:48Z"
+  },
+  "schema": "research_claims.v1",
+  "sprint_id": "sprint-autosci-smoke",
+  "status": "completed",
+  "task_id": "smoke-autosci-claim-extract"
+}

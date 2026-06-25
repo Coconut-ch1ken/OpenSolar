@@ -1,0 +1,138 @@
+{
+  "action": "verify_claim",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/autosci/runs/harness-dollarsurvey2/claim_verdict.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "claim_id": "claim-001",
+      "claims_evidence": "artifacts/autosci/runs/harness-dollarsurvey2/research_claims.json",
+      "code_evidence": "artifacts/autosci/runs/harness-dollarsurvey2/code_evidence_map.json",
+      "experiment_result_evidence": "artifacts/autosci/runs/harness-dollarsurvey2/experiment_result.json",
+      "native_options": {
+        "after_artifacts": [],
+        "all": false,
+        "allowlist_evidence": [],
+        "approval_ref": "",
+        "auto": false,
+        "before_artifacts": [],
+        "checklist": false,
+        "claims_evidence": [],
+        "code_evidence": [],
+        "collect": false,
+        "collect_ready": false,
+        "difficulty": "",
+        "discover": false,
+        "env": "",
+        "execute_approved": false,
+        "experiment_result_evidence": [],
+        "fix": false,
+        "focus": "",
+        "format": "latex",
+        "full": false,
+        "max_ideas": 0,
+        "max_rounds": 0,
+        "model_command": "",
+        "model_evidence": [],
+        "no_introduction": false,
+        "novelty_evidence": [],
+        "online": false,
+        "pipeline": "",
+        "quick": false,
+        "review": false,
+        "review_llm_command": "",
+        "review_llm_endpoint": "",
+        "review_llm_evidence": [],
+        "review_llm_model": "",
+        "review_llm_provider": "",
+        "runtime_evidence": [],
+        "skip_paper": false,
+        "skip_pilot": false,
+        "skip_validation": false,
+        "start_from": "",
+        "target_score": 0.0,
+        "title": "",
+        "verbose": false,
+        "visualize": false,
+        "write": false
+      },
+      "smoke_mode": true
+    },
+    "limitations": [
+      "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation.",
+      "Review LLM second-opinion evidence was not supplied or did not complete."
+    ],
+    "node_id": "node-verify-claim",
+    "outputs": {
+      "verdicts": [
+        {
+          "basis": "Verdict derived from experiment_result.v1 outcome `supports` for `exp-001`. Claim text: This compact markdown fixture is derived from the SkillGen paper for Solar-native AutoSci operator smoke testing.",
+          "claim_evidence_ids": [
+            "claim-001",
+            "paper-skillgen-operator-smoke-paper",
+            "skillgen_operator_smoke_paper.md#evidence-notes"
+          ],
+          "claim_id": "claim-001",
+          "code_evidence_ids": [
+            "task-autosci-skillgen-map_code_evidence",
+            "map-001",
+            "artifacts/autosci/runs/harness-dollarsurvey2/sample_repo/bridge_fixture.py",
+            "claim-001"
+          ],
+          "confidence": 0.72,
+          "evidence_ids": [
+            "claim-001",
+            "paper-skillgen-operator-smoke-paper",
+            "skillgen_operator_smoke_paper.md#evidence-notes",
+            "task-autosci-skillgen-run_experiment",
+            "exp-001",
+            "evidence:autosci-fixture-result",
+            "evidence:autosci-fixture-ledger",
+            "task-autosci-skillgen-map_code_evidence",
+            "map-001",
+            "artifacts/autosci/runs/harness-dollarsurvey2/sample_repo/bridge_fixture.py"
+          ],
+          "evidence_outcome": "supports",
+          "experiment_evidence_ids": [
+            "task-autosci-skillgen-run_experiment",
+            "exp-001",
+            "evidence:autosci-fixture-result",
+            "evidence:autosci-fixture-ledger"
+          ],
+          "experiment_id": "exp-001",
+          "limitations": [
+            "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation.",
+            "Review LLM second-opinion evidence was not supplied or did not complete."
+          ],
+          "review_llm": {
+            "checked_paths": [],
+            "claim_id": "claim-001",
+            "reasons": [
+              "No Review LLM evidence was supplied."
+            ],
+            "status": "unavailable"
+          },
+          "verdict": "supported"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-25T20:31:41Z"
+    },
+    "schema": "claim_verdict.v1",
+    "sprint_id": "phase19-skillgen-operator-smoke",
+    "status": "completed",
+    "task_id": "task-autosci-skillgen-verify_claim"
+  },
+  "evidence_jsonl": "artifacts/autosci/runs/harness-dollarsurvey2/evidence.jsonl",
+  "evidence_path": "artifacts/autosci/runs/harness-dollarsurvey2/claim_verdict.json",
+  "ok": true,
+  "result_path": "artifacts/autosci/runs/harness-dollarsurvey2/verify_claim.result.json",
+  "schema": "claim_verdict.v1",
+  "status": "completed"
+}

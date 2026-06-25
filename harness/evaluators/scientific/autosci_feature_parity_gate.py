@@ -70,6 +70,16 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
         item_limits = require_non_empty_list(item.get("limitations"), f"items[{index}].limitations", reasons)
         if not has_any_evidence_ids(item.get("evidence_ids")):
             reasons.append(f"items[{index}].evidence_ids must contain at least one id")
+        tool_abi_status = str(item.get("tool_abi_status") or "")
+        missing_primary_tools = item.get("missing_primary_tools")
+        if tool_abi_status:
+            if tool_abi_status not in {"ok", "missing"}:
+                reasons.append(f"items[{index}].tool_abi_status must be ok or missing")
+            if tool_abi_status == "missing":
+                reasons.append(f"items[{index}] has missing primary tool/config references")
+        if isinstance(missing_primary_tools, list) and missing_primary_tools:
+            missing_refs = ", ".join(str(entry.get("ref") or entry) for entry in missing_primary_tools if isinstance(entry, dict))
+            reasons.append(f"items[{index}].missing_primary_tools must be empty: {missing_refs}")
 
         coverage = item.get("coverage_status")
         side_effect_policy = item.get("side_effect_policy")
@@ -77,6 +87,18 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
             reasons.append(
                 f"items[{index}] cannot claim full coverage while side_effect_policy={side_effect_policy}"
             )
+        if coverage == "full":
+            limitation_text = " ".join(str(item).lower() for item in item_limits)
+            overclaim_markers = (
+                "fixture",
+                "smoke only",
+                "smoke evidence only",
+                "not yet implemented",
+                "not fully implemented",
+                "local surrogate",
+            )
+            if any(marker in limitation_text for marker in overclaim_markers):
+                reasons.append(f"items[{index}] full coverage cannot describe fixture/smoke-only or unimplemented behavior")
         if coverage in {"partial", "gated", "blocked", "missing"} and not item_limits:
             reasons.append(f"items[{index}] must explain limitations for {coverage} coverage")
         if coverage == "gated" and side_effect_policy != "approval_required":

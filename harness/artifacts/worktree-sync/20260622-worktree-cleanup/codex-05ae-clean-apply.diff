@@ -1,0 +1,830 @@
+diff --git a/.gitignore b/.gitignore
+index 6a61a661..5443eab9 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -18,6 +18,11 @@ secrets/
+ *.tmp
+ .DS_Store
+ node_modules/
++.bun-cache/
++.uv-cache/
++.venv/
++.test-home/
++__pycache__/
+ bun.lockb
+ *.cache
+ 
+@@ -50,11 +55,13 @@ coverage/
+ 
+ # Solar Harness 运行时/证据产物
+ harness/.coverage
++harness/.pm/
+ harness/run/
+ harness/state/
+ reports/
+ harness/intake-requests/
+ harness/intents/intent-*/
++harness/sprints/sprint-*
+ harness/handovers/*.md
+ harness/sprints/*-eval.json
+ harness/sprints/*-handoff.md
+diff --git a/README.md b/README.md
+index 22730f0f..e507d3bc 100644
+--- a/README.md
++++ b/README.md
+@@ -4,7 +4,7 @@
+ > 让用户当老板，让 AI 组织自己完成软件工程。
+ 
+ [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+-[![Solar Core](https://img.shields.io/badge/Solar-Core-38bdf8.svg)](CLAUDE.md)
++[![Solar Core](https://img.shields.io/badge/Solar-Core-38bdf8.svg)](AGENTS.md)
+ [![Solar Harness](https://img.shields.io/badge/Solar-Harness-8b5cf6.svg)](harness/)
+ [![AI Native](https://img.shields.io/badge/AI--Native-Execution%20Fabric-14b8a6.svg)](#solar-是什么)
+ 
+@@ -20,7 +20,7 @@ Solar 当前由三层组成：
+ 
+ | Layer | Directory | Role |
+ |---|---|---|
+-| **Solar Core** | `CLAUDE.md`, `agents/`, `skills/`, `rules/`, `hooks/`, `core/` | Claude/Codex-native workflow kernel: agents, skills, rules, hooks, and operating context. |
++| **Solar Core** | `AGENTS.md`, `CLAUDE.md` legacy context, `agents/`, `skills/`, `rules/`, `hooks/`, `core/` | Codex-first workflow kernel: source adapters, agents, skills, rules, hooks, and operating context. |
+ | **Solar Harness** | `harness/` | Requirement compiler, sprint control plane, TaskGraph runtime, actor/operator fleet, evaluator, benchmark, and experience memory. |
+ | **Solar Knowledge** | `docs/`, `scripts/`, research adapters, runtime-generated indices | Knowledge surface for docs, accepted artifacts, research evidence, source maps, and future context maps. |
+ 
+@@ -224,7 +224,7 @@ The user should not become the glue between tools, models, agents, browser tabs,
+ 
+ | Capability | Status | Notes |
+ |---|---|---|
+-| Solar Core install | Available | Installs Claude/Codex-facing agents, rules, skills, hooks, and core files. |
++| Solar Core install | Available | Installs Codex/Claude-facing agents, rules, skills, hooks, and core files. |
+ | Solar Harness local runtime | Available | File-backed sprint contracts, coordinator, queues, leases, builder/evaluator flow. |
+ | TaskGraph DAG scheduling | Available | Dependency gating, write-scope batching, capability matching, parent-gate checks. |
+ | Actor / host registry | Available | Models AI workers and execution surfaces with capability, cost, quota, lifecycle, mailbox, and evidence fields. |
+@@ -290,6 +290,21 @@ Dedicated documents:
+ | [`INSTALL-AGENT.md`](INSTALL-AGENT.md) | Step-by-step install/deploy/self-check protocol for AI agents. |
+ | [`SKILLS-INSTALL.md`](SKILLS-INSTALL.md) | Optional skill expansion protocol for AI agents. |
+ | [`scripts/sync-harness-runtime.sh`](scripts/sync-harness-runtime.sh) | Syncs repository `harness/` into the local runtime `~/.solar/harness/`. |
++| [`docs/codex-core-entrypoints.md`](docs/codex-core-entrypoints.md) | Codex App/CLI entrypoints and Core-to-Harness mapping. |
++
++### Codex Core entry
++
++Codex is the active Core surface for new Solar project entry. Heterogeneous input
++still enters through source adapters and RawIntent metadata; Harness keeps its
++existing intake and scheduling interfaces.
++
++```bash
++cd ~/Solar
++codex "请把这个需求通过 Solar Codex Core 提交到 Harness: <需求文本>"
++
++# Direct CLI RawIntent submission without autopilot dispatch:
++bash scripts/solar-codex-intake.sh --source codex_cli --no-dispatch --json "<需求文本>"
++```
+ 
+ ### Harness runtime
+ 
+diff --git a/core/agent-daemon/mail-agent.sh b/core/agent-daemon/mail-agent.sh
+index f9001ebb..bb2d7e9e 100755
+--- a/core/agent-daemon/mail-agent.sh
++++ b/core/agent-daemon/mail-agent.sh
+@@ -1,6 +1,6 @@
+ #!/bin/bash
+ # Solar Mail Agent - 后台邮件监听与自动执行
+-# 方案A: cron + himalaya + claude CLI
++# 方案A: cron + himalaya + Solar Harness intake
+ 
+ set -euo pipefail
+ 
+@@ -11,6 +11,19 @@ LOG_FILE="$HOME/.solar/agent-daemon.log"
+ LOCK_FILE="/tmp/solar-mail-agent.lock"
+ IMESSAGE_ADDR="${SOLAR_GUARDIAN_IMESSAGE:-guardian-imessage@example.com}"
+ MAIL_RECIPIENT="${SOLAR_ALERT_EMAIL:-${SOLAR_GUARDIAN_EMAIL:-${GUARDIAN_EMAILS[0]:-guardian@example.com}}}"
++SOLAR_REPO_DIR="${SOLAR_REPO_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
++SOLAR_REPO_HARNESS_DIR="$SOLAR_REPO_DIR/harness"
++SOLAR_INSTALLED_HARNESS_DIR="$HOME/.solar/harness"
++if [[ -n "${SOLAR_HARNESS_DIR:-}" ]]; then
++    SOLAR_ACTIVE_HARNESS_DIR="$SOLAR_HARNESS_DIR"
++elif [[ -n "${HARNESS_DIR:-}" ]]; then
++    SOLAR_ACTIVE_HARNESS_DIR="$HARNESS_DIR"
++elif [[ -f "$SOLAR_INSTALLED_HARNESS_DIR/solar-harness.sh" ]]; then
++    SOLAR_ACTIVE_HARNESS_DIR="$SOLAR_INSTALLED_HARNESS_DIR"
++else
++    SOLAR_ACTIVE_HARNESS_DIR="$SOLAR_REPO_HARNESS_DIR"
++fi
++SOLAR_HARNESS_BIN="${SOLAR_HARNESS_BIN:-$SOLAR_ACTIVE_HARNESS_DIR/solar-harness.sh}"
+ 
+ # ==================== 初始化 ====================
+ mkdir -p "$HOME/.solar"
+@@ -135,12 +148,12 @@ execute_task() {
+         return 0
+     fi
+ 
+-    # 其他任务 - 调用 Claude CLI (非交互模式)
+-    log "调用 Claude 处理复杂任务..."
+-    TASK_RESULT=$(cd ~/Solar && claude -p "$task" 2>&1 | head -100)
++    # 其他任务 - 进入 Solar Harness RawIntent 链路
++    log "调用 Solar Harness 处理复杂任务..."
++    TASK_RESULT=$(cd "$SOLAR_REPO_DIR" && HARNESS_DIR="$SOLAR_ACTIVE_HARNESS_DIR" bash "$SOLAR_HARNESS_BIN" intake "$task" 2>&1 | head -100)
+     local exit_code=$?
+     if [[ $exit_code -ne 0 ]]; then
+-        log "Claude 执行失败，退出码: $exit_code"
++        log "Solar Harness 执行失败，退出码: $exit_code"
+         TASK_RESULT="执行出错 (exit $exit_code): $TASK_RESULT"
+     fi
+ 
+diff --git a/core/listeners/message-executor.ts b/core/listeners/message-executor.ts
+index f2ebc103..129c101d 100644
+--- a/core/listeners/message-executor.ts
++++ b/core/listeners/message-executor.ts
+@@ -9,6 +9,13 @@ import Database from 'bun:sqlite';
+ import { ReplySender } from '../reply/reply-sender';
+ import { sendNtfy } from '../notify/ntfy';
+ import { getGuardianIdentifiers } from '../config/privacy';
++import {
++  CORE_TO_HARNESS_SCHEMA_VERSION,
++  submitCoreToHarness,
++  type CoreToHarnessMode,
++  type CoreToHarnessRequest,
++  type CoreToHarnessUrgency,
++} from '../harness';
+ 
+ const DB_PATH = `${process.env.HOME}/.solar/solar.db`;
+ 
+@@ -196,7 +203,7 @@ export class MessageExecutor {
+   }
+ 
+   /**
+-   * 执行任务 - 调用 Claude 处理
++   * 执行任务 - 进入 Harness RawIntent 链路
+    */
+   private async executeTask(task: QueuedTask, context: string): Promise<string> {
+     // 提取用户指令 (邮件正文第一行通常是指令)
+@@ -248,21 +255,116 @@ ${context}
+ 
+ 请根据用户指令处理，给出简洁的回复。如果是分析任务，给出分析结果；如果是设计任务，给出设计方案。`;
+ 
+-    // 调用 Claude (通过 claude CLI)
+-    try {
+-      const result = await Bun.spawn(['claude', '-p', prompt], {
+-        stdout: 'pipe',
+-        stderr: 'pipe',
+-      });
++    const request = this.buildHarnessRequest(task, instruction, prompt, context);
++    const result = await submitCoreToHarness(request);
+ 
+-      const output = await new Response(result.stdout).text();
+-      return output.trim() || '任务已处理';
+-
+-    } catch (e) {
+-      // 降级: 返回简单确认
+-      console.warn('[Executor] Claude 调用失败，使用降级回复');
+-      return `收到您的消息: "${instruction.slice(0, 50)}..."\n\n已记录，稍后处理。`;
++    if (!result.ok) {
++      const detail = result.error || result.consume?.error || result.capture?.error || 'unknown harness error';
++      throw new Error(`Harness intake failed: ${detail}`);
+     }
++
++    const sprintId = result.consume?.results?.[0]?.sprint_id || 'N/A';
++    const consumeStatus = result.consume?.results?.[0]?.status || (request.consume?.enabled === false ? 'capture_only' : 'N/A');
++    return [
++      'Solar Harness 已接收任务。',
++      '',
++      `- request_id: ${request.request_id}`,
++      `- intent_id: ${result.intent_id || 'N/A'}`,
++      `- consume_status: ${consumeStatus}`,
++      `- sprint_id: ${sprintId}`,
++      `- raw_intent: ${result.capture?.raw_intent || 'N/A'}`,
++      `- requirement_ir: ${result.capture?.requirement_ir || 'N/A'}`,
++    ].join('\n');
++  }
++
++  private buildHarnessRequest(
++    task: QueuedTask,
++    instruction: string,
++    prompt: string,
++    context: string,
++  ): CoreToHarnessRequest {
++    const isThreadReply = context.includes('=== 邮件线程历史 ===');
++    const requestId = this.toIntentId(task.task_id);
++
++    return {
++      schema_version: CORE_TO_HARNESS_SCHEMA_VERSION,
++      request_id: requestId,
++      created_at: new Date().toISOString(),
++      source: {
++        channel: task.source,
++        actor: task.sender || 'unknown',
++        device: task.source,
++        thread_ref: task.source_id,
++        source_trust: 'guardian_direct',
++      },
++      workspace: {
++        repo: process.cwd(),
++        cwd: process.cwd(),
++        knowledge_query: instruction,
++      },
++      routing: {
++        mode: this.inferMode(task),
++        urgency: this.inferUrgency(task),
++        allow_autodispatch: false,
++        requires_human_confirm: false,
++        require_research_artifact: false,
++      },
++      raw_input: {
++        text: task.content,
++        quoted_context: isThreadReply ? [context] : [],
++      },
++      core_analysis: {
++        title: instruction.slice(0, 90) || task.task_id,
++        objective: instruction,
++        problem: prompt,
++        constraints: [
++          'Enter Solar-Harness through RawIntent and requirement compilation.',
++          'Do not bypass TaskGraph, operator runtime, evidence logging, or Harness policy gates.',
++        ],
++        non_goals: [
++          'Do not execute this message by directly invoking a model CLI from Core.',
++        ],
++        acceptance: [
++          'Harness capture returns an intent_id and persisted RawIntent artifacts.',
++          'Harness consume reports a sprint_id or an explicit non-consumed status.',
++        ],
++        suggested_logical_operators: [
++          'RequirementCompiler',
++          'Planner',
++        ],
++      },
++      consume: {
++        enabled: true,
++        auto_dispatch_planner: false,
++      },
++    };
++  }
++
++  private inferMode(task: QueuedTask): CoreToHarnessMode {
++    const text = `${task.parsed_intent || ''}\n${task.content}`.toLowerCase();
++    if (/(debug|bug|失败|报错|修复|卡住)/i.test(text)) return 'debug';
++    if (/(research|report|论文|调研|报告)/i.test(text)) return 'research';
++    if (/(architecture|strategy|架构|设计|operator|runtime|schema|算子)/i.test(text)) return 'strategy';
++    if (/(monitor|heartbeat|巡检|监控)/i.test(text)) return 'monitor';
++    if (/(review|审查|评审)/i.test(text)) return 'review';
++    return 'delivery';
++  }
++
++  private inferUrgency(task: QueuedTask): CoreToHarnessUrgency {
++    const text = `${task.priority || ''}\n${task.content}`.toLowerCase();
++    if (/(urgent|p0|紧急|马上|立即)/i.test(text)) return 'urgent';
++    if (/(high|p1|重要)/i.test(text)) return 'high';
++    if (/(low|p3|不急)/i.test(text)) return 'low';
++    return 'normal';
++  }
++
++  private toIntentId(taskId: string): string {
++    const safe = taskId
++      .trim()
++      .replace(/[^A-Za-z0-9_.-]+/g, '-')
++      .replace(/^-+|-+$/g, '')
++      .slice(0, 96);
++    return safe.startsWith('intent-') ? safe : `intent-${safe || Date.now()}`;
+   }
+ 
+   /**
+diff --git a/harness/lib/unified_selector.py b/harness/lib/unified_selector.py
+index a9af991c..37d7a411 100644
+--- a/harness/lib/unified_selector.py
++++ b/harness/lib/unified_selector.py
+@@ -3,10 +3,49 @@
+ from __future__ import annotations
+ 
+ import json
++import os
+ import re
+ from typing import Any
+ from selector_runtime_store import actor_load_snapshot, record_selection, round_robin_start_index
+ 
++CODEX_FIRST_ROUTING_BOOST = int(os.environ.get("SOLAR_CODEX_FIRST_ROUTING_BOOST", "80") or "80")
++
++
++def codex_first_routing_enabled() -> bool:
++    return os.environ.get("SOLAR_CODEX_FIRST_ROUTING", "1").strip().lower() not in {"0", "false", "off", "no"}
++
++
++def _operator_is_codex(operator: dict[str, Any], operator_id: str = "") -> bool:
++    values: list[str] = [
++        operator_id,
++        str(operator.get("operator_id") or ""),
++        str(operator.get("actor_id") or ""),
++        str(operator.get("profile") or ""),
++        str(operator.get("provider") or ""),
++        str(operator.get("vendor") or ""),
++        str(operator.get("model") or ""),
++        str(operator.get("model_config") or ""),
++        str(operator.get("base_url") or ""),
++        str(operator.get("backend") or ""),
++        str(operator.get("operator_class") or ""),
++    ]
++    for key in ("preferred_for", "task_classes", "roles", "strengths", "capabilities"):
++        raw = operator.get(key) or []
++        if isinstance(raw, str):
++            values.append(raw)
++        elif isinstance(raw, dict):
++            values.extend(str(item) for item in raw.keys())
++        else:
++            values.extend(str(item) for item in raw)
++    return "codex" in " ".join(values).lower()
++
++
++def _codex_first_candidate_rank(candidate: dict[str, Any], actors: dict[str, dict[str, Any]]) -> int:
++    actor_id = str(candidate.get("actor_id") or "")
++    if codex_first_routing_enabled() and _operator_is_codex(actors.get(actor_id, {}), actor_id):
++        return 0
++    return 1
++
+ 
+ def _normalize_bound_candidates(candidates: list[Any]) -> list[dict[str, Any]]:
+     normalized: list[dict[str, Any]] = []
+@@ -92,6 +131,7 @@ def _order_bound_candidates(
+         return sorted(
+             ordered,
+             key=lambda candidate: (
++                _codex_first_candidate_rank(candidate, actors),
+                 _actor_cost_tier(actors.get(candidate["actor_id"], {})),
+                 *_candidate_priority(candidate),
+             ),
+@@ -100,14 +140,29 @@ def _order_bound_candidates(
+         return sorted(
+             ordered,
+             key=lambda candidate: (
++                _codex_first_candidate_rank(candidate, actors),
+                 *_actor_load_rank(candidate["actor_id"], actors.get(candidate["actor_id"], {})),
+                 *_candidate_priority(candidate),
+             ),
+         )
+     if policy == "round_robin" and len(ordered) > 1:
++        if codex_first_routing_enabled():
++            codex_ordered = [
++                candidate
++                for candidate in ordered
++                if _codex_first_candidate_rank(candidate, actors) == 0
++            ]
++            if codex_ordered:
++                cursor = round_robin_start_index(operator_type or "__global__", len(codex_ordered))
++                other_ordered = [
++                    candidate
++                    for candidate in ordered
++                    if _codex_first_candidate_rank(candidate, actors) != 0
++                ]
++                return codex_ordered[cursor:] + codex_ordered[:cursor] + other_ordered
+         cursor = round_robin_start_index(operator_type or "__global__", len(ordered))
+         return ordered[cursor:] + ordered[:cursor]
+-    return ordered
++    return sorted(ordered, key=lambda candidate: (_codex_first_candidate_rank(candidate, actors), *_candidate_priority(candidate)))
+ 
+ 
+ def select_bound_candidate(
+@@ -469,8 +524,17 @@ def rank_physical_operators(
+             or str(operator.get("profile") or "") == default_operator_profile
+         ):
+             score += 8
++        if codex_first_routing_enabled() and _operator_is_codex(operator, str(operator.get("operator_id") or "")):
++            score += CODEX_FIRST_ROUTING_BOOST
+         scored.append((score, operator))
+-    scored.sort(key=lambda item: (item[0], str(item[1].get("operator_id") or "")), reverse=True)
++    scored.sort(
++        key=lambda item: (
++            1 if codex_first_routing_enabled() and _operator_is_codex(item[1], str(item[1].get("operator_id") or "")) else 0,
++            item[0],
++            str(item[1].get("operator_id") or ""),
++        ),
++        reverse=True,
++    )
+     return scored
+ 
+ 
+diff --git a/harness/tests/test_physical_operator_logical_selector.py b/harness/tests/test_physical_operator_logical_selector.py
+index 2ab10b2a..f42f08dd 100644
+--- a/harness/tests/test_physical_operator_logical_selector.py
++++ b/harness/tests/test_physical_operator_logical_selector.py
+@@ -107,6 +107,54 @@ def test_task_type_matching():
+     assert op.get("operator_id") == "operator-builder", op
+     assert not err
+ 
++
++def test_codex_first_routing_prefers_codex_builder(monkeypatch):
++    registry = {
++        "version": 1,
++        "operators": {
++            "mini-claude-sonnet-builder": {
++                "display_name": "Claude Builder",
++                "role": "builder",
++                "profile": "builder",
++                "enabled": True,
++                "available": True,
++                "auth_mode": "subscription",
++                "quota_guard_state": "ok",
++                "task_classes": ["implementation"],
++                "preferred_for": ["builder", "implementation"],
++                "cost_tier": "low",
++            },
++            "mini-codex-gpt53-spark-builder-1": {
++                "display_name": "Codex Builder",
++                "role": "builder",
++                "profile": "codex-builder",
++                "provider": "openai",
++                "model_config": "Codex CLI;gpt-5.3-codex-spark",
++                "enabled": True,
++                "available": True,
++                "auth_mode": "subscription",
++                "quota_guard_state": "ok",
++                "task_classes": ["implementation"],
++                "preferred_for": ["builder", "implementation", "codex"],
++                "cost_tier": "medium",
++            },
++        },
++    }
++    monkeypatch.setattr(m, "load_physical_operators", lambda: registry)
++
++    node = {
++        "task_type": "implementation",
++        "operator_selector": {
++            "task_type": "implementation",
++        },
++    }
++    op, err = m.select_operator(node, {"name": "builder"})
++
++    assert op is not None
++    assert op.get("operator_id") == "mini-codex-gpt53-spark-builder-1", op
++    assert not err
++
++
+ def test_capability_scores():
+     # required_capabilities constraint
+     node = {
+diff --git a/harness/tests/test_pm_dispatch.py b/harness/tests/test_pm_dispatch.py
+index fba3cfa6..a8e8d82e 100644
+--- a/harness/tests/test_pm_dispatch.py
++++ b/harness/tests/test_pm_dispatch.py
+@@ -63,6 +63,147 @@ def test_select_operator_by_role_prefers_capsule_operator_constraints(monkeypatc
+     assert operator_id == "builder-b"
+ 
+ 
++def test_select_operator_by_role_prefers_codex_over_capsule_claude_constraints(monkeypatch):
++    pm_dispatch = _load_pm_dispatch()
++    monkeypatch.setattr(
++        pm_dispatch,
++        "load_registry",
++        lambda: {
++            "version": 1,
++            "operators": {
++                "mini-claude-sonnet-builder": {
++                    "enabled": True,
++                    "available": True,
++                    "roles": ["builder"],
++                    "launch_cmd_kind": "command",
++                    "task_classes": ["implementation"],
++                    "profile": "builder",
++                    "preferred_for": ["builder", "implementation"],
++                },
++                "mini-codex-gpt53-spark-builder-1": {
++                    "enabled": True,
++                    "available": True,
++                    "roles": ["builder"],
++                    "launch_cmd_kind": "command",
++                    "task_classes": ["implementation"],
++                    "profile": "codex-builder",
++                    "provider": "openai",
++                    "model_config": "Codex CLI;gpt-5.3-codex-spark",
++                    "preferred_for": ["builder", "implementation", "codex"],
++                },
++            },
++        },
++    )
++    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda op: (True, ""))
++
++    operator_id, _, reason = pm_dispatch.select_operator_by_role(
++        role="builder",
++        task_type="implementation",
++        resolved_capsule={
++            "operator_constraints": {
++                "preferred": ["mini-claude-sonnet-builder"],
++                "forbidden": [],
++                "default_operator_profile": "mini-claude-sonnet-builder",
++            }
++        },
++    )
++
++    assert reason == ""
++    assert operator_id == "mini-codex-gpt53-spark-builder-1"
++
++
++def test_select_operator_by_role_explicit_operator_overrides_codex_first(monkeypatch):
++    pm_dispatch = _load_pm_dispatch()
++    monkeypatch.setattr(
++        pm_dispatch,
++        "load_registry",
++        lambda: {
++            "version": 1,
++            "operators": {
++                "mini-claude-sonnet-builder": {
++                    "enabled": True,
++                    "available": True,
++                    "roles": ["builder"],
++                    "launch_cmd_kind": "command",
++                    "task_classes": ["implementation"],
++                    "profile": "builder",
++                    "preferred_for": ["builder", "implementation"],
++                },
++                "mini-codex-gpt53-spark-builder-1": {
++                    "enabled": True,
++                    "available": True,
++                    "roles": ["builder"],
++                    "launch_cmd_kind": "command",
++                    "task_classes": ["implementation"],
++                    "profile": "codex-builder",
++                    "provider": "openai",
++                    "model_config": "Codex CLI;gpt-5.3-codex-spark",
++                    "preferred_for": ["builder", "implementation", "codex"],
++                },
++            },
++        },
++    )
++    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda op: (True, ""))
++
++    operator_id, _, reason = pm_dispatch.select_operator_by_role(
++        role="builder",
++        task_type="implementation",
++        prefer_operator="mini-claude-sonnet-builder",
++    )
++
++    assert reason == ""
++    assert operator_id == "mini-claude-sonnet-builder"
++
++
++def test_select_operator_by_role_prefers_codex_planner(monkeypatch):
++    pm_dispatch = _load_pm_dispatch()
++    monkeypatch.setattr(
++        pm_dispatch,
++        "load_registry",
++        lambda: {
++            "version": 1,
++            "operators": {
++                "mini-claude-opus-planner": {
++                    "enabled": True,
++                    "available": True,
++                    "roles": ["planner"],
++                    "launch_cmd_kind": "command",
++                    "task_classes": ["planning"],
++                    "profile": "planner",
++                    "preferred_for": ["planner", "planning"],
++                },
++                "mini-codex-gpt55-medium-planner-1": {
++                    "enabled": True,
++                    "available": True,
++                    "roles": ["planner"],
++                    "launch_cmd_kind": "command",
++                    "task_classes": ["planning", "requirements"],
++                    "profile": "codex-planner",
++                    "provider": "openai",
++                    "model_config": "Codex CLI;gpt-5.5",
++                    "preferred_for": ["planner", "planning", "codex"],
++                },
++            },
++        },
++    )
++    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda op: (True, ""))
++
++    operator_id, _, reason = pm_dispatch.select_operator_by_role(
++        role="planner",
++        task_type="planning",
++        resolved_capsule={
++            "operator_constraints": {
++                "preferred": ["mini-claude-opus-planner"],
++                "forbidden": [],
++                "default_operator_profile": "mini-claude-opus-planner",
++            }
++        },
++    )
++
++    assert reason == ""
++    assert operator_id == "mini-codex-gpt55-medium-planner-1"
++
++
+ def test_cmd_submit_reads_task_graph_capsule_metadata(monkeypatch):
+     pm_dispatch = _load_pm_dispatch()
+     with tempfile.TemporaryDirectory() as td:
+diff --git a/harness/tests/test_unified_selector_binding_policy.py b/harness/tests/test_unified_selector_binding_policy.py
+index 952a13e1..6bb9e584 100644
+--- a/harness/tests/test_unified_selector_binding_policy.py
++++ b/harness/tests/test_unified_selector_binding_policy.py
+@@ -59,3 +59,57 @@ def test_least_loaded_policy_prefers_lower_runtime_snapshot(monkeypatch):
+ 
+     assert selected == "actor-free"
+     assert rejected == []
++
++
++def test_priority_policy_prefers_codex_bound_candidate(monkeypatch):
++    monkeypatch.setattr(selector, "record_selection", lambda *args, **kwargs: None)
++
++    selected, rejected = selector.select_bound_candidate(
++        [
++            {"actor_id": "mini-claude-opus-planner", "priority": 1},
++            {"actor_id": "mini-codex-gpt55-medium-planner-1", "priority": 10},
++        ],
++        selection_policy="priority_first",
++        operator_type="DeepArchitect",
++    )
++
++    assert selected == "mini-codex-gpt55-medium-planner-1"
++    assert rejected == []
++
++
++def test_rank_physical_operators_prefers_codex_over_claude_defaults():
++    ranked = selector.rank_physical_operators(
++        operators=[
++            {
++                "operator_id": "mini-claude-sonnet-builder",
++                "enabled": True,
++                "available": True,
++                "role": "builder",
++                "roles": ["builder"],
++                "task_classes": ["implementation"],
++                "profile": "builder",
++                "preferred_for": ["builder", "implementation"],
++            },
++            {
++                "operator_id": "mini-codex-gpt53-spark-builder-1",
++                "enabled": True,
++                "available": True,
++                "role": "builder",
++                "roles": ["builder"],
++                "task_classes": ["implementation"],
++                "profile": "codex-builder",
++                "provider": "openai",
++                "model_config": "Codex CLI;gpt-5.3-codex-spark",
++                "preferred_for": ["builder", "implementation", "codex"],
++            },
++        ],
++        node={"task_type": "implementation", "goal": "Implement approved change"},
++        selector={},
++        dispatchable_fn=lambda operator: (True, ""),
++        role="builder",
++        task_type="implementation",
++        preferred_operator_ids={"mini-claude-sonnet-builder"},
++        default_operator_profile="mini-claude-sonnet-builder",
++    )
++
++    assert ranked[0][1]["operator_id"] == "mini-codex-gpt53-spark-builder-1"
+diff --git a/harness/tools/multi_task_runner.py b/harness/tools/multi_task_runner.py
+index 958d3b69..384777a7 100755
+--- a/harness/tools/multi_task_runner.py
++++ b/harness/tools/multi_task_runner.py
+@@ -42,6 +42,7 @@ DEFAULT_MEMORY_RESERVE_GB = float(os.environ.get("SOLAR_MULTI_TASK_MEMORY_RESERV
+ DEFAULT_QUOTA_BACKOFF = int(os.environ.get("SOLAR_MULTI_TASK_QUOTA_BACKOFF_SEC", "900") or "900")
+ GRAPH_SUMMARY_CACHE_TTL_SEC = int(os.environ.get("SOLAR_MULTI_TASK_GRAPH_SUMMARY_CACHE_TTL_SEC", "5") or "5")
+ PROBE_CACHE_PATH = Path(os.environ.get("SOLAR_MULTI_TASK_PROBE_CACHE", RUN_DIR / "capability-probes.json"))
++CODEX_FIRST_ROUTING_BOOST = int(os.environ.get("SOLAR_CODEX_FIRST_ROUTING_BOOST", "80") or "80")
+ 
+ # Normalized fallback ladders for observability surfaces such as
+ # ``solar_monitor_bridge``. Keep these lightweight and model-agnostic enough
+@@ -862,6 +863,34 @@ def operator_matches_class(operator: dict[str, Any], class_name: str) -> bool:
+     return str(op_class).lower() == class_name.lower()
+ 
+ 
++def codex_first_routing_enabled() -> bool:
++    return os.environ.get("SOLAR_CODEX_FIRST_ROUTING", "1").strip().lower() not in {"0", "false", "off", "no"}
++
++
++def operator_is_codex(operator: dict[str, Any]) -> bool:
++    values: list[str] = [
++        str(operator.get("operator_id") or ""),
++        str(operator.get("actor_id") or ""),
++        str(operator.get("profile") or ""),
++        str(operator.get("provider") or ""),
++        str(operator.get("vendor") or ""),
++        str(operator.get("model") or ""),
++        str(operator.get("model_config") or ""),
++        str(operator.get("base_url") or ""),
++        str(operator.get("backend") or ""),
++        str(operator.get("operator_class") or ""),
++    ]
++    for key in ("preferred_for", "task_classes", "roles", "strengths", "capabilities"):
++        raw = operator.get(key) or []
++        if isinstance(raw, str):
++            values.append(raw)
++        elif isinstance(raw, dict):
++            values.extend(str(item) for item in raw.keys())
++        else:
++            values.extend(str(item) for item in raw)
++    return "codex" in " ".join(values).lower()
++
++
+ def select_operator(node: dict[str, Any], base_profile: dict[str, Any]) -> tuple[dict[str, Any] | None, str]:
+     preferred = str(node.get("preferred_operator") or "").strip()
+     if preferred:
+@@ -958,13 +987,22 @@ def select_operator(node: dict[str, Any], base_profile: dict[str, Any]) -> tuple
+             for c in classes_list:
+                 if operator_matches_class(operator, str(c)):
+                     score += 100
++        if codex_first_routing_enabled() and operator_is_codex(operator):
++            score += CODEX_FIRST_ROUTING_BOOST
+                     
+         scored.append((score, operator))
+         
+     if not scored:
+         return None, "operator_selector_no_match"
+         
+-    scored.sort(key=lambda item: (item[0], str(item[1].get("operator_id") or "")), reverse=True)
++    scored.sort(
++        key=lambda item: (
++            1 if codex_first_routing_enabled() and operator_is_codex(item[1]) else 0,
++            item[0],
++            str(item[1].get("operator_id") or ""),
++        ),
++        reverse=True,
++    )
+     return scored[0][1], ""
+ 
+ 
+diff --git a/harness/tools/pm_dispatch.py b/harness/tools/pm_dispatch.py
+index 547c7b88..334bbac0 100755
+--- a/harness/tools/pm_dispatch.py
++++ b/harness/tools/pm_dispatch.py
+@@ -87,6 +87,7 @@ CODE_EXEC_TASK_TYPES = {
+ }
+ CODE_EXEC_ROLES = {"builder", "implementation", "implementer", "coder", "dev"}
+ CODE_EXEC_AVOID_MARKERS = {"implementation", "code-edit", "repo-modification"}
++CODEX_FIRST_ROUTING_BOOST = int(os.environ.get("SOLAR_CODEX_FIRST_ROUTING_BOOST", "80") or "80")
+ BUILDER_READY_LOGICAL_OPERATORS = {
+     "ImplementationWorker",
+     "PatchWorker",
+@@ -109,6 +110,32 @@ NON_BUILDER_READY_LOGICAL_OPERATORS = {
+ }
+ 
+ 
++def codex_first_routing_enabled() -> bool:
++    return os.environ.get("SOLAR_CODEX_FIRST_ROUTING", "1").strip().lower() not in {"0", "false", "off", "no"}
++
++
++def _operator_is_codex(op: dict[str, Any], op_id: str = "") -> bool:
++    values: list[str] = [
++        op_id,
++        str(op.get("operator_id") or ""),
++        str(op.get("actor_id") or ""),
++        str(op.get("profile") or ""),
++        str(op.get("provider") or ""),
++        str(op.get("vendor") or ""),
++        str(op.get("model") or ""),
++        str(op.get("model_config") or ""),
++        str(op.get("base_url") or ""),
++        str(op.get("backend") or ""),
++    ]
++    for key in ("preferred_for", "task_classes", "roles", "strengths"):
++        raw = op.get(key) or []
++        if isinstance(raw, str):
++            values.append(raw)
++        else:
++            values.extend(str(item) for item in raw)
++    return "codex" in " ".join(values).lower()
++
++
+ def _load_concurrency_policy_module() -> Any | None:
+     try:
+         lib_dir = HARNESS_DIR / "lib"
+@@ -769,6 +796,8 @@ def _operator_priority(
+         priority += 20
+     if default_profile and (op_id == default_profile or str(op.get("profile", "")) == default_profile):
+         priority += 8
++    if codex_first_routing_enabled() and _operator_is_codex(op, op_id):
++        priority += CODEX_FIRST_ROUTING_BOOST
+ 
+     if spillover_spec and policy_mod:
+         group = policy_mod.infer_builder_group(op)
+@@ -781,6 +810,12 @@ def _operator_priority(
+     return priority
+ 
+ 
++def _operator_candidate_sort_key(item: tuple[int, str, dict[str, Any]]) -> tuple[int, int, str]:
++    priority, op_id, op = item
++    codex_rank = 1 if codex_first_routing_enabled() and _operator_is_codex(op, op_id) else 0
++    return codex_rank, priority, op_id
++
++
+ def _role_spillover_candidates(
+     *,
+     operators: dict[str, Any],
+@@ -949,7 +984,7 @@ def select_operator_by_role(
+                 spillover_spec=spillover_spec,
+             )
+             if spillover_candidates:
+-                spillover_candidates.sort(key=lambda x: -x[0])
++                spillover_candidates.sort(key=_operator_candidate_sort_key, reverse=True)
+                 _, best_id, best_op = spillover_candidates[0]
+                 return best_id, best_op, ""
+             if spillover_reason:
+@@ -958,7 +993,7 @@ def select_operator_by_role(
+             return "", {}, f"no_dispatchable_operator_for_role: {norm_role}; builder_pool_depleted"
+         return "", {}, f"no_dispatchable_operator_for_role: {norm_role}"
+ 
+-    candidates.sort(key=lambda x: -x[0])
++    candidates.sort(key=_operator_candidate_sort_key, reverse=True)
+     _, best_id, best_op = candidates[0]
+     return best_id, best_op, ""
+ 

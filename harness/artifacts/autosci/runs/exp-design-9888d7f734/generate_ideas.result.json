@@ -1,0 +1,85 @@
+{
+  "action": "generate_ideas",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/autosci/runs/exp-design-9888d7f734/idea_candidate.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "claims_evidence": "artifacts/autosci/runs/exp-design-9888d7f734/research_claims.json",
+      "memory_evidence": "artifacts/autosci/runs/exp-design-9888d7f734/research_memory_update.json",
+      "method_evidence": "artifacts/autosci/runs/exp-design-9888d7f734/research_method.json",
+      "paper_evidence": "artifacts/autosci/runs/exp-design-9888d7f734/research_paper.json"
+    },
+    "limitations": [
+      "Fixture ideas are generated from supplied local evidence only; external novelty is not proven."
+    ],
+    "node_id": "node-generate-ideas",
+    "outputs": {
+      "ideas": [
+        {
+          "approach": "Use claim `claim-003` and method `method-001` to compare source-only evidence against source-plus-code evidence coverage.",
+          "duplicate_status": "new",
+          "grounding_summary": "Seeded from claim: It emphasizes contrastive induction, candidate verification, and empirical net-effect checks before deployment.",
+          "hypothesis": "Pairing source-grounded claims with method and code evidence will expose verification gaps before claim verdict generation.",
+          "idea_id": "idea-001",
+          "novelty_hypothesis": "Combines claim, method, and code evidence at the same Solar Evidence ABI grain.",
+          "origin_evidence_ids": [
+            "claim-003",
+            "method-001",
+            "task-autosci-skillgen-ingest_paper",
+            "task-autosci-skillgen-extract_claims",
+            "claim-001",
+            "claim-002",
+            "claim-003",
+            "task-autosci-skillgen-extract_methods",
+            "method-001",
+            "paper-skillgen-operator-smoke-paper"
+          ],
+          "status": "candidate",
+          "title": "Evidence-linked verification coverage experiment"
+        },
+        {
+          "approach": "Run the existing Method protocol without adding new evidence dimensions.",
+          "duplicate_of": "task-autosci-smoke",
+          "duplicate_status": "duplicate",
+          "grounding_summary": "Included to prove duplicate ideas are marked rather than silently promoted.",
+          "hypothesis": "Repeating the bridge smoke test alone will improve scientific verification.",
+          "idea_id": "idea-duplicate-001",
+          "novelty_hypothesis": "Low novelty because it duplicates the fixture smoke path.",
+          "origin_evidence_ids": [
+            "claim-003",
+            "method-001",
+            "task-autosci-skillgen-ingest_paper",
+            "task-autosci-skillgen-extract_claims",
+            "claim-001",
+            "claim-002",
+            "claim-003",
+            "task-autosci-skillgen-extract_methods",
+            "method-001",
+            "paper-skillgen-operator-smoke-paper"
+          ],
+          "status": "filtered",
+          "title": "Repeat existing fixture bridge smoke"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-22T20:48:53Z"
+    },
+    "schema": "idea_candidate.v1",
+    "sprint_id": "phase19-skillgen-operator-smoke",
+    "status": "completed",
+    "task_id": "task-autosci-skillgen-generate_ideas"
+  },
+  "evidence_jsonl": "artifacts/autosci/runs/exp-design-9888d7f734/evidence.jsonl",
+  "evidence_path": "artifacts/autosci/runs/exp-design-9888d7f734/idea_candidate.json",
+  "ok": true,
+  "result_path": "artifacts/autosci/runs/exp-design-9888d7f734/generate_ideas.result.json",
+  "schema": "idea_candidate.v1",
+  "status": "completed"
+}

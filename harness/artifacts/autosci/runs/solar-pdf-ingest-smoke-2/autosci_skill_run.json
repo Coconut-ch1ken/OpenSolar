@@ -1,0 +1,192 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-pdf-ingest-smoke-2/research_paper.json",
+      "type": "action_evidence"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-pdf-ingest-smoke-2/research_paper.analyzed.json",
+      "type": "action_evidence"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+      "type": "human_workspace"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+      "type": "human_workspace"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+      "type": "human_workspace"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+      "type": "human_workspace"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+      "type": "human_workspace_index"
+    }
+  ],
+  "inputs": {
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "paper_path": "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "solar-pdf-ingest-smoke-2",
+    "skill": "ingest",
+    "skill_args": [],
+    "target": "",
+    "topic": "",
+    "work_dir": "artifacts/autosci/runs/solar-pdf-ingest-smoke-2"
+  },
+  "limitations": [
+    "PDF and arXiv source preparation writes explicit raw/tmp artifacts; set allow_network_fetch=false for offline synthetic-TeX fallback.",
+    "Skillgen smoke uses local markdown paper input."
+  ],
+  "node_id": "autosci-skill-ingest",
+  "outputs": {
+    "skill_run": {
+      "action_count": 2,
+      "actions": [
+        {
+          "action": "ingest_paper",
+          "evidence_ids": [
+            "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.txt",
+            "extracted_pdf_text",
+            "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+            "synthetic_latex",
+            "artifacts/autosci/runs/solar-pdf-ingest-smoke-2/research_paper.json",
+            "solar_evidence_json",
+            "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf",
+            "arXiv source fetch skipped for 2401.00003: network fetch disabled",
+            "node-ingest-paper",
+            "This PDF verifies Solar harness offline source preparation.",
+            "2401.00003",
+            "skipped_network_disabled",
+            "completed",
+            "paper-solar-autosci-pdf-smoke-2401.00003",
+            "parsed",
+            "tex",
+            "pdf",
+            "Solar Harness PDF Smoke",
+            "abstract",
+            "2401-00003.tex#abstract",
+            "Abstract",
+            "recovered-text",
+            "2401-00003.tex#recovered-text",
+            "Solar Harness PDF Smoke arXiv: 2401.00003 Abstract This PDF verifies Solar harness offline source preparation. 1. Method The pipeline writes synthetic TeX fallback artifacts.",
+            "Recovered Text",
+            "latex",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-22T19:28:53Z",
+            "research_paper.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-ingest_paper"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-pdf-ingest-smoke-2/research_paper.json",
+          "gate_status": "passed",
+          "reasons": [],
+          "schema": "research_paper.v1",
+          "status": "passed",
+          "warnings": []
+        },
+        {
+          "action": "analyze_paper",
+          "evidence_ids": [
+            "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.txt",
+            "extracted_pdf_text",
+            "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+            "synthetic_latex",
+            "artifacts/autosci/runs/solar-pdf-ingest-smoke-2/research_paper.analyzed.json",
+            "solar_evidence_json",
+            "/private/tmp/solar-autosci-pdf-smoke-2401.00003.pdf",
+            "arXiv source fetch skipped for 2401.00003: network fetch disabled",
+            "node-analyze-paper",
+            "This PDF verifies Solar harness offline source preparation.",
+            "paper-solar-autosci-pdf-smoke-2401.00003",
+            "paper source preparation",
+            "arXiv source recovery",
+            "Solar Evidence ABI",
+            "Prepared and parsed Solar Harness PDF Smoke through the Solar AutoSci paper preparation backend and emitted Solar Evidence ABI paper evidence.",
+            "2401.00003",
+            "skipped_network_disabled",
+            "completed",
+            "parsed",
+            "tex",
+            "pdf",
+            "Solar Harness PDF Smoke",
+            "abstract",
+            "2401-00003.tex#abstract",
+            "Abstract",
+            "recovered-text",
+            "2401-00003.tex#recovered-text",
+            "Solar Harness PDF Smoke arXiv: 2401.00003 Abstract This PDF verifies Solar harness offline source preparation. 1. Method The pipeline writes synthetic TeX fallback artifacts.",
+            "Recovered Text",
+            "latex",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-22T19:28:53Z",
+            "research_paper.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-analyze_paper"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-pdf-ingest-smoke-2/research_paper.analyzed.json",
+          "gate_status": "passed",
+          "reasons": [],
+          "schema": "research_paper.v1",
+          "status": "passed",
+          "warnings": []
+        }
+      ],
+      "autosci_command": "/ingest",
+      "execution_status": "completed",
+      "failed_count": 0,
+      "passed_count": 2,
+      "route": {
+        "backend_mode": "solar_native",
+        "coverage_status": "full",
+        "evidence_schema": "research_paper.v1",
+        "physical_operator": "AutoSciBridgePaperIngestor",
+        "solar_backend_action": "ingest_paper",
+        "solar_capability": "cap.research-paper-ingest",
+        "solar_logical_operator": "ScientificPaperIngestor"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "ingest",
+      "side_effect_policy": "dry_run_only",
+      "workspace": {
+        "index_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+        "policy": "human-facing workspace projection; execution logs remain Solar-managed",
+        "solar_managed_run_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-pdf-ingest-smoke-2",
+        "updated_count": 4,
+        "updated_paths": [
+          "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+          "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+          "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+          "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md"
+        ],
+        "wiki_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki",
+        "workspace_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace"
+      }
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-22T19:28:53.472438Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "solar-pdf-ingest-smoke-2",
+  "status": "completed",
+  "task_id": "autosci-skill-ingest"
+}

@@ -1,7 +1,7 @@
 {
   "schema": "scientific_report.v1",
   "task_id": "task.phase1.sample.report",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.report_draft",
   "status": "completed",
   "inputs": {
@@ -25,7 +25,7 @@
   "artifacts": [
     {
       "type": "markdown_report",
-      "path": "artifacts/autosci/fixtures/scientific_report.md"
+      "path": "artifacts/scientific/fixtures/scientific_report.md"
     }
   ],
   "provenance": {

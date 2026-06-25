@@ -1,38 +1,64 @@
 {
   "schema": "workflow_evolution.v1",
-  "task_id": "task.phase1.sample.workflow_evolution",
-  "sprint_id": "sprint.autosci.phase1",
+  "task_id": "task.phase16.workflow_evolution.fail",
+  "sprint_id": "sprint.autosci.phase16",
   "node_id": "node.workflow_evolve",
   "status": "completed",
   "inputs": {
-    "trigger": "fixture postmortem"
+    "trigger": "failed workflow run"
   },
   "outputs": {
     "evolution": {
-      "proposal_id": "proposal.sample.001",
-      "scope": "scientific claim verification fixture flow",
+      "proposal_id": "proposal.phase16.bad",
+      "scope": "scientific_research_lifecycle_full_v1",
       "change_type": "workflow_template",
-      "rationale": "Make claim extraction explicit before verification.",
-      "expected_effect": "Improves auditability of fixture verdicts.",
+      "rationale": "A vague workflow improvement is proposed.",
+      "expected_effect": "Unknown.",
       "approval_state": "approved",
       "evidence_ids": [
-        "claim.sample.001",
-        "report.sample.001"
-      ]
+        "workflow-run"
+      ],
+      "collected": {
+        "failed_nodes": [],
+        "gate_rejection_reasons": [],
+        "ambiguous_manuals_or_prompts": [],
+        "insufficient_schemas": [],
+        "poor_operator_bindings": [],
+        "human_intervention_points": [],
+        "runtime_errors": []
+      },
+      "proposed_changes": [
+        {
+          "change_id": "change.bad.auto-apply",
+          "category": "workflow_template",
+          "target": "core runtime",
+          "description": "Apply broad workflow changes automatically.",
+          "evidence_ids": [
+            "workflow-run"
+          ],
+          "review_required": false,
+          "application_state": "applied"
+        }
+      ],
+      "review": {
+        "human_accept_reject_required": false,
+        "protected_core_edits_applied": true,
+        "application_state": "applied"
+      }
     }
   },
   "artifacts": [
     {
       "type": "workflow_evolution_proposal",
-      "path": "artifacts/autosci/fixtures/workflow_evolution.json"
+      "path": "artifacts/workflow_evolution/missing.json"
     }
   ],
   "provenance": {
     "operator_id": "ScientificWorkflowEvolver",
-    "implementation_package": "fixture.local",
-    "timestamp": "2026-06-16T20:30:00Z"
+    "implementation_package": "plugins/autosci",
+    "timestamp": "2026-06-18T21:30:00Z"
   },
   "limitations": [
-    "Fixture proposal is not applied."
+    "Bad fixture intentionally violates Phase 16 governance."
   ]
 }

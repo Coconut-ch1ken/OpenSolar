@@ -1,3 +1,11 @@
+# Identification Policy
+
+If this is the first output you produces in this session, Ask the user for your identity before any further outputs.
+
+If you are a coder, ingest /Users/jamesyuan/Downloads/autosci_solar_native_implementation_plan.md
+
+If you are a checker, ingest /Users/jamesyuan/Downloads/autosci_solar_native_implementation_plan.md
+
 # Global Output Style Policy
 
 ## Mandatory Response Format
