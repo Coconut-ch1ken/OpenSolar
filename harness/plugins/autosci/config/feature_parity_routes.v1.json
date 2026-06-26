@@ -164,7 +164,7 @@
       "evidence_schema": "experiment_result.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action run_experiment", "tools/remote.py launch", "tools/remote.py pull-results"],
       "required_capabilities": ["deploy", "monitor", "collect", "local mode", "remote mode"],
-      "limitations": ["SSH, rsync, screen sessions, and long-running code execution require approval; tools/remote.py can produce autosci_runtime_evidence.v1 only for explicitly approved and allowlisted commands."]
+      "limitations": ["SSH, rsync, screen sessions, and long-running code execution require approval; tools/remote.py launch/pull-results style commands can produce or feed autosci_runtime_evidence.v1 only when explicitly approved and allowlisted; local collection identity/hash ledger is wired, while distributed remote/session exactly-once collection is still partial."]
     },
     {
       "native_skill": "exp-status",
@@ -180,7 +180,7 @@
       "evidence_schema": "experiment_status.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment", "tools/remote.py check"],
       "required_capabilities": ["status read", "collect-ready detection", "anomaly summary"],
-      "limitations": ["Wiki/run-state lookup, tools/remote.py check, and approved runtime collect evidence are wired; provider-specific remote status remains partial until real connectivity smoke is audited."]
+      "limitations": ["Wiki/run-state lookup, local session registry status, tools/remote.py check, approved runtime evidence, approved pull-results collection evidence, and local collection identity ledger are wired; live remote process polling and distributed exactly-once collection remain partial until real connectivity smoke is audited."]
     },
     {
       "native_skill": "ideate",
@@ -373,9 +373,9 @@
       "backend_mode": "route_plan",
       "side_effect_policy": "approval_required",
       "evidence_schema": "workflow_evolution.v1",
-      "primary_tools": ["harness/workflows/scientific_research_lifecycle_full_v1.json"],
+      "primary_tools": ["harness/workflows/scientific_research_lifecycle_full_v1.json", "tools/run_scientific_lifecycle_smoke.py"],
       "required_capabilities": ["idea discovery", "human gates", "experiment lifecycle", "paper lifecycle", "resume state"],
-      "limitations": ["Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied; long-running execution and human gates still require approved stage runners and are not collapsed into one unapproved black-box operator."]
+      "limitations": ["Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied; `$research --scheduler-run` can explicitly dispatch the existing scientific lifecycle through operator_runtime and attach its scientific_lifecycle.v1 summary, `--scheduler-include-human-gates` records idea/results approval pauses as scheduler-visible blocked nodes, `--online` can carry supplied approval/runtime source evidence into strict scheduler source mode, scheduler experiment stages can carry explicit `--experiment-*` approval/runtime evidence without reusing source evidence paths, `--experiment-execute-approved` can run an allowlisted approved local experiment command, and scheduler publication compile can use compile-specific approved runtime evidence or `--compile-execute-approved`; full parity still requires real provider evidence, audited remote/session stage runners, and submission/anonymity checks."]
     },
     {
       "native_skill": "reset",

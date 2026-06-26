@@ -817,7 +817,7 @@ def _approval_semantic_runtime(contract: dict[str, Any], action: str, *, limit: 
             "command_run": command_run,
             "logs": _runtime_logs(records),
         })
-    elif action in {"daily_arxiv_prepare_finalize", "init_sources"}:
+    elif action in {"daily_arxiv_prepare_finalize", "init_sources", "discover_literature"}:
         candidates = _runtime_candidates(records, limit=limit)
         fetch_ok = bool(candidates) and any(_runtime_exit_ok(record) for record in records)
         checks.extend([
@@ -1535,6 +1535,16 @@ def _wiki_markdown_entities(root: Path, group: str) -> list[dict[str, Any]]:
             entity["experiment_id"] = str(frontmatter.get("experiment_id") or entity["id"])
             entity["idea_id"] = str(frontmatter.get("idea_id") or "")
             entity["linked_outputs"] = _first_string_list(frontmatter, ("linked_outputs", "outputs", "output_ids"))
+            entity["pipeline"] = str(frontmatter.get("pipeline") or frontmatter.get("pipeline_id") or "")
+            aliases = _first_string_list(frontmatter, ("aliases", "pipeline_aliases", "pipelines"))
+            if entity["pipeline"]:
+                aliases.append(str(entity["pipeline"]))
+            entity["aliases"] = _unique_strings(aliases)
+            entity["outcome"] = str(frontmatter.get("outcome") or frontmatter.get("result") or "")
+            entity["evidence_ids"] = _first_string_list(
+                frontmatter,
+                ("evidence_ids", "result_evidence_ids", "runtime_evidence_ids"),
+            )
             run_log = str(frontmatter.get("run_log") or frontmatter.get("run_log_path") or "").strip()
             entity["run_log"] = run_log
             if run_log:
@@ -1596,7 +1606,7 @@ def _wiki_graph_edges(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, 
 
 def _wiki_entity_aliases(entity: dict[str, Any], id_keys: tuple[str, ...]) -> set[str]:
     aliases: set[str] = set()
-    for key in ("id", "slug", "title", "path", *id_keys):
+    for key in ("id", "slug", "title", "path", "pipeline", *id_keys):
         value = str(entity.get(key) or "").strip()
         if not value:
             continue
@@ -1605,6 +1615,9 @@ def _wiki_entity_aliases(entity: dict[str, Any], id_keys: tuple[str, ...]) -> se
         if "/" in value:
             aliases.add(Path(value).stem.lower())
             aliases.add(_slug(Path(value).stem))
+    for value in _string_list(entity.get("aliases")):
+        aliases.add(value.lower())
+        aliases.add(_slug(value))
     return {alias for alias in aliases if alias}
 
 
@@ -1834,13 +1847,49 @@ def _target_idea_from_wiki_state(resolver: dict[str, Any] | None) -> dict[str, A
     return None
 
 
-def _resolved_wiki_experiment_id(resolver: dict[str, Any] | None) -> str:
+def _resolved_wiki_experiment(resolver: dict[str, Any] | None) -> dict[str, Any] | None:
     if not resolver:
-        return ""
+        return None
     resolution = resolver.get("resolution") if isinstance(resolver.get("resolution"), dict) else {}
     if resolution.get("target_type") != "experiment":
+        return None
+    target_id = str(resolution.get("target_id") or "").strip()
+    target_path = str(resolution.get("target_path") or "").strip()
+    for experiment in resolver.get("experiments") or []:
+        if not isinstance(experiment, dict):
+            continue
+        ids = {
+            str(experiment.get("experiment_id") or ""),
+            str(experiment.get("id") or ""),
+            str(experiment.get("slug") or ""),
+        }
+        if target_id and target_id in ids:
+            return experiment
+        if target_path and target_path == str(experiment.get("path") or ""):
+            return experiment
+    return None
+
+
+def _resolved_wiki_experiment_id(resolver: dict[str, Any] | None) -> str:
+    experiment = _resolved_wiki_experiment(resolver)
+    if not experiment:
         return ""
-    return str(resolution.get("target_id") or "").strip()
+    return str(experiment.get("experiment_id") or experiment.get("id") or "").strip()
+
+
+def _experiment_state_from_wiki_status(raw_status: str) -> str:
+    normalized = _slug(raw_status)
+    if normalized in {"completed", "complete", "done", "passed", "success", "succeeded", "collected"}:
+        return "completed"
+    if normalized in {"failed", "failure", "error", "errored", "abandoned", "cancelled", "canceled"}:
+        return "failed"
+    if normalized in {"planned", "plan", "designed", "drafted"}:
+        return "planned"
+    if normalized in {"running", "active", "launched", "queued", "in-progress", "ready", "collect-ready", "collectible"}:
+        return "running"
+    if normalized in {"blocked", "paused", "gated", "waiting", "needs-approval"}:
+        return "blocked"
+    return "unknown"
 
 
 def _model_command(inputs: dict[str, Any]) -> list[str]:
@@ -1854,6 +1903,8 @@ def _model_command(inputs: dict[str, Any]) -> list[str]:
 def _normalize_model_response(payload: dict[str, Any], source: str) -> dict[str, Any]:
     outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
     answer = str(outputs.get("answer") or outputs.get("summary") or payload.get("answer") or payload.get("summary") or "").strip()
+    ideas_raw = outputs.get("ideas") if isinstance(outputs.get("ideas"), list) else payload.get("ideas")
+    ideas = ideas_raw if isinstance(ideas_raw, list) else []
     evidence_ids_raw = outputs.get("evidence_ids") or payload.get("evidence_ids") or []
     evidence_ids = [str(item) for item in (evidence_ids_raw if isinstance(evidence_ids_raw, list) else [evidence_ids_raw]) if str(item).strip()]
     findings_raw = outputs.get("findings") if isinstance(outputs.get("findings"), list) else payload.get("findings")
@@ -1866,16 +1917,17 @@ def _normalize_model_response(payload: dict[str, Any], source: str) -> dict[str,
     status = str(payload.get("status") or "completed")
     if status not in {"completed", "inconclusive"}:
         return {"status": "invalid", "source": source, "reason": f"model response status is not completed/inconclusive: {status}"}
-    if status == "completed" and (not answer or not evidence_ids):
+    if status == "completed" and ((not answer and not ideas) or not evidence_ids):
         return {
             "status": "invalid",
             "source": source,
-            "reason": "completed model response requires answer/summary and evidence_ids.",
+            "reason": "completed model response requires answer/summary or ideas plus evidence_ids.",
         }
     return {
         "status": status,
         "source": source,
         "answer": answer,
+        "ideas": ideas,
         "confidence": confidence,
         "evidence_ids": evidence_ids,
         "findings": findings,
@@ -1926,6 +1978,7 @@ def _model_output(
                 "confidence": "number between 0 and 1",
                 "evidence_ids": ["source id used by the answer"],
                 "findings": [],
+                "ideas": [],
             },
         },
     }
@@ -1969,6 +2022,68 @@ def _model_output(
     normalized["command"] = command
     normalized["checked_paths"] = checked
     return normalized, artifacts
+
+
+def _model_output_requested(envelope: dict[str, Any]) -> bool:
+    inputs = dict(envelope.get("inputs") or {})
+    return bool(_input_path_values(inputs, "model_evidence", "model_output_evidence") or _model_command(inputs))
+
+
+def _idea_candidates_from_model_output(
+    model: dict[str, Any],
+    *,
+    source_mode: str,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    raw_ideas = model.get("ideas") if isinstance(model.get("ideas"), list) else []
+    model_evidence_ids = [str(item) for item in model.get("evidence_ids") or [] if str(item).strip()]
+    ideas: list[dict[str, Any]] = []
+    skipped: list[str] = []
+    normalized_source_mode = source_mode if source_mode and source_mode != "missing" else "external"
+    for index, item in enumerate(raw_ideas, start=1):
+        if not isinstance(item, dict):
+            skipped.append(f"ideas[{index}] is not an object")
+            continue
+        title = str(item.get("title") or "").strip()
+        hypothesis = str(item.get("hypothesis") or "").strip()
+        approach = str(item.get("approach") or "").strip()
+        if not (title and hypothesis and approach):
+            skipped.append(f"ideas[{index}] missing title, hypothesis, or approach")
+            continue
+        origin_evidence_ids = _unique_strings(
+            [
+                *[str(value) for value in item.get("origin_evidence_ids") or [] if str(value).strip()],
+                *model_evidence_ids,
+            ]
+        )
+        if not origin_evidence_ids:
+            skipped.append(f"ideas[{index}] missing origin evidence ids")
+            continue
+        ideas.append(
+            {
+                "idea_id": str(item.get("idea_id") or f"idea-model-{index:03d}"),
+                "title": title,
+                "hypothesis": hypothesis,
+                "approach": approach,
+                "origin_evidence_ids": origin_evidence_ids,
+                "novelty_hypothesis": str(
+                    item.get("novelty_hypothesis")
+                    or item.get("rationale")
+                    or "Novelty must be validated by external source evidence and Review LLM evidence."
+                ),
+                "grounding_summary": str(
+                    item.get("grounding_summary")
+                    or model.get("answer")
+                    or "Model-supplied brainstorm grounded in explicit model evidence."
+                )[:600],
+                "source_mode": str(item.get("source_mode") or normalized_source_mode),
+                "generation_path": str(item.get("generation_path") or f"model-{model.get('invocation_mode') or 'evidence'}"),
+                "duplicate_status": str(item.get("duplicate_status") or "unknown"),
+                "status": str(item.get("status") or "candidate"),
+                "model": str(model.get("model") or ""),
+                "provider": str(model.get("provider") or ""),
+            }
+        )
+    return ideas, skipped
 
 
 def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -2414,6 +2529,49 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
 def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     wiki_root = _resolve_harness_path(str(inputs.get("wiki_root") or "artifacts/autosci/workspace/wiki"))
+    runtime_requested = bool(
+        inputs.get("approval_ref")
+        or inputs.get("allowlist_evidence")
+        or inputs.get("before_artifacts")
+        or inputs.get("runtime_evidence")
+        or inputs.get("after_artifacts")
+    )
+    if runtime_requested:
+        query = str(inputs.get("query") or inputs.get("topic") or "AutoSci literature discovery")
+        limit = int(inputs.get("limit") or 10)
+        contract = _approval_contract(
+            envelope,
+            "discover_literature",
+            ["network_source_fetch", "source_manifest_ingest"],
+        )
+        semantic = _approval_semantic_runtime(contract, "discover_literature", limit=limit)
+        contract["semantic_runtime"] = semantic
+        candidates = semantic.get("detail", {}).get("candidates") if isinstance(semantic.get("detail"), dict) else []
+        candidates = candidates if isinstance(candidates, list) else []
+        contract_artifact = _write_approval_contract_sidecar(envelope, "discover_literature", contract)
+        runtime_artifacts = _contract_existing_artifacts(
+            contract,
+            "runtime_evidence",
+            "source_runtime_evidence_json",
+        )
+        limitations = [
+            "Literature discovery used supplied approval-gated runtime evidence; the bridge did not execute network fetches.",
+            *_approval_contract_limitations(contract),
+        ]
+        if semantic.get("verified"):
+            limitations = [
+                "Literature discovery runtime was verified from supplied approval-gated source evidence; this bridge did not execute the fetch.",
+            ]
+        return convert_literature_discovery({
+            "query": query,
+            "mode": "discover_literature_runtime_verified" if semantic.get("verified") else "discover_literature_runtime_pending",
+            "limit": limit,
+            "candidates": candidates,
+            "status": "completed" if semantic.get("verified") else "inconclusive",
+            "artifacts": [contract_artifact, *runtime_artifacts],
+            "limitations": limitations,
+        }, envelope)
+
     allow_network_fetch = str(inputs.get("allow_network_fetch", "true")).lower() not in {"0", "false", "no"}
     if os.environ.get("AUTOSCI_DISABLE_NETWORK_FETCH", "").lower() in {"1", "true", "yes"}:
         allow_network_fetch = False
@@ -2693,6 +2851,60 @@ def _action_generate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
     wiki_artifacts = [wiki_state_artifact] if wiki_state_artifact else []
     if mode != "fixture" and not inputs.get("smoke_mode"):
         sourced = build_idea_candidates(envelope, workspace_root=HARNESS_DIR, repository_root=REPO_HARNESS_DIR)
+        source_summary = sourced.get("source_summary") if isinstance(sourced.get("source_summary"), dict) else {}
+        if _model_output_requested(envelope):
+            topic = str(inputs.get("topic") or inputs.get("query") or inputs.get("target") or "research workflow")
+            model, model_artifacts = _model_output(
+                envelope,
+                action="generate_ideas",
+                prompt=(
+                    "Brainstorm source-grounded AutoSci research ideas. Return JSON with outputs.ideas; each idea "
+                    "must include title, hypothesis, approach, novelty_hypothesis, and origin_evidence_ids."
+                ),
+                context={
+                    "topic": topic,
+                    "source_summary": source_summary,
+                    "wiki_state_resolution": (wiki_state or {}).get("resolution") if isinstance(wiki_state, dict) else {},
+                    "local_candidate_count": len(sourced.get("ideas") or []),
+                },
+            )
+            model_ideas, skipped_model_ideas = _idea_candidates_from_model_output(
+                model,
+                source_mode=str(source_summary.get("source_mode") or "external"),
+            )
+            if model.get("status") == "completed" and model_ideas:
+                return convert_idea_candidate(
+                    {
+                        "ideas": model_ideas,
+                        "artifacts": [*wiki_artifacts, *model_artifacts],
+                        "limitations": [
+                            "Ideas came from explicit model evidence or a model-command bridge; novelty/review validation remains required.",
+                            *(
+                                [f"Skipped incomplete model ideas: {'; '.join(skipped_model_ideas)}"]
+                                if skipped_model_ideas
+                                else []
+                            ),
+                            *_wiki_state_limitations(wiki_state),
+                        ],
+                    },
+                    envelope,
+                    status="completed",
+                )
+            if model.get("status") in {"failed", "invalid", "inconclusive"}:
+                return convert_idea_candidate(
+                    {
+                        "ideas": sourced["ideas"],
+                        "artifacts": [*wiki_artifacts, *model_artifacts],
+                        "limitations": [
+                            f"Explicit model brainstorm did not complete: {model.get('reason') or model.get('status')}.",
+                            "Returned source-grounded local candidates as inconclusive fallback evidence, not as model brainstorm parity.",
+                            *list(sourced["limitations"]),
+                            *_wiki_state_limitations(wiki_state),
+                        ],
+                    },
+                    envelope,
+                    status="inconclusive",
+                )
         return convert_idea_candidate(
             {
                 "ideas": sourced["ideas"],
@@ -3461,6 +3673,211 @@ def _write_experiment_state_mutation(
     ]
 
 
+def _existing_experiment_state_artifacts(envelope: dict[str, Any], experiment_id: str) -> list[dict[str, str]]:
+    artifacts: list[dict[str, str]] = []
+    for root in _wiki_roots_for_write(envelope):
+        exp_path = root / "experiments" / f"{_slug(experiment_id)}.md"
+        log_path = root / "log.md"
+        edge_path = root / "graph" / "edges.jsonl"
+        if exp_path.exists():
+            artifacts.append({"type": "wiki_experiment_state", "path": _rel(exp_path)})
+        if log_path.exists():
+            artifacts.append({"type": "wiki_log", "path": _rel(log_path)})
+        if edge_path.exists():
+            artifacts.append({"type": "wiki_graph_edges", "path": _rel(edge_path)})
+        if artifacts:
+            break
+    return artifacts
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _collection_file_digests(paths: list[Path]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in sorted(paths, key=lambda item: _rel(item)):
+        if not path.exists() or not path.is_file():
+            continue
+        rows.append({
+            "path": _rel(path),
+            "sha256": _file_sha256(path),
+            "bytes": path.stat().st_size,
+        })
+    return rows
+
+
+def _record_collection_ledger(
+    envelope: dict[str, Any],
+    *,
+    experiment_id: str,
+    command_run: str,
+    collected_files: list[Path],
+    evidence_ids: list[str],
+) -> dict[str, Any]:
+    root = _wiki_roots_for_write(envelope)[0]
+    ledger_path = root / "collections" / "collection-ledger.json"
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    file_digests = _collection_file_digests(collected_files)
+    identity_seed = json.dumps({"experiment_id": experiment_id, "files": file_digests}, sort_keys=True)
+    identity = hashlib.sha1(identity_seed.encode("utf-8")).hexdigest()
+    try:
+        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        ledger = {"schema": "autosci_collection_ledger.v1", "entries": []}
+    if not isinstance(ledger, dict):
+        ledger = {"schema": "autosci_collection_ledger.v1", "entries": []}
+    entries = ledger.get("entries") if isinstance(ledger.get("entries"), list) else []
+    for entry in entries:
+        if isinstance(entry, dict) and entry.get("collection_identity") == identity:
+            ledger["entries"] = entries
+            ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            return {
+                "duplicate": True,
+                "collection_identity": identity,
+                "ledger_path": _rel(ledger_path),
+                "entry": entry,
+                "file_digests": file_digests,
+            }
+    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    entry = {
+        "collection_identity": identity,
+        "experiment_id": experiment_id,
+        "accepted_at": now,
+        "command_run": command_run,
+        "files": file_digests,
+        "evidence_ids": _unique_strings(evidence_ids),
+    }
+    entries.append(entry)
+    ledger.update({"schema": "autosci_collection_ledger.v1", "entries": entries})
+    ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {
+        "duplicate": False,
+        "collection_identity": identity,
+        "ledger_path": _rel(ledger_path),
+        "entry": entry,
+        "file_digests": file_digests,
+    }
+
+
+def _experiment_session_registry_path(envelope: dict[str, Any]) -> Path:
+    root = _wiki_roots_for_write(envelope)[0]
+    return root / "experiments" / "session-registry.json"
+
+
+def _remote_launch_session_state(record: dict[str, Any], *, remote_runtime_rel: str) -> str:
+    status = str(record.get("status") or "").strip().lower()
+    if status == "failed":
+        return "failed"
+    if status == "completed" and remote_runtime_rel:
+        return "completed"
+    if status in {"completed", "inconclusive", "running", "started", "launched"}:
+        return "running"
+    return "unknown"
+
+
+def _record_experiment_session(
+    envelope: dict[str, Any],
+    *,
+    experiment_id: str,
+    command_run: str,
+    record: dict[str, Any],
+    remote_runtime_rel: str,
+) -> dict[str, Any]:
+    registry_path = _experiment_session_registry_path(envelope)
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        registry = {"schema": "autosci_experiment_session_registry.v1", "sessions": []}
+    if not isinstance(registry, dict):
+        registry = {"schema": "autosci_experiment_session_registry.v1", "sessions": []}
+    sessions = registry.get("sessions") if isinstance(registry.get("sessions"), list) else []
+    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    session = {
+        "experiment_id": experiment_id,
+        "state": _remote_launch_session_state(record, remote_runtime_rel=remote_runtime_rel),
+        "command_run": command_run,
+        "remote_cli_status": str(record.get("status") or ""),
+        "run_dir": str(record.get("run_dir") or ""),
+        "runtime_evidence_path": remote_runtime_rel,
+        "result_collected": bool(record.get("result_collected")),
+        "updated_at": now,
+    }
+    replaced = False
+    for index, existing in enumerate(sessions):
+        if isinstance(existing, dict) and existing.get("experiment_id") == experiment_id:
+            sessions[index] = session
+            replaced = True
+            break
+    if not replaced:
+        sessions.append(session)
+    registry.update({"schema": "autosci_experiment_session_registry.v1", "sessions": sessions})
+    registry_path.write_text(json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {"registry_path": _rel(registry_path), "session": session}
+
+
+def _experiment_session_from_registry(envelope: dict[str, Any], experiment_id: str) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    registry_path = _experiment_session_registry_path(envelope)
+    if not registry_path.exists():
+        return None, None
+    try:
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, {"type": "experiment_session_registry_json", "path": _rel(registry_path)}
+    sessions = registry.get("sessions") if isinstance(registry, dict) and isinstance(registry.get("sessions"), list) else []
+    for session in sessions:
+        if isinstance(session, dict) and str(session.get("experiment_id") or "") == experiment_id:
+            return session, {"type": "experiment_session_registry_json", "path": _rel(registry_path)}
+    return None, {"type": "experiment_session_registry_json", "path": _rel(registry_path)}
+
+
+def _session_status_raw(
+    *,
+    experiment_id: str,
+    session: dict[str, Any],
+    session_artifact: dict[str, str] | None,
+    wiki_artifacts: list[dict[str, str]],
+    wiki_state: dict[str, Any] | None,
+) -> dict[str, Any]:
+    state = str(session.get("state") or "unknown")
+    session_artifacts = [*wiki_artifacts]
+    if session_artifact:
+        session_artifacts.append(session_artifact)
+    observations = [
+        f"Resolved experiment session `{experiment_id}` with state `{state}`.",
+        f"remote_cli_status={session.get('remote_cli_status') or 'N/A'}",
+    ]
+    run_dir = str(session.get("run_dir") or "").strip()
+    if run_dir:
+        observations.append(f"run_dir={run_dir}")
+    next_actions = (
+        ["Run approved collect with runtime evidence before treating results as collected."]
+        if state in {"running", "unknown"}
+        else ["Inspect failed session logs before retry."]
+        if state == "failed"
+        else ["Use collected result evidence for claim verification and reporting."]
+    )
+    evidence_ids = _unique_strings([experiment_id, str(session.get("runtime_evidence_path") or ""), session_artifact["path"] if session_artifact else ""])
+    return {
+        "experiment_id": experiment_id,
+        "state": state,
+        "observations": observations,
+        "next_actions": next_actions,
+        "evidence_ids": evidence_ids or [experiment_id, "experiment-session:registry"],
+        "status": "completed" if state != "unknown" else "inconclusive",
+        "artifacts": session_artifacts,
+        "limitations": [
+            "Experiment status was read from the local session registry; no remote process was polled and no results were collected in this status call.",
+            *_wiki_state_limitations(wiki_state),
+        ],
+    }
+
+
 def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     execution_mode = _experiment_execution_mode(envelope)
@@ -3834,6 +4251,8 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         or target_ref
         or ("exp-001" if _fixture_like_envelope(envelope) else "experiment-unresolved")
     )
+    collect_requested = bool(inputs.get("collect"))
+    session, session_artifact = _experiment_session_from_registry(envelope, experiment_id)
     if result_payload and result_payload.get("schema") == "experiment_result.v1":
         result = ((result_payload.get("outputs") or {}).get("result") or {})
         experiment_id = str(result.get("experiment_id") or experiment_id)
@@ -3865,17 +4284,108 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                 *_wiki_state_limitations(wiki_state),
             ],
         }, envelope)
-    collect_requested = bool(inputs.get("collect"))
+    wiki_experiment = _resolved_wiki_experiment(wiki_state)
+    if wiki_experiment and not collect_requested and not inputs.get("runtime_evidence"):
+        experiment_id = str(wiki_experiment.get("experiment_id") or experiment_id)
+        raw_status = str(wiki_experiment.get("status") or "")
+        state = _experiment_state_from_wiki_status(raw_status)
+        outcome = str(wiki_experiment.get("outcome") or "").strip()
+        experiment_path = str(wiki_experiment.get("path") or "").strip()
+        run_log_path = str(wiki_experiment.get("run_log_path") or "").strip()
+        evidence_ids = _unique_strings(
+            [
+                experiment_id,
+                experiment_path,
+                run_log_path if wiki_experiment.get("run_log_exists") else "",
+                *[str(item) for item in wiki_experiment.get("evidence_ids") or [] if str(item).strip()],
+            ]
+        )
+        experiment_artifacts = list(wiki_artifacts)
+        if experiment_path:
+            experiment_artifacts.append({"type": "wiki_experiment_markdown", "path": experiment_path})
+        if run_log_path and wiki_experiment.get("run_log_exists"):
+            experiment_artifacts.append({"type": "wiki_experiment_run_log", "path": run_log_path})
+        observations = [f"Resolved wiki experiment `{experiment_id}` with status `{raw_status or 'unknown'}`."]
+        if outcome:
+            observations.append(f"Wiki experiment outcome: {outcome}.")
+        if run_log_path:
+            observations.append(
+                "Wiki experiment run log exists." if wiki_experiment.get("run_log_exists") else "Wiki experiment run log path is recorded but missing."
+            )
+        next_actions = (
+            ["Use linked run/result evidence for claim verification and reporting."]
+            if state == "completed"
+            else ["Supply experiment_result.v1 or approved runtime evidence before treating results as collected."]
+        )
+        status = "completed" if state != "unknown" else "inconclusive"
+        limitations = [
+            "Experiment status was read from wiki experiment state; no command was executed and no remote results were collected.",
+            *_wiki_state_limitations(wiki_state),
+        ]
+        if not evidence_ids:
+            evidence_ids = [experiment_id or "wiki-experiment:missing-evidence"]
+        if session and state in {"planned", "running", "unknown", "blocked"}:
+            return convert_experiment_status(
+                _session_status_raw(
+                    experiment_id=experiment_id,
+                    session=session,
+                    session_artifact=session_artifact,
+                    wiki_artifacts=experiment_artifacts,
+                    wiki_state=wiki_state,
+                ),
+                envelope,
+            )
+        return convert_experiment_status({
+            "experiment_id": experiment_id,
+            "state": state,
+            "observations": observations,
+            "next_actions": next_actions,
+            "evidence_ids": evidence_ids,
+            "status": status,
+            "artifacts": experiment_artifacts,
+            "limitations": limitations,
+        }, envelope)
+    if session and not collect_requested and not inputs.get("runtime_evidence"):
+        return convert_experiment_status(
+            _session_status_raw(
+                experiment_id=experiment_id,
+                session=session,
+                session_artifact=session_artifact,
+                wiki_artifacts=wiki_artifacts,
+                wiki_state=wiki_state,
+            ),
+            envelope,
+        )
     if collect_requested or inputs.get("runtime_evidence"):
         contract = _approval_contract(
             envelope,
             "monitor_experiment",
             ["result_collection", "status_mutation", "wiki_state_mutation"],
         )
+        collector_result: dict[str, Any] = {"executed": False}
+        if collect_requested:
+            contract, collector_result = _execute_monitor_collect_if_approved(envelope, contract, plan, experiment_id)
         semantic = _approval_semantic_runtime(contract, "run_experiment")
         contract["semantic_runtime"] = semantic
         contract_artifact = _write_approval_contract_sidecar(envelope, "monitor_experiment", contract)
         runtime_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "experiment_runtime_evidence_json")
+        if collector_result.get("executed"):
+            for key, artifact_type in (
+                ("stdout_path", "executor_stdout"),
+                ("stderr_path", "executor_stderr"),
+            ):
+                raw_path = str(collector_result.get(key) or "").strip()
+                if raw_path:
+                    artifact_path = _resolve_harness_path(raw_path)
+                    if artifact_path.exists():
+                        runtime_artifacts.append({"type": artifact_type, "path": _rel(artifact_path)})
+            runtime_artifacts.extend(
+                {"type": "remote_collected_file", "path": str(path)}
+                for path in collector_result.get("collected_files") or []
+                if str(path).strip()
+            )
+            if collector_result.get("collection_ledger_path"):
+                runtime_artifacts.append({"type": "collection_ledger_json", "path": str(collector_result["collection_ledger_path"])})
         detail = semantic.get("detail") if isinstance(semantic.get("detail"), dict) else {}
         runtime_evidence_ids = [str(item) for item in detail.get("evidence_ids") or [] if str(item).strip()]
         evidence_ids = _unique_strings([experiment_id, *runtime_evidence_ids])
@@ -3883,21 +4393,39 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             outcome = str(detail.get("outcome") or "supports")
             state = "failed" if outcome == "failed" else "completed"
             metrics = detail.get("metrics") if isinstance(detail.get("metrics"), list) else []
-            wiki_update_artifacts = _write_experiment_state_mutation(
-                envelope,
-                experiment_id=experiment_id,
-                outcome=outcome,
-                evidence_ids=evidence_ids,
-                metrics=metrics,
-            )
+            observations = [
+                f"Approved runtime evidence verified experiment outcome: {outcome}.",
+                f"approval_state={contract.get('approval_state')}",
+                f"runtime_semantic_status={semantic.get('status')}",
+            ]
+            if collector_result.get("executed"):
+                observations.extend([
+                    f"collect_executor_result={collector_result.get('result_collected')}",
+                    f"collector_exit_code={collector_result.get('exit_code')}",
+                    f"collection_duplicate={collector_result.get('collection_duplicate')}",
+                ])
+            if collector_result.get("collection_duplicate"):
+                wiki_update_artifacts = _existing_experiment_state_artifacts(envelope, experiment_id)
+                if not wiki_update_artifacts:
+                    wiki_update_artifacts = _write_experiment_state_mutation(
+                        envelope,
+                        experiment_id=experiment_id,
+                        outcome=outcome,
+                        evidence_ids=evidence_ids,
+                        metrics=metrics,
+                    )
+            else:
+                wiki_update_artifacts = _write_experiment_state_mutation(
+                    envelope,
+                    experiment_id=experiment_id,
+                    outcome=outcome,
+                    evidence_ids=evidence_ids,
+                    metrics=metrics,
+                )
             return convert_experiment_status({
                 "experiment_id": experiment_id,
                 "state": state,
-                "observations": [
-                    f"Approved runtime evidence verified experiment outcome: {outcome}.",
-                    f"approval_state={contract.get('approval_state')}",
-                    f"runtime_semantic_status={semantic.get('status')}",
-                ],
+                "observations": observations,
                 "next_actions": ["Use collected result evidence for claim verification and paper reporting."],
                 "evidence_ids": evidence_ids,
                 "artifacts": [*wiki_artifacts, contract_artifact, *runtime_artifacts, *wiki_update_artifacts],
@@ -6048,6 +6576,8 @@ def _parse_experiment_output_record(stdout_text: str) -> tuple[dict[str, Any] | 
                 continue
             if not isinstance(payload, dict):
                 continue
+            if payload.get("schema") == "autosci_remote_cli.v1":
+                return payload, "remote_cli_runtime_evidence"
             if payload.get("schema") == "experiment_result.v1":
                 result = ((payload.get("outputs") or {}).get("result") or {})
                 return result if isinstance(result, dict) else payload, "experiment_result_payload"
@@ -6060,12 +6590,50 @@ def _parse_experiment_output_record(stdout_text: str) -> tuple[dict[str, Any] | 
         return None, ""
     if not isinstance(payload, dict):
         return None, ""
+    if payload.get("schema") == "autosci_remote_cli.v1":
+        return payload, "remote_cli_runtime_evidence"
     if payload.get("schema") == "experiment_result.v1":
         result = ((payload.get("outputs") or {}).get("result") or {})
         return result if isinstance(result, dict) else payload, "experiment_result_payload"
     if isinstance(payload.get("result"), dict):
         return payload["result"], "result_key"
     return payload, "experiment_result_key_value"
+
+
+def _collected_result_summary(paths: list[Path]) -> dict[str, Any]:
+    metrics: list[dict[str, Any]] = []
+    logs: list[str] = []
+    evidence_ids: list[str] = []
+    outcome = ""
+    for path in paths:
+        if not path.exists() or not path.is_file():
+            continue
+        evidence_ids.append(_rel(path))
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        if not outcome:
+            raw_outcome = _field(payload, "outcome", "experiment_outcome")
+            if str(raw_outcome or "").strip():
+                outcome = str(raw_outcome).strip()
+        raw_metrics = _field(payload, "metrics")
+        if isinstance(raw_metrics, list):
+            metrics.extend(item for item in raw_metrics if isinstance(item, dict) and str(item.get("name") or "").strip())
+        raw_logs = _field(payload, "logs", "log")
+        log_values = raw_logs if isinstance(raw_logs, list) else ([raw_logs] if raw_logs else [])
+        logs.extend(str(item) for item in log_values if str(item).strip())
+        raw_ids = _field(payload, "evidence_ids")
+        id_values = raw_ids if isinstance(raw_ids, list) else ([raw_ids] if raw_ids else [])
+        evidence_ids.extend(str(item) for item in id_values if str(item).strip())
+    return {
+        "metrics": metrics,
+        "logs": logs,
+        "evidence_ids": _unique_strings(evidence_ids),
+        "outcome": outcome,
+    }
 
 
 def _execute_experiment_if_approved(
@@ -6134,7 +6702,35 @@ def _execute_experiment_if_approved(
     ]
     result_record, result_source = _parse_experiment_output_record(proc.stdout)
     result_payload: dict[str, Any] = {}
-    if result_record:
+    remote_runtime_rel = ""
+    session_registry_rel = ""
+    is_remote_cli_record = result_source == "remote_cli_runtime_evidence"
+    if is_remote_cli_record and isinstance(result_record, dict):
+        raw_runtime_path = str(result_record.get("runtime_evidence_path") or "").strip()
+        if raw_runtime_path:
+            runtime_candidate = _resolve_harness_path(raw_runtime_path)
+            if runtime_candidate.exists() and runtime_candidate.is_file():
+                remote_runtime_rel = _rel(runtime_candidate)
+                contract.setdefault("runtime_evidence", []).append({
+                    "path": remote_runtime_rel,
+                    "artifact_path": remote_runtime_rel,
+                    "exists": True,
+                    "kind": "file",
+                    "verifiable": True,
+                })
+                artifacts.append({"type": "remote_runtime_evidence_json", "path": remote_runtime_rel})
+        if str(result_record.get("command") or "") == "launch":
+            session_record = _record_experiment_session(
+                envelope,
+                experiment_id=experiment_id,
+                command_run=" ".join(command),
+                record=result_record,
+                remote_runtime_rel=remote_runtime_rel,
+            )
+            session_registry_rel = str(session_record.get("registry_path") or "")
+            if session_registry_rel:
+                artifacts.append({"type": "experiment_session_registry_json", "path": session_registry_rel})
+    if result_record and not is_remote_cli_record:
         result_payload.update({
             "experiment_id": str(result_record.get("experiment_id") or experiment_id),
             "outcome": str(result_record.get("outcome") or "supports"),
@@ -6146,6 +6742,16 @@ def _execute_experiment_if_approved(
             result_payload["evidence_ids"] = [f"experiment-runtime:{_slug(experiment_id)}"]
         if not result_payload["metrics"]:
             result_payload["metrics"] = [{"name": "experiment_exit_code", "value": int(proc.returncode)}]
+    elif result_record and is_remote_cli_record:
+        result_payload = {
+            "experiment_id": experiment_id,
+            "outcome": "failed" if proc.returncode != 0 else "inconclusive",
+            "metrics": [],
+            "evidence_ids": [],
+            "logs": [
+                "Remote helper stdout parsed; semantic experiment result is delegated to runtime_evidence_path."
+            ],
+        }
     else:
         result_payload = {
             "experiment_id": experiment_id,
@@ -6154,7 +6760,7 @@ def _execute_experiment_if_approved(
             "evidence_ids": [f"experiment-runtime:{_slug(experiment_id)}"],
             "logs": ["Experiment command executed without parseable experiment payload."],
         }
-    result_collected = bool(result_record) or bool(proc.stdout.strip())
+    result_collected = False if is_remote_cli_record else (bool(result_record) or bool(proc.stdout.strip()))
 
     runtime_result_path = _configured_output_path(
         envelope,
@@ -6180,7 +6786,9 @@ def _execute_experiment_if_approved(
     }
     runtime_result_rel = _write_json_sidecar(runtime_result_path, runtime_result_json)
     artifacts.append({"type": "run_experiment_result", "path": runtime_result_rel})
-    result_collected = bool(result_record) or bool(proc.stdout.strip())
+    result_collected = False if is_remote_cli_record else (bool(result_record) or bool(proc.stdout.strip()))
+    semantic_result_path = "" if is_remote_cli_record else runtime_result_rel
+    semantic_result_artifacts = [] if is_remote_cli_record else [runtime_result_rel]
     payload = _runtime_evidence_payload(
         envelope,
         action="run_experiment",
@@ -6197,10 +6805,15 @@ def _execute_experiment_if_approved(
         ],
         runtime_fields={
             "result_collected": result_collected,
-            "result_path": runtime_result_rel,
+            "metrics": list(result_payload.get("metrics") or []),
+            "outcome": str(result_payload.get("outcome") or ("supports" if proc.returncode == 0 else "failed")),
+            "logs": list(result_payload.get("logs") or []),
+            "result_path": semantic_result_path,
             "result": result_payload,
-            "result_artifacts": [runtime_result_rel],
+            "result_artifacts": semantic_result_artifacts,
             "parsed_record_count": 1 if result_record else 0,
+            "remote_runtime_evidence_path": remote_runtime_rel,
+            "session_registry_path": session_registry_rel,
         },
         artifacts=artifacts,
         limitations=["Approved experiment executor ran a real command locally (subject to allowlist and approval contract)."],
@@ -6223,6 +6836,155 @@ def _execute_experiment_if_approved(
         "stdout_path": stdout_rel,
         "stderr_path": stderr_rel,
         "result_collected": result_collected,
+    }
+
+
+def _execute_monitor_collect_if_approved(
+    envelope: dict[str, Any],
+    contract: dict[str, Any],
+    plan: dict[str, Any],
+    experiment_id: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    inputs = envelope.get("inputs") if isinstance(envelope.get("inputs"), dict) else {}
+    output_dir = _output_dir(envelope, "monitor_experiment")
+    runtime_path = _configured_output_path(envelope, "runtime_evidence_path", output_dir / "monitor_experiment_runtime_evidence.json")
+    if not bool(inputs.get("execute_approved_side_effect")):
+        return contract, {"executed": False, "reason": "execute_approved_side_effect=false"}
+    if not contract.get("ready_for_execution"):
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="run_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:collect-approval-contract-incomplete",
+            exit_code=1,
+            evidence_ids=["remote-collect:blocked"],
+            checks=[{"check": "approval_preflight", "status": "error", "detail": "Approval contract was not ready for collect execution."}],
+            runtime_fields={"result_collected": False},
+            artifacts=[],
+            limitations=["Collect executor did not run because approval preflight was incomplete."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "approval_preflight_incomplete", "runtime_path": runtime_rel}
+
+    command, command_reason = _pick_experiment_command(plan, contract, experiment_id)
+    if not command:
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="run_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:collect-command-availability",
+            exit_code=1,
+            evidence_ids=["remote-collect:blocked"],
+            checks=[{"check": "command_allowlisted", "status": "error", "detail": command_reason}],
+            runtime_fields={"result_collected": False},
+            artifacts=[],
+            limitations=["Collect executor did not run because no allowlisted collect command was selected."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "collect_command_missing", "runtime_path": runtime_rel}
+
+    command = _normalize_command(command)
+    proc = subprocess.run(
+        command,
+        cwd=REPO_HARNESS_DIR,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        timeout=int(inputs.get("executor_timeout_seconds") or 120),
+    )
+    stdout_rel = _write_text_sidecar(output_dir / "monitor_experiment_executor_stdout.txt", proc.stdout)
+    stderr_rel = _write_text_sidecar(output_dir / "monitor_experiment_executor_stderr.txt", proc.stderr)
+    artifacts = [
+        {"type": "executor_stdout", "path": stdout_rel},
+        {"type": "executor_stderr", "path": stderr_rel},
+    ]
+    result_record, result_source = _parse_experiment_output_record(proc.stdout)
+    remote_cli_status = str(result_record.get("status") or "") if isinstance(result_record, dict) else ""
+    remote_cli_command = str(result_record.get("command") or "") if isinstance(result_record, dict) else ""
+    files_raw = result_record.get("files") if isinstance(result_record, dict) and isinstance(result_record.get("files"), list) else []
+    collected_files = [
+        _resolve_harness_path(str(item))
+        for item in files_raw
+        if str(item or "").strip()
+    ]
+    existing_files = [path for path in collected_files if path.exists() and path.is_file()]
+    summary = _collected_result_summary(existing_files)
+    metrics = list(summary.get("metrics") or [])
+    if existing_files and not metrics:
+        metrics = [{"name": "collected_file_count", "value": len(existing_files)}]
+    outcome = str(summary.get("outcome") or ("supports" if existing_files else "inconclusive"))
+    evidence_ids = _unique_strings([f"remote-collect:{_slug(experiment_id)}", *[str(item) for item in summary.get("evidence_ids") or []]])
+    result_collected = proc.returncode == 0 and bool(existing_files)
+    runtime_status = "completed" if result_collected else ("failed" if proc.returncode else "inconclusive")
+    ledger_result: dict[str, Any] = {}
+    if result_collected:
+        ledger_result = _record_collection_ledger(
+            envelope,
+            experiment_id=experiment_id,
+            command_run=" ".join(command),
+            collected_files=existing_files,
+            evidence_ids=evidence_ids,
+        )
+        artifacts.append({"type": "collection_ledger_json", "path": str(ledger_result.get("ledger_path") or "")})
+    for path in existing_files:
+        rel = _rel(path)
+        artifacts.append({"type": "remote_collected_file", "path": rel})
+        contract.setdefault("after_artifacts", []).append({
+            "path": rel,
+            "artifact_path": rel,
+            "exists": True,
+            "kind": "file",
+            "verifiable": True,
+        })
+    payload = _runtime_evidence_payload(
+        envelope,
+        action="run_experiment",
+        status=runtime_status,
+        approval_ref=str(contract.get("approval_ref") or ""),
+        command_run=" ".join(command),
+        exit_code=int(proc.returncode),
+        evidence_ids=evidence_ids,
+        checks=[
+            {"check": "command_allowlisted", "status": "ok", "detail": command_reason},
+            {"check": "exit_code", "status": "ok" if proc.returncode == 0 else "error", "detail": f"exit_code={proc.returncode}"},
+            {"check": "remote_cli_output", "status": "ok" if result_source == "remote_cli_runtime_evidence" else "warn", "detail": result_source or "not-structured"},
+            {"check": "collected_files_present", "status": "ok" if existing_files else "error", "detail": str(len(existing_files))},
+        ],
+        runtime_fields={
+            "result_collected": result_collected,
+            "metrics": metrics,
+            "outcome": outcome,
+            "logs": [*list(summary.get("logs") or []), f"remote_cli_status={remote_cli_status or 'N/A'}"],
+            "result_paths": [_rel(path) for path in existing_files],
+            "remote_cli_command": remote_cli_command,
+            "remote_cli_status": remote_cli_status,
+            "collection_identity": str(ledger_result.get("collection_identity") or ""),
+            "collection_duplicate": bool(ledger_result.get("duplicate")),
+            "collection_ledger_path": str(ledger_result.get("ledger_path") or ""),
+            "parsed_record_count": 1 if result_record else 0,
+        },
+        artifacts=artifacts,
+        limitations=["Approved collect executor ran a real command locally and verified collected result files."],
+    )
+    runtime_rel = _write_json_sidecar(runtime_path, payload)
+    contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+    return _refresh_approval_contract(contract), {
+        "executed": True,
+        "command": command,
+        "exit_code": proc.returncode,
+        "runtime_path": runtime_rel,
+        "stdout_path": stdout_rel,
+        "stderr_path": stderr_rel,
+        "collected_files": [_rel(path) for path in existing_files],
+        "result_collected": result_collected,
+        "collection_identity": str(ledger_result.get("collection_identity") or ""),
+        "collection_duplicate": bool(ledger_result.get("duplicate")),
+        "collection_ledger_path": str(ledger_result.get("ledger_path") or ""),
     }
 
 
@@ -6368,6 +7130,95 @@ def _check_row(check: str, status: str, detail: str, evidence: list[str] | None 
     }
 
 
+def _read_limited_text(path: Path, *, limit: int = 200_000) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")[:limit]
+    except OSError:
+        return ""
+
+
+def _optional_number(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _submission_check_rows(
+    inputs: dict[str, Any],
+    *,
+    latex_files: list[Path],
+    markdown_files: list[Path],
+) -> list[dict[str, Any]]:
+    text_by_path = {
+        _rel(path): _read_limited_text(path)
+        for path in [*latex_files, *markdown_files]
+    }
+    unconfirmed_paths = [
+        path
+        for path, text in text_by_path.items()
+        if "[UNCONFIRMED]" in text
+    ]
+    anonymous_requested = bool(
+        inputs.get("anonymous")
+        or inputs.get("anonymized")
+        or inputs.get("double_blind")
+        or str(inputs.get("submission_mode") or "").strip().lower() in {"anonymous", "double_blind", "double-blind"}
+    )
+    author_disclosures: list[str] = []
+    for path, text in text_by_path.items():
+        for match in re.finditer(r"\\author\s*\{([^{}]+)\}", text):
+            author_text = match.group(1).strip()
+            if author_text and "anonymous" not in author_text.lower():
+                author_disclosures.append(path)
+                break
+    page_limit = _optional_number(inputs.get("page_limit"))
+    page_count = _optional_number(inputs.get("page_count") or inputs.get("verified_page_count"))
+    min_font_size = _optional_number(inputs.get("min_font_size") or inputs.get("minimum_font_size"))
+    verified_min_font_size = _optional_number(inputs.get("verified_min_font_size"))
+    rows = [
+        _check_row(
+            "unconfirmed_marker_scan",
+            "warn" if unconfirmed_paths else "ok",
+            f"[UNCONFIRMED] markers found in {len(unconfirmed_paths)} source file(s)."
+            if unconfirmed_paths
+            else "No [UNCONFIRMED] markers were found in scanned source files.",
+            unconfirmed_paths,
+        ),
+        _check_row(
+            "anonymity_check",
+            "warn" if anonymous_requested and author_disclosures else "ok" if anonymous_requested else "warn",
+            "Anonymous mode requested and no explicit non-anonymous author blocks were found."
+            if anonymous_requested and not author_disclosures
+            else f"Anonymous mode requested but author blocks may disclose identity in {len(author_disclosures)} file(s)."
+            if anonymous_requested
+            else "Anonymous/double-blind submission mode was not requested, so anonymity is not claimed.",
+            author_disclosures,
+        ),
+        _check_row(
+            "page_limit_check",
+            "ok"
+            if page_limit is not None and page_count is not None and page_count <= page_limit
+            else "warn",
+            f"Verified page count {page_count} is within limit {page_limit}."
+            if page_limit is not None and page_count is not None and page_count <= page_limit
+            else "Page limit compliance is unconfirmed; supply page_limit and verified_page_count evidence.",
+        ),
+        _check_row(
+            "font_size_check",
+            "ok"
+            if min_font_size is not None and verified_min_font_size is not None and verified_min_font_size >= min_font_size
+            else "warn",
+            f"Verified minimum font size {verified_min_font_size} is >= required {min_font_size}."
+            if min_font_size is not None and verified_min_font_size is not None and verified_min_font_size >= min_font_size
+            else "Font-size compliance is unconfirmed; supply minimum font-size evidence from a PDF checker.",
+        ),
+    ]
+    return rows
+
+
 def _render_compile_diagnostics(checklist: dict[str, Any]) -> str:
     lines = [
         "# Paper Compile Checklist Diagnostics",
@@ -6384,6 +7235,14 @@ def _render_compile_diagnostics(checklist: dict[str, Any]) -> str:
             continue
         detail = str(row.get("detail") or "N/A").replace("|", "\\|")
         lines.append(f"| {row.get('check', 'N/A')} | {row.get('status', 'N/A')} | {detail} |")
+    submission_checks = checklist.get("submission_checks") if isinstance(checklist.get("submission_checks"), list) else []
+    if submission_checks:
+        lines.extend(["", "## Submission Checks", "", "| Check | Status | Detail |", "| --- | --- | --- |"])
+        for row in submission_checks:
+            if not isinstance(row, dict):
+                continue
+            detail = str(row.get("detail") or "N/A").replace("|", "\\|")
+            lines.append(f"| {row.get('check', 'N/A')} | {row.get('status', 'N/A')} | {detail} |")
     lines.extend(["", "## Files", ""])
     for key in ("latex_files", "pdf_files", "markdown_files", "bibliography_files"):
         values = checklist.get(key) if isinstance(checklist.get(key), list) else []
@@ -6520,6 +7379,8 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             [contract_artifact["path"]],
         ),
     ]
+    submission_checks = _submission_check_rows(inputs, latex_files=latex_files, markdown_files=markdown_files)
+    checks.extend(submission_checks)
     limitations = [
         "Paper compile currently performs a bounded checklist and diagnostics pass only.",
         "The bridge does not run a TeX executor, mutate source files, or claim PDF compilation without explicit approved execution.",
@@ -6540,6 +7401,8 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("No compiled PDF was found in the target path.")
     if fix_requested:
         limitations.extend(str(item) for item in fix_result.get("limitations") or [])
+    if any(row.get("status") != "ok" for row in submission_checks):
+        limitations.append("Submission readiness includes warnings or unconfirmed checks; see submission_checks in the compile checklist.")
     status = (
         "completed"
         if target_exists and latex_files and (pdf_files or semantic.get("verified")) and (not fix_requested or bool(fix_result.get("applied")))
@@ -6565,6 +7428,7 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "runtime_semantic": semantic,
         "fix_writeback": fix_result.get("write"),
         "checks": checks,
+        "submission_checks": submission_checks,
         "latex_files": [_rel(path) for path in latex_files],
         "pdf_files": [_rel(path) for path in pdf_files],
         "markdown_files": [_rel(path) for path in markdown_files],
@@ -7354,6 +8218,64 @@ def _discovery_evidence_completed(payloads: list[dict[str, Any]]) -> bool:
     )
 
 
+SCHEDULER_FULL_LIFECYCLE_NODE_IDS = {
+    "literature_discover",
+    "paper_ingest",
+    "paper_analyze",
+    "memory_update_initial",
+    "graph_update",
+    "claim_extract",
+    "method_extract",
+    "code_evidence_map",
+    "idea_generate",
+    "idea_evaluate",
+    "experiment_design",
+    "experiment_run",
+    "experiment_monitor",
+    "claim_verify",
+    "report_draft",
+    "artifact_review",
+    "memory_update_final",
+    "workflow_evolve",
+    "report_plan",
+    "publication_produce",
+}
+
+
+def _scheduler_lifecycle_summary(payloads: list[dict[str, Any]]) -> dict[str, Any]:
+    for payload in payloads:
+        if str(payload.get("schema") or "") != "scientific_lifecycle.v1":
+            continue
+        if str(payload.get("lifecycle_status") or "").lower() != "passed":
+            continue
+        gate = payload.get("lifecycle_gate_result") if isinstance(payload.get("lifecycle_gate_result"), dict) else {}
+        if gate.get("ok") is not True:
+            continue
+        blocked = payload.get("blocked_nodes")
+        if isinstance(blocked, dict) and blocked:
+            continue
+        node_results = payload.get("node_results") if isinstance(payload.get("node_results"), dict) else {}
+        present_nodes = {str(node_id) for node_id in node_results}
+        missing = sorted(SCHEDULER_FULL_LIFECYCLE_NODE_IDS - present_nodes)
+        if missing:
+            continue
+        if any(
+            str((node_results.get(node_id) or {}).get("status") or "").lower() != "passed"
+            for node_id in SCHEDULER_FULL_LIFECYCLE_NODE_IDS
+        ):
+            continue
+        return {
+            "schema": "scientific_lifecycle.v1",
+            "status": "completed",
+            "job_id": str(payload.get("job_id") or payload.get("sprint_id") or ""),
+            "workflow_id": str(payload.get("workflow_id") or ""),
+            "source_path": str(payload.get("source_path") or ""),
+            "node_count": len(node_results),
+            "required_node_count": len(SCHEDULER_FULL_LIFECYCLE_NODE_IDS),
+        }
+    return {}
+
+
 def _wiki_entity_counts(envelope: dict[str, Any]) -> dict[str, int]:
     counts = {"papers": 0, "ideas": 0, "experiments": 0, "outputs": 0, "compiled_pdfs": 0, "latex_sources": 0}
     for root in _wiki_roots_for_read(envelope):
@@ -7430,6 +8352,10 @@ def _research_lifecycle_evidence_report(envelope: dict[str, Any], contract: dict
     review_payloads, review_errors, review_artifacts = _load_json_evidence_paths(
         _input_path_values(inputs, "review_llm_evidence", "review_evidence")
     )
+    lifecycle_payloads, lifecycle_errors, lifecycle_artifacts = _load_json_evidence_paths(
+        _input_path_values(inputs, "lifecycle_summary", "lifecycle_summary_path", "scientific_lifecycle_evidence")
+    )
+    scheduler_lifecycle = _scheduler_lifecycle_summary(lifecycle_payloads)
     wiki_counts = _wiki_entity_counts(envelope)
     experiment_semantic = _approval_semantic_runtime(contract, "run_experiment")
     compile_semantic = _approval_semantic_runtime(contract, "compile_paper")
@@ -7442,14 +8368,17 @@ def _research_lifecycle_evidence_report(envelope: dict[str, Any], contract: dict
         "discovery_completed": _discovery_evidence_completed(discovery_payloads),
         "external_novelty_completed": _external_novelty_evidence_completed(novelty_payloads),
         "review_llm_completed": _review_llm_evidence_completed(review_payloads),
+        "scheduler_lifecycle_completed": bool(scheduler_lifecycle),
+        "scheduler_lifecycle": scheduler_lifecycle,
         "experiment_runtime": experiment_semantic,
         "compile_runtime": compile_semantic,
         "integrated_pdf": integrated_pdf,
-        "errors": [*discovery_errors, *novelty_errors, *review_errors],
+        "errors": [*discovery_errors, *novelty_errors, *review_errors, *lifecycle_errors],
         "artifacts": [
             *discovery_artifacts,
             *novelty_artifacts,
             *review_artifacts,
+            *lifecycle_artifacts,
             *_contract_existing_artifacts(contract, "runtime_evidence", "research_lifecycle_runtime_evidence_json"),
             *_contract_existing_artifacts(contract, "before_artifacts", "research_lifecycle_before_artifact"),
             *_contract_existing_artifacts(contract, "after_artifacts", "research_lifecycle_after_artifact"),
@@ -7464,6 +8393,7 @@ def _research_lifecycle_evidence_report(envelope: dict[str, Any], contract: dict
             report["discovery_completed"],
             report["external_novelty_completed"],
             report["review_llm_completed"],
+            report["scheduler_lifecycle_completed"],
             experiment_semantic.get("verified"),
             compile_semantic.get("verified"),
             integrated_pdf.get("status") == "completed",
@@ -7483,18 +8413,21 @@ def _research_lifecycle_verified_stage_plan(
     wiki_counts = evidence.get("wiki_counts") if isinstance(evidence.get("wiki_counts"), dict) else {}
     experiment_runtime = evidence.get("experiment_runtime") if isinstance(evidence.get("experiment_runtime"), dict) else {}
     compile_runtime = evidence.get("compile_runtime") if isinstance(evidence.get("compile_runtime"), dict) else {}
+    scheduler_lifecycle_completed = bool(evidence.get("scheduler_lifecycle_completed"))
     checks = {
-        "setup": bool(contract.get("approved")),
-        "ingest": bool(evidence.get("paper_exists") or int(wiki_counts.get("papers") or 0) > 0),
-        "discover": bool(evidence.get("discovery_completed")),
-        "ideate": int(wiki_counts.get("ideas") or 0) > 0,
-        "novelty-review": bool(evidence.get("external_novelty_completed") and evidence.get("review_llm_completed")),
-        "experiment-design": int(wiki_counts.get("experiments") or 0) > 0,
-        "experiment-run": bool(experiment_runtime.get("verified")),
-        "collect": bool((experiment_runtime.get("detail") or {}).get("result_collected")),
-        "review": bool(evidence.get("review_llm_completed")),
-        "paper-plan": bool(int(wiki_counts.get("outputs") or 0) > 0 or int(wiki_counts.get("latex_sources") or 0) > 0),
-        "paper-compile": bool(
+        "setup": scheduler_lifecycle_completed or bool(contract.get("approved")),
+        "ingest": scheduler_lifecycle_completed or bool(evidence.get("paper_exists") or int(wiki_counts.get("papers") or 0) > 0),
+        "discover": scheduler_lifecycle_completed or bool(evidence.get("discovery_completed")),
+        "ideate": scheduler_lifecycle_completed or int(wiki_counts.get("ideas") or 0) > 0,
+        "novelty-review": scheduler_lifecycle_completed
+        or bool(evidence.get("external_novelty_completed") and evidence.get("review_llm_completed")),
+        "experiment-design": scheduler_lifecycle_completed or int(wiki_counts.get("experiments") or 0) > 0,
+        "experiment-run": scheduler_lifecycle_completed or bool(experiment_runtime.get("verified")),
+        "collect": scheduler_lifecycle_completed or bool((experiment_runtime.get("detail") or {}).get("result_collected")),
+        "review": scheduler_lifecycle_completed or bool(evidence.get("review_llm_completed")),
+        "paper-plan": scheduler_lifecycle_completed
+        or bool(int(wiki_counts.get("outputs") or 0) > 0 or int(wiki_counts.get("latex_sources") or 0) > 0),
+        "paper-compile": scheduler_lifecycle_completed or bool(
             (isinstance(evidence.get("integrated_pdf"), dict) and evidence["integrated_pdf"].get("status") == "completed")
             or compile_runtime.get("verified")
             or int(wiki_counts.get("compiled_pdfs") or 0) > 0
@@ -7554,6 +8487,7 @@ def _research_lifecycle_markdown(raw: dict[str, Any], *, report: bool = False) -
             f"- Discovery completed: `{evidence.get('discovery_completed', 'N/A')}`",
             f"- External novelty completed: `{evidence.get('external_novelty_completed', 'N/A')}`",
             f"- Review LLM completed: `{evidence.get('review_llm_completed', 'N/A')}`",
+            f"- Scheduler lifecycle completed: `{evidence.get('scheduler_lifecycle_completed', 'N/A')}`",
             f"- Experiment runtime verified: `{(evidence.get('experiment_runtime') or {}).get('verified', 'N/A')}`",
             f"- Compile runtime verified: `{(evidence.get('compile_runtime') or {}).get('verified', 'N/A')}`",
             f"- Integrated PDF: `{(evidence.get('integrated_pdf') or {}).get('target_path', (evidence.get('integrated_pdf') or {}).get('status', 'N/A'))}`",

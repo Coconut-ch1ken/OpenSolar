@@ -567,6 +567,515 @@ def test_autosci_skill_shim_research_lifecycle_completes_from_verified_stage_evi
     assert (tmp_path / "artifacts/autosci/workspace/paper/main.pdf").exists()
 
 
+def test_autosci_skill_shim_research_lifecycle_completes_from_scheduler_summary(tmp_path: Path) -> None:
+    lifecycle_summary = tmp_path / "scientific-lifecycle-summary.json"
+    required_nodes = [
+        "literature_discover",
+        "paper_ingest",
+        "paper_analyze",
+        "memory_update_initial",
+        "graph_update",
+        "claim_extract",
+        "method_extract",
+        "code_evidence_map",
+        "idea_generate",
+        "idea_evaluate",
+        "experiment_design",
+        "experiment_run",
+        "experiment_monitor",
+        "claim_verify",
+        "report_draft",
+        "artifact_review",
+        "memory_update_final",
+        "workflow_evolve",
+        "report_plan",
+        "publication_produce",
+    ]
+    lifecycle_summary.write_text(
+        json.dumps(
+            {
+                "schema": "scientific_lifecycle.v1",
+                "workflow_id": "scientific_research_lifecycle_full_v1",
+                "job_id": "job-scheduler-lifecycle-proof",
+                "sprint_id": "job-scheduler-lifecycle-proof",
+                "lifecycle_status": "passed",
+                "required_nodes": required_nodes,
+                "node_results": {
+                    node_id: {
+                        "node_id": node_id,
+                        "status": "passed",
+                    }
+                    for node_id in required_nodes
+                },
+                "gate_results": {
+                    node_id: {
+                        "node_id": node_id,
+                        "status": "passed",
+                        "ok": True,
+                    }
+                    for node_id in required_nodes
+                },
+                "blocked_nodes": {},
+                "lifecycle_gate_result": {"ok": True, "status": "passed"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen-main",
+        "--lifecycle-summary",
+        str(lifecycle_summary),
+        "--run-id",
+        "shim-research-scheduler-summary",
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "research"
+    assert summary["passed_count"] == 1
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "run_research_lifecycle"
+    assert action["gate_status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    evolution = evidence["outputs"]["evolution"]
+    assert evidence["status"] == "completed"
+    assert evolution["pipeline"]["status"] == "completed"
+    assert {stage["state"] for stage in evolution["stage_plan"]} == {"completed"}
+    state_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "pipeline_state_json")
+    state = json.loads((tmp_path / state_artifact["path"]).read_text(encoding="utf-8"))
+    assert state["evidence_report"]["scheduler_lifecycle_completed"] is True
+    assert state["evidence_report"]["scheduler_lifecycle"]["node_count"] == len(required_nodes)
+
+
+def test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary(tmp_path: Path) -> None:
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--scheduler-include-blocked-external",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-scheduler-run",
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "research"
+    assert summary["execution_status"] == "gated"
+    assert summary["scheduler_lifecycle_status"] == "blocked"
+    assert summary["scheduler_lifecycle_node_count"] == 18
+    assert summary["scheduler_lifecycle_blocked_node_count"] == 2
+
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    assert scheduler_summary["schema"] == "scientific_lifecycle.v1"
+    assert scheduler_summary["execution_owner"] == "solar.operator_runtime.scheduler_lifecycle_smoke"
+    assert scheduler_summary["lifecycle_status"] == "blocked"
+    assert set(scheduler_summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
+    assert len(scheduler_summary["node_results"]) == 18
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    skill_run = payload["outputs"]["skill_run"]
+    assert skill_run["scheduler_lifecycle"]["summary_path"] == summary["scheduler_lifecycle_summary_path"]
+    assert payload["inputs"]["lifecycle_summary"] == [summary["scheduler_lifecycle_summary_path"]]
+    action = skill_run["actions"][0]
+    assert action["action"] == "run_research_lifecycle"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    evolution = evidence["outputs"]["evolution"]
+    state_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "pipeline_state_json")
+    state = json.loads((tmp_path / state_artifact["path"]).read_text(encoding="utf-8"))
+    assert state["evidence_report"]["scheduler_lifecycle_completed"] is False
+    assert any(stage["state"] in {"pending", "pending_evidence"} for stage in evolution["stage_plan"])
+
+
+def test_autosci_skill_shim_research_scheduler_run_records_human_gate(tmp_path: Path) -> None:
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--scheduler-include-human-gates",
+        "--idea-approval-ref",
+        "approval-shim-idea-gate",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-human-gate",
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["scheduler_lifecycle_status"] == "blocked"
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    assert "idea_acceptance_gate" in scheduler_summary["node_results"]
+    assert scheduler_summary["node_results"]["idea_acceptance_gate"]["approval_ref"] == "approval-shim-idea-gate"
+    assert "results_acceptance_gate" in scheduler_summary["blocked_nodes"]
+    assert "report_draft" not in scheduler_summary["required_nodes"]
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    scheduler_lifecycle = payload["outputs"]["skill_run"]["scheduler_lifecycle"]
+    assert scheduler_lifecycle["status"] == "blocked"
+    assert scheduler_lifecycle["blocked_node_count"] == 1
+
+
+def test_autosci_skill_shim_research_scheduler_online_uses_source_runtime_evidence(tmp_path: Path) -> None:
+    external_dir = tmp_path / "external-source-runtime"
+    external_dir.mkdir()
+    allowlist = external_dir / "allowlist.json"
+    before = external_dir / "before.json"
+    after = external_dir / "after.json"
+    runtime = external_dir / "source-runtime.json"
+    source_manifest = external_dir / "source-manifest.json"
+    allowlist.write_text('{"allowed": ["semantic_scholar", "arxiv"]}\n', encoding="utf-8")
+    before.write_text('{"state": "before-source-fetch"}\n', encoding="utf-8")
+    after.write_text('{"state": "after-source-fetch", "candidates": ["runtime-source-001"]}\n', encoding="utf-8")
+    source_manifest.write_text('{"candidate_ids": ["runtime-source-001"]}\n', encoding="utf-8")
+    runtime.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_runtime_evidence.v1",
+                "task_id": "task-source-runtime-shim",
+                "sprint_id": "sprint-source-runtime-shim",
+                "node_id": "source_runtime",
+                "status": "completed",
+                "exit_code": 0,
+                "inputs": {"approval_ref": "approval-source-runtime-shim"},
+                "outputs": {
+                    "runtime": {
+                        "action": "discover_literature",
+                        "status": "completed",
+                        "approval_ref": "approval-source-runtime-shim",
+                        "command_run": "approved-semantic-scholar-fetch",
+                        "exit_code": 0,
+                        "evidence_ids": ["runtime:source-fetch:shim"],
+                        "checks": [{"check": "source_fetch", "status": "ok", "detail": "one candidate"}],
+                        "candidates": [
+                            {
+                                "candidate_id": "runtime-source-001",
+                                "title": "Runtime Verified Skill Generation Source",
+                                "url": "https://arxiv.org/abs/2601.00005",
+                                "source_channels": ["search_s2"],
+                                "ranking_score": 0.93,
+                                "ranking_rationale": "Approved source runtime returned this source.",
+                                "dedup_status": "new",
+                                "fetch_status": "fetched",
+                            }
+                        ],
+                    }
+                },
+                "artifacts": [{"type": "source_manifest", "path": str(source_manifest)}],
+                "provenance": {
+                    "operator_id": "external-source-runtime-shim",
+                    "implementation_package": "harness.tests",
+                    "timestamp": "2026-06-26T00:00:00Z",
+                },
+                "limitations": ["Runtime source evidence was supplied by the test harness."],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--online",
+        "--topic",
+        "skill generation",
+        "--approval-ref",
+        "approval-source-runtime-shim",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--runtime-evidence",
+        str(runtime),
+        "--before-artifact",
+        str(before),
+        "--after-artifact",
+        str(after),
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-online-source",
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["scheduler_lifecycle_status"] == "passed"
+    assert summary["scheduler_lifecycle_node_count"] == 18
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    literature_path = tmp_path / scheduler_summary["node_results"]["literature_discover"]["artifact_path"]
+    literature = json.loads(literature_path.read_text(encoding="utf-8"))
+    assert literature["outputs"]["mode"] == "discover_literature_runtime_verified"
+    assert literature["outputs"]["candidates"][0]["source_channels"] == ["search_s2"]
+    assert "fixture" not in literature["outputs"]["candidates"][0]["candidate_id"]
+
+
+def test_autosci_skill_shim_research_scheduler_uses_experiment_runtime_evidence(tmp_path: Path) -> None:
+    external_dir = tmp_path / "external-experiment-runtime"
+    external_dir.mkdir()
+    allowlist = external_dir / "experiment-allowlist.json"
+    before = external_dir / "experiment-before.json"
+    after = external_dir / "experiment-after.json"
+    runtime = external_dir / "experiment-runtime.json"
+    allowlist.write_text('{"allowed": ["approved-local-experiment"]}\n', encoding="utf-8")
+    before.write_text('{"state": "planned"}\n', encoding="utf-8")
+    after.write_text('{"state": "completed", "metrics": ["accuracy"]}\n', encoding="utf-8")
+    runtime.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_runtime_evidence.v1",
+                "task_id": "task-experiment-runtime-shim",
+                "sprint_id": "sprint-experiment-runtime-shim",
+                "node_id": "experiment_runtime",
+                "status": "completed",
+                "exit_code": 0,
+                "inputs": {"approval_ref": "approval-experiment-runtime-shim"},
+                "outputs": {
+                    "runtime": {
+                        "action": "run_experiment",
+                        "status": "completed",
+                        "approval_ref": "approval-experiment-runtime-shim",
+                        "command_run": "approved-local-experiment",
+                        "exit_code": 0,
+                        "result_collected": True,
+                        "outcome": "supports",
+                        "metrics": [{"name": "accuracy", "value": 0.81}],
+                        "evidence_ids": ["runtime:experiment:shim-scheduler"],
+                        "logs": ["approved experiment runtime completed"],
+                    }
+                },
+                "artifacts": [{"type": "experiment_after", "path": str(after)}],
+                "provenance": {
+                    "operator_id": "external-experiment-runtime-shim",
+                    "implementation_package": "harness.tests",
+                    "timestamp": "2026-06-26T00:00:00Z",
+                },
+                "limitations": ["Runtime experiment evidence was supplied by the test harness."],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--experiment-approval-ref",
+        "approval-experiment-runtime-shim",
+        "--experiment-allowlist-evidence",
+        str(allowlist),
+        "--experiment-runtime-evidence",
+        str(runtime),
+        "--experiment-before-artifact",
+        str(before),
+        "--experiment-after-artifact",
+        str(after),
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-experiment-runtime",
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["scheduler_lifecycle_status"] == "passed"
+    assert summary["scheduler_lifecycle_node_count"] == 18
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    run_path = tmp_path / scheduler_summary["node_results"]["experiment_run"]["artifact_path"]
+    run_evidence = json.loads(run_path.read_text(encoding="utf-8"))
+    result = run_evidence["outputs"]["result"]
+    assert result["execution_mode"] == "human_approved"
+    assert result["metrics"] == [{"name": "accuracy", "value": 0.81}]
+    assert "runtime:experiment:shim-scheduler" in result["evidence_ids"]
+    assert "fixture result collected" not in "\n".join(result["logs"]).lower()
+    assert any(artifact["type"] == "experiment_runtime_evidence_json" for artifact in run_evidence["artifacts"])
+
+    monitor_path = tmp_path / scheduler_summary["node_results"]["experiment_monitor"]["artifact_path"]
+    monitor_evidence = json.loads(monitor_path.read_text(encoding="utf-8"))
+    status_report = monitor_evidence["outputs"]["status_report"]
+    assert status_report["state"] == "completed"
+    assert "runtime:experiment:shim-scheduler" in status_report["evidence_ids"]
+
+
+def test_autosci_skill_shim_research_scheduler_executes_approved_experiment_command(tmp_path: Path) -> None:
+    external_dir = tmp_path / "external-experiment-executor"
+    external_dir.mkdir()
+    runner = external_dir / "approved_experiment_runner.py"
+    runner.write_text(
+        "\n".join(
+            [
+                "import argparse",
+                "import json",
+                "",
+                "parser = argparse.ArgumentParser()",
+                "parser.add_argument('--experiment-id', required=True)",
+                "args = parser.parse_args()",
+                "print(json.dumps({",
+                "    'experiment_id': args.experiment_id,",
+                "    'outcome': 'supports',",
+                "    'metrics': [{'name': 'accuracy', 'value': 0.86}],",
+                "    'evidence_ids': ['runtime:experiment:shim-executor'],",
+                "    'logs': ['approved shim executor produced experiment result'],",
+                "}))",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    command_template = f"{sys.executable} {runner} --experiment-id {{experiment_id}}"
+    allowlist = external_dir / "experiment-allowlist.json"
+    before = external_dir / "experiment-before.json"
+    after = external_dir / "experiment-after.json"
+    allowlist.write_text(json.dumps({"commands": [command_template]}) + "\n", encoding="utf-8")
+    before.write_text('{"state": "planned"}\n', encoding="utf-8")
+    after.write_text('{"state": "completed"}\n', encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--experiment-approval-ref",
+        "approval-experiment-executor-shim",
+        "--experiment-allowlist-evidence",
+        str(allowlist),
+        "--experiment-before-artifact",
+        str(before),
+        "--experiment-after-artifact",
+        str(after),
+        "--experiment-execute-approved",
+        "--experiment-executor-timeout-seconds",
+        "20",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-experiment-executor",
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["scheduler_lifecycle_status"] == "passed"
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    run_evidence = json.loads((tmp_path / scheduler_summary["node_results"]["experiment_run"]["artifact_path"]).read_text(encoding="utf-8"))
+    result = run_evidence["outputs"]["result"]
+    assert result["metrics"] == [{"name": "accuracy", "value": 0.86}]
+    assert "runtime:experiment:shim-executor" in result["evidence_ids"]
+    assert "approved shim executor produced experiment result" in "\n".join(result["logs"])
+    artifact_types = {artifact["type"] for artifact in run_evidence["artifacts"]}
+    assert {"experiment_runtime_evidence_json", "executor_stdout", "executor_stderr"}.issubset(artifact_types)
+    assert "fixture result collected" not in "\n".join(result["logs"]).lower()
+
+
+def test_autosci_skill_shim_research_scheduler_executes_approved_publication_compile(tmp_path: Path) -> None:
+    external_dir = tmp_path / "external-publication-compile"
+    external_dir.mkdir()
+    review_llm_path = external_dir / "review_llm_artifact_review.json"
+    review_llm_path.write_text(
+        json.dumps(
+            {
+                "schema": "artifact_review.v1",
+                "task_id": "task-review-llm-publication-compile-shim",
+                "sprint_id": "external-review-llm-publication-compile-shim",
+                "node_id": "external_artifact_review",
+                "status": "completed",
+                "inputs": {"target": "scheduler-lifecycle-publication-compile-shim"},
+                "outputs": {
+                    "review": {
+                        "artifact_id": "artifact:scheduler-lifecycle-publication-compile-shim",
+                        "target": "scheduler-lifecycle-publication-compile-shim",
+                        "review_mode": "review_llm",
+                        "review_available": True,
+                        "difficulty": "standard",
+                        "focus": "completeness",
+                        "score": 0.87,
+                        "recommendation": "inconclusive",
+                        "evidence_ids": ["review-llm:publication-compile-shim"],
+                    },
+                    "findings": [],
+                    "artifact": {"artifact_id": "artifact:scheduler-lifecycle-publication-compile-shim"},
+                },
+                "artifacts": [],
+                "provenance": {
+                    "operator_id": "external-review-llm-publication-compile-shim",
+                    "implementation_package": "harness.tests",
+                    "timestamp": "2026-06-26T00:00:00Z",
+                },
+                "limitations": ["Test fixture supplied as explicit external Review LLM evidence."],
+            }
+        ),
+        encoding="utf-8",
+    )
+    compile_target = external_dir / "compile_target"
+    compile_target.mkdir()
+    (compile_target / "main.tex").write_text(
+        "\\documentclass{article}\n\\begin{document}\nApproved shim scheduler publication compile.\n\\end{document}\n",
+        encoding="utf-8",
+    )
+    fake_bin = external_dir / "bin"
+    fake_bin.mkdir()
+    fake_latexmk = fake_bin / "latexmk"
+    fake_latexmk.write_text(
+        "#!/usr/bin/env python3\n"
+        "from pathlib import Path\n"
+        "Path('main.pdf').write_text('%PDF-1.4\\n', encoding='utf-8')\n"
+        "print('fake shim scheduler latexmk completed')\n",
+        encoding="utf-8",
+    )
+    fake_latexmk.chmod(0o755)
+    allowlist = external_dir / "compile-allowlist.json"
+    before = external_dir / "compile-before.json"
+    allowlist.write_text(json.dumps({"executables": ["latexmk"]}) + "\n", encoding="utf-8")
+    before.write_text(json.dumps({"paper_dir": str(compile_target), "pdf_exists": False}) + "\n", encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--scheduler-dispatch-external-evidence",
+        "--review-llm-evidence",
+        str(review_llm_path),
+        "--compile-target",
+        str(compile_target),
+        "--compile-approval-ref",
+        "approval-publication-compile-shim",
+        "--compile-allowlist-evidence",
+        str(allowlist),
+        "--compile-before-artifact",
+        str(before),
+        "--compile-execute-approved",
+        "--compile-executor-timeout-seconds",
+        "20",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-publication-compile",
+        extra_env={"PATH": f"{fake_bin}{os.pathsep}{os.environ.get('PATH', '')}"},
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["scheduler_lifecycle_status"] == "passed"
+    assert summary["scheduler_lifecycle_node_count"] == 20
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    compile_evidence = json.loads((tmp_path / scheduler_summary["node_results"]["publication_produce"]["artifact_path"]).read_text(encoding="utf-8"))
+    assert compile_evidence["status"] == "completed"
+    bundle_files = compile_evidence["outputs"]["bundle"]["files"]
+    assert any(item["type"] == "compiled_pdf" and item["path"].endswith("main.pdf") for item in bundle_files)
+    assert any(item["type"] == "compile_runtime_evidence_json" for item in bundle_files)
+    checklist_path = next(item["path"] for item in bundle_files if item["type"] == "paper_compile_checklist_json")
+    checklist = json.loads((tmp_path / checklist_path).read_text(encoding="utf-8"))
+    assert checklist["runtime_semantic"]["verified"] is True
+
+
 def test_autosci_skill_shim_accepts_exp_run_native_options_without_fixture_fallback(tmp_path: Path) -> None:
     proc = run_shim(
         tmp_path,
@@ -628,6 +1137,116 @@ def test_autosci_skill_shim_exp_status_pipeline_runs_monitor_action(tmp_path: Pa
     report = status_evidence["outputs"]["status_report"]
     assert status_evidence["status"] == "inconclusive"
     assert report["experiment_id"] == "skillgen-main"
+
+
+def test_autosci_skill_shim_exp_status_pipeline_reads_wiki_experiment_state(tmp_path: Path) -> None:
+    wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
+    experiments = wiki_root / "experiments"
+    logs = wiki_root / "logs"
+    experiments.mkdir(parents=True)
+    logs.mkdir(parents=True)
+    (logs / "exp-skillgen.log").write_text("completed run\n", encoding="utf-8")
+    (experiments / "exp-skillgen.md").write_text(
+        "\n".join(
+            [
+                "---",
+                "title: SkillGen Experiment",
+                "experiment_id: exp-skillgen",
+                "pipeline: skillgen-main",
+                "status: completed",
+                "outcome: supports",
+                "run_log: ../logs/exp-skillgen.log",
+                "evidence_ids:",
+                "  - runtime:exp-skillgen",
+                "---",
+                "# SkillGen Experiment",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-status",
+        "--pipeline",
+        "skillgen-main",
+        "--run-id",
+        "shim-exp-status-wiki-state",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "exp-status"
+    assert summary["action_count"] == 1
+    assert summary["passed_count"] == 1
+    assert summary["schema_only_count"] == 0
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "monitor_experiment"
+    assert action["gate_status"] == "passed"
+    status_evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = status_evidence["outputs"]["status_report"]
+    assert status_evidence["status"] == "completed"
+    assert report["experiment_id"] == "exp-skillgen"
+    assert report["state"] == "completed"
+    assert "runtime:exp-skillgen" in report["evidence_ids"]
+    artifact_types = {artifact["type"] for artifact in status_evidence["artifacts"]}
+    assert {"wiki_state_resolver_json", "wiki_experiment_markdown", "wiki_experiment_run_log"} <= artifact_types
+
+
+@pytest.mark.parametrize(
+    ("wiki_status", "expected_state"),
+    [
+        ("collected", "completed"),
+        ("collect-ready", "running"),
+        ("ready", "running"),
+    ],
+)
+def test_autosci_skill_shim_exp_status_normalizes_native_wiki_states(
+    tmp_path: Path,
+    wiki_status: str,
+    expected_state: str,
+) -> None:
+    wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
+    experiments = wiki_root / "experiments"
+    experiments.mkdir(parents=True)
+    (experiments / "exp-skillgen.md").write_text(
+        "\n".join(
+            [
+                "---",
+                "title: SkillGen Experiment",
+                "experiment_id: exp-skillgen",
+                "pipeline: skillgen-main",
+                f"status: {wiki_status}",
+                "evidence_ids:",
+                "  - runtime:exp-skillgen",
+                "---",
+                "# SkillGen Experiment",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-status",
+        "--pipeline",
+        "skillgen-main",
+        "--run-id",
+        f"shim-exp-status-{wiki_status}",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["gate_status"] == "passed"
+    status_evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = status_evidence["outputs"]["status_report"]
+    assert status_evidence["status"] == "completed"
+    assert report["experiment_id"] == "exp-skillgen"
+    assert report["state"] == expected_state
 
 
 def test_autosci_skill_shim_blocks_unapproved_exp_run_deploy_without_fixture_support(tmp_path: Path) -> None:
@@ -949,6 +1568,243 @@ def test_autosci_skill_shim_exp_run_executes_approved_native_command(tmp_path: P
     assert "runtime:exp-native" in state_text
 
 
+def test_autosci_skill_shim_exp_run_assimilates_remote_helper_runtime_evidence(tmp_path: Path) -> None:
+    allowlist = tmp_path / "exp-remote-allowlist.json"
+    remote_allowlist = tmp_path / "exp-remote-inner-allowlist.json"
+    before = tmp_path / "exp-remote-before.json"
+    after = tmp_path / "exp-remote-after.json"
+    run_dir = tmp_path / "remote-run"
+    runtime_out = tmp_path / "exp-remote-runtime.json"
+    inner_script = tmp_path / "exp_remote_inner.py"
+    before.write_text(json.dumps({"state": "planned", "approved": True}), encoding="utf-8")
+    after.write_text(json.dumps({"state": "completed", "approved": True}), encoding="utf-8")
+    inner_script.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env python3",
+                "import json",
+                "from pathlib import Path",
+                "Path('results.json').write_text(json.dumps({",
+                "    'outcome': 'supports',",
+                "    'metrics': [{'name': 'accuracy', 'value': 0.92}],",
+                "    'logs': ['remote helper collected result'],",
+                "}), encoding='utf-8')",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    inner_script.chmod(0o755)
+    inner_command = " ".join([str(sys.executable), str(inner_script)])
+    inner_command_arg = " ".join([shlex.quote(str(sys.executable)), shlex.quote(str(inner_script))])
+    remote_allowlist.write_text(json.dumps({"commands": [inner_command]}), encoding="utf-8")
+    outer_command = " ".join(
+        [
+            shlex.quote(str(sys.executable)),
+            shlex.quote(str(REPO / "tools" / "remote.py")),
+            "launch",
+            "--approval-ref",
+            "approval-exp-remote",
+            "--experiment",
+            "{experiment_id}",
+            "--allowlist-evidence",
+            shlex.quote(str(remote_allowlist)),
+            "--command",
+            shlex.quote(inner_command_arg),
+            "--run-dir",
+            shlex.quote(str(run_dir)),
+            "--runtime-evidence-out",
+            shlex.quote(str(runtime_out)),
+            "--timeout-seconds",
+            "20",
+            "--execute-approved",
+        ]
+    )
+    allowlist.write_text(json.dumps({"commands": [outer_command]}), encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-run",
+        "exp-remote",
+        "--review",
+        "--env",
+        "local",
+        "--approval-ref",
+        "approval-exp-remote",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--after-artifact",
+        str(after),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-run-remote-helper",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "exp-run"
+    assert summary["execution_status"] == "gated"
+    assert runtime_out.exists()
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = next(action for action in payload["outputs"]["skill_run"]["actions"] if action["action"] == "run_experiment")
+    assert action["status"] == "passed"
+    result = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    experiment_result = result["outputs"]["result"]
+    assert result["status"] == "completed"
+    assert experiment_result["experiment_id"] == "exp-remote"
+    assert experiment_result["outcome"] == "supports"
+    assert experiment_result["metrics"] == [{"name": "accuracy", "value": 0.92}]
+    assert "remote-runtime:exp-remote" in experiment_result["evidence_ids"]
+    assert "remote helper collected result" in " ".join(experiment_result["logs"])
+    runtime_artifacts = [
+        artifact["path"]
+        for artifact in result["artifacts"]
+        if artifact["type"] == "experiment_runtime_evidence_json"
+    ]
+    assert any(path.endswith("exp-remote-runtime.json") for path in runtime_artifacts)
+
+    remote_runtime = json.loads(runtime_out.read_text(encoding="utf-8"))
+    assert remote_runtime["schema"] == "autosci_runtime_evidence.v1"
+    assert remote_runtime["status"] == "completed"
+    assert remote_runtime["outputs"]["runtime"]["run_dir"] == str(run_dir.resolve())
+    assert remote_runtime["outputs"]["runtime"]["result_collected"] is True
+
+    state_path = tmp_path / "artifacts/autosci/workspace/wiki/experiments/exp-remote.md"
+    state_text = state_path.read_text(encoding="utf-8")
+    assert "status: completed" in state_text
+    assert "outcome: supports" in state_text
+    assert "remote-runtime:exp-remote" in state_text
+
+
+def test_autosci_skill_shim_exp_run_rejects_remote_helper_stdout_without_runtime_evidence(tmp_path: Path) -> None:
+    allowlist = tmp_path / "exp-remote-missing-allowlist.json"
+    before = tmp_path / "exp-remote-missing-before.json"
+    after = tmp_path / "exp-remote-missing-after.json"
+    missing_runtime = tmp_path / "missing-remote-runtime.json"
+    fake_remote = tmp_path / "fake_remote_stdout.py"
+    before.write_text(json.dumps({"state": "planned", "approved": True}), encoding="utf-8")
+    after.write_text(json.dumps({"state": "completed", "approved": True}), encoding="utf-8")
+    fake_remote.write_text(
+        "\n".join(
+            [
+                "import json",
+                f"print(json.dumps({{'schema': 'autosci_remote_cli.v1', 'status': 'completed', 'ok': True, 'runtime_evidence_path': {str(missing_runtime)!r}}}))",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    command = " ".join([shlex.quote(str(sys.executable)), shlex.quote(str(fake_remote))])
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-run",
+        "exp-remote-missing",
+        "--review",
+        "--env",
+        "local",
+        "--approval-ref",
+        "approval-exp-remote-missing",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--after-artifact",
+        str(after),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-run-remote-missing-runtime",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = next(action for action in payload["outputs"]["skill_run"]["actions"] if action["action"] == "run_experiment")
+    assert action["status"] != "passed"
+    result = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    experiment_result = result["outputs"]["result"]
+    assert result["status"] == "inconclusive"
+    assert {"name": "runtime_evidence_verified", "value": False} in experiment_result["metrics"]
+    assert "remote-runtime:exp-remote-missing" not in experiment_result["evidence_ids"]
+    local_runtime_path = next(
+        artifact["path"]
+        for artifact in result["artifacts"]
+        if artifact["type"] == "experiment_runtime_evidence_json"
+    )
+    local_runtime = json.loads((tmp_path / local_runtime_path).read_text(encoding="utf-8"))
+    runtime = local_runtime["outputs"]["runtime"]
+    assert runtime["result_collected"] is False
+    assert runtime["result_path"] == ""
+    assert runtime["remote_runtime_evidence_path"] == ""
+
+
+def test_autosci_skill_shim_exp_status_reads_persistent_session_registry(tmp_path: Path) -> None:
+    allowlist = tmp_path / "exp-session-allowlist.json"
+    before = tmp_path / "exp-session-before.json"
+    run_dir = tmp_path / "session-run"
+    fake_launch = tmp_path / "fake_launch.py"
+    before.write_text(json.dumps({"state": "planned", "approved": True}), encoding="utf-8")
+    fake_launch.write_text(
+        "\n".join(
+            [
+                "import json",
+                f"print(json.dumps({{'schema': 'autosci_remote_cli.v1', 'command': 'launch', 'status': 'inconclusive', 'ok': False, 'run_dir': {str(run_dir)!r}, 'result_collected': False, 'runtime_evidence_path': ''}}))",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    command = " ".join([shlex.quote(str(sys.executable)), shlex.quote(str(fake_launch))])
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    launched = run_shim(
+        tmp_path,
+        "$exp-run",
+        "exp-session",
+        "--review",
+        "--env",
+        "local",
+        "--approval-ref",
+        "approval-exp-session",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-session-launch",
+    )
+    assert launched.returncode == 0, launched.stderr
+    registry_path = tmp_path / "artifacts/autosci/workspace/wiki/experiments/session-registry.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    assert registry["schema"] == "autosci_experiment_session_registry.v1"
+    assert registry["sessions"][0]["experiment_id"] == "exp-session"
+    assert registry["sessions"][0]["state"] == "running"
+
+    status = run_shim(
+        tmp_path,
+        "$exp-status",
+        "exp-session",
+        "--run-id",
+        "shim-exp-session-status",
+    )
+    assert status.returncode == 0, status.stderr
+    summary = json.loads(status.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = evidence["outputs"]["status_report"]
+    assert evidence["status"] == "completed"
+    assert report["experiment_id"] == "exp-session"
+    assert report["state"] == "running"
+    assert any("Resolved experiment session" in item for item in report["observations"])
+    assert any("Run approved collect" in item for item in report["next_actions"])
+    assert any("no remote process was polled" in item for item in evidence["limitations"])
+    assert any(artifact["type"] == "experiment_session_registry_json" for artifact in evidence["artifacts"])
+
+
 def test_autosci_skill_shim_exp_collect_uses_verified_runtime_evidence(tmp_path: Path) -> None:
     allowlist = tmp_path / "collect-allowlist.json"
     runtime = tmp_path / "collect-runtime.json"
@@ -1031,6 +1887,203 @@ def test_autosci_skill_shim_exp_collect_uses_verified_runtime_evidence(tmp_path:
     assert "status: completed" in state_text
     assert "outcome: partially_supports" in state_text
     assert "runtime:exp-collect" in state_text
+
+
+def test_autosci_skill_shim_exp_collect_executes_approved_remote_pull_results(tmp_path: Path) -> None:
+    allowlist = tmp_path / "remote-collect-allowlist.json"
+    before = tmp_path / "remote-collect-before.json"
+    result_dir = tmp_path / "remote-results"
+    result_dir.mkdir()
+    (result_dir / "results.json").write_text(
+        json.dumps(
+            {
+                "outcome": "partially_supports",
+                "metrics": [{"name": "accuracy", "value": 0.94}],
+                "evidence_ids": ["result:exp-remote-collect"],
+                "logs": ["remote pull-results collected metrics"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    before.write_text(json.dumps({"state": "running", "approved": True}), encoding="utf-8")
+    command = " ".join(
+        [
+            shlex.quote(str(sys.executable)),
+            shlex.quote(str(REPO / "tools" / "remote.py")),
+            "pull-results",
+            "--result-dir",
+            shlex.quote(str(result_dir)),
+        ]
+    )
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-run",
+        "exp-remote-collect",
+        "--collect",
+        "--approval-ref",
+        "approval-exp-remote-collect",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-remote-collect",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "monitor_experiment"
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = evidence["outputs"]["status_report"]
+    assert evidence["status"] == "completed"
+    assert report["experiment_id"] == "exp-remote-collect"
+    assert report["state"] == "completed"
+    assert "remote-collect:exp-remote-collect" in report["evidence_ids"]
+    assert "result:exp-remote-collect" in report["evidence_ids"]
+    assert any("collect_executor_result=True" in item for item in report["observations"])
+    artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
+    assert {"experiment_runtime_evidence_json", "executor_stdout", "executor_stderr", "remote_collected_file", "wiki_experiment_state"}.issubset(artifact_types)
+    runtime_path = next(artifact["path"] for artifact in evidence["artifacts"] if artifact["type"] == "experiment_runtime_evidence_json")
+    runtime = json.loads((tmp_path / runtime_path).read_text(encoding="utf-8"))
+    runtime_payload = runtime["outputs"]["runtime"]
+    assert runtime_payload["result_collected"] is True
+    assert runtime_payload["metrics"] == [{"name": "accuracy", "value": 0.94}]
+    assert runtime_payload["outcome"] == "partially_supports"
+    assert runtime_payload["remote_cli_command"] == "pull-results"
+
+    state_text = (tmp_path / "artifacts/autosci/workspace/wiki/experiments/exp-remote-collect.md").read_text(encoding="utf-8")
+    assert "outcome: partially_supports" in state_text
+    assert "- accuracy: 0.94" in state_text
+
+
+def test_autosci_skill_shim_exp_collect_rejects_empty_remote_pull_results(tmp_path: Path) -> None:
+    allowlist = tmp_path / "remote-empty-allowlist.json"
+    before = tmp_path / "remote-empty-before.json"
+    result_dir = tmp_path / "remote-empty-results"
+    result_dir.mkdir()
+    before.write_text(json.dumps({"state": "running", "approved": True}), encoding="utf-8")
+    command = " ".join(
+        [
+            shlex.quote(str(sys.executable)),
+            shlex.quote(str(REPO / "tools" / "remote.py")),
+            "pull-results",
+            "--result-dir",
+            shlex.quote(str(result_dir)),
+        ]
+    )
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-run",
+        "exp-remote-empty",
+        "--collect",
+        "--approval-ref",
+        "approval-exp-remote-empty",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-remote-empty",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "monitor_experiment"
+    assert action["status"] != "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = evidence["outputs"]["status_report"]
+    assert evidence["status"] == "inconclusive"
+    assert report["state"] == "unknown"
+    assert any("runtime_semantic_status=incomplete" in item for item in report["observations"])
+    runtime_path = next(artifact["path"] for artifact in evidence["artifacts"] if artifact["type"] == "experiment_runtime_evidence_json")
+    runtime = json.loads((tmp_path / runtime_path).read_text(encoding="utf-8"))
+    runtime_payload = runtime["outputs"]["runtime"]
+    assert runtime_payload["result_collected"] is False
+    assert runtime_payload["metrics"] == []
+    assert any(check["check"] == "collected_files_present" and check["status"] == "error" for check in runtime_payload["checks"])
+
+
+def test_autosci_skill_shim_exp_collect_reuses_exactly_once_collection_ledger(tmp_path: Path) -> None:
+    allowlist = tmp_path / "remote-once-allowlist.json"
+    before = tmp_path / "remote-once-before.json"
+    result_dir = tmp_path / "remote-once-results"
+    result_dir.mkdir()
+    (result_dir / "results.json").write_text(
+        json.dumps(
+            {
+                "outcome": "supports",
+                "metrics": [{"name": "accuracy", "value": 0.96}],
+                "evidence_ids": ["result:exp-once"],
+                "logs": ["first collection payload"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    before.write_text(json.dumps({"state": "running", "approved": True}), encoding="utf-8")
+    command = " ".join(
+        [
+            shlex.quote(str(sys.executable)),
+            shlex.quote(str(REPO / "tools" / "remote.py")),
+            "pull-results",
+            "--result-dir",
+            shlex.quote(str(result_dir)),
+        ]
+    )
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    common_args = [
+        "$exp-run",
+        "exp-once",
+        "--collect",
+        "--approval-ref",
+        "approval-exp-once",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--execute-approved",
+    ]
+    first = run_shim(tmp_path, *common_args, "--run-id", "shim-exp-once-first")
+    assert first.returncode == 0, first.stderr
+    second = run_shim(tmp_path, *common_args, "--run-id", "shim-exp-once-second")
+    assert second.returncode == 0, second.stderr
+
+    summary = json.loads(second.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = evidence["outputs"]["status_report"]
+    assert report["state"] == "completed"
+    assert any("collection_duplicate=True" in item for item in report["observations"])
+
+    ledger_path = tmp_path / "artifacts/autosci/workspace/wiki/collections/collection-ledger.json"
+    ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    assert ledger["schema"] == "autosci_collection_ledger.v1"
+    assert len(ledger["entries"]) == 1
+    assert ledger["entries"][0]["experiment_id"] == "exp-once"
+    assert ledger["entries"][0]["evidence_ids"] == [
+        "remote-collect:exp-once",
+        "remote-once-results/results.json",
+        "result:exp-once",
+    ]
+
+    runtime_path = next(artifact["path"] for artifact in evidence["artifacts"] if artifact["type"] == "experiment_runtime_evidence_json")
+    runtime = json.loads((tmp_path / runtime_path).read_text(encoding="utf-8"))
+    runtime_payload = runtime["outputs"]["runtime"]
+    assert runtime_payload["collection_duplicate"] is True
+    assert runtime_payload["collection_identity"] == ledger["entries"][0]["collection_identity"]
+    log_text = (tmp_path / "artifacts/autosci/workspace/wiki/log.md").read_text(encoding="utf-8")
+    assert log_text.count("completed `exp-once`") == 1
 
 
 def test_autosci_skill_shim_accepts_paper_plan_title_without_topic_fallback(tmp_path: Path) -> None:
@@ -3249,6 +4302,46 @@ def test_autosci_skill_shim_accepts_paper_compile_checklist_without_bundle_fallb
     assert "compiled PDF" in diagnostics_path.read_text(encoding="utf-8")
 
 
+def test_autosci_skill_shim_paper_compile_checklist_records_submission_checks(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "paper-submission-checks"
+    paper_dir.mkdir()
+    (paper_dir / "main.tex").write_text(
+        "\\documentclass{article}\n"
+        "\\author{Jane Researcher}\n"
+        "\\begin{document}\n"
+        "SkillGen paper draft with [UNCONFIRMED] citation note.\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    proc = run_shim(
+        tmp_path,
+        "$paper-compile",
+        str(paper_dir),
+        "--checklist",
+        "--run-id",
+        "shim-paper-compile-submission-checks",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    checklist_artifact = next(item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_checklist_json")
+    checklist = json.loads((tmp_path / checklist_artifact["path"]).read_text(encoding="utf-8"))
+    submission = {row["check"]: row for row in checklist["submission_checks"]}
+    assert submission["unconfirmed_marker_scan"]["status"] == "warn"
+    assert submission["anonymity_check"]["status"] == "warn"
+    assert submission["page_limit_check"]["status"] == "warn"
+    assert submission["font_size_check"]["status"] == "warn"
+    assert "paper-submission-checks/main.tex" in submission["unconfirmed_marker_scan"]["evidence"]
+    assert any(row["check"] == "unconfirmed_marker_scan" for row in checklist["checks"])
+    diagnostics_path = next(item["path"] for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_diagnostics_markdown")
+    diagnostics = (tmp_path / diagnostics_path).read_text(encoding="utf-8")
+    assert "Submission Checks" in diagnostics
+    assert "Font-size compliance is unconfirmed" in diagnostics
+    assert any("Submission readiness includes warnings" in item for item in evidence["limitations"])
+
+
 def test_autosci_skill_shim_runs_ideate_from_wiki_and_discovery_sources(tmp_path: Path) -> None:
     wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
     (wiki_root / "papers").mkdir(parents=True)
@@ -3330,6 +4423,83 @@ def test_autosci_skill_shim_runs_ideate_from_wiki_and_discovery_sources(tmp_path
     assert evaluation["review_available"] is False
     assert evaluation["closest_prior_work"]
     assert evaluation["review_score"] != "N/A"
+
+
+def test_autosci_skill_shim_ideate_uses_model_command_for_brainstorm(tmp_path: Path) -> None:
+    wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
+    (wiki_root / "papers").mkdir(parents=True)
+    (wiki_root / "papers/skillgen.md").write_text(
+        "---\ntitle: SkillGen Paper\n---\n# SkillGen Paper\n\nSkill generation exposes an inference-time adaptation gap.\n",
+        encoding="utf-8",
+    )
+    model_command = tmp_path / "ideate_model_command.py"
+    model_command.write_text(
+        "\n".join(
+            [
+                "import json",
+                "import sys",
+                "request = json.loads(sys.stdin.read())",
+                "assert request['action'] == 'generate_ideas'",
+                "assert request['context']['topic'] == 'agent skill learning'",
+                "payload = {",
+                "    'schema': 'autosci_model_response.v1',",
+                "    'status': 'completed',",
+                "    'outputs': {",
+                "        'answer': 'Model brainstorm grounded in SkillGen paper evidence.',",
+                "        'confidence': 0.72,",
+                "        'provider': 'test-model-provider',",
+                "        'model': 'gpt-5.5-test-double',",
+                "        'evidence_ids': ['wiki:papers/skillgen'],",
+                "        'ideas': [",
+                "            {",
+                "                'idea_id': 'idea-model-skillgen-001',",
+                "                'title': 'Verifier-gated skill transfer benchmark',",
+                "                'hypothesis': 'Verifier-gated generated skills transfer more reliably across held-out agent tasks.',",
+                "                'approach': 'Build a benchmark that compares generated skills with and without verifier gates across held-out tasks.',",
+                "                'novelty_hypothesis': 'The contribution is a source-grounded transfer benchmark for generated agent skills.',",
+                "                'origin_evidence_ids': ['wiki:papers/skillgen'],",
+                "                'duplicate_status': 'unknown',",
+                "            }",
+                "        ],",
+                "    },",
+                "}",
+                "print(json.dumps(payload))",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$ideate",
+        "agent skill learning",
+        "--from-wiki",
+        "--model-command",
+        f"{shlex.quote(sys.executable)} {shlex.quote(str(model_command))}",
+        "--run-id",
+        "shim-ideate-model-command",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "ideate"
+    assert summary["action_count"] == 2
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    actions = payload["outputs"]["skill_run"]["actions"]
+    idea_evidence = json.loads(Path(actions[0]["evidence_path"]).read_text(encoding="utf-8"))
+    assert idea_evidence["status"] == "completed"
+    idea = idea_evidence["outputs"]["ideas"][0]
+    assert idea["idea_id"] == "idea-model-skillgen-001"
+    assert idea["generation_path"] == "model-command"
+    assert idea["model"] == "gpt-5.5-test-double"
+    assert "wiki:papers/skillgen" in idea["origin_evidence_ids"]
+    artifact_types = {artifact["type"] for artifact in idea_evidence["artifacts"]}
+    assert {"model_command_stdout_json", "model_command_stderr"} <= artifact_types
+
+    evaluation_evidence = json.loads(Path(actions[1]["evidence_path"]).read_text(encoding="utf-8"))
+    evaluation = evaluation_evidence["outputs"]["evaluations"][0]
+    assert evaluation["idea_id"] == "idea-model-skillgen-001"
+    assert evaluation["review_mode"] == "local_surrogate"
 
 
 def test_autosci_skill_shim_wiki_state_resolver_parses_entities_and_edges(tmp_path: Path) -> None:
@@ -3584,8 +4754,12 @@ def test_autosci_skill_shim_novelty_defaults_to_online_fetch_when_available(tmp_
     assert evaluation["source_mode"] == "target"
     assert evaluation["external_novelty"]["status"] == "completed"
     assert evaluation["external_novelty"]["source_count"] >= 1
-    assert any(item.get("provider") == "semantic_scholar" for item in evaluation["external_novelty"]["provider_statuses"])
-    assert "file://" in str(archive_dir)
+    provider_status = next(
+        item for item in evaluation["external_novelty"]["provider_statuses"] if item.get("provider") == "semantic_scholar"
+    )
+    assert provider_status["raw_payload_ref"] == semantic_payload.as_uri()
+    assert provider_status["raw_payload_archive_status"] == "completed"
+    assert Path(provider_status["raw_payload_archive_path"]).is_file()
 
 
 def test_autosci_skill_shim_novelty_uses_supplied_external_evidence(tmp_path: Path) -> None:
@@ -3796,6 +4970,7 @@ def test_autosci_skill_shim_novelty_write_skips_without_external_evidence(tmp_pa
         "--write",
         "--run-id",
         "shim-novelty-write",
+        extra_env={"AUTOSCI_DISABLE_NETWORK_FETCH": "1"},
     )
     assert proc.returncode == 0, proc.stderr
     summary = json.loads(proc.stdout)

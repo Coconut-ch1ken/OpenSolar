@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import shlex
+import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -197,6 +198,29 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "approval_ref": str(args.approval_ref or ""),
         "allowlist_evidence": list(args.allowlist_evidence or []),
         "runtime_evidence": list(args.runtime_evidence or []),
+        "lifecycle_summary": list(args.lifecycle_summary or []),
+        "scheduler_run": bool(args.scheduler_run),
+        "scheduler_include_blocked_external": bool(args.scheduler_include_blocked_external),
+        "scheduler_include_human_gates": bool(args.scheduler_include_human_gates),
+        "scheduler_dispatch_external_evidence": bool(args.scheduler_dispatch_external_evidence),
+        "scheduler_timeout": float(args.scheduler_timeout or 0),
+        "idea_approval_ref": str(args.idea_approval_ref or ""),
+        "results_approval_ref": str(args.results_approval_ref or ""),
+        "experiment_approval_ref": str(args.experiment_approval_ref or ""),
+        "experiment_runtime_evidence": list(args.experiment_runtime_evidence or []),
+        "experiment_allowlist_evidence": list(args.experiment_allowlist_evidence or []),
+        "experiment_before_artifacts": list(args.experiment_before_artifact or []),
+        "experiment_after_artifacts": list(args.experiment_after_artifact or []),
+        "experiment_execute_approved": bool(args.experiment_execute_approved),
+        "experiment_executor_timeout_seconds": int(args.experiment_executor_timeout_seconds or 0),
+        "compile_target": str(args.compile_target or ""),
+        "compile_approval_ref": str(args.compile_approval_ref or ""),
+        "compile_runtime_evidence": list(args.compile_runtime_evidence or []),
+        "compile_allowlist_evidence": list(args.compile_allowlist_evidence or []),
+        "compile_before_artifacts": list(args.compile_before_artifact or []),
+        "compile_after_artifacts": list(args.compile_after_artifact or []),
+        "compile_execute_approved": bool(args.compile_execute_approved),
+        "compile_executor_timeout_seconds": int(args.compile_executor_timeout_seconds or 0),
         "before_artifacts": list(args.before_artifact or []),
         "after_artifacts": list(args.after_artifact or []),
         "execute_approved": bool(args.execute_approved),
@@ -217,6 +241,148 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "skip_validation": bool(args.skip_validation),
         "skip_pilot": bool(args.skip_pilot),
         "auto": bool(args.auto),
+    }
+
+
+def prepare_scheduler_harness(harness_dir: Path) -> None:
+    """Expose read-only harness resources when HARNESS_DIR is an isolated run root."""
+    for name in ("config", "personas", "tools", "plugins", "evaluators", "schemas", "lib", "templates"):
+        source = REPO_HARNESS / name
+        target = harness_dir / name
+        if target.exists() or not source.exists():
+            continue
+        target.symlink_to(source, target_is_directory=source.is_dir())
+    (harness_dir / "run").mkdir(parents=True, exist_ok=True)
+    (harness_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+
+
+def run_research_scheduler_lifecycle(args: argparse.Namespace, *, run_id: str, work_dir: str) -> dict[str, Any]:
+    """Run the existing scheduler-dispatched lifecycle proof for explicit `$research` requests."""
+    prepare_scheduler_harness(OUTPUT_HARNESS)
+    scheduler_rel = Path(work_dir) / "scheduler_lifecycle"
+    scheduler_dir = OUTPUT_HARNESS / scheduler_rel
+    scheduler_dir.mkdir(parents=True, exist_ok=True)
+    summary_rel = scheduler_rel / "scientific_lifecycle_runtime.json"
+    stdout_path = scheduler_dir / "scheduler_run_stdout.json"
+    stderr_path = scheduler_dir / "scheduler_run_stderr.txt"
+    job_id = f"{run_id}-scheduler"
+    command = [
+        sys.executable,
+        str(REPO_HARNESS / "tools" / "run_scientific_lifecycle_smoke.py"),
+        "--harness-dir",
+        str(OUTPUT_HARNESS),
+        "--job-id",
+        job_id,
+        "--timeout-seconds",
+        str(float(args.scheduler_timeout or 30.0)),
+        "--output-dir",
+        str(scheduler_rel),
+        "--out",
+        str(summary_rel),
+    ]
+    if args.scheduler_include_blocked_external:
+        command.append("--include-blocked-external")
+    if args.scheduler_include_human_gates:
+        command.append("--include-human-gates")
+    if args.scheduler_dispatch_external_evidence:
+        command.append("--dispatch-external-evidence")
+    if args.idea_approval_ref:
+        command.extend(["--idea-approval-ref", str(args.idea_approval_ref)])
+    if args.results_approval_ref:
+        command.extend(["--results-approval-ref", str(args.results_approval_ref)])
+    if args.experiment_approval_ref:
+        command.extend(["--experiment-approval-ref", str(args.experiment_approval_ref)])
+    for path in args.experiment_runtime_evidence or []:
+        command.extend(["--experiment-runtime-evidence", str(path)])
+    for path in args.experiment_allowlist_evidence or []:
+        command.extend(["--experiment-allowlist-evidence", str(path)])
+    for path in args.experiment_before_artifact or []:
+        command.extend(["--experiment-before-artifact", str(path)])
+    for path in args.experiment_after_artifact or []:
+        command.extend(["--experiment-after-artifact", str(path)])
+    if args.experiment_execute_approved:
+        command.append("--experiment-execute-approved")
+    if args.experiment_executor_timeout_seconds:
+        command.extend(["--experiment-executor-timeout-seconds", str(int(args.experiment_executor_timeout_seconds))])
+    if args.review_llm_evidence:
+        for path in args.review_llm_evidence:
+            command.extend(["--review-llm-evidence", str(path)])
+    if args.compile_target:
+        command.extend(["--compile-target", str(args.compile_target)])
+    if args.compile_approval_ref:
+        command.extend(["--compile-approval-ref", str(args.compile_approval_ref)])
+    for path in args.compile_runtime_evidence or []:
+        command.extend(["--compile-runtime-evidence", str(path)])
+    for path in args.compile_allowlist_evidence or []:
+        command.extend(["--compile-allowlist-evidence", str(path)])
+    for path in args.compile_before_artifact or []:
+        command.extend(["--compile-before-artifact", str(path)])
+    for path in args.compile_after_artifact or []:
+        command.extend(["--compile-after-artifact", str(path)])
+    if args.compile_execute_approved:
+        command.append("--compile-execute-approved")
+    if args.compile_executor_timeout_seconds:
+        command.extend(["--compile-executor-timeout-seconds", str(int(args.compile_executor_timeout_seconds))])
+    if args.online:
+        command.extend(["--allow-network-fetch", "--require-online-source-evidence", "--disable-fixture-fallback"])
+        if args.approval_ref:
+            command.extend(["--source-approval-ref", str(args.approval_ref)])
+        for path in args.runtime_evidence or []:
+            command.extend(["--source-runtime-evidence", str(path)])
+        for path in args.allowlist_evidence or []:
+            command.extend(["--source-allowlist-evidence", str(path)])
+        for path in args.before_artifact or []:
+            command.extend(["--source-before-artifact", str(path)])
+        for path in args.after_artifact or []:
+            command.extend(["--source-after-artifact", str(path)])
+    if args.topic:
+        command.extend(["--discovery-query", str(args.topic)])
+    if args.limit:
+        command.extend(["--discovery-limit", str(int(args.limit))])
+
+    env = dict(os.environ)
+    env["HARNESS_DIR"] = str(OUTPUT_HARNESS)
+    env.setdefault("SOLAR_OPERATORD_ONCE_MAX_WAIT_SECONDS", str(max(1, int(float(args.scheduler_timeout or 30.0)))))
+    proc = subprocess.run(
+        command,
+        cwd=REPO_HARNESS,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    stdout_path.write_text(proc.stdout, encoding="utf-8")
+    stderr_path.write_text(proc.stderr, encoding="utf-8")
+    summary_path = OUTPUT_HARNESS / summary_rel
+    summary_payload: dict[str, Any] = {}
+    if summary_path.exists():
+        try:
+            summary_payload = load_json(summary_path)
+        except Exception:
+            summary_payload = {}
+    if not summary_payload and proc.stdout.strip():
+        try:
+            loaded = json.loads(proc.stdout)
+            if isinstance(loaded, dict):
+                summary_payload = loaded
+        except json.JSONDecodeError:
+            summary_payload = {}
+
+    status = str(summary_payload.get("lifecycle_status") or "").lower()
+    result_status = "passed" if proc.returncode == 0 and status == "passed" else "blocked" if proc.returncode == 3 or status == "blocked" else "failed"
+    return {
+        "schema": "autosci_scheduler_lifecycle_run.v1",
+        "status": result_status,
+        "exit_code": proc.returncode,
+        "job_id": job_id,
+        "summary_path": as_artifact_path(summary_path) if summary_path.exists() else "",
+        "stdout_path": as_artifact_path(stdout_path),
+        "stderr_path": as_artifact_path(stderr_path),
+        "command": command,
+        "lifecycle_status": status or "N/A",
+        "node_count": len(summary_payload.get("node_results") or {}) if isinstance(summary_payload.get("node_results"), dict) else 0,
+        "blocked_node_count": len(summary_payload.get("blocked_nodes") or {}) if isinstance(summary_payload.get("blocked_nodes"), dict) else 0,
     }
 
 
@@ -280,6 +446,8 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
         inputs["allowlist_evidence"] = list(args.allowlist_evidence)
     if args.runtime_evidence:
         inputs["runtime_evidence"] = list(args.runtime_evidence)
+    if args.lifecycle_summary:
+        inputs["lifecycle_summary"] = list(args.lifecycle_summary)
     if args.discovery_evidence:
         inputs["discovery_evidence"] = list(args.discovery_evidence)
     if args.novelty_evidence:
@@ -357,9 +525,13 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["online_novelty"] = True
         elif not args.quick and not args.skip_validation:
             inputs["online_novelty"] = True
-        if args.review and not args.skip_validation:
-            inputs["review_llm_requested"] = True
-        elif not args.quick and not args.skip_validation:
+        if (
+            args.review
+            or args.review_llm_evidence
+            or args.review_llm_command
+            or args.review_llm_provider
+            or args.review_llm_endpoint
+        ) and not args.skip_validation:
             inputs["review_llm_requested"] = True
         if args.skip_validation:
             inputs["skip_validation"] = True
@@ -752,6 +924,14 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
         actions = ["run_research_lifecycle"]
     if skill == "visualize" and not args.smoke:
         actions = ["visualize_graph"]
+    scheduler_lifecycle: dict[str, Any] = {}
+    if skill == "research" and args.scheduler_run and not args.smoke:
+        scheduler_lifecycle = run_research_scheduler_lifecycle(args, run_id=run_id, work_dir=work_dir)
+        if scheduler_lifecycle.get("summary_path"):
+            args.lifecycle_summary = [
+                *list(args.lifecycle_summary or []),
+                str(scheduler_lifecycle["summary_path"]),
+            ]
     can_run_actions, skip_reason = should_run_actions(actions, args)
     action_results: list[dict[str, Any]] = []
     for action in (actions if can_run_actions else []):
@@ -761,9 +941,11 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
         action_results.append(run_bridge_action(action, envelope, envelope_path))
 
     failed_count = count_results(action_results, "failed")
+    scheduler_failed = bool(scheduler_lifecycle and scheduler_lifecycle.get("status") == "failed")
+    failed_total = failed_count + (1 if scheduler_failed else 0)
     operator_status = str((binding or {}).get("operator_status") or route.get("coverage_status") or "partial")
     side_effect_policy = str(route.get("side_effect_policy") or "unavailable")
-    if failed_count:
+    if failed_total:
         execution_status = "failed"
     elif operator_status == "gated" or side_effect_policy == "approval_required":
         execution_status = "gated"
@@ -820,9 +1002,11 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
                 "action_count": len(action_results),
                 "passed_count": count_results(action_results, "passed"),
                 "schema_only_count": count_results(action_results, "schema_only"),
-                "failed_count": failed_count,
-                "actions": action_results,
-                "route": {
+            "failed_count": failed_count,
+            "scheduler_failed": scheduler_failed,
+            "actions": action_results,
+            "scheduler_lifecycle": scheduler_lifecycle,
+            "route": {
                     "solar_capability": str(route.get("solar_capability") or ""),
                     "solar_logical_operator": str(route.get("solar_logical_operator") or ""),
                     "solar_backend_action": str(route.get("solar_backend_action") or ""),
@@ -841,6 +1025,15 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
                 for result in action_results
                 if result.get("evidence_path") and result.get("status") != "failed"
             ],
+            *(
+                [
+                    {"type": "scientific_lifecycle_summary", "path": str(scheduler_lifecycle.get("summary_path"))},
+                    {"type": "scheduler_lifecycle_stdout", "path": str(scheduler_lifecycle.get("stdout_path"))},
+                    {"type": "scheduler_lifecycle_stderr", "path": str(scheduler_lifecycle.get("stderr_path"))},
+                ]
+                if scheduler_lifecycle
+                else []
+            ),
         ],
         "provenance": {
             "operator_id": "AutoSciSkillShim",
@@ -849,6 +1042,11 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
         },
         "limitations": limitations or ["No additional route limitations were declared."],
     }
+    if scheduler_lifecycle:
+        payload["inputs"]["lifecycle_summary"] = list(args.lifecycle_summary or [])
+    if scheduler_failed:
+        payload["status"] = "failed"
+        payload["limitations"].append("Explicit scheduler lifecycle run failed; research bridge output is not treated as a successful lifecycle.")
     return payload, out_path
 
 
@@ -899,6 +1097,12 @@ def cmd_run_skill(args: argparse.Namespace) -> int:
         "failed_count": skill_run["failed_count"],
         "work_dir": payload["inputs"]["work_dir"],
     }
+    scheduler_lifecycle = skill_run.get("scheduler_lifecycle") if isinstance(skill_run.get("scheduler_lifecycle"), dict) else {}
+    if scheduler_lifecycle:
+        summary["scheduler_lifecycle_status"] = scheduler_lifecycle.get("status")
+        summary["scheduler_lifecycle_summary_path"] = scheduler_lifecycle.get("summary_path")
+        summary["scheduler_lifecycle_node_count"] = scheduler_lifecycle.get("node_count")
+        summary["scheduler_lifecycle_blocked_node_count"] = scheduler_lifecycle.get("blocked_node_count")
     if workspace_summary:
         summary["workspace_path"] = workspace_summary["workspace_root"]
         summary["wiki_path"] = workspace_summary["wiki_root"]
@@ -963,6 +1167,29 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--approval-ref", help="Human approval reference for gated side-effect execution")
     skill.add_argument("--allowlist-evidence", action="append", help="JSON/text artifact proving approved command/source allowlist")
     skill.add_argument("--runtime-evidence", action="append", help="Runtime log/result artifact from an approved side-effect execution")
+    skill.add_argument("--lifecycle-summary", action="append", help="Existing scientific_lifecycle.v1 scheduler runtime summary evidence")
+    skill.add_argument("--scheduler-run", action="store_true", help="For $research only: explicitly run the scheduler-dispatched scientific lifecycle proof and attach its summary")
+    skill.add_argument("--scheduler-timeout", type=float, default=30.0, help="Timeout in seconds for each scheduler-dispatched lifecycle node")
+    skill.add_argument("--scheduler-include-blocked-external", action="store_true", help="Record report/compile external nodes as blocked scheduler state")
+    skill.add_argument("--scheduler-include-human-gates", action="store_true", help="Record idea/results human approval gates as scheduler-visible lifecycle state")
+    skill.add_argument("--scheduler-dispatch-external-evidence", action="store_true", help="Dispatch report/compile external nodes when Review LLM and compile evidence are supplied")
+    skill.add_argument("--idea-approval-ref", help="Durable approval reference for the scheduler idea acceptance gate")
+    skill.add_argument("--results-approval-ref", help="Durable approval reference for the scheduler results acceptance gate")
+    skill.add_argument("--experiment-approval-ref", help="Durable approval reference for scheduler experiment runtime evidence")
+    skill.add_argument("--experiment-runtime-evidence", action="append", help="Approved runtime evidence for scheduler experiment_run/experiment_monitor")
+    skill.add_argument("--experiment-allowlist-evidence", action="append", help="Allowlist evidence for scheduler experiment runtime")
+    skill.add_argument("--experiment-before-artifact", action="append", help="Before-state artifact for scheduler experiment runtime")
+    skill.add_argument("--experiment-after-artifact", action="append", help="After-state artifact for scheduler experiment runtime")
+    skill.add_argument("--experiment-execute-approved", action="store_true", help="Execute an approved allowlisted scheduler experiment command")
+    skill.add_argument("--experiment-executor-timeout-seconds", type=int, default=120, help="Timeout for an approved scheduler experiment command")
+    skill.add_argument("--compile-target", help="LaTeX/PDF target directory for scheduler publication_produce dispatch")
+    skill.add_argument("--compile-approval-ref", help="Durable approval reference for scheduler publication compile evidence")
+    skill.add_argument("--compile-runtime-evidence", action="append", help="Approved runtime evidence for scheduler publication_produce")
+    skill.add_argument("--compile-allowlist-evidence", action="append", help="Allowlist evidence for scheduler publication compile")
+    skill.add_argument("--compile-before-artifact", action="append", help="Before-state artifact for scheduler publication compile")
+    skill.add_argument("--compile-after-artifact", action="append", help="After-state artifact for scheduler publication compile")
+    skill.add_argument("--compile-execute-approved", action="store_true", help="Execute an approved allowlisted scheduler publication compile command")
+    skill.add_argument("--compile-executor-timeout-seconds", type=int, default=120, help="Timeout for an approved scheduler publication compile command")
     skill.add_argument("--before-artifact", action="append", help="Before-state artifact for approved mutation/execution")
     skill.add_argument("--after-artifact", action="append", help="After-state artifact for approved mutation/execution")
     skill.add_argument("--execute-approved", action="store_true", help="Execute an implemented side-effect path only when approval and allowlist evidence are present")
