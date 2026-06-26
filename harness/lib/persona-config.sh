@@ -14,7 +14,8 @@
 # @module solar-farm/harness/lib/persona-config
 # ================================================================
 
-HARNESS_DIR="${HARNESS_DIR:-$HOME/.solar/harness}"
+SOURCE_HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$SOURCE_HARNESS_DIR}}"
 [[ -f "$HARNESS_DIR/lib/harness-config.sh" ]] && source "$HARNESS_DIR/lib/harness-config.sh"
 
 # 从 model-config.sh 读 ZHIPU_* 变量
@@ -76,15 +77,15 @@ _infer_auth_source_for_base_url() {
 
 _normalize_main_model_alias() {
   if command -v solar_model_alias_canonical >/dev/null 2>&1; then
-    solar_model_alias_canonical "${1:-anthropic-sonnet}" 2>/dev/null || printf '%s' "claude-sonnet"
+    solar_model_alias_canonical "${1:-codex}" 2>/dev/null || printf '%s' "codex-gpt-5.5"
   else
-    printf '%s' "${1:-sonnet}" | tr '[:upper:]' '[:lower:]' | xargs
+    printf '%s' "${1:-codex}" | tr '[:upper:]' '[:lower:]' | xargs
   fi
 }
 
 _persona_model_alias() {
   local persona="$1"
-  local default_value="${2:-anthropic-sonnet}"
+  local default_value="${2:-codex}"
   if command -v solar_persona_model >/dev/null 2>&1; then
     _normalize_main_model_alias "$(solar_persona_model "$persona" "$default_value")"
   else
@@ -116,9 +117,27 @@ _configure_anthropic_persona_model() {
   esac
 }
 
+_configure_codex_persona_model() {
+  local alias="$(_normalize_main_model_alias "${1:-codex}")"
+  model_id="$alias"
+  model_flag="$(solar_model_flag "$alias")"
+  base_url=""
+  auth_token=""
+  auth_source="codex"
+  extra_flags=""
+  display_model="$(solar_model_alias_label "$alias") (Codex)"
+}
+
 _configure_persona_model() {
-  local alias="$(_normalize_main_model_alias "${1:-anthropic-sonnet}")"
+  local alias="$(_normalize_main_model_alias "${1:-codex}")"
   local display_suffix="${2:-}"
+  local provider=""
+  provider="$(solar_model_provider "$alias" 2>/dev/null || true)"
+  if [[ "$provider" == "codex" ]]; then
+    _configure_codex_persona_model "$alias"
+    display_model="${display_model}${display_suffix}"
+    return 0
+  fi
   case "$alias" in
     zhipu-glm-5.1)
       if _zhipu_credentials_available; then
@@ -275,7 +294,10 @@ get_persona_config() {
       cn="实验建设者"
       local lab_model
       lab_model="$(_lab_builder_model_for_slot)"
-      if [[ "$lab_model" == "zhipu-glm-5.1" ]] && _zhipu_credentials_available; then
+      if [[ "$(solar_model_provider "$lab_model" 2>/dev/null || true)" == "codex" ]]; then
+        _configure_codex_persona_model "$lab_model"
+        display_model="${display_model} (${SOLAR_BUILDER_SLOT:-lab-builder})"
+      elif [[ "$lab_model" == "zhipu-glm-5.1" ]] && _zhipu_credentials_available; then
         model_id="$lab_model"
         model_flag="$(solar_model_flag "$lab_model")"
         base_url="${ZHIPU_BASE_URL:-}"
@@ -339,54 +361,21 @@ get_persona_config() {
       ;;
     lab-evaluator)
       cn="实验审判官"
-      if _zhipu_available; then
-        model_flag="--model claude-opus-4-8"
-        base_url="${ZHIPU_BASE_URL:-}"
-        auth_token="${ZHIPU_AUTH_TOKEN:-}"
-        auth_source="zhipu"
-        extra_flags="$(_zhipu_coding_plan_flags)"
-        display_model="GLM-5.1 (智谱)"
-      else
-        _configure_anthropic_persona_model "$(_persona_model_alias lab-evaluator)"
-        base_url=""
-        auth_token=""
-      fi
+      _configure_persona_model "$(_persona_model_alias lab-evaluator)"
       tool_flag="--allowedTools Read Bash Grep Glob Write"
       startup_token=""
       proxy_check="0"
       ;;
     observer)
       cn="观察者"
-      if _zhipu_available; then
-        model_flag="--model claude-opus-4-8"
-        base_url="${ZHIPU_BASE_URL:-}"
-        auth_token="${ZHIPU_AUTH_TOKEN:-}"
-        auth_source="zhipu"
-        extra_flags="$(_zhipu_coding_plan_flags)"
-        display_model="GLM-5.1 (智谱)"
-      else
-        _configure_anthropic_persona_model "$(_persona_model_alias observer)"
-        base_url=""
-        auth_token=""
-      fi
+      _configure_persona_model "$(_persona_model_alias observer)"
       tool_flag="--allowedTools Read Bash Grep Glob"
       startup_token=""
       proxy_check="0"
       ;;
     *)
       cn="$persona"
-      if _zhipu_available; then
-        model_flag="--model claude-opus-4-8"
-        base_url="${ZHIPU_BASE_URL:-}"
-        auth_token="${ZHIPU_AUTH_TOKEN:-}"
-        auth_source="zhipu"
-        extra_flags="$(_zhipu_coding_plan_flags)"
-        display_model="GLM-5.1 (智谱)"
-      else
-        _configure_anthropic_persona_model "$(_persona_model_alias "$persona")"
-        base_url=""
-        auth_token=""
-      fi
+      _configure_persona_model "$(_persona_model_alias "$persona")"
       tool_flag=""
       startup_token=""
       proxy_check="0"
@@ -408,8 +397,15 @@ get_persona_config() {
   # 修复: 单引号包裹 + AUTH_TOKEN 输出 mask (真值仍由 apply_persona_env 从 env 设置)
   local masked_token=""
   [[ -n "$auth_token" ]] && masked_token="<from-env:ZHIPU_AUTH_TOKEN>"
+  local model_provider="" model_key=""
+  if [[ -n "$model_id" ]] && command -v solar_model_provider >/dev/null 2>&1; then
+    model_provider="$(solar_model_provider "$model_id" 2>/dev/null || true)"
+    model_key="$(solar_model_key "$model_id" 2>/dev/null || true)"
+  fi
   echo "CN='$cn'"
   echo "MODEL_ID='$model_id'"
+  echo "MODEL_PROVIDER='$model_provider'"
+  echo "MODEL_KEY='$model_key'"
   echo "MODEL_FLAG='$model_flag'"
   echo "BASE_URL='$base_url'"
   echo "AUTH_TOKEN='$masked_token'"
@@ -583,6 +579,7 @@ solar-harness context inject --query "<把用户原始问题简洁转写到这�
 这个命令是默认知识库入口，背后包含 Mirage VFS + QMD solar-wiki + Obsidian Vault + Solar DB。你必须把它作为主检索路径。
 
 硬性规则：
+- 路径以当前运行时为准：优先使用 `solar-harness ...` 命令和 `$HARNESS_DIR` / `$SPRINTS_DIR`，不要把文档中的 `~/.solar/harness` 示例当成真实写入目标。
 - 不得把 `sqlite3 ~/.solar/solar.db ...` 当作第一步或唯一知识库查询。
 - 不得直接跳到 Web Search；必须先跑 `solar-harness context inject`，再按需要补充 web 或 sqlite。
 - 如果 context inject 有命中，回答/brief/plan/handoff/eval 中必须体现“已使用 Solar Unified Context”，并引用关键命中来源。

@@ -25,3 +25,25 @@ def test_claim_verdict_gate_rejects_source_free_verdict():
     assert "evidence_ids" in joined
     assert "limitations" in joined
     assert "artifacts" in joined
+
+
+def test_claim_verdict_gate_requires_claim_id_in_evidence_ids():
+    path = FIXTURES / "pass/claim_verdict.json"
+    payload = load_json(path)
+    payload["outputs"]["verdicts"][0]["evidence_ids"] = ["experiment.sample.001"]
+    result = claim_verdict_gate.evaluate(payload, path)
+
+    assert result.ok is False
+    assert "claim_id" in " ".join(result.reasons)
+
+
+def test_claim_verdict_gate_rejects_upgraded_inconclusive_evidence():
+    path = FIXTURES / "pass/claim_verdict.json"
+    payload = load_json(path)
+    payload["outputs"]["verdicts"][0]["evidence_outcome"] = "inconclusive"
+    payload["outputs"]["verdicts"][0]["verdict"] = "supported"
+    result = claim_verdict_gate.evaluate(payload, path)
+
+    assert result.ok is False
+    joined = " ".join(result.reasons)
+    assert "cannot upgrade inconclusive evidence" in joined

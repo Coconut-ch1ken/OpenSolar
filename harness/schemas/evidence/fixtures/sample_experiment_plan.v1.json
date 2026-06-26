@@ -1,7 +1,7 @@
 {
   "schema": "experiment_plan.v1",
   "task_id": "task.phase1.sample.experiment_plan",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.experiment_design",
   "status": "completed",
   "inputs": {
@@ -22,7 +22,7 @@
   "artifacts": [
     {
       "type": "experiment_plan",
-      "path": "artifacts/autosci/fixtures/experiment_plan.json"
+      "path": "artifacts/scientific/fixtures/experiment_plan.json"
     }
   ],
   "provenance": {

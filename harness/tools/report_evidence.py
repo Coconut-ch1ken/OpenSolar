@@ -259,5 +259,15 @@ def run_chapter_writer(
         "output_token_count": int(result.get("output_token_count") or 0),
         "request_dir": str(result.get("request_dir") or ""),
     }
+    request_dir = Path(str(result.get("request_dir") or "")).expanduser() if result.get("request_dir") else None
+    if request_dir and request_dir.exists():
+        deep_proof_path = request_dir / "deep-research-state.json"
+        deep_request_path = request_dir / "report-operator-request.json"
+        mode_proof_path = request_dir / "chatgpt-mode-state.json"
+        if deep_proof_path.exists():
+            proof["deep_proof_path"] = str(deep_proof_path)
+            proof["deep_request_path"] = str(deep_request_path if deep_request_path.exists() else request_dir / "request.json")
+        if mode_proof_path.exists():
+            proof["chatgpt_mode_proof_path"] = str(mode_proof_path)
     atomic_write_json(proof_path, proof)
     return {**proof, "markdown": markdown, "proof_path": str(proof_path)}

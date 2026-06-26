@@ -20,8 +20,10 @@ DEFAULT_PAPER = REPO_HARNESS / "plugins" / "autosci" / "tests" / "fixtures" / "s
 SCHEMA = "autosci_operator_smoke.v1"
 
 GATES = {
+    "literature_discovery.v1": "literature_discovery_gate.py",
     "research_paper.v1": "paper_gate.py",
     "research_memory_update.v1": "memory_update_gate.py",
+    "research_graph_update.v1": "graph_update_gate.py",
     "research_claims.v1": "claims_gate.py",
     "research_method.v1": "method_gate.py",
     "code_evidence_map.v1": "code_evidence_gate.py",
@@ -31,7 +33,9 @@ GATES = {
     "experiment_result.v1": "experiment_result_gate.py",
     "experiment_status.v1": "experiment_status_gate.py",
     "claim_verdict.v1": "claim_verdict_gate.py",
+    "artifact_review.v1": "artifact_review_gate.py",
     "scientific_report.v1": "report_gate.py",
+    "publication_bundle.v1": "publication_gate.py",
     "workflow_evolution.v1": "workflow_evolution_gate.py",
 }
 
@@ -175,11 +179,43 @@ def build_envelope(action: str, *, paper_path: str, base_rel: str, sample_repo: 
             "inputs": {"paper_path": paper_path},
             "outputs": base_outputs(base_rel, action, "research_graph_update.direct.json"),
         }
+    if action == "ask_wiki":
+        outputs = base_outputs(base_rel, action, "research_memory_update.ask.json")
+        outputs.update({"answer_markdown_path": f"{base_rel}/ask_wiki_answer.md"})
+        return {
+            **common,
+            "inputs": {"query": "What evidence supports SkillGen?"},
+            "outputs": outputs,
+        }
+    if action == "init_sources":
+        return {
+            **common,
+            "inputs": {"topic": "SkillGen verified inference-time agent skill synthesis", "limit": 10},
+            "outputs": base_outputs(base_rel, action, "literature_discovery.init.json"),
+        }
+    if action == "prefill_foundations":
+        return {
+            **common,
+            "inputs": {"target": "SkillGen foundation scaffold"},
+            "outputs": base_outputs(base_rel, action, "research_memory_update.prefill.json"),
+        }
+    if action == "edit_wiki_plan":
+        return {
+            **common,
+            "inputs": {"target": "wiki/ideas/skillgen.md"},
+            "outputs": base_outputs(base_rel, action, "research_memory_update.edit_plan.json"),
+        }
     if action == "discover_literature":
         return {
             **common,
             "inputs": {"query": "SkillGen verified inference-time agent skill synthesis"},
             "outputs": base_outputs(base_rel, action, "literature_discovery.json"),
+        }
+    if action == "daily_arxiv_prepare_finalize":
+        return {
+            **common,
+            "inputs": {"query": "SkillGen verified inference-time agent skill synthesis", "limit": 10},
+            "outputs": base_outputs(base_rel, action, "literature_discovery.daily_arxiv.json"),
         }
     if action == "extract_claims":
         return {
@@ -247,6 +283,12 @@ def build_envelope(action: str, *, paper_path: str, base_rel: str, sample_repo: 
             },
             "outputs": base_outputs(base_rel, action, "experiment_result.json"),
         }
+    if action == "run_pilot_experiment":
+        return {
+            **common,
+            "inputs": {"target": "pilot-skillgen-001"},
+            "outputs": base_outputs(base_rel, action, "experiment_result.pilot.json"),
+        }
     if action == "monitor_experiment":
         return {
             **common,
@@ -267,6 +309,12 @@ def build_envelope(action: str, *, paper_path: str, base_rel: str, sample_repo: 
                 "code_evidence": f"{base_rel}/code_evidence_map.json",
             },
             "outputs": base_outputs(base_rel, action, "claim_verdict.json"),
+        }
+    if action == "evaluate_pilot_result":
+        return {
+            **common,
+            "inputs": {"target": "pilot-claim-001"},
+            "outputs": base_outputs(base_rel, action, "claim_verdict.pilot.json"),
         }
     if action == "write_report":
         outputs = base_outputs(base_rel, action, "scientific_report.json")
@@ -292,6 +340,86 @@ def build_envelope(action: str, *, paper_path: str, base_rel: str, sample_repo: 
                 "report_id": "report-skillgen-operator-smoke",
                 "report_title": "SkillGen Evidence-Linked Operator Smoke Report",
             },
+            "outputs": outputs,
+        }
+    if action == "plan_report":
+        outputs = base_outputs(base_rel, action, "scientific_report.plan.json")
+        outputs.update(
+            {
+                "plan_json_path": f"{base_rel}/paper_plan.json",
+                "markdown_path": f"{base_rel}/paper_plan.md",
+            }
+        )
+        return {
+            **common,
+            "inputs": {
+                "target": "idea-001",
+                "title": "SkillGen Evidence-Linked Paper Plan",
+                "claims_evidence": f"{base_rel}/research_claims.json",
+                "method_evidence": f"{base_rel}/research_method.json",
+            },
+            "outputs": outputs,
+        }
+    if action == "write_survey":
+        outputs = base_outputs(base_rel, action, "scientific_report.survey.json")
+        outputs.update(
+            {
+                "plan_json_path": f"{base_rel}/survey_plan.json",
+                "markdown_path": f"{base_rel}/survey.md",
+            }
+        )
+        return {
+            **common,
+            "inputs": {
+                "topic": "SkillGen verified inference-time agent skill synthesis",
+                "paper_evidence": f"{base_rel}/research_paper.json",
+                "method_evidence": f"{base_rel}/research_method.json",
+            },
+            "outputs": outputs,
+        }
+    if action == "draft_rebuttal":
+        outputs = base_outputs(base_rel, action, "publication_bundle.rebuttal.json")
+        outputs.update(
+            {
+                "markdown_path": f"{base_rel}/rebuttal.md",
+                "map_json_path": f"{base_rel}/rebuttal_response_map.json",
+            }
+        )
+        return {
+            **common,
+            "inputs": {
+                "target": "report-skillgen-operator-smoke",
+                "claim_verdict_evidence": f"{base_rel}/claim_verdict.json",
+            },
+            "outputs": outputs,
+        }
+    if action == "build_poster":
+        outputs = base_outputs(base_rel, action, "publication_bundle.poster.json")
+        outputs.update(
+            {
+                "html_path": f"{base_rel}/poster.html",
+                "map_json_path": f"{base_rel}/poster_validation.json",
+            }
+        )
+        return {
+            **common,
+            "inputs": {
+                "target": "report-skillgen-operator-smoke",
+                "report_evidence": f"{base_rel}/scientific_report.json",
+            },
+            "outputs": outputs,
+        }
+    if action == "compile_paper":
+        outputs = base_outputs(base_rel, action, "publication_bundle.compile.json")
+        outputs.update(
+            {
+                "compile_checklist_path": f"{base_rel}/paper_compile_checklist.json",
+                "compile_diagnostics_path": f"{base_rel}/paper_compile_diagnostics.md",
+            }
+        )
+        return {
+            **common,
+            "inputs": {"target": "paper/", "checklist": True},
             "outputs": outputs,
         }
     if action == "evolve_workflow":
@@ -335,6 +463,83 @@ def build_envelope(action: str, *, paper_path: str, base_rel: str, sample_repo: 
                 "patch_candidates_path": f"{base_rel}/patch_candidates",
             },
         }
+    if action == "setup_status":
+        outputs = base_outputs(base_rel, action, "workflow_evolution.setup.json")
+        outputs.update(
+            {
+                "recommended_changes_path": f"{base_rel}/setup_recommended_changes.md",
+                "patch_candidates_path": f"{base_rel}/patch_candidates",
+            }
+        )
+        return {
+            **common,
+            "inputs": {"target": "autosci setup"},
+            "outputs": outputs,
+        }
+    if action == "reset_plan":
+        outputs = base_outputs(base_rel, action, "workflow_evolution.reset.json")
+        outputs.update(
+            {
+                "recommended_changes_path": f"{base_rel}/reset_recommended_changes.md",
+                "patch_candidates_path": f"{base_rel}/patch_candidates",
+            }
+        )
+        return {
+            **common,
+            "inputs": {"target": "autosci reset"},
+            "outputs": outputs,
+        }
+    if action == "refine_artifact":
+        outputs = base_outputs(base_rel, action, "workflow_evolution.refine.json")
+        outputs.update(
+            {
+                "recommended_changes_path": f"{base_rel}/refine_recommended_changes.md",
+                "patch_candidates_path": f"{base_rel}/patch_candidates",
+            }
+        )
+        return {
+            **common,
+            "inputs": {"target": "report-skillgen-operator-smoke"},
+            "outputs": outputs,
+        }
+    if action == "run_research_lifecycle":
+        outputs = base_outputs(base_rel, action, "workflow_evolution.research.json")
+        outputs.update(
+            {
+                "recommended_changes_path": f"{base_rel}/research_lifecycle_recommended_changes.md",
+                "patch_candidates_path": f"{base_rel}/patch_candidates",
+            }
+        )
+        return {
+            **common,
+            "inputs": {"target": "skillgen research lifecycle"},
+            "outputs": outputs,
+        }
+    if action == "check_wiki_health":
+        outputs = base_outputs(base_rel, action, "workflow_evolution.check.json")
+        outputs.update(
+            {
+                "recommended_changes_path": f"{base_rel}/check_recommended_changes.md",
+                "patch_candidates_path": f"{base_rel}/patch_candidates",
+            }
+        )
+        return {
+            **common,
+            "inputs": {"target": "autosci wiki"},
+            "outputs": outputs,
+        }
+    if action == "visualize_graph":
+        return {
+            **common,
+            "inputs": {"target": "autosci graph"},
+            "outputs": base_outputs(base_rel, action, "research_graph_update.visualize.json"),
+        }
+    if action == "review_artifact":
+        return {
+            **common,
+            "inputs": {"paper_path": paper_path, "target": paper_path},
+            "outputs": base_outputs(base_rel, action, "artifact_review.json"),
+        }
     raise ValueError(f"unsupported smoke action: {action}")
 
 
@@ -343,9 +548,12 @@ def run_gate(schema: str, evidence_path: Path) -> dict[str, Any]:
     if not gate_name:
         return {"gate_status": "not_available", "reasons": [], "warnings": ["no deterministic gate registered"]}
     gate_path = REPO_HARNESS / "evaluators" / "scientific" / gate_name
+    env = dict(os.environ)
+    env["HARNESS_DIR"] = str(OUTPUT_HARNESS)
     proc = subprocess.run(
         [sys.executable, str(gate_path), str(evidence_path)],
         cwd=REPO_HARNESS,
+        env=env,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -411,13 +619,19 @@ def run_bridge_action(action: str, envelope: dict[str, Any], envelope_path: Path
     evidence = load_json(evidence_path)
     gate_result = run_gate(schema, evidence_path)
     gate_status = gate_result["gate_status"]
-    status = "passed" if gate_status == "passed" else "schema_only" if gate_status == "not_available" else "failed"
+    if gate_status == "passed":
+        status = "passed"
+    elif gate_status in {"not_available", "inconclusive"}:
+        status = "schema_only"
+    else:
+        status = "failed"
+    action_gate_status = "schema_only" if gate_status == "inconclusive" else gate_status
     return {
         "action": action,
         "status": status,
         "schema": schema,
         "evidence_path": as_artifact_path(evidence_path),
-        "gate_status": gate_status,
+        "gate_status": action_gate_status,
         "evidence_ids": collect_ids(evidence),
         "reasons": gate_result["reasons"],
         "warnings": gate_result["warnings"],

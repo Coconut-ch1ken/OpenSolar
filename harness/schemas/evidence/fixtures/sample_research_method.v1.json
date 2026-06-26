@@ -1,7 +1,7 @@
 {
   "schema": "research_method.v1",
   "task_id": "task.phase1.sample.method",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.method_extract",
   "status": "completed",
   "inputs": {
@@ -22,7 +22,7 @@
   "artifacts": [
     {
       "type": "method_record",
-      "path": "artifacts/autosci/fixtures/research_method.json"
+      "path": "artifacts/scientific/fixtures/research_method.json"
     }
   ],
   "provenance": {

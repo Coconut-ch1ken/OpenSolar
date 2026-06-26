@@ -21,6 +21,11 @@
       "evidence_ids": [
         "mapping.sample.001",
         "claim.sample.001"
+      ],
+      "execution_mode": "fixture",
+      "command_run": "fixture-mode:no-external-command",
+      "logs": [
+        "Fixture run completed locally."
       ]
     }
   },

@@ -1,7 +1,7 @@
 {
   "schema": "literature_discovery.v1",
   "task_id": "task.phase1.sample.discovery",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.literature_discover",
   "status": "completed",
   "inputs": {
@@ -24,7 +24,7 @@
   "artifacts": [
     {
       "type": "discovery_shortlist",
-      "path": "artifacts/autosci/fixtures/literature_discovery.json"
+      "path": "artifacts/scientific/fixtures/literature_discovery.json"
     }
   ],
   "provenance": {

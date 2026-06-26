@@ -1,7 +1,7 @@
 {
   "schema": "publication_bundle.v1",
   "task_id": "task.phase1.sample.publication",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.publication_produce",
   "status": "completed",
   "inputs": {
@@ -14,7 +14,7 @@
       "files": [
         {
           "type": "paper_pdf",
-          "path": "artifacts/autosci/fixtures/sample_paper.pdf"
+          "path": "artifacts/scientific/fixtures/sample_paper.pdf"
         }
       ],
       "source_report_id": "report.sample.001",
@@ -24,7 +24,7 @@
   "artifacts": [
     {
       "type": "publication_manifest",
-      "path": "artifacts/autosci/fixtures/publication_bundle.json"
+      "path": "artifacts/scientific/fixtures/publication_bundle.json"
     }
   ],
   "provenance": {

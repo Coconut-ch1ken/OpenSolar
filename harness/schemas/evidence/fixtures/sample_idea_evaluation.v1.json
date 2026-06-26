@@ -1,7 +1,7 @@
 {
   "schema": "idea_evaluation.v1",
   "task_id": "task.phase1.sample.idea_eval",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.idea_evaluate",
   "status": "completed",
   "inputs": {
@@ -22,7 +22,7 @@
   "artifacts": [
     {
       "type": "idea_evaluation",
-      "path": "artifacts/autosci/fixtures/idea_evaluation.json"
+      "path": "artifacts/scientific/fixtures/idea_evaluation.json"
     }
   ],
   "provenance": {

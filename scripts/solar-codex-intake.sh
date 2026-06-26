@@ -27,6 +27,27 @@ die() {
   exit 1
 }
 
+is_autosci_dollar_request() {
+  python3 - "$1" <<'PY'
+import shlex
+import sys
+
+raw = sys.argv[1].strip()
+if not raw:
+    raise SystemExit(1)
+try:
+    parts = shlex.split(raw)
+except ValueError:
+    raise SystemExit(1)
+if not parts:
+    raise SystemExit(1)
+first = parts[0]
+if first in {"$skills", "$skill"} or (first.startswith("$") and len(first) > 1):
+    raise SystemExit(0)
+raise SystemExit(1)
+PY
+}
+
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_harness_dir="$repo_dir/harness"
 installed_harness_dir="${HOME:-}/.solar/harness"
@@ -34,6 +55,8 @@ if [[ -n "${SOLAR_HARNESS_DIR:-}" ]]; then
   harness_dir="$SOLAR_HARNESS_DIR"
 elif [[ -n "${HARNESS_DIR:-}" ]]; then
   harness_dir="$HARNESS_DIR"
+elif [[ -f "$repo_harness_dir/solar-harness.sh" ]]; then
+  harness_dir="$repo_harness_dir"
 elif [[ -f "$installed_harness_dir/solar-harness.sh" ]]; then
   harness_dir="$installed_harness_dir"
 else
@@ -113,12 +136,49 @@ input_count=0
 ((${#request_parts[@]} > 0)) && input_count=$((input_count + 1))
 [[ "$input_count" == "1" ]] || die "provide exactly one request source: args, --file, or --stdin"
 
-declare -a harness_args=(intake)
+request_text_for_direct=""
 if [[ -n "$request_file" ]]; then
   [[ -f "$request_file" ]] || die "request file not found: $request_file"
+  request_text_for_direct="$(cat "$request_file")"
+elif [[ "$use_stdin" == "1" ]]; then
+  request_text_for_direct="$(cat)"
+else
+  request_text_for_direct="${request_parts[*]}"
+fi
+
+if is_autosci_dollar_request "$request_text_for_direct"; then
+  direct_shim="$harness_dir/plugins/autosci/bin/autosci_skill_shim.py"
+  [[ -f "$direct_shim" ]] || die "AutoSci skill shim not found: $direct_shim"
+  if [[ "$dry_run" == "1" ]]; then
+    printf 'repo_dir=%q\n' "$repo_dir"
+    printf 'HARNESS_DIR=%q\n' "$harness_dir"
+    printf 'SOLAR_INTENT_SOURCE_CHANNEL=%q\n' "$source_channel"
+    printf 'SOLAR_INTENT_ACTOR=%q\n' "$actor"
+    printf 'SOLAR_INTENT_DEVICE=%q\n' "$device"
+    printf 'python3=%q\n' "$(command -v python3 2>/dev/null || printf 'N/A')"
+    printf 'direct_autosci_command='
+    printf '%q ' python3 "$direct_shim" text "$request_text_for_direct"
+    printf '\n'
+    exit 0
+  fi
+
+  export HARNESS_DIR="$harness_dir"
+  export SOLAR_HARNESS_DIR="$harness_dir"
+  export SOLAR_HARNESS_SPRINTS_DIR="${SOLAR_HARNESS_SPRINTS_DIR:-$harness_dir/sprints}"
+  export SOLAR_INTENT_GATEWAY_DIR="${SOLAR_INTENT_GATEWAY_DIR:-$harness_dir/intents}"
+  export SOLAR_INTENT_SOURCE_CHANNEL="$source_channel"
+  export SOLAR_INTENT_ACTOR="$actor"
+  export SOLAR_INTENT_DEVICE="$device"
+
+  cd "$repo_dir"
+  exec python3 "$direct_shim" text "$request_text_for_direct"
+fi
+
+declare -a harness_args=(intake)
+if [[ -n "$request_file" ]]; then
   harness_args+=(--file "$request_file")
 elif [[ "$use_stdin" == "1" ]]; then
-  harness_args+=(--stdin)
+  harness_args+=(--request "$request_text_for_direct")
 else
   harness_args+=(--request "${request_parts[*]}")
 fi

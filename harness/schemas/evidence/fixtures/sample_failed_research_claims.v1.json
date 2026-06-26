@@ -1,7 +1,7 @@
 {
   "schema": "research_claims.v1",
   "task_id": "task.phase1.failed.claims",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.claim_extract",
   "status": "failed",
   "inputs": {

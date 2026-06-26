@@ -15,6 +15,13 @@ def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict
         "files": ["N/A"],
         "execution_entrypoint": "fixture-mode",
         "mapping_status": "unknown",
+        "relevance_label": "unknown",
+        "relevance_reason": "No code path was available to support this claim.",
         "evidence_ids": ["paper:sample#results"],
     }])
-    return evidence_base("code_evidence_map.v1", envelope, {"mappings": mappings})
+    return evidence_base(
+        "code_evidence_map.v1",
+        envelope,
+        {"mappings": mappings},
+        limitations=list(raw.get("limitations") or ["Fixture code mapping records explicit files when available; otherwise marks mappings unknown."]),
+    )

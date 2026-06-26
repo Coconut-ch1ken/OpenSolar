@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
 HARNESS_DIR = Path(__file__).resolve().parents[2]
+ARTIFACT_HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", HARNESS_DIR))
 SCHEMAS_DIR = HARNESS_DIR / "schemas" / "evidence"
+REPO_DIR = HARNESS_DIR.parent
 
 
 @dataclass
@@ -45,6 +49,30 @@ def schema_path(schema_name: str) -> Path:
     return SCHEMAS_DIR / f"{schema_name}.schema.json"
 
 
+def _repo_venv_site_packages() -> Path:
+    version = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    return REPO_DIR / ".venv" / "lib" / version / "site-packages"
+
+
+def _import_jsonschema():
+    try:
+        import jsonschema  # type: ignore
+
+        return jsonschema
+    except ModuleNotFoundError as exc:
+        if exc.name != "jsonschema":
+            raise
+        site_packages = _repo_venv_site_packages()
+        if site_packages.exists():
+            site_path = str(site_packages)
+            if site_path not in sys.path:
+                sys.path.insert(0, site_path)
+            import jsonschema  # type: ignore
+
+            return jsonschema
+        raise
+
+
 def validate_schema(payload: dict[str, Any], expected_schema: str) -> tuple[list[str], list[str]]:
     reasons: list[str] = []
     warnings: list[str] = []
@@ -59,14 +87,16 @@ def validate_schema(payload: dict[str, Any], expected_schema: str) -> tuple[list
 
     schema = load_json(path)
     try:
-        import jsonschema  # type: ignore
-
+        jsonschema = _import_jsonschema()
         validator = jsonschema.Draft202012Validator(schema)
         for error in sorted(validator.iter_errors(payload), key=lambda item: list(item.path)):
             location = ".".join(str(part) for part in error.path) or "<root>"
             reasons.append(f"schema:{location}: {error.message}")
-    except ModuleNotFoundError:
-        warnings.extend(_fallback_schema_check(payload, schema))
+    except ModuleNotFoundError as exc:
+        reasons.append(
+            "schema validator dependency missing: "
+            f"{exc.name or 'jsonschema'}; run with the repo .venv Python or rebuild .venv"
+        )
     return reasons, warnings
 
 
@@ -177,7 +207,7 @@ def check_artifact_paths(payload: dict[str, Any], evidence_path: str | Path | No
                 reasons.append(f"artifacts[{index}].path declares unavailable without a reason")
             continue
         path = Path(raw_path).expanduser()
-        candidates = [path] if path.is_absolute() else [evidence_dir / path, HARNESS_DIR / path]
+        candidates = [path] if path.is_absolute() else [evidence_dir / path, ARTIFACT_HARNESS_DIR / path, HARNESS_DIR / path]
         if not any(candidate.exists() for candidate in candidates):
             reasons.append(f"artifacts[{index}].path does not exist or declare unavailable: {raw_path}")
 

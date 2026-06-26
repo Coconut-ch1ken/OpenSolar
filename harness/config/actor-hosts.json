@@ -68,6 +68,39 @@
         }
       }
     },
+    "local-autosci-backend": {
+      "host_id": "local-autosci-backend",
+      "host_type": "local_command_worker",
+      "display_name": "Local AutoSci bounded command backend",
+      "lifecycle": {
+        "state": "online",
+        "started_at": "2026-06-25T00:00:00Z",
+        "last_seen_at": "2026-06-25T00:00:00Z",
+        "shutdown_policy": "manual"
+      },
+      "address": {
+        "hostname": "localhost",
+        "harness_dir": "~/.solar/harness"
+      },
+      "heartbeat": {
+        "interval_sec": 30,
+        "timeout_sec": 90,
+        "path": "actors/_host/local-autosci-backend/heartbeat.json"
+      },
+      "probe": {
+        "last_probe_at": "2026-06-25T00:00:00Z",
+        "last_probe_result": "ok",
+        "probe_cmd": "python3 \"$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py\" --help",
+        "probe_expected": "actions:"
+      },
+      "carrier": {
+        "local_command_meta": {
+          "plugin": "autosci",
+          "bridge": "plugins/autosci/bin/autosci_bridge.py",
+          "execution_policy": "bounded_local_or_explicit_approval"
+        }
+      }
+    },
     "stub_tmux_pane": {
       "host_id": "stub_tmux_pane",
       "host_type": "tmux_pane",

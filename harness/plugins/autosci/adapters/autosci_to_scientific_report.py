@@ -8,6 +8,7 @@ from .common import evidence_base
 
 
 def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict[str, Any]:
+    limitations = list(raw.get("limitations") or ["fixture-mode report; not a production scientific publication"])
     report = {
         "report_id": str(raw.get("report_id") or "report-001"),
         "title": str(raw.get("title") or "AutoSci Adapter Fixture Report"),
@@ -22,4 +23,14 @@ def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict
         "evidence_ids": list(raw.get("evidence_ids") or ["claim-001", "exp-001"]),
         "unsupported_claims": list(raw.get("unsupported_claims") or []),
     }
-    return evidence_base("scientific_report.v1", envelope, {"report": report})
+    for optional_key in ("figures", "tables", "publication_bundle_path", "compile_handoff"):
+        if optional_key in raw:
+            report[optional_key] = raw[optional_key]
+    return evidence_base(
+        "scientific_report.v1",
+        envelope,
+        {"report": report},
+        artifacts=list(raw.get("artifacts") or []),
+        status=str(raw.get("status") or "completed"),
+        limitations=limitations,
+    )

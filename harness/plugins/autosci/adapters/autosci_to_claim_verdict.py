@@ -17,12 +17,29 @@ OUTCOME_TO_VERDICT = {
 
 
 def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict[str, Any]:
+    outcome = str(raw.get("evidence_outcome") or raw.get("outcome") or "inconclusive")
+    verdict_label = str(raw.get("verdict") or OUTCOME_TO_VERDICT.get(outcome, "inconclusive"))
+    limitations = list(raw.get("limitations") or ["fixture-mode verdict; not a real scientific claim verification"])
     verdict = {
         "claim_id": str(raw.get("claim_id") or "claim-001"),
-        "verdict": str(raw.get("verdict") or OUTCOME_TO_VERDICT.get(str(raw.get("outcome") or "supports"), "inconclusive")),
-        "confidence": float(raw.get("confidence", 0.8)),
+        "verdict": verdict_label,
+        "confidence": float(raw.get("confidence", 0.5 if verdict_label == "inconclusive" else 0.8)),
         "basis": str(raw.get("basis") or "Fixture experiment result is linked for adapter smoke validation."),
         "evidence_ids": list(raw.get("evidence_ids") or ["evidence:autosci-fixture"]),
-        "limitations": list(raw.get("limitations") or ["fixture-mode verdict; not a real scientific claim verification"]),
+        "limitations": limitations,
+        "evidence_outcome": outcome,
+        "claim_evidence_ids": list(raw.get("claim_evidence_ids") or []),
+        "experiment_evidence_ids": list(raw.get("experiment_evidence_ids") or []),
+        "code_evidence_ids": list(raw.get("code_evidence_ids") or []),
     }
-    return evidence_base("claim_verdict.v1", envelope, {"verdicts": [verdict]}, limitations=verdict["limitations"])
+    for key in ("experiment_id", "review_llm", "metrics"):
+        if raw.get(key) is not None:
+            verdict[key] = raw[key]
+    return evidence_base(
+        "claim_verdict.v1",
+        envelope,
+        {"verdicts": [verdict]},
+        artifacts=list(raw.get("artifacts") or []),
+        status=str(raw.get("status") or "completed"),
+        limitations=limitations,
+    )

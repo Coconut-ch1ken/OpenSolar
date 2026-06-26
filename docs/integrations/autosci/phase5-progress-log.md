@@ -29,6 +29,14 @@ For future checker agents and follow-up conversations, use the current Phase 2
 capsule token `cap.research-claim-extract`. Do not use the stale
 `cap.scientific-claim-extract` token in AutoSci Phase 5/6 dispatch checks.
 
+Claim extraction ownership clarification for later phases:
+
+| Item | Phase 5 status | Later-phase wording |
+|---|---|---|
+| `ScientificClaimExtractor` | Already introduced in Phase 3 and covered by Phase 5 binding checks. | Later phases should say they used it, not added it. |
+| `extract_claims` bridge action | Already available through the AutoSci bridge path by Phase 5 functional dispatch. | Later phases should say they used or validated it, unless they materially change action behavior. |
+| `autosci-claim-extract-worker` | Registered as the AutoSci-backed physical worker in Phase 5. | Later phases should say they used it, not added it. |
+
 Run operator-runtime submit checks from the project-local harness with
 `HARNESS_DIR=$PWD` and the project `.venv` Python. System `python3` may not have
 PyYAML, and without `HARNESS_DIR=$PWD` the runtime may fall back to

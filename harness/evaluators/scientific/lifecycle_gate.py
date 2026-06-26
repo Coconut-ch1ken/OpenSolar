@@ -10,6 +10,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from evaluators.scientific.common import GateResult, run_cli
+from evaluators.scientific.lifecycle_runtime_gate import evaluate as evaluate_runtime
 
 SCHEMA = "scientific_lifecycle.v1"
 
@@ -82,6 +83,8 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
     if schema is not None and schema != SCHEMA:
         reasons.append(f"schema must be {SCHEMA}")
     is_summary = _is_runtime_summary(payload)
+    if is_summary:
+        return evaluate_runtime(payload, path)
 
     nodes = payload.get("nodes")
     if not isinstance(nodes, list) or not nodes:
@@ -392,8 +395,10 @@ def _validate_no_black_box(
     *,
     is_summary: bool = False,
 ) -> None:
-    if node.get("logical_operator") == "AutoSciRunner":
-        reasons.append(f"{node_id} must not use AutoSciRunner")
+    black_box_operators = {"AutoSciRunner", "BackendFullWorkflowRunner"}
+    logical_operator = str(node.get("logical_operator") or "")
+    if logical_operator in black_box_operators:
+        reasons.append(f"{node_id} must not use black-box workflow runner {logical_operator}")
     architecture_policy = node.get("architecture_policy")
     if not isinstance(architecture_policy, dict):
         if is_summary:
@@ -401,10 +406,10 @@ def _validate_no_black_box(
         reasons.append(f"{node_id}.architecture_policy is required")
         return
     forbidden = set(_string_list(architecture_policy.get("forbidden")))
-    if "hidden-autosci-full-workflow" not in forbidden:
-        reasons.append(f"{node_id}.architecture_policy must forbid hidden-autosci-full-workflow")
-    if "autosci-black-box-runner" not in forbidden:
-        reasons.append(f"{node_id}.architecture_policy must forbid autosci-black-box-runner")
+    if "hidden-backend-full-workflow" not in forbidden:
+        reasons.append(f"{node_id}.architecture_policy must forbid hidden-backend-full-workflow")
+    if "backend-black-box-runner" not in forbidden:
+        reasons.append(f"{node_id}.architecture_policy must forbid backend-black-box-runner")
     backend_contract = str(architecture_policy.get("backend_contract") or "")
     if backend_contract != "single_bounded_action_or_solar_gate":
         reasons.append(f"{node_id}.architecture_policy.backend_contract must be single_bounded_action_or_solar_gate")

@@ -1,7 +1,7 @@
 {
   "schema": "research_claims.v1",
   "task_id": "task.phase1.sample.claims",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.claim_extract",
   "status": "completed",
   "inputs": {
@@ -22,7 +22,7 @@
   "artifacts": [
     {
       "type": "claim_table",
-      "path": "artifacts/autosci/fixtures/research_claims.json"
+      "path": "artifacts/scientific/fixtures/research_claims.json"
     }
   ],
   "provenance": {

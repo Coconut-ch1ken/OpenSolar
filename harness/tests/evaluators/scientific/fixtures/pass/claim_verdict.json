@@ -19,6 +19,7 @@
           "claim.sample.001",
           "experiment.sample.001"
         ],
+        "evidence_outcome": "supports",
         "limitations": [
           "Fixture verdict is not external scientific validation."
         ]

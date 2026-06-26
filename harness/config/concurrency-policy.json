@@ -49,12 +49,12 @@
         "priority": 10
       },
       "codex-gpt-5.5-medium": {
-        "desired": 2,
-        "priority": 82
+        "desired": 6,
+        "priority": 96
       },
       "codex-gpt-5.3-spark": {
-        "desired": 1,
-        "priority": 96
+        "desired": 0,
+        "priority": 20
       },
       "antigravity-gemini-3.5-flash": {
         "desired": 0,
@@ -243,20 +243,20 @@
       "groups": {
         "codex-gpt-5.3-spark": {
           "metric": "active_planning_complete",
-          "base": 2,
-          "min": 1,
-          "max": 6,
-          "trigger_backlog": 10,
-          "backlog_per_step": 6,
+          "base": 0,
+          "min": 0,
+          "max": 0,
+          "trigger_backlog": 999999,
+          "backlog_per_step": 999999,
           "step": 1
         },
         "codex-gpt-5.5-medium": {
           "metric": "active_planning_complete",
-          "base": 2,
-          "min": 1,
-          "max": 4,
-          "trigger_backlog": 10,
-          "backlog_per_step": 8,
+          "base": 4,
+          "min": 2,
+          "max": 8,
+          "trigger_backlog": 8,
+          "backlog_per_step": 6,
           "step": 1
         },
         "sonnet": {

@@ -10,7 +10,7 @@ from .common import evidence_base
 def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict[str, Any]:
     claims = []
     for idx, claim in enumerate(raw.get("claims") or [], start=1):
-        claims.append({
+        item = {
             "claim_id": str(claim.get("claim_id") or claim.get("id") or f"claim-{idx:03d}"),
             "text": str(claim.get("text") or "Fixture claim"),
             "claim_type": str(claim.get("claim_type") or "result"),
@@ -18,7 +18,12 @@ def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict
             "testability": str(claim.get("testability") or "testable"),
             "verification_status": "unverified",
             "evidence_ids": list(claim.get("evidence_ids") or ["paper:sample#results"]),
-        })
+        }
+        if claim.get("non_testable_reason"):
+            item["non_testable_reason"] = str(claim.get("non_testable_reason"))
+        if claim.get("limitations"):
+            item["limitations"] = list(claim.get("limitations") or [])
+        claims.append(item)
     if not claims:
         claims.append({
             "claim_id": "claim-001",
@@ -29,4 +34,9 @@ def convert(raw: dict[str, Any], envelope: dict[str, Any] | None = None) -> dict
             "verification_status": "unverified",
             "evidence_ids": ["paper:sample#results"],
         })
-    return evidence_base("research_claims.v1", envelope, {"claims": claims})
+    return evidence_base(
+        "research_claims.v1",
+        envelope,
+        {"claims": claims},
+        limitations=list(raw.get("limitations") or ["Fixture claim extraction uses local paper sections only."]),
+    )

@@ -1,7 +1,7 @@
 from copy import deepcopy
 from pathlib import Path
 
-from evaluators.scientific import lifecycle_gate
+from evaluators.scientific import lifecycle_contract_gate, lifecycle_gate
 from evaluators.scientific.common import load_json
 
 HARNESS_DIR = Path(__file__).parents[3]
@@ -44,7 +44,7 @@ def _compact_summary_from_workflow(workflow: dict, status: str = "passed") -> di
 
 
 def test_full_lifecycle_workflow_contract_passes():
-    result = lifecycle_gate.evaluate(
+    result = lifecycle_contract_gate.evaluate(
         _workflow("scientific_research_lifecycle_full_v1.json")
     )
 
@@ -54,7 +54,7 @@ def test_full_lifecycle_workflow_contract_passes():
 
 
 def test_resume_workflow_contract_passes():
-    result = lifecycle_gate.evaluate(
+    result = lifecycle_contract_gate.evaluate(
         _workflow("scientific_research_resume_v1.json")
     )
 
@@ -67,14 +67,14 @@ def test_lifecycle_gate_rejects_black_box_runner():
     payload = deepcopy(_workflow("scientific_research_lifecycle_full_v1.json"))
     payload["nodes"][0]["logical_operator"] = "AutoSciRunner"
 
-    result = lifecycle_gate.evaluate(payload)
+    result = lifecycle_contract_gate.evaluate(payload)
 
     assert result.ok is False
     assert result.status == "failed"
     assert "AutoSciRunner" in " ".join(result.reasons)
 
 
-def test_compact_lifecycle_summary_can_report_inconclusive():
+def test_compact_lifecycle_summary_without_runtime_maps_is_rejected():
     payload = _compact_summary_from_workflow(
         _workflow("scientific_research_lifecycle_full_v1.json"),
         status="inconclusive",
@@ -83,16 +83,16 @@ def test_compact_lifecycle_summary_can_report_inconclusive():
     result = lifecycle_gate.evaluate(payload)
 
     assert result.ok is False
-    assert result.status == "inconclusive"
-    assert result.reasons == []
+    assert result.status == "failed"
+    assert "node_results" in " ".join(result.reasons)
 
 
-def test_lifecycle_summary_fixture_passes():
+def test_lifecycle_summary_fixture_without_runtime_maps_is_rejected():
     result = lifecycle_gate.evaluate(load_json(FIXTURES / "pass/lifecycle.json"))
 
-    assert result.ok is True
-    assert result.status == "passed"
-    assert result.reasons == []
+    assert result.ok is False
+    assert result.status == "failed"
+    assert "node_results" in " ".join(result.reasons)
 
 
 def test_lifecycle_summary_fixture_fails_on_black_box():

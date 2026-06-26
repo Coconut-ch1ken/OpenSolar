@@ -27,6 +27,10 @@ contract:
       - name: workflow_evolution
         schema_ref: schemas/evidence/workflow_evolution.v1.schema.json
     optional:
+      - name: recommended_changes
+        description: Human-readable Markdown proposal that separates manual, schema/gate, routing, capsule, and workflow-template changes.
+      - name: patch_candidates
+        description: Optional non-applied candidate patches for human review; never promoted by this capsule.
       - name: rollback_plan
         description: Reversal or non-application plan for proposed changes.
   preconditions:
@@ -84,12 +88,14 @@ verification:
     required: true
   pass_conditions:
     - Fixture evolution emits valid workflow_evolution.v1 evidence.
+    - Evolution report cites concrete failed nodes and gate/runtime reasons.
+    - Recommended changes are bounded, category-separated, and review_required.
     - Proposed changes are not applied by this capsule without separate approval.
 operator_compatibility:
   preferred:
     - ScientificWorkflowEvolver
   forbidden:
-    - AutoSciRunner
+    - BackendFullWorkflowRunner
 provenance:
   owner: opensolar
   source_phase: phase2_autosci_solar_native_capsules

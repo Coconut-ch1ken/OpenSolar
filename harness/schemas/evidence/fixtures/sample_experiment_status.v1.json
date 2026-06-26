@@ -1,7 +1,7 @@
 {
   "schema": "experiment_status.v1",
   "task_id": "task.phase1.sample.experiment_status",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.experiment_monitor",
   "status": "completed",
   "inputs": {
@@ -19,7 +19,7 @@
   "artifacts": [
     {
       "type": "experiment_status",
-      "path": "artifacts/autosci/fixtures/experiment_status.json"
+      "path": "artifacts/scientific/fixtures/experiment_status.json"
     }
   ],
   "provenance": {

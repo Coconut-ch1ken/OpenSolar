@@ -1,10 +1,15 @@
 {
   "task_id": "task-autosci-claims-fixture",
-  "sprint_id": "sprint-autosci-phase4",
+  "sprint_id": "sprint-autosci-phase10",
   "node_id": "node-extract-claims",
   "mode": "fixture",
-  "output_dir": "artifacts/autosci/extract_claims",
+  "output_dir": "artifacts/scientific/smoke",
   "inputs": {
-    "raw_claims": "plugins/autosci/tests/fixtures/sample_autosci_raw_claims.json"
+    "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md"
+  },
+  "outputs": {
+    "result_path": "artifacts/scientific/smoke/extract_claims.result.json",
+    "evidence_payload_path": "artifacts/scientific/smoke/research_claims.json",
+    "evidence_jsonl": "artifacts/scientific/smoke/evidence.jsonl"
   }
 }

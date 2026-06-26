@@ -2,7 +2,8 @@
 # Guard model routing single-source invariants.
 set -euo pipefail
 
-HARNESS_DIR="${HARNESS_DIR:-$HOME/.solar/harness}"
+SOURCE_HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$SOURCE_HARNESS_DIR}}"
 PASS=0
 FAIL=0
 
@@ -71,6 +72,7 @@ from model_registry import load_registry, normalize
 
 reg = load_registry(root / "config" / "model-registry.json")
 checks = [
+    (normalize(reg, "codex"), "codex-gpt-5.5", "codex canonical"),
     (normalize(reg, "opus"), "claude-opus", "opus canonical"),
     (normalize(reg, "anthropic-sonnet"), "claude-sonnet", "explicit anthropic sonnet canonical"),
     (normalize(reg, "sonnet"), "zhipu-glm-4.7", "bare sonnet remains zhipu lab alias"),
@@ -84,8 +86,9 @@ config_mod = importlib.util.module_from_spec(config_spec)
 config_spec.loader.exec_module(config_mod)
 opts = config_mod.model_registry_options()
 model_values = [x["value"] for x in opts["model_options"]]
-if model_values != ["opus", "anthropic-sonnet"]:
-    raise SystemExit(f"config UI model values drifted: {model_values}")
+for required in ("codex", "opus", "anthropic-sonnet"):
+    if required not in model_values:
+        raise SystemExit(f"config UI model values missing {required}: {model_values}")
 
 os.environ["HARNESS_DIR"] = str(root)
 os.environ["SOLAR_HARNESS_SESSION"] = "solar-harness"
@@ -97,14 +100,47 @@ worker_models = {
     "lab1": dispatcher._models_for_pane("solar-harness-lab:0.0"),
     "lab4": dispatcher._models_for_pane("solar-harness-lab:0.3"),
 }
-if "claude-opus" not in worker_models["main_builder"]:
-    raise SystemExit(f"main builder not registry-configured Opus: {worker_models['main_builder']}")
-if "zhipu-glm-5.1" not in worker_models["lab1"]:
-    raise SystemExit(f"lab1 not registry-configured GLM: {worker_models['lab1']}")
-if "claude-sonnet" not in worker_models["lab4"]:
-    raise SystemExit(f"lab4 not registry-configured Sonnet: {worker_models['lab4']}")
+if "codex-gpt-5.5" not in worker_models["main_builder"]:
+    raise SystemExit(f"main builder not registry-configured Codex: {worker_models['main_builder']}")
+if "codex-gpt-5.5" not in worker_models["lab1"]:
+    raise SystemExit(f"lab1 not registry-configured Codex: {worker_models['lab1']}")
+if "codex-gpt-5.5" not in worker_models["lab4"]:
+    raise SystemExit(f"lab4 not registry-configured Codex: {worker_models['lab4']}")
 
-print(json.dumps({"ok": True, "worker_models": worker_models}, ensure_ascii=False))
+os.environ["SOLAR_MULTI_TASK_OPERATORS"] = str(root / "config" / "physical-operators.json")
+runner_spec = importlib.util.spec_from_file_location("multi_task_runner", root / "lib" / "multi_task_runner.py")
+runner = importlib.util.module_from_spec(runner_spec)
+runner_spec.loader.exec_module(runner)
+default_builder = runner.select_profile({
+    "role": "builder",
+    "operator_selector": {"task_type": "implementation"},
+})
+if default_builder.get("operator_id") not in {"mini-codex-gpt55-medium-builder-1", "mini-codex-gpt55-medium-builder-2"}:
+    raise SystemExit(f"default implementation builder is not Codex GPT-5.5: {default_builder}")
+if default_builder.get("model") != "gpt-5.5":
+    raise SystemExit(f"default implementation builder model is not gpt-5.5: {default_builder}")
+
+codex_builder = runner.select_profile({
+    "role": "builder",
+    "operator_selector": {"provider": "openai", "model": "codex", "task_type": "implementation"},
+})
+if codex_builder.get("operator_id") not in {"mini-codex-gpt55-medium-builder-1", "mini-codex-gpt55-medium-builder-2"}:
+    raise SystemExit(f"explicit Codex builder is not GPT-5.5: {codex_builder}")
+if codex_builder.get("model") != "gpt-5.5":
+    raise SystemExit(f"explicit Codex builder model is not gpt-5.5: {codex_builder}")
+
+print(json.dumps({
+    "ok": True,
+    "worker_models": worker_models,
+    "default_builder": {
+        "operator_id": default_builder.get("operator_id"),
+        "model": default_builder.get("model"),
+    },
+    "codex_builder": {
+        "operator_id": codex_builder.get("operator_id"),
+        "model": codex_builder.get("model"),
+    },
+}, ensure_ascii=False))
 PY
 ok "functional registry guard passed"
 

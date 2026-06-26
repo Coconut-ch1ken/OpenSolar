@@ -1,7 +1,7 @@
 {
   "schema": "research_paper.v1",
   "task_id": "task.phase1.inconclusive.paper",
-  "sprint_id": "sprint.autosci.phase1",
+  "sprint_id": "sprint.scientific.phase1",
   "node_id": "node.paper_ingest",
   "status": "inconclusive",
   "inputs": {

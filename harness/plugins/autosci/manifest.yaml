@@ -16,15 +16,24 @@ read_scope:
   - "artifacts/scientific"
 
 capabilities:
+  - "cap.research-literature-discover"
   - "cap.research-paper-ingest"
+  - "cap.research-paper-analyze"
+  - "cap.research-memory-update"
+  - "cap.research-graph-update"
   - "cap.research-claim-extract"
   - "cap.research-method-extract"
   - "cap.research-code-evidence-map"
   - "cap.research-idea-generate"
+  - "cap.research-idea-evaluate"
   - "cap.research-experiment-design"
   - "cap.research-experiment-run"
+  - "cap.research-experiment-monitor"
   - "cap.research-claim-verify"
+  - "cap.research-report-plan"
   - "cap.research-report-draft"
+  - "cap.research-publication-produce"
+  - "cap.research-workflow-evolve"
 
 commands:
   - "python3 plugins/autosci/bin/autosci_bridge.py --help"
@@ -55,6 +64,7 @@ events:
   - "autosci.bridge.smoke"
   - "autosci.bridge.run"
   - "autosci.bridge.validate"
+  - "autosci.bridge.evolve_workflow"
 
 depends_on: []
 

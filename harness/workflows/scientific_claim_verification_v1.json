@@ -12,7 +12,7 @@
     "mode": "strict",
     "package_first": true,
     "forbidden_patterns": [
-      "hidden-autosci-full-workflow"
+      "hidden-backend-full-workflow"
     ]
   },
   "evidence_policy": {
@@ -53,7 +53,7 @@
       "acceptance": [
         "Emits or validates research_paper.v1 evidence for ScientificPaperIngestor.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "research_paper.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -76,8 +76,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending"
@@ -104,7 +104,7 @@
       "acceptance": [
         "Emits or validates research_claims.v1 evidence for ScientificClaimExtractor.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "research_claims.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -127,8 +127,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending"
@@ -155,7 +155,7 @@
       "acceptance": [
         "Emits or validates research_method.v1 evidence for ScientificMethodExtractor.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "research_method.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -178,8 +178,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending"
@@ -206,7 +206,7 @@
       "acceptance": [
         "Emits or validates code_evidence_map.v1 evidence for ScientificCodeEvidenceMapper.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "code_evidence_map.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -229,8 +229,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending"
@@ -257,7 +257,7 @@
       "acceptance": [
         "Emits or validates experiment_plan.v1 evidence for ScientificExperimentDesigner.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "experiment_plan.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -280,8 +280,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending",
@@ -319,7 +319,7 @@
       "acceptance": [
         "Emits or validates experiment_result.v1 evidence for ScientificExperimentRunner.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "experiment_result.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -342,8 +342,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending",
@@ -387,7 +387,7 @@
       "acceptance": [
         "Emits or validates claim_verdict.v1 evidence for ScientificClaimVerifier.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "claim_verdict.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -410,8 +410,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending"
@@ -438,7 +438,7 @@
       "acceptance": [
         "Emits or validates scientific_report.v1 evidence for ScientificReportDrafter.",
         "Records failed or inconclusive status instead of inventing missing evidence.",
-        "Does not call a hidden AutoSci full workflow runner."
+        "Does not call a hidden backend full workflow runner."
       ],
       "pass_conditions": [
         "scientific_report.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
@@ -461,8 +461,8 @@
         "plugin_id": "autosci",
         "backend_contract": "single_bounded_action_or_solar_gate",
         "forbidden": [
-          "hidden-autosci-full-workflow",
-          "autosci-black-box-runner"
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
         ]
       },
       "status": "pending"
@@ -471,7 +471,7 @@
   "manual_review_checklist": [
     "Every node has logical_operator, required_capabilities, read_scope, write_scope, gate, and acceptance.",
     "Dependencies are explicit and acyclic.",
-    "No node calls a full AutoSci black-box workflow.",
+    "No node calls a full backend black-box workflow.",
     "Experiment-running nodes require bounded mode or human approval."
   ]
 }

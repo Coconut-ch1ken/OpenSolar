@@ -16,12 +16,17 @@ function resolveDefaultHarnessDir(): string {
   if (process.env.SOLAR_HARNESS_DIR) return process.env.SOLAR_HARNESS_DIR;
   if (process.env.HARNESS_DIR) return process.env.HARNESS_DIR;
 
+  const repoHarnessDir = join(process.cwd(), "harness");
+  if (existsSync(join(repoHarnessDir, "solar-harness.sh"))) {
+    return repoHarnessDir;
+  }
+
   const installedHarnessDir = process.env.HOME ? join(process.env.HOME, ".solar", "harness") : "";
   if (installedHarnessDir && existsSync(join(installedHarnessDir, "solar-harness.sh"))) {
     return installedHarnessDir;
   }
 
-  return join(process.cwd(), "harness");
+  return repoHarnessDir;
 }
 
 const DEFAULT_HARNESS_DIR = resolveDefaultHarnessDir();

@@ -87,7 +87,7 @@ operator_compatibility:
   preferred:
     - ScientificMethodExtractor
   forbidden:
-    - AutoSciRunner
+    - BackendFullWorkflowRunner
 provenance:
   owner: opensolar
   source_phase: phase2_autosci_solar_native_capsules

@@ -22,6 +22,7 @@ from evaluators.scientific.common import (
 
 SCHEMA = "claim_verdict.v1"
 ALLOWED_VERDICTS = {"supported", "partially_supported", "not_supported", "inconclusive"}
+NON_SUPPORTING_EVIDENCE_OUTCOMES = {"inconclusive", "failed"}
 
 
 def evaluate(payload: dict[str, Any], path: str | Path | None = None):
@@ -34,8 +35,20 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
             continue
         if verdict.get("verdict") not in ALLOWED_VERDICTS:
             reasons.append(f"verdicts[{index}].verdict is not allowed")
-        if not has_any_evidence_ids(verdict.get("evidence_ids")):
+        evidence_ids = verdict.get("evidence_ids")
+        if not has_any_evidence_ids(evidence_ids):
             reasons.append(f"verdicts[{index}].evidence_ids must contain at least one id")
+            evidence_ids = []
+        claim_id = str(verdict.get("claim_id") or "")
+        if claim_id and isinstance(evidence_ids, list) and claim_id not in evidence_ids:
+            reasons.append(f"verdicts[{index}].evidence_ids must include the claim_id")
+        if isinstance(evidence_ids, list) and not any(isinstance(item, str) and item.strip() and item != claim_id for item in evidence_ids):
+            reasons.append(f"verdicts[{index}].evidence_ids must include experiment, static, or code evidence in addition to the claim id")
+        if not verdict.get("limitations") and not top_limitations:
+            reasons.append(f"verdicts[{index}] requires limitations")
+        evidence_outcome = str(verdict.get("evidence_outcome") or "").strip()
+        if evidence_outcome in NON_SUPPORTING_EVIDENCE_OUTCOMES and verdict.get("verdict") != "inconclusive":
+            reasons.append(f"verdicts[{index}] cannot upgrade {evidence_outcome} evidence to {verdict.get('verdict')}")
         confidence = verdict.get("confidence")
         if isinstance(confidence, (int, float)) and confidence < 0.8:
             if not verdict.get("limitations") and not top_limitations:
