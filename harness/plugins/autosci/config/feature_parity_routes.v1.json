@@ -17,7 +17,7 @@
       "evidence_schema": "research_memory_update.v1",
       "primary_tools": ["tools/research_wiki.py query", "tools/research_wiki.py neighbors"],
       "required_capabilities": ["wiki retrieval", "answer synthesis", "source attribution"],
-      "limitations": ["Retrieval-backed ask answers now accept explicit model evidence or model-command synthesis; missing retrieval/model evidence must remain visible as inconclusive rather than inferred."]
+      "limitations": ["Retrieval-backed ask answers now accept explicit model evidence or model-command synthesis with persisted request/response provenance; ask_final_answer_boundary requires retrieved source evidence plus completed model-backed synthesis with evidence ids before an answer is final, and missing retrieval/model evidence remains visible as incomplete rather than inferred."]
     },
     {
       "native_skill": "check",
@@ -33,7 +33,7 @@
       "evidence_schema": "workflow_evolution.v1",
       "primary_tools": ["tools/lint.py", "tools/research_wiki.py stats"],
       "required_capabilities": ["wiki lint", "graph consistency check", "tiered recommendations"],
-      "limitations": ["LLM-assisted content quality checks can be backed by explicit model evidence or a model command; absent model evidence is not treated as deterministic pass/fail."]
+      "limitations": ["LLM-assisted content quality checks can be backed by explicit model evidence or a model command with persisted request/response provenance; check_final_quality_boundary requires passing local wiki checks plus completed model-backed recommendation evidence, and absent model evidence is not treated as deterministic pass/fail."]
     },
     {
       "native_skill": "daily-arxiv",
@@ -49,7 +49,7 @@
       "evidence_schema": "literature_discovery.v1",
       "primary_tools": ["tools/daily_arxiv.py prepare", "tools/daily_arxiv.py finalize", "tools/send_email.py"],
       "required_capabilities": ["arXiv feed collection", "Semantic Scholar enrichment", "LLM ranking", "email digest", "optional ingest"],
-      "limitations": ["Approved runtime digest evidence can complete the route and --write can fan runtime candidates into wiki papers/log/graph; SMTP delivery, live feed fetches, and GitHub Actions scheduling remain approval/provider-gated."]
+      "limitations": ["Approved runtime digest evidence can complete the route and --write can fan runtime candidates into wiki papers/log/graph; daily_arxiv_final_provider_delivery_boundary requires verified provider source-channel candidates, ranking evidence, and explicit delivery or approved wiki ingest/fan-in status before a digest is final; SMTP delivery, live feed fetches, and GitHub Actions scheduling remain approval/provider-gated."]
     },
     {
       "native_skill": "discover",
@@ -67,7 +67,7 @@
       "required_capabilities": ["shortlist generation", "deduplication", "ranking signals", "source manifest"],
       "limitations": [
         "Live API failures must be represented as incomplete source evidence rather than synthetic recommendations.",
-        "Root discover CLI now covers topic, anchor, wiki, and venue modes; keep partial until live/wiki source evidence produces completed shortlist evidence under real provider conditions."
+        "Root discover CLI now covers topic, anchor, wiki, and venue modes; source runtime completion requires a non-fixture provider channel boundary, and discover_final_shortlist_boundary requires non-empty candidates backed by provider source channels; keep partial until live/wiki source evidence produces completed shortlist evidence under real provider conditions."
       ]
     },
     {
@@ -100,7 +100,7 @@
       "evidence_schema": "experiment_plan.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action design_experiment"],
       "required_capabilities": ["hypothesis grounding", "experiment blocks", "success criteria", "artifact plan"],
-      "limitations": ["Current experiment design path emits evidence-linked local plans and can attach Review LLM design validation; full parity still requires native runtime artifact discovery and end-to-end approved execution audit."]
+      "limitations": ["Current experiment design path emits evidence-linked local plans, can attach Review LLM design validation, and now records experiment_design_final_execution_boundary requiring resolved target evidence, completed Review LLM validation, approval preflight, command handoff, and expected artifact handoff before a plan is executable; full parity still requires native runtime artifact discovery and end-to-end approved execution audit."]
     },
     {
       "native_skill": "exp-eval",
@@ -112,11 +112,11 @@
       "solar_backend_action": "verify_claim",
       "coverage_status": "partial",
       "backend_mode": "external_optional",
-      "side_effect_policy": "dry_run_only",
+      "side_effect_policy": "approval_required",
       "evidence_schema": "claim_verdict.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action verify_claim"],
       "required_capabilities": ["result review", "four-path verdict", "idea status update proposal", "cross-model review binding"],
-      "limitations": ["Experiment result, claim, code, and Review LLM evidence can be supplied explicitly for review-backed verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked."]
+      "limitations": ["Experiment result, claim, code, and Review LLM evidence can be supplied explicitly for review-backed verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked; experiment_evaluation_final_verdict_boundary requires completed experiment_result.v1 evidence, linked claim/code evidence, completed Review LLM proof, and completed approved wiki writeback before a verdict is treated as final."]
     },
     {
       "native_skill": "exp-pilot-eval",
@@ -128,11 +128,11 @@
       "solar_backend_action": "evaluate_pilot_result",
       "coverage_status": "partial",
       "backend_mode": "route_plan",
-      "side_effect_policy": "dry_run_only",
+      "side_effect_policy": "approval_required",
       "evidence_schema": "claim_verdict.v1",
-      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action verify_claim"],
+      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action evaluate_pilot_result"],
       "required_capabilities": ["pilot-specific criteria", "lenient verdict", "idea update proposal"],
-      "limitations": ["Pilot result/runtime evidence can produce completed lenient verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked."]
+      "limitations": ["Pilot result/runtime evidence can produce completed lenient verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked; pilot_eval_final_acceptance_boundary requires linked pilot runtime/result evidence, a non-inconclusive pilot verdict, and completed approved wiki writeback before pilot evaluation is treated as final."]
     },
     {
       "native_skill": "exp-pilot-run",
@@ -146,9 +146,9 @@
       "backend_mode": "side_effect_gated",
       "side_effect_policy": "approval_required",
       "evidence_schema": "experiment_result.v1",
-      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action run_experiment", "tools/remote.py"],
+      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action run_pilot_experiment", "tools/remote.py"],
       "required_capabilities": ["pilot code preparation", "local execution", "remote execution", "result collection"],
-      "limitations": ["Code execution and remote execution require approval; approved runtime evidence can be supplied or produced through an allowlisted remote/local command before marking pilot results complete."]
+      "limitations": ["Code execution and remote execution require approval; approved runtime evidence can be supplied or produced through an allowlisted remote/local command before marking pilot results complete; pilot_run_final_acceptance_boundary separates runtime readiness from final pilot acceptance, which still requires pilot evaluation verdict linkage and approved wiki writeback."]
     },
     {
       "native_skill": "exp-run",
@@ -164,7 +164,7 @@
       "evidence_schema": "experiment_result.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action run_experiment", "tools/remote.py launch", "tools/remote.py pull-results"],
       "required_capabilities": ["deploy", "monitor", "collect", "local mode", "remote mode"],
-      "limitations": ["SSH, rsync, screen sessions, and long-running code execution require approval; tools/remote.py launch/pull-results style commands can produce or feed autosci_runtime_evidence.v1 only when explicitly approved and allowlisted; local collection identity/hash ledger is wired, while distributed remote/session exactly-once collection is still partial."]
+      "limitations": ["SSH, rsync, screen sessions, and long-running code execution require approval; tools/remote.py launch/pull-results style commands can produce or feed autosci_runtime_evidence.v1 only when explicitly approved and allowlisted; approved live/provider pull-results commands now emit a remote collection boundary, while local result-dir reads remain local collection only; local collection identity/hash ledger is wired, and experiment_run_final_runtime_audit_boundary requires verified approval/runtime evidence, collection ledger, live remote/provider collection proof, and wiki mutation evidence before a run/collect lifecycle is treated as final; distributed remote/session exactly-once collection and real external connectivity smoke are still partial."]
     },
     {
       "native_skill": "exp-status",
@@ -180,7 +180,7 @@
       "evidence_schema": "experiment_status.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment", "tools/remote.py check"],
       "required_capabilities": ["status read", "collect-ready detection", "anomaly summary"],
-      "limitations": ["Wiki/run-state lookup, local session registry status, tools/remote.py check, approved runtime evidence, approved pull-results collection evidence, and local collection identity ledger are wired; live remote process polling and distributed exactly-once collection remain partial until real connectivity smoke is audited."]
+      "limitations": ["Wiki/run-state lookup, local session registry status, approved tools/remote.py check execution, approved live/provider status command execution, approved runtime evidence, approved pull-results collection evidence, and local collection identity ledger are wired; `$exp-status` emits an explicit remote poll boundary so local run-dir status-file checks are not counted as live SSH/provider polling; live SSH/provider polling and distributed exactly-once remote collection remain partial until real external connectivity smoke is audited."]
     },
     {
       "native_skill": "ideate",
@@ -196,7 +196,7 @@
       "evidence_schema": "idea_candidate.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action generate_ideas", "plugins/autosci/bin/autosci_bridge.py run --action evaluate_ideas"],
       "required_capabilities": ["idea generation", "deduplication", "novelty scoring", "pilot handoff"],
-      "limitations": ["Full native ideation still requires wiki maturity scan, failed-idea banlist, external discovery evidence, dual-model brainstorming, novelty/review gates, and explicit --smoke for fixture-only runs."]
+      "limitations": ["Explicit model-command/model-evidence brainstorming is wired for source-grounded candidates with persisted request/response provenance, and ideate_final_promotion_boundary now records wiki maturity scan, failed-idea banlist, source evidence, model provenance, and novelty/review gate requirements before ideas are promotable; full native ideation still requires audited provider-backed dual-model brainstorming, external discovery evidence, novelty/review gates, and explicit --smoke for fixture-only runs."]
     },
     {
       "native_skill": "ingest",
@@ -214,7 +214,7 @@
       "required_capabilities": ["source preparation", "metadata extraction", "memory sidecars", "graph sidecars"],
       "limitations": [
         "PDF and arXiv source preparation writes explicit raw/tmp artifacts; set allow_network_fetch=false for offline synthetic-TeX fallback.",
-        "Source-grounded PDF extraction, fixture-leakage guards, generic local wiki mutation/rebuild tooling, and publication citation-map handoff are covered; keep partial until downstream lifecycle/provider audits pass."
+        "Source-grounded PDF extraction, fixture-leakage guards, and phase9 memory/graph sidecars are covered; ingest_final_source_registration_boundary requires verified source preparation, parse quality, raw provenance, memory/graph handoff, and wiki paper/log/graph/index/context registration before a source is treated as fully registered."
       ]
     },
     {
@@ -227,11 +227,11 @@
       "solar_backend_action": "init_sources",
       "coverage_status": "partial",
       "backend_mode": "route_plan",
-      "side_effect_policy": "dry_run_only",
+      "side_effect_policy": "approval_required",
       "evidence_schema": "literature_discovery.v1",
       "primary_tools": ["tools/init_discovery.py prepare", "tools/init_discovery.py plan", "tools/init_discovery.py fetch"],
       "required_capabilities": ["raw source preparation", "discovery plan", "fan-in ingest", "best-effort visualization"],
-      "limitations": ["Approved runtime source manifests can complete init evidence and --write can fan candidates into wiki papers/log/graph; native network fetch and bulk ingest execution remain approval/provider-gated."]
+      "limitations": ["Approved runtime source manifests can complete init evidence only with non-fixture provider channel boundary proof, and --write can fan candidates into wiki papers/log/graph; init_sources_final_fan_in_boundary requires provider candidates, approved wiki fan-in, graph/log/index rebuild evidence, and verified approval/runtime evidence before initialization is final; native network fetch and bulk ingest execution remain approval/provider-gated."]
     },
     {
       "native_skill": "novelty",
@@ -247,7 +247,7 @@
       "evidence_schema": "idea_evaluation.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action evaluate_ideas", "tools/fetch_s2.py search", "tools/fetch_deepxiv.py search"],
       "required_capabilities": ["wiki comparison", "web search evidence", "Semantic Scholar evidence", "Review LLM second opinion"],
-      "limitations": ["S2 and DeepXiv source CLIs now emit explicit provider evidence; unavailable sources and Review LLM remain warnings/inconclusive evidence, not deterministic substitutes."]
+      "limitations": ["S2 and DeepXiv source CLIs now emit explicit provider evidence; unavailable sources and Review LLM remain warnings/inconclusive evidence, not deterministic substitutes; novelty_final_acceptance_boundary requires completed external novelty evidence, passed provider provenance, and completed Review LLM proof before promotion/writeback is treated as final."]
     },
     {
       "native_skill": "paper-compile",
@@ -263,7 +263,7 @@
       "evidence_schema": "publication_bundle.v1",
       "primary_tools": ["latexmk", "pdflatex", "xelatex", "lualatex", "tools/rasterize_latex.py"],
       "required_capabilities": ["LaTeX compile", "PDF checks", "submission checklist", "auto-fix proposal"],
-      "limitations": ["Approved paper compile execution can use an allowlisted TeX executor and --fix can replace TeX source from after_artifact evidence; unavailable or unapproved toolchains produce diagnostics rather than successful publication evidence."]
+      "limitations": ["Approved paper compile execution can use an allowlisted TeX executor and --fix can replace TeX source from after_artifact evidence; unavailable or unapproved toolchains produce diagnostics rather than successful publication evidence; publication_submission_boundary separates compile/PDF evidence from submission/anonymity/page/font readiness, CLI evidence flags can satisfy the generic boundary only when explicit page/font/anonymity proof is supplied, venue_submission_ready requires source-backed --submission-profile plus --pdf-inspection rather than inferred venue rules or loose numeric claims, and submission_audit_ready requires explicit --submission-audit evidence without implying portal upload unless that evidence says portal_submission_completed=true."]
     },
     {
       "native_skill": "paper-draft",
@@ -279,7 +279,7 @@
       "evidence_schema": "scientific_report.v1",
       "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action write_report"],
       "required_capabilities": ["section drafting", "evidence citation", "figure/table references", "review hooks"],
-      "limitations": ["Current bridge writes evidence-linked report and LaTeX sidecars, and can attach verified compile/PDF handoff evidence; keep partial until wiki-output manuscript synthesis is audited end to end under real provider/runtime conditions."]
+      "limitations": ["Current bridge writes evidence-linked report and LaTeX sidecars, and now records a paper_draft_final_manuscript_boundary requiring supplied source evidence, source-backed citation map, completed Review LLM proof, and verified compile/PDF handoff before publication-ready draft claims are allowed; keep partial until wiki-output manuscript synthesis is audited end to end under real provider/runtime conditions."]
     },
     {
       "native_skill": "paper-plan",
@@ -293,9 +293,9 @@
       "backend_mode": "route_plan",
       "side_effect_policy": "dry_run_only",
       "evidence_schema": "scientific_report.v1",
-      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action write_report"],
+      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action plan_report"],
       "required_capabilities": ["outline planning", "citation plan", "figure plan", "review gate"],
-      "limitations": ["Citation-map and Review LLM evidence can complete the plan route; verified compile/PDF handoff can be attached when supplied; keep partial until live idea-graph/figure/table planning and downstream compile audit pass end to end."]
+      "limitations": ["Citation-map and explicit Review LLM boundary evidence are wired, and paper_plan_final_acceptance_boundary now requires source-backed citation planning, completed Review LLM proof, and verified downstream compile/PDF handoff before a plan is treated as draft/compile-ready; keep partial until live idea-graph/figure/table planning and downstream compile audit pass end to end."]
     },
     {
       "native_skill": "poster",
@@ -341,7 +341,7 @@
       "backend_mode": "external_optional",
       "side_effect_policy": "dry_run_only",
       "evidence_schema": "publication_bundle.v1",
-      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action write_report"],
+      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action draft_rebuttal"],
       "required_capabilities": ["review comment atomization", "evidence mapping", "response drafting", "stress-test"],
       "limitations": ["Supplied Review LLM findings can complete mapped rebuttal response plans; route remains partial until full reviewer-thread ingestion and submission audit are covered."]
     },
@@ -357,7 +357,7 @@
       "backend_mode": "side_effect_gated",
       "side_effect_policy": "approval_required",
       "evidence_schema": "workflow_evolution.v1",
-      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action evolve_workflow"],
+      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action refine_artifact"],
       "required_capabilities": ["review loop", "actionable issue classification", "bounded fixes", "iteration report"],
       "limitations": ["Applying edits requires explicit approval; verified --execute-approved runs can replace a target artifact from after_artifact evidence, while quality gate reruns remain approval/provider-gated."]
     },
@@ -373,9 +373,17 @@
       "backend_mode": "route_plan",
       "side_effect_policy": "approval_required",
       "evidence_schema": "workflow_evolution.v1",
-      "primary_tools": ["harness/workflows/scientific_research_lifecycle_full_v1.json", "tools/run_scientific_lifecycle_smoke.py"],
+      "primary_tools": ["harness/workflows/scientific_research_lifecycle_full_v1.json", "harness/tools/run_scientific_lifecycle_smoke.py"],
       "required_capabilities": ["idea discovery", "human gates", "experiment lifecycle", "paper lifecycle", "resume state"],
-      "limitations": ["Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied; `$research --scheduler-run` can explicitly dispatch the existing scientific lifecycle through operator_runtime and attach its scientific_lifecycle.v1 summary, `--scheduler-include-human-gates` records idea/results approval pauses as scheduler-visible blocked nodes, `--online` can carry supplied approval/runtime source evidence into strict scheduler source mode, scheduler experiment stages can carry explicit `--experiment-*` approval/runtime evidence without reusing source evidence paths, `--experiment-execute-approved` can run an allowlisted approved local experiment command, and scheduler publication compile can use compile-specific approved runtime evidence or `--compile-execute-approved`; full parity still requires real provider evidence, audited remote/session stage runners, and submission/anonymity checks."]
+      "limitations": [
+        "Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied.",
+        "`$research --scheduler-run` dispatches the bounded scientific lifecycle through operator_runtime and attaches its scientific_lifecycle.v1 summary, but default runs intentionally block the configured publication tail at report_plan/publication_produce unless explicit Review LLM and compile/PDF evidence are supplied with `--scheduler-dispatch-external-evidence`.",
+        "Scheduler resume runs now emit `autosci_scheduler_resume_boundary.v1` with reused-node fingerprints and no-rerun checks; lifecycle summaries emit `autosci_scheduler_lease_boundary.v1` for local smoke-run lease ownership, but production scheduler parity still requires a non-smoke dispatcher plus distributed lease/quota/runtime audit.",
+        "`--scheduler-require-workflow-config-alignment` passes only for the full supplied-evidence tail; partial/default runs surface workflow_config_alignment drift or inconclusive status rather than full parity.",
+        "`--scheduler-require-production-dispatch` now fails while the bounded smoke runner or fixture/smoke input markers remain in the lifecycle dispatch boundary.",
+        "`--scheduler-include-human-gates` records idea/results approval pauses as scheduler-visible blocked nodes, `--online` can carry supplied approval/runtime source evidence into strict scheduler source mode with non-fixture provider channel boundary checks, scheduler experiment stages can carry explicit `--experiment-*` approval/runtime evidence without reusing source evidence paths, `--experiment-execute-approved` can run an allowlisted approved local experiment command, and scheduler publication compile can use compile-specific approved runtime evidence or `--compile-execute-approved`.",
+        "Full parity still requires real provider evidence, audited remote/session stage runners, production scheduler dispatch, and submission/anonymity checks."
+      ]
     },
     {
       "native_skill": "reset",
@@ -407,7 +415,7 @@
       "evidence_schema": "artifact_review.v1",
       "primary_tools": ["mcp__llm-review__chat", "plugins/autosci/bin/autosci_bridge.py run --action review_artifact"],
       "required_capabilities": ["independent reviewer prompt", "score rubric", "entity mapping", "actionable suggestions"],
-      "limitations": ["Local surrogate review is available; configured OpenAI-compatible Review LLM provider, command bridge, or supplied Review LLM evidence is required for final acceptance."]
+      "limitations": ["Local surrogate review is available and now emits review_final_acceptance_boundary; final_acceptance_ready requires configured OpenAI-compatible Review LLM provider, command bridge, or supplied Review LLM evidence, and --require-review-llm records that local surrogate output is insufficient."]
     },
     {
       "native_skill": "setup",
@@ -437,9 +445,9 @@
       "backend_mode": "route_plan",
       "side_effect_policy": "dry_run_only",
       "evidence_schema": "scientific_report.v1",
-      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action write_report"],
+      "primary_tools": ["plugins/autosci/bin/autosci_bridge.py run --action write_survey"],
       "required_capabilities": ["related work grouping", "gap analysis", "citation-backed survey"],
-      "limitations": ["Survey synthesis now completes only with source-backed citation-map evidence; keep partial until live/exhaustive literature coverage is audited under provider conditions."]
+      "limitations": ["Survey synthesis now completes only with source-backed citation-map evidence; survey_final_coverage_boundary records bounded source-backed coverage and keeps exhaustive_coverage_verified=false until live/exhaustive literature coverage is audited under provider conditions."]
     },
     {
       "native_skill": "visualize",

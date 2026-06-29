@@ -10,6 +10,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from evaluators.scientific.common import GateResult, run_cli
+from evaluators.scientific.lifecycle_runtime_gate import evaluate as evaluate_runtime
 
 SCHEMA = "scientific_lifecycle.v1"
 
@@ -30,6 +31,7 @@ FULL_LIFECYCLE_OPERATORS = [
     "ScientificClaimVerifier",
     "ScientificReportPlanner",
     "ScientificReportDrafter",
+    "ScientificArtifactReviewer",
     "ScientificPublicationProducer",
     "ScientificMemoryUpdater",
     "ScientificWorkflowEvolver",
@@ -82,6 +84,8 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
     if schema is not None and schema != SCHEMA:
         reasons.append(f"schema must be {SCHEMA}")
     is_summary = _is_runtime_summary(payload)
+    if is_summary:
+        return evaluate_runtime(payload, path)
 
     nodes = payload.get("nodes")
     if not isinstance(nodes, list) or not nodes:

@@ -34,6 +34,11 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
     require_non_empty_string(skill_run.get("autosci_command"), "outputs.skill_run.autosci_command", reasons)
     execution_status = str(skill_run.get("execution_status") or "")
     side_effect_policy = str(skill_run.get("side_effect_policy") or "")
+    evidence_status = str(payload.get("status") or "")
+    if execution_status in {"partial", "gated"} and evidence_status == "completed":
+        reasons.append(
+            "partial or gated skill runs must use top-level status inconclusive, not completed"
+        )
     if execution_status == "gated" and side_effect_policy != "approval_required":
         reasons.append("gated execution requires approval_required side_effect_policy")
     if execution_status == "failed":

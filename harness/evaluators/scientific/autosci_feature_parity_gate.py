@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import shlex
 from pathlib import Path
 from typing import Any
 
@@ -22,10 +23,51 @@ from evaluators.scientific.common import (  # noqa: E402
 )
 
 SCHEMA = "autosci_feature_parity.v1"
+SEMANTIC_PARITY_VALUES = {"full", "partial", "missing"}
+EXECUTION_POLICY_VALUES = {"pure", "bounded_local", "approval_required", "provider_required"}
+PROOF_LEVELS = ("E0", "E1", "E2", "E3", "E4", "E5")
+PROOF_LEVEL_RANK = {value: index for index, value in enumerate(PROOF_LEVELS)}
+RUNTIME_PROOF_STATUS_VALUES = {"not_required", "pending", "supplied", "verified"}
+PROOF_REQUIREMENT_STATUS_VALUES = {"ok", "pending", "supplied", "missing", "blocked"}
 
 
 def _count(items: list[dict[str, Any]], status: str) -> int:
     return sum(1 for item in items if item.get("coverage_status") == status)
+
+
+def _bridge_actions(primary_tools: Any) -> list[str]:
+    if not isinstance(primary_tools, list):
+        return []
+    actions: list[str] = []
+    for raw in primary_tools:
+        text = str(raw or "")
+        if "autosci_bridge.py" not in text or "--action" not in text:
+            continue
+        try:
+            tokens = shlex.split(text)
+        except ValueError:
+            tokens = text.split()
+        for index, token in enumerate(tokens):
+            if token == "--action" and index + 1 < len(tokens):
+                actions.append(tokens[index + 1])
+            elif token.startswith("--action="):
+                actions.append(token.split("=", 1)[1])
+    return actions
+
+
+def _proof_requirement_status_counts(items: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {value: 0 for value in PROOF_REQUIREMENT_STATUS_VALUES}
+    for item in items:
+        requirements = item.get("proof_requirements")
+        if not isinstance(requirements, list):
+            continue
+        for requirement in requirements:
+            if not isinstance(requirement, dict):
+                continue
+            status = str(requirement.get("status") or "")
+            if status in counts:
+                counts[status] += 1
+    return counts
 
 
 def evaluate(payload: dict[str, Any], path: str | Path | None = None):
@@ -61,13 +103,162 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
             "coverage_status",
             "backend_mode",
             "side_effect_policy",
+            "semantic_parity",
+            "execution_policy",
+            "proof_level",
             "evidence_schema",
         ):
             require_non_empty_string(item.get(field), f"items[{index}].{field}", reasons)
+        proof_refs = require_non_empty_list(item.get("proof_refs"), f"items[{index}].proof_refs", reasons)
+        runtime_proof_status = require_non_empty_string(
+            item.get("runtime_proof_status"),
+            f"items[{index}].runtime_proof_status",
+            reasons,
+        )
+        runtime_proof_refs = item.get("runtime_proof_refs")
+        if not isinstance(runtime_proof_refs, list):
+            reasons.append(f"items[{index}].runtime_proof_refs must be a list")
+            runtime_proof_refs = []
+        runtime_proof_sources = item.get("runtime_proof_sources")
+        if not isinstance(runtime_proof_sources, list):
+            reasons.append(f"items[{index}].runtime_proof_sources must be a list")
+            runtime_proof_sources = []
+        runtime_source_categories: set[str] = set()
+        for source_index, source in enumerate(runtime_proof_sources):
+            if not isinstance(source, dict):
+                reasons.append(f"items[{index}].runtime_proof_sources[{source_index}] must be an object")
+                continue
+            require_non_empty_string(
+                source.get("proof_id"),
+                f"items[{index}].runtime_proof_sources[{source_index}].proof_id",
+                reasons,
+            )
+            source_skill = require_non_empty_string(
+                source.get("native_skill"),
+                f"items[{index}].runtime_proof_sources[{source_index}].native_skill",
+                reasons,
+            )
+            source_status = require_non_empty_string(
+                source.get("status"),
+                f"items[{index}].runtime_proof_sources[{source_index}].status",
+                reasons,
+            )
+            require_non_empty_string(
+                source.get("manifest_path"),
+                f"items[{index}].runtime_proof_sources[{source_index}].manifest_path",
+                reasons,
+            )
+            require_non_empty_string(
+                source.get("description"),
+                f"items[{index}].runtime_proof_sources[{source_index}].description",
+                reasons,
+            )
+            require_non_empty_list(
+                source.get("categories"),
+                f"items[{index}].runtime_proof_sources[{source_index}].categories",
+                reasons,
+            )
+            if isinstance(source.get("categories"), list):
+                runtime_source_categories.update(str(category) for category in source.get("categories") if str(category or "").strip())
+            require_non_empty_list(
+                source.get("evidence_refs"),
+                f"items[{index}].runtime_proof_sources[{source_index}].evidence_refs",
+                reasons,
+            )
+            evidence_ref_statuses = require_non_empty_list(
+                source.get("evidence_ref_statuses"),
+                f"items[{index}].runtime_proof_sources[{source_index}].evidence_ref_statuses",
+                reasons,
+            )
+            unresolved_refs = []
+            for ref_index, ref_status in enumerate(evidence_ref_statuses):
+                if not isinstance(ref_status, dict):
+                    reasons.append(
+                        f"items[{index}].runtime_proof_sources[{source_index}].evidence_ref_statuses[{ref_index}] must be an object"
+                    )
+                    continue
+                ref_kind = require_non_empty_string(
+                    ref_status.get("kind"),
+                    f"items[{index}].runtime_proof_sources[{source_index}].evidence_ref_statuses[{ref_index}].kind",
+                    reasons,
+                )
+                ref_state = require_non_empty_string(
+                    ref_status.get("status"),
+                    f"items[{index}].runtime_proof_sources[{source_index}].evidence_ref_statuses[{ref_index}].status",
+                    reasons,
+                )
+                require_non_empty_string(
+                    ref_status.get("ref"),
+                    f"items[{index}].runtime_proof_sources[{source_index}].evidence_ref_statuses[{ref_index}].ref",
+                    reasons,
+                )
+                if ref_kind == "local_path" and ref_state != "ok":
+                    unresolved_refs.append(str(ref_status.get("ref") or ref_index))
+            if source_skill and skill and source_skill != skill:
+                reasons.append(
+                    f"items[{index}].runtime_proof_sources[{source_index}].native_skill must match item native_skill"
+                )
+            if source_status and source_status not in {"supplied", "blocked"}:
+                reasons.append(f"items[{index}].runtime_proof_sources[{source_index}].status must be supplied or blocked")
+            if source_status == "supplied" and unresolved_refs:
+                reasons.append(
+                    f"items[{index}].runtime_proof_sources[{source_index}] supplied proof has unresolved local refs: "
+                    f"{', '.join(unresolved_refs)}"
+                )
+            if source_status == "blocked":
+                reasons.append(f"items[{index}].runtime_proof_sources[{source_index}] is blocked by unresolved evidence refs")
+        proof_requirements_raw = require_non_empty_list(
+            item.get("proof_requirements"),
+            f"items[{index}].proof_requirements",
+            reasons,
+        )
+        proof_requirement_categories: set[str] = set()
+        proof_requirement_statuses: list[str] = []
+        for req_index, requirement in enumerate(proof_requirements_raw):
+            if not isinstance(requirement, dict):
+                reasons.append(f"items[{index}].proof_requirements[{req_index}] must be an object")
+                continue
+            category = require_non_empty_string(
+                requirement.get("category"),
+                f"items[{index}].proof_requirements[{req_index}].category",
+                reasons,
+            )
+            status = require_non_empty_string(
+                requirement.get("status"),
+                f"items[{index}].proof_requirements[{req_index}].status",
+                reasons,
+            )
+            require_non_empty_string(
+                requirement.get("description"),
+                f"items[{index}].proof_requirements[{req_index}].description",
+                reasons,
+            )
+            evidence_refs = requirement.get("evidence_refs")
+            if not isinstance(evidence_refs, list):
+                reasons.append(f"items[{index}].proof_requirements[{req_index}].evidence_refs must be a list")
+            if category:
+                proof_requirement_categories.add(category)
+            if status:
+                proof_requirement_statuses.append(status)
+                if status not in PROOF_REQUIREMENT_STATUS_VALUES:
+                    reasons.append(
+                        f"items[{index}].proof_requirements[{req_index}].status must be one of "
+                        f"{', '.join(sorted(PROOF_REQUIREMENT_STATUS_VALUES))}"
+                    )
+        remaining_requirements = item.get("remaining_requirements")
+        if not isinstance(remaining_requirements, list):
+            reasons.append(f"items[{index}].remaining_requirements must be a list")
         require_non_empty_list(item.get("native_paths"), f"items[{index}].native_paths", reasons)
         require_non_empty_list(item.get("primary_tools"), f"items[{index}].primary_tools", reasons)
         require_non_empty_list(item.get("required_capabilities"), f"items[{index}].required_capabilities", reasons)
         item_limits = require_non_empty_list(item.get("limitations"), f"items[{index}].limitations", reasons)
+        bridge_actions = _bridge_actions(item.get("primary_tools"))
+        backend_action = str(item.get("solar_backend_action") or "")
+        if bridge_actions and backend_action not in bridge_actions:
+            reasons.append(
+                f"items[{index}].primary_tools bridge action(s) {', '.join(bridge_actions)} "
+                f"must include solar_backend_action {backend_action}"
+            )
         if not has_any_evidence_ids(item.get("evidence_ids")):
             reasons.append(f"items[{index}].evidence_ids must contain at least one id")
         tool_abi_status = str(item.get("tool_abi_status") or "")
@@ -83,6 +274,49 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
 
         coverage = item.get("coverage_status")
         side_effect_policy = item.get("side_effect_policy")
+        semantic = str(item.get("semantic_parity") or "")
+        execution = str(item.get("execution_policy") or "")
+        proof = str(item.get("proof_level") or "")
+        if semantic and semantic not in SEMANTIC_PARITY_VALUES:
+            reasons.append(f"items[{index}].semantic_parity must be full, partial, or missing")
+        if execution and execution not in EXECUTION_POLICY_VALUES:
+            reasons.append(
+                f"items[{index}].execution_policy must be pure, bounded_local, approval_required, or provider_required"
+            )
+        if proof and proof not in PROOF_LEVEL_RANK:
+            reasons.append(f"items[{index}].proof_level must be one of {', '.join(PROOF_LEVELS)}")
+        if runtime_proof_status and runtime_proof_status not in RUNTIME_PROOF_STATUS_VALUES:
+            reasons.append(
+                f"items[{index}].runtime_proof_status must be one of {', '.join(sorted(RUNTIME_PROOF_STATUS_VALUES))}"
+            )
+        if runtime_proof_status in {"supplied", "verified"} and not runtime_proof_refs:
+            reasons.append(f"items[{index}].runtime_proof_status={runtime_proof_status} requires runtime_proof_refs")
+        if runtime_proof_status == "supplied" and "supplied" not in proof_requirement_statuses:
+            reasons.append(f"items[{index}].runtime_proof_status=supplied requires at least one supplied proof requirement")
+        if runtime_proof_status == "pending" and "external_runtime_evidence" not in proof_requirement_categories:
+            reasons.append(f"items[{index}].runtime_proof_status=pending requires external_runtime_evidence requirement")
+        unknown_source_categories = sorted(runtime_source_categories - proof_requirement_categories)
+        if unknown_source_categories:
+            reasons.append(
+                f"items[{index}].runtime_proof_sources categories are not declared proof requirements: "
+                f"{', '.join(unknown_source_categories)}"
+            )
+        if proof_refs and semantic == "full" and PROOF_LEVEL_RANK.get(proof, -1) < PROOF_LEVEL_RANK["E3"]:
+            reasons.append(f"items[{index}] semantic_parity=full requires proof_level E3 or higher")
+        if semantic == "full" and str(item.get("native_skill") or "") == "research" and PROOF_LEVEL_RANK.get(proof, -1) < PROOF_LEVEL_RANK["E4"]:
+            reasons.append("research semantic_parity=full requires recoverable lifecycle proof_level E4 or higher")
+        if semantic == "missing" and coverage != "missing":
+            reasons.append(f"items[{index}] semantic_parity=missing requires coverage_status=missing")
+        if semantic in {"partial", "missing"} and isinstance(remaining_requirements, list) and not remaining_requirements:
+            reasons.append(f"items[{index}].remaining_requirements must explain non-full semantic parity")
+        if semantic in {"partial", "missing"} and not any(
+            status in {"pending", "missing", "blocked"} for status in proof_requirement_statuses
+        ):
+            reasons.append(f"items[{index}].proof_requirements must include unresolved proof for non-full semantic parity")
+        if execution in {"approval_required", "provider_required"} and "external_runtime_evidence" not in proof_requirement_categories:
+            reasons.append(f"items[{index}].execution_policy={execution} requires external_runtime_evidence requirement")
+        if side_effect_policy == "approval_required" and "approval_boundary_evidence" not in proof_requirement_categories:
+            reasons.append(f"items[{index}] approval_required side effects require approval_boundary_evidence requirement")
         if coverage == "full" and side_effect_policy not in {"none", "dry_run_only"}:
             reasons.append(
                 f"items[{index}] cannot claim full coverage while side_effect_policy={side_effect_policy}"
@@ -146,8 +380,56 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
         expected = int(parity.get(field) or 0)
         if expected != actual:
             reasons.append(f"{field}={expected} does not match actual {actual}")
+    semantic_count_fields = {
+        "semantic_full_count": sum(1 for item in items if item.get("semantic_parity") == "full"),
+        "semantic_partial_count": sum(1 for item in items if item.get("semantic_parity") == "partial"),
+        "semantic_missing_count": sum(1 for item in items if item.get("semantic_parity") == "missing"),
+    }
+    for field, actual in semantic_count_fields.items():
+        expected = int(parity.get(field) or 0)
+        if expected != actual:
+            reasons.append(f"{field}={expected} does not match actual {actual}")
+    execution_policy_counts = parity.get("execution_policy_counts")
+    if not isinstance(execution_policy_counts, dict):
+        reasons.append("outputs.parity.execution_policy_counts must be an object")
+    else:
+        for value in EXECUTION_POLICY_VALUES:
+            expected = int(execution_policy_counts.get(value) or 0)
+            actual = sum(1 for item in items if item.get("execution_policy") == value)
+            if expected != actual:
+                reasons.append(f"execution_policy_counts.{value}={expected} does not match actual {actual}")
+    proof_level_counts = parity.get("proof_level_counts")
+    if not isinstance(proof_level_counts, dict):
+        reasons.append("outputs.parity.proof_level_counts must be an object")
+    else:
+        for value in PROOF_LEVELS:
+            expected = int(proof_level_counts.get(value) or 0)
+            actual = sum(1 for item in items if item.get("proof_level") == value)
+            if expected != actual:
+                reasons.append(f"proof_level_counts.{value}={expected} does not match actual {actual}")
+    runtime_proof_status_counts = parity.get("runtime_proof_status_counts")
+    if not isinstance(runtime_proof_status_counts, dict):
+        reasons.append("outputs.parity.runtime_proof_status_counts must be an object")
+    else:
+        for value in RUNTIME_PROOF_STATUS_VALUES:
+            expected = int(runtime_proof_status_counts.get(value) or 0)
+            actual = sum(1 for item in items if item.get("runtime_proof_status") == value)
+            if expected != actual:
+                reasons.append(f"runtime_proof_status_counts.{value}={expected} does not match actual {actual}")
+    proof_requirement_status_counts = parity.get("proof_requirement_status_counts")
+    if not isinstance(proof_requirement_status_counts, dict):
+        reasons.append("outputs.parity.proof_requirement_status_counts must be an object")
+    else:
+        actual_counts = _proof_requirement_status_counts(items)
+        for value in PROOF_REQUIREMENT_STATUS_VALUES:
+            expected = int(proof_requirement_status_counts.get(value) or 0)
+            actual = actual_counts.get(value, 0)
+            if expected != actual:
+                reasons.append(f"proof_requirement_status_counts.{value}={expected} does not match actual {actual}")
     if count_fields["partial_count"] or count_fields["gated_count"] or count_fields["blocked_count"]:
         warnings.append("parity inventory includes non-full routes; downstream execution must respect limitations")
+    if semantic_count_fields["semantic_partial_count"] or semantic_count_fields["semantic_missing_count"]:
+        warnings.append("semantic parity includes non-full routes; proof levels and remaining requirements are authoritative")
 
     if not limitations(payload):
         reasons.append("top-level limitations must describe parity scope")

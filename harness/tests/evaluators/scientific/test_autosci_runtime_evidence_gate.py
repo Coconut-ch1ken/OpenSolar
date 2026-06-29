@@ -28,7 +28,7 @@ def payload(tmp_path: Path, *, action: str = "compile_paper") -> dict:
             "result_collected": True,
             "metrics": [{"name": "accuracy", "value": 0.91}],
         })
-    elif action == "daily_arxiv_prepare_finalize":
+    elif action in {"daily_arxiv_prepare_finalize", "init_sources", "discover_literature"}:
         runtime.update({
             "candidates": [
                 {
@@ -70,7 +70,15 @@ def test_autosci_runtime_evidence_gate_accepts_completed_compile_runtime(tmp_pat
 
 
 def test_autosci_runtime_evidence_gate_accepts_action_specific_completed_runtime(tmp_path: Path) -> None:
-    for action in ("build_poster", "run_experiment", "run_pilot_experiment", "daily_arxiv_prepare_finalize", "send_email"):
+    for action in (
+        "build_poster",
+        "run_experiment",
+        "run_pilot_experiment",
+        "daily_arxiv_prepare_finalize",
+        "init_sources",
+        "discover_literature",
+        "send_email",
+    ):
         result = autosci_runtime_evidence_gate.evaluate(payload(tmp_path, action=action), path=tmp_path / f"{action}.json")
 
         assert result.ok is True, result.reasons

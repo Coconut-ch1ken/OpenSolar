@@ -39,6 +39,7 @@
     "G_CLAIM_VERIFY",
     "G_REPORT_PLAN",
     "G_REPORT_DRAFT",
+    "G_ARTIFACT_REVIEW",
     "G_PUBLICATION_PRODUCE",
     "G_MEMORY_UPDATE_FINAL",
     "G_WORKFLOW_EVOLVE",
@@ -1233,11 +1234,81 @@
       }
     },
     {
+      "id": "artifact_review",
+      "goal": "Review drafted scientific report artifacts with explicit Review LLM or artifact review evidence before publication production.",
+      "logical_operator": "ScientificArtifactReviewer",
+      "depends_on": [
+        "report_draft"
+      ],
+      "required_capabilities": [
+        "cap.research-artifact-review",
+        "academic_critique",
+        "research_synthesis"
+      ],
+      "read_scope": [
+        "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/scientific_report.v1.json"
+      ],
+      "write_scope": [
+        "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/artifact_review.v1.json"
+      ],
+      "gate": "G_ARTIFACT_REVIEW",
+      "acceptance": [
+        "Emits or validates artifact_review.v1 evidence for ScientificArtifactReviewer.",
+        "Records failed or inconclusive status instead of inventing missing review evidence.",
+        "Does not claim publication readiness without explicit review findings."
+      ],
+      "pass_conditions": [
+        "artifact_review.v1 payload is present or the node records failed/inconclusive evidence with limitations.",
+        "Review mode, score, recommendation, findings, and evidence ids are preserved where applicable."
+      ],
+      "priority": 83,
+      "required_phase": "research_taskgraph_template",
+      "required_node_id": "report_draft",
+      "required_node_status": "passed",
+      "research_stage": "artifact_review",
+      "evidence_policy": {
+        "expected_schema": "artifact_review.v1",
+        "allow_failed": true,
+        "allow_inconclusive": true,
+        "require_provenance": true,
+        "forbid_overclaiming": true
+      },
+      "architecture_policy": {
+        "package_boundary": "plugins/autosci",
+        "plugin_id": "autosci",
+        "backend_contract": "single_bounded_action_or_solar_gate",
+        "forbidden": [
+          "hidden-backend-full-workflow",
+          "backend-black-box-runner"
+        ]
+      },
+      "status": "pending",
+      "lifecycle_artifact_slot": "09_report",
+      "evidence_log": "artifacts/scientific/scientific_research_lifecycle_full_v1/evidence.jsonl",
+      "resume_policy": {
+        "mode": "skip_if_completed_evidence_exists",
+        "artifact": "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/artifact_review.v1.json",
+        "expected_schema": "artifact_review.v1",
+        "evidence_log": "artifacts/scientific/scientific_research_lifecycle_full_v1/evidence.jsonl",
+        "completed_statuses": [
+          "passed",
+          "skipped_parent_passed"
+        ],
+        "rerun_statuses": [
+          "failed",
+          "inconclusive",
+          "missing_artifact",
+          "schema_invalid"
+        ],
+        "do_not_rerun_completed_nodes": true
+      }
+    },
+    {
       "id": "publication_produce",
       "goal": "Prepare publication bundles only from approved report evidence.",
       "logical_operator": "ScientificPublicationProducer",
       "depends_on": [
-        "report_draft"
+        "artifact_review"
       ],
       "required_capabilities": [
         "cap.research-publication-produce",
@@ -1245,7 +1316,8 @@
         "data_extraction"
       ],
       "read_scope": [
-        "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/scientific_report.v1.json"
+        "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/scientific_report.v1.json",
+        "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/artifact_review.v1.json"
       ],
       "write_scope": [
         "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/publication_bundle.v1.json"
@@ -1262,7 +1334,7 @@
       ],
       "priority": 83,
       "required_phase": "research_taskgraph_template",
-      "required_node_id": "report_draft",
+      "required_node_id": "artifact_review",
       "required_node_status": "passed",
       "research_stage": "publication_production",
       "evidence_policy": {
@@ -1594,6 +1666,11 @@
         "slot": "09_report",
         "path": "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/scientific_report.v1.json",
         "schema": "scientific_report.v1"
+      },
+      "artifact_review": {
+        "slot": "09_report",
+        "path": "artifacts/scientific/scientific_research_lifecycle_full_v1/09_report/artifact_review.v1.json",
+        "schema": "artifact_review.v1"
       },
       "publication_produce": {
         "slot": "09_report",

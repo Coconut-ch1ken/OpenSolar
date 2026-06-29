@@ -183,6 +183,17 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "title": str(args.title or ""),
         "checklist": bool(args.checklist),
         "fix": bool(args.fix),
+        "anonymous": bool(args.anonymous),
+        "double_blind": bool(args.double_blind),
+        "submission_mode": str(args.submission_mode or ""),
+        "submission_profile": str(args.submission_profile or ""),
+        "pdf_inspection": str(args.pdf_inspection or ""),
+        "submission_audit": str(args.submission_audit or ""),
+        "page_limit": args.page_limit,
+        "page_count": args.page_count,
+        "verified_page_count": args.verified_page_count,
+        "min_font_size": args.min_font_size,
+        "verified_min_font_size": args.verified_min_font_size,
         "quick": bool(args.quick),
         "verbose": bool(args.verbose),
         "write": bool(args.write),
@@ -198,11 +209,14 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "approval_ref": str(args.approval_ref or ""),
         "allowlist_evidence": list(args.allowlist_evidence or []),
         "runtime_evidence": list(args.runtime_evidence or []),
+        "remote_check_command": str(args.remote_check_command or ""),
+        "remote_run_dir": str(args.remote_run_dir or ""),
         "lifecycle_summary": list(args.lifecycle_summary or []),
         "scheduler_run": bool(args.scheduler_run),
         "scheduler_include_blocked_external": bool(args.scheduler_include_blocked_external),
         "scheduler_include_human_gates": bool(args.scheduler_include_human_gates),
         "scheduler_dispatch_external_evidence": bool(args.scheduler_dispatch_external_evidence),
+        "scheduler_require_workflow_config_alignment": bool(args.scheduler_require_workflow_config_alignment),
         "scheduler_timeout": float(args.scheduler_timeout or 0),
         "idea_approval_ref": str(args.idea_approval_ref or ""),
         "results_approval_ref": str(args.results_approval_ref or ""),
@@ -229,6 +243,7 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "review_llm_provider": str(args.review_llm_provider or ""),
         "review_llm_model": str(args.review_llm_model or ""),
         "review_llm_endpoint": str(args.review_llm_endpoint or ""),
+        "require_review_llm": bool(args.require_review_llm),
         "model_evidence": list(args.model_evidence or []),
         "model_command": str(args.model_command or ""),
         "experiment_result_evidence": list(args.experiment_result_evidence or []),
@@ -286,6 +301,10 @@ def run_research_scheduler_lifecycle(args: argparse.Namespace, *, run_id: str, w
         command.append("--include-human-gates")
     if args.scheduler_dispatch_external_evidence:
         command.append("--dispatch-external-evidence")
+    if args.scheduler_require_workflow_config_alignment:
+        command.append("--require-workflow-config-alignment")
+    if args.scheduler_require_production_dispatch:
+        command.append("--require-production-dispatch")
     if args.idea_approval_ref:
         command.extend(["--idea-approval-ref", str(args.idea_approval_ref)])
     if args.results_approval_ref:
@@ -371,6 +390,16 @@ def run_research_scheduler_lifecycle(args: argparse.Namespace, *, run_id: str, w
 
     status = str(summary_payload.get("lifecycle_status") or "").lower()
     result_status = "passed" if proc.returncode == 0 and status == "passed" else "blocked" if proc.returncode == 3 or status == "blocked" else "failed"
+    workflow_alignment = (
+        summary_payload.get("workflow_config_alignment")
+        if isinstance(summary_payload.get("workflow_config_alignment"), dict)
+        else {}
+    )
+    dispatch_boundary = (
+        summary_payload.get("dispatch_boundary")
+        if isinstance(summary_payload.get("dispatch_boundary"), dict)
+        else {}
+    )
     return {
         "schema": "autosci_scheduler_lifecycle_run.v1",
         "status": result_status,
@@ -383,6 +412,14 @@ def run_research_scheduler_lifecycle(args: argparse.Namespace, *, run_id: str, w
         "lifecycle_status": status or "N/A",
         "node_count": len(summary_payload.get("node_results") or {}) if isinstance(summary_payload.get("node_results"), dict) else 0,
         "blocked_node_count": len(summary_payload.get("blocked_nodes") or {}) if isinstance(summary_payload.get("blocked_nodes"), dict) else 0,
+        "workflow_config_alignment": workflow_alignment,
+        "workflow_config_alignment_status": workflow_alignment.get("status", "N/A"),
+        "workflow_config_alignment_ok": workflow_alignment.get("ok"),
+        "workflow_config_alignment_issues": list(workflow_alignment.get("issues") or []),
+        "dispatch_boundary": dispatch_boundary,
+        "dispatch_boundary_status": dispatch_boundary.get("status", "N/A"),
+        "dispatch_boundary_production_ready": dispatch_boundary.get("production_ready"),
+        "dispatch_boundary_blocking_reasons": list(dispatch_boundary.get("blocking_reasons") or []),
     }
 
 
@@ -601,6 +638,9 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["wiki_root"] = str(args.wiki_root)
         if args.review:
             inputs["review_llm_requested"] = True
+        if args.require_review_llm:
+            inputs["require_review_llm"] = True
+            inputs["review_llm_requested"] = True
         if args.review_llm_evidence:
             inputs["review_llm_evidence"] = list(args.review_llm_evidence)
         if args.review_llm_command:
@@ -611,6 +651,8 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["review_llm_model"] = str(args.review_llm_model)
         if args.review_llm_endpoint:
             inputs["review_llm_endpoint"] = str(args.review_llm_endpoint)
+    if action in {"ingest_paper", "analyze_paper"} and args.wiki_root:
+        inputs["wiki_root"] = str(args.wiki_root)
     if action in {"design_experiment", "run_experiment", "monitor_experiment"} and not args.smoke and (
         skill_name in {"exp-run", "exp-pilot-run"} or args.env or args.full or args.review
     ):
@@ -622,6 +664,10 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["collect"] = True
         if args.collect_ready:
             inputs["collect_ready"] = True
+        if args.remote_check_command:
+            inputs["remote_check_command"] = str(args.remote_check_command)
+        if args.remote_run_dir:
+            inputs["remote_run_dir"] = str(args.remote_run_dir)
         if args.pipeline:
             inputs["pipeline"] = str(args.pipeline)
             inputs.setdefault("target", str(args.pipeline))
@@ -659,8 +705,31 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["fix"] = True
         if args.title:
             inputs["title"] = str(args.title)
+        if args.anonymous:
+            inputs["anonymous"] = True
+        if args.double_blind:
+            inputs["double_blind"] = True
+        if args.submission_mode:
+            inputs["submission_mode"] = str(args.submission_mode)
+        if args.submission_profile:
+            inputs["submission_profile"] = str(args.submission_profile)
+        if args.pdf_inspection:
+            inputs["pdf_inspection"] = str(args.pdf_inspection)
+        if args.submission_audit:
+            inputs["submission_audit"] = str(args.submission_audit)
+        if args.page_limit is not None:
+            inputs["page_limit"] = float(args.page_limit)
+        if args.page_count is not None:
+            inputs["page_count"] = float(args.page_count)
+        if args.verified_page_count is not None:
+            inputs["verified_page_count"] = float(args.verified_page_count)
+        if args.min_font_size is not None:
+            inputs["min_font_size"] = float(args.min_font_size)
+        if args.verified_min_font_size is not None:
+            inputs["verified_min_font_size"] = float(args.verified_min_font_size)
         outputs.setdefault("compile_checklist_path", f"{envelope.get('output_dir')}/paper_compile_checklist.json")
         outputs.setdefault("compile_diagnostics_path", f"{envelope.get('output_dir')}/paper_compile_diagnostics.md")
+        outputs.setdefault("publication_submission_boundary_path", f"{envelope.get('output_dir')}/publication_submission_boundary.json")
     if action in {"plan_report", "write_survey", "draft_rebuttal", "build_poster"}:
         outputs = envelope.setdefault("outputs", {})
         if args.title:
@@ -953,6 +1022,11 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
         execution_status = "partial"
     else:
         execution_status = "completed"
+    payload_status = (
+        "failed"
+        if failed_total
+        else ("completed" if execution_status == "completed" else "inconclusive")
+    )
 
     limitations = [
         *[str(item) for item in route.get("limitations") or []],
@@ -972,7 +1046,7 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
         "task_id": f"autosci-skill-{skill}",
         "sprint_id": run_id,
         "node_id": f"autosci-skill-{skill}",
-        "status": "failed" if failed_count else "completed",
+        "status": payload_status,
         "inputs": {
             "skill": skill,
             "skill_args": list(args.skill_args or []),
@@ -1047,6 +1121,8 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
     if scheduler_failed:
         payload["status"] = "failed"
         payload["limitations"].append("Explicit scheduler lifecycle run failed; research bridge output is not treated as a successful lifecycle.")
+    if scheduler_lifecycle and scheduler_lifecycle.get("workflow_config_alignment_status") == "drift":
+        payload["limitations"].append("Scheduler workflow-config drift was detected; smoke lifecycle evidence must not be treated as full scheduler parity.")
     return payload, out_path
 
 
@@ -1075,7 +1151,7 @@ def cmd_run_skill(args: argparse.Namespace) -> int:
     write_json(out_path, payload)
     skill_run = payload["outputs"]["skill_run"]
     workspace_summary: dict[str, Any] | None = None
-    if payload["status"] == "completed" and skill_run["action_count"] > 0:
+    if payload["status"] != "failed" and skill_run["action_count"] > 0:
         workspace_summary = project_run_to_workspace(out_path, output_harness=OUTPUT_HARNESS)
         skill_run["workspace"] = workspace_summary
         for path in workspace_summary.get("updated_paths", []):
@@ -1084,8 +1160,9 @@ def cmd_run_skill(args: argparse.Namespace) -> int:
         write_json(out_path, payload)
 
     summary = {
-        "ok": payload["status"] == "completed",
+        "ok": payload["status"] != "failed",
         "schema": SCHEMA,
+        "status": payload["status"],
         "evidence_path": as_artifact_path(out_path),
         "skill": skill_run["selected_skill"],
         "autosci_command": skill_run["autosci_command"],
@@ -1103,12 +1180,18 @@ def cmd_run_skill(args: argparse.Namespace) -> int:
         summary["scheduler_lifecycle_summary_path"] = scheduler_lifecycle.get("summary_path")
         summary["scheduler_lifecycle_node_count"] = scheduler_lifecycle.get("node_count")
         summary["scheduler_lifecycle_blocked_node_count"] = scheduler_lifecycle.get("blocked_node_count")
+        summary["scheduler_workflow_config_alignment_status"] = scheduler_lifecycle.get("workflow_config_alignment_status")
+        summary["scheduler_workflow_config_alignment_ok"] = scheduler_lifecycle.get("workflow_config_alignment_ok")
+        summary["scheduler_workflow_config_alignment_issues"] = scheduler_lifecycle.get("workflow_config_alignment_issues")
+        summary["scheduler_dispatch_boundary_status"] = scheduler_lifecycle.get("dispatch_boundary_status")
+        summary["scheduler_dispatch_boundary_production_ready"] = scheduler_lifecycle.get("dispatch_boundary_production_ready")
+        summary["scheduler_dispatch_boundary_blocking_reasons"] = scheduler_lifecycle.get("dispatch_boundary_blocking_reasons")
     if workspace_summary:
         summary["workspace_path"] = workspace_summary["workspace_root"]
         summary["wiki_path"] = workspace_summary["wiki_root"]
         summary["workspace_updated_count"] = workspace_summary["updated_count"]
     print(json.dumps(summary, indent=2, sort_keys=True))
-    return 0 if payload["status"] == "completed" else 2
+    return 0 if payload["status"] != "failed" else 2
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1148,6 +1231,7 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--pipeline", help="Native research pipeline slug or status target")
     skill.add_argument("--full", action="store_true", help="Native full experiment run mode")
     skill.add_argument("--review", action="store_true", help="Request native Review LLM review where supported")
+    skill.add_argument("--require-review-llm", action="store_true", help="Require Review LLM evidence for final review acceptance")
     skill.add_argument("--review-llm-evidence", action="append", help="Existing Review LLM evidence JSON for /review")
     skill.add_argument("--review-llm-command", help="Command bridge that returns artifact_review.v1 Review LLM JSON on stdout")
     skill.add_argument("--review-llm-provider", choices=["openai", "openrouter", "openai_compatible"], help="OpenAI-compatible Review LLM provider")
@@ -1162,17 +1246,32 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--no-introduction", action="store_true", help="Native init mode without introduction source generation")
     skill.add_argument("--checklist", action="store_true", help="Native paper compile checklist mode")
     skill.add_argument("--fix", action="store_true", help="Native paper compile auto-fix mode")
+    skill.add_argument("--anonymous", action="store_true", help="Paper compile evidence: anonymous submission mode requested")
+    skill.add_argument("--double-blind", action="store_true", help="Paper compile evidence: double-blind submission mode requested")
+    skill.add_argument("--submission-mode", help="Paper compile evidence: submission mode, for example anonymous or double_blind")
+    skill.add_argument("--submission-profile", help="Paper compile evidence: JSON venue submission profile with source-backed requirements")
+    skill.add_argument("--pdf-inspection", help="Paper compile evidence: JSON PDF inspection with verified page/font measurements")
+    skill.add_argument("--submission-audit", help="Paper compile evidence: JSON publication submission audit/checklist evidence")
+    skill.add_argument("--page-limit", type=float, help="Paper compile evidence: venue page limit")
+    skill.add_argument("--page-count", type=float, help="Paper compile evidence: observed page count")
+    skill.add_argument("--verified-page-count", type=float, help="Paper compile evidence: verified PDF page count")
+    skill.add_argument("--min-font-size", type=float, help="Paper compile evidence: required minimum font size")
+    skill.add_argument("--verified-min-font-size", type=float, help="Paper compile evidence: verified minimum PDF font size")
     skill.add_argument("--quick", action="store_true", help="Native quick novelty/review mode")
     skill.add_argument("--online", action="store_true", help="Attempt live online evidence fetching for supported skills")
     skill.add_argument("--approval-ref", help="Human approval reference for gated side-effect execution")
     skill.add_argument("--allowlist-evidence", action="append", help="JSON/text artifact proving approved command/source allowlist")
     skill.add_argument("--runtime-evidence", action="append", help="Runtime log/result artifact from an approved side-effect execution")
+    skill.add_argument("--remote-check-command", help="Approved allowlisted command that returns autosci_remote_cli.v1 check status JSON")
+    skill.add_argument("--remote-run-dir", help="Remote/local run directory to pass through approved status-check commands")
     skill.add_argument("--lifecycle-summary", action="append", help="Existing scientific_lifecycle.v1 scheduler runtime summary evidence")
     skill.add_argument("--scheduler-run", action="store_true", help="For $research only: explicitly run the scheduler-dispatched scientific lifecycle proof and attach its summary")
     skill.add_argument("--scheduler-timeout", type=float, default=30.0, help="Timeout in seconds for each scheduler-dispatched lifecycle node")
     skill.add_argument("--scheduler-include-blocked-external", action="store_true", help="Record report/compile external nodes as blocked scheduler state")
     skill.add_argument("--scheduler-include-human-gates", action="store_true", help="Record idea/results human approval gates as scheduler-visible lifecycle state")
     skill.add_argument("--scheduler-dispatch-external-evidence", action="store_true", help="Dispatch report/compile external nodes when Review LLM and compile evidence are supplied")
+    skill.add_argument("--scheduler-require-workflow-config-alignment", action="store_true", help="Fail scheduler lifecycle smoke when it diverges from the declared workflow config")
+    skill.add_argument("--scheduler-require-production-dispatch", action="store_true", help="Fail scheduler lifecycle smoke when it is not a production-ready non-fixture dispatch")
     skill.add_argument("--idea-approval-ref", help="Durable approval reference for the scheduler idea acceptance gate")
     skill.add_argument("--results-approval-ref", help="Durable approval reference for the scheduler results acceptance gate")
     skill.add_argument("--experiment-approval-ref", help="Durable approval reference for scheduler experiment runtime evidence")

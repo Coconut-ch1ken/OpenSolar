@@ -110,7 +110,7 @@ def evaluate(payload: dict[str, Any], path: str | Path | None = None):
         reasons.append("runtime evidence must include approval_ref in outputs.runtime or inputs")
 
     if _completed(reasons, runtime):
-        if action in {"daily_arxiv_prepare_finalize", "init_sources"}:
+        if action in {"daily_arxiv_prepare_finalize", "init_sources", "discover_literature"}:
             _gate_source_fetch(runtime, reasons)
         elif action in {"run_experiment", "run_pilot_experiment"}:
             _gate_experiment(runtime, reasons)

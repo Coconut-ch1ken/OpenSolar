@@ -23,7 +23,7 @@ def _prepare_isolated_harness(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_scientific_lifecycle_smoke_emits_runtime_gate_accepted_summary(tmp_path: Path) -> None:
+def test_scientific_lifecycle_smoke_blocks_configured_publication_tail_without_external_evidence(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
     env = os.environ.copy()
     env["HARNESS_DIR"] = str(harness_dir)
@@ -46,11 +46,21 @@ def test_scientific_lifecycle_smoke_emits_runtime_gate_accepted_summary(tmp_path
         check=False,
     )
 
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.returncode == 3, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["schema"] == "scientific_lifecycle.v1"
     assert summary["workflow_id"] == "scientific_research_lifecycle_full_v1"
-    assert summary["lifecycle_status"] == "passed"
+    assert summary["lifecycle_status"] == "blocked"
+    alignment = summary["workflow_config_alignment"]
+    assert alignment["status"] == "drift"
+    assert alignment["ok"] is False
+    assert set(alignment["configured_nodes_not_required_by_run"]) == {
+        "report_draft",
+        "artifact_review",
+        "memory_update_final",
+        "workflow_evolve",
+    }
+    assert alignment["runner_nodes_not_declared_in_config"] == []
     expected_actions = {
         "literature_discover": ("discover_literature", "literature_discovery.v1"),
         "paper_ingest": ("ingest_paper", "research_paper.v1"),
@@ -66,16 +76,27 @@ def test_scientific_lifecycle_smoke_emits_runtime_gate_accepted_summary(tmp_path
         "experiment_run": ("run_experiment", "experiment_result.v1"),
         "experiment_monitor": ("monitor_experiment", "experiment_status.v1"),
         "claim_verify": ("verify_claim", "claim_verdict.v1"),
-        "report_draft": ("write_report", "scientific_report.v1"),
-        "artifact_review": ("review_artifact", "artifact_review.v1"),
-        "memory_update_final": ("update_memory", "research_memory_update.v1"),
-        "workflow_evolve": ("evolve_workflow", "workflow_evolution.v1"),
     }
-    assert summary["required_nodes"] == list(expected_actions)
+    assert summary["required_nodes"] == [*list(expected_actions), "report_plan", "publication_produce"]
     assert set(summary["node_results"]) == set(expected_actions)
     assert set(summary["gate_results"]) == set(expected_actions)
-    assert summary["lifecycle_gate_result"]["ok"] is True
+    assert summary["lifecycle_gate_result"]["status"] == "inconclusive"
+    assert set(summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
     assert {item["status"] for item in summary["checks"]} == {"ok"}
+    assert summary["dispatch_boundary"]["status"] == "bounded_smoke"
+    assert summary["dispatch_boundary"]["production_ready"] is False
+    assert "runner_contract=bounded_smoke_runner" in summary["dispatch_boundary"]["blocking_reasons"]
+    assert "literature_discover" in summary["dispatch_boundary"]["smoke_nodes"]
+    lease_boundary = summary["lease_boundary"]
+    assert lease_boundary["schema"] == "autosci_scheduler_lease_boundary.v1"
+    assert lease_boundary["status"] == "local_smoke_lease"
+    assert lease_boundary["local_lease_recorded"] is True
+    assert lease_boundary["distributed_lease_verified"] is False
+    assert (harness_dir / lease_boundary["lease_path"]).exists()
+    assert any(
+        item["check"] == "scheduler_local_lease_boundary" and item["status"] == "ok"
+        for item in summary["checks"]
+    )
 
     for node_id, (action, schema) in expected_actions.items():
         result = summary["node_results"][node_id]
@@ -100,9 +121,48 @@ def test_scientific_lifecycle_smoke_emits_runtime_gate_accepted_summary(tmp_path
         stderr=subprocess.PIPE,
         check=False,
     )
-    assert gate.returncode == 0, gate.stdout + gate.stderr
+    assert gate.returncode == 3, gate.stdout + gate.stderr
     gate_payload = json.loads(gate.stdout)
-    assert gate_payload["ok"] is True
+    assert gate_payload["status"] == "inconclusive"
+
+
+def test_scientific_lifecycle_smoke_strict_production_dispatch_rejects_smoke_boundary(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    env = os.environ.copy()
+    env["HARNESS_DIR"] = str(harness_dir)
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SMOKE),
+            "--harness-dir",
+            str(harness_dir),
+            "--job-id",
+            "job-scientific-lifecycle-production-boundary-test",
+            "--timeout-seconds",
+            "20",
+            "--require-production-dispatch",
+        ],
+        cwd=HARNESS,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["lifecycle_status"] == "failed"
+    boundary = summary["dispatch_boundary"]
+    assert boundary["schema"] == "autosci_scheduler_dispatch_boundary.v1"
+    assert boundary["status"] == "bounded_smoke"
+    assert boundary["production_ready"] is False
+    assert "runner_contract=bounded_smoke_runner" in boundary["blocking_reasons"]
+    assert "node_inputs_include_smoke_mode" in boundary["blocking_reasons"]
+    assert any(
+        item["check"] == "production_dispatch_boundary" and item["status"] == "error"
+        for item in summary["checks"]
+    )
 
 
 def test_scientific_lifecycle_smoke_can_record_external_blocked_nodes(tmp_path: Path) -> None:
@@ -133,11 +193,49 @@ def test_scientific_lifecycle_smoke_can_record_external_blocked_nodes(tmp_path: 
     summary = json.loads(proc.stdout)
     assert summary["lifecycle_status"] == "blocked"
     assert summary["lifecycle_gate_result"]["status"] == "inconclusive"
+    assert summary["workflow_config_alignment"]["status"] == "drift"
+    assert summary["workflow_config_alignment"]["runner_nodes_not_declared_in_config"] == []
+    assert "configured_nodes_not_required_by_run" in summary["workflow_config_alignment"]["issues"]
     assert set(summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
     assert "report_plan" in summary["required_nodes"]
     assert "publication_produce" in summary["required_nodes"]
     assert summary["blocked_nodes"]["report_plan"]["required_evidence"]
     assert summary["blocked_nodes"]["publication_produce"]["unblock_condition"]
+
+
+def test_scientific_lifecycle_smoke_strict_workflow_config_alignment_rejects_drift(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    env = os.environ.copy()
+    env["HARNESS_DIR"] = str(harness_dir)
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SMOKE),
+            "--harness-dir",
+            str(harness_dir),
+            "--job-id",
+            "job-scientific-lifecycle-config-drift-test",
+            "--timeout-seconds",
+            "20",
+            "--require-workflow-config-alignment",
+        ],
+        cwd=HARNESS,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["lifecycle_status"] == "failed"
+    assert summary["workflow_config_alignment"]["status"] == "drift"
+    assert "configured_nodes_not_required_by_run" in summary["workflow_config_alignment"]["issues"]
+    assert any(
+        item["check"] == "workflow_config_alignment" and item["status"] == "error"
+        for item in summary["checks"]
+    )
 
 
 def test_scientific_lifecycle_smoke_records_human_gate_pause(tmp_path: Path) -> None:
@@ -176,7 +274,10 @@ def test_scientific_lifecycle_smoke_records_human_gate_pause(tmp_path: Path) -> 
     assert summary["blocked_nodes"]["results_acceptance_gate"]["required_evidence"]
     assert "claim_verify" in summary["node_results"]
     assert "report_draft" not in summary["required_nodes"]
-    approval_path = harness_dir / summary["node_results"]["idea_acceptance_gate"]["artifact_path"]
+    idea_gate_result = summary["node_results"]["idea_acceptance_gate"]
+    assert (harness_dir / idea_gate_result["operator_result_path"]).exists()
+    assert (harness_dir / idea_gate_result["bridge_result_path"]).exists()
+    approval_path = harness_dir / idea_gate_result["artifact_path"]
     approval_evidence = json.loads(approval_path.read_text(encoding="utf-8"))
     assert approval_evidence["schema"] == "workflow_evolution.v1"
     assert approval_evidence["outputs"]["evolution"]["approval_state"] == "approved"
@@ -234,11 +335,48 @@ def test_scientific_lifecycle_smoke_resumes_human_gate_pauses(tmp_path: Path) ->
     assert first_resume_proc.returncode == 3, first_resume_proc.stdout + first_resume_proc.stderr
     first_resumed = json.loads(first_resume_proc.stdout)
     assert "idea_acceptance_gate" in first_resumed["node_results"]
-    assert first_resumed["node_results"]["idea_acceptance_gate"]["approval_ref"] == "approval-resume-idea-gate"
+    first_idea_gate = first_resumed["node_results"]["idea_acceptance_gate"]
+    assert first_idea_gate["approval_ref"] == "approval-resume-idea-gate"
+    assert (harness_dir / first_idea_gate["operator_result_path"]).exists()
+    assert (harness_dir / first_idea_gate["bridge_result_path"]).exists()
+    first_resume_audit = first_resumed["resume_audit"]
+    assert first_resume_audit["blocked_nodes_before"] == ["idea_acceptance_gate"]
+    assert first_resume_audit["approved_human_gates"] == ["idea_acceptance_gate"]
+    assert first_resume_audit["dispatched_nodes"] == [
+        "experiment_design",
+        "experiment_run",
+        "experiment_monitor",
+        "claim_verify",
+    ]
+    assert first_resume_audit["reused_nodes"]["literature_discover"]["artifact_path"] == original_literature_artifact
+    first_resume_boundary = first_resumed["resume_boundary"]
+    assert first_resume_boundary["schema"] == "autosci_scheduler_resume_boundary.v1"
+    assert first_resume_boundary["status"] == "resume_no_rerun_verified"
+    assert first_resume_boundary["no_rerun_verified"] is True
+    assert first_resume_boundary["changed_reused_nodes"] == []
+    assert first_resume_boundary["dispatched_nodes"] == first_resume_audit["dispatched_nodes"]
+    assert first_resume_boundary["reused_nodes"]["literature_discover"]["artifact_path"] == original_literature_artifact
+    first_lease_boundary = first_resumed["lease_boundary"]
+    assert first_lease_boundary["schema"] == "autosci_scheduler_lease_boundary.v1"
+    assert first_lease_boundary["status"] == "local_smoke_lease"
+    assert first_lease_boundary["lease_scope"] == "local_smoke_runner_resume"
+    assert (harness_dir / first_lease_boundary["lease_path"]).exists()
     assert set(first_resumed["blocked_nodes"]) == {"results_acceptance_gate"}
     assert "claim_verify" in first_resumed["node_results"]
     assert "report_draft" not in first_resumed["required_nodes"]
     assert first_resumed["node_results"]["literature_discover"]["artifact_path"] == original_literature_artifact
+    assert any(
+        item["check"] == "resume_reused_nodes_preserved" and item["status"] == "ok"
+        for item in first_resumed["checks"]
+    )
+    assert any(
+        item["check"] == "scheduler_resume_no_rerun_boundary" and item["status"] == "ok"
+        for item in first_resumed["checks"]
+    )
+    assert any(
+        item["check"] == "scheduler_local_lease_boundary" and item["status"] == "ok"
+        for item in first_resumed["checks"]
+    )
 
     second_resume_proc = subprocess.run(
         [
@@ -263,11 +401,45 @@ def test_scientific_lifecycle_smoke_resumes_human_gate_pauses(tmp_path: Path) ->
     assert second_resume_proc.returncode == 3, second_resume_proc.stdout + second_resume_proc.stderr
     second_resumed = json.loads(second_resume_proc.stdout)
     assert "results_acceptance_gate" in second_resumed["node_results"]
-    assert second_resumed["node_results"]["results_acceptance_gate"]["approval_ref"] == "approval-resume-results-gate"
-    assert "report_draft" in second_resumed["node_results"]
-    assert "workflow_evolve" in second_resumed["node_results"]
+    second_results_gate = second_resumed["node_results"]["results_acceptance_gate"]
+    assert second_results_gate["approval_ref"] == "approval-resume-results-gate"
+    assert (harness_dir / second_results_gate["operator_result_path"]).exists()
+    assert (harness_dir / second_results_gate["bridge_result_path"]).exists()
+    second_resume_audit = second_resumed["resume_audit"]
+    assert second_resume_audit["blocked_nodes_before"] == ["results_acceptance_gate"]
+    assert second_resume_audit["approved_human_gates"] == ["results_acceptance_gate"]
+    assert second_resume_audit["dispatched_nodes"] == []
+    assert second_resume_audit["reused_nodes"]["literature_discover"]["artifact_path"] == original_literature_artifact
+    assert "idea_acceptance_gate" in second_resume_audit["reused_nodes"]
+    assert "claim_verify" in second_resume_audit["reused_nodes"]
+    second_resume_boundary = second_resumed["resume_boundary"]
+    assert second_resume_boundary["schema"] == "autosci_scheduler_resume_boundary.v1"
+    assert second_resume_boundary["status"] == "resume_no_rerun_verified"
+    assert second_resume_boundary["no_rerun_verified"] is True
+    assert second_resume_boundary["changed_reused_nodes"] == []
+    assert second_resume_boundary["dispatched_nodes"] == []
+    assert second_resume_boundary["reused_nodes"]["literature_discover"]["artifact_path"] == original_literature_artifact
+    second_lease_boundary = second_resumed["lease_boundary"]
+    assert second_lease_boundary["schema"] == "autosci_scheduler_lease_boundary.v1"
+    assert second_lease_boundary["status"] == "local_smoke_lease"
+    assert second_lease_boundary["lease_scope"] == "local_smoke_runner_resume"
+    assert (harness_dir / second_lease_boundary["lease_path"]).exists()
+    assert "report_draft" not in second_resumed["node_results"]
+    assert "workflow_evolve" not in second_resumed["node_results"]
     assert set(second_resumed["blocked_nodes"]) == {"report_plan", "publication_produce"}
     assert second_resumed["node_results"]["literature_discover"]["artifact_path"] == original_literature_artifact
+    assert any(
+        item["check"] == "resume_reused_nodes_preserved" and item["status"] == "ok"
+        for item in second_resumed["checks"]
+    )
+    assert any(
+        item["check"] == "scheduler_resume_no_rerun_boundary" and item["status"] == "ok"
+        for item in second_resumed["checks"]
+    )
+    assert any(
+        item["check"] == "scheduler_local_lease_boundary" and item["status"] == "ok"
+        for item in second_resumed["checks"]
+    )
 
 
 def test_scientific_lifecycle_smoke_strict_online_mode_rejects_offline_fixture(tmp_path: Path) -> None:
@@ -453,6 +625,7 @@ def test_scientific_lifecycle_smoke_accepts_combined_full_external_evidence(tmp_
             "--compile-target",
             str(compile_target),
             "--dispatch-external-evidence",
+            "--require-workflow-config-alignment",
         ],
         cwd=HARNESS,
         env=env,
@@ -466,6 +639,9 @@ def test_scientific_lifecycle_smoke_accepts_combined_full_external_evidence(tmp_
     summary = json.loads(proc.stdout)
     assert summary["lifecycle_status"] == "passed"
     assert summary["blocked_nodes"] == {}
+    assert summary["workflow_config_alignment"]["status"] == "aligned"
+    assert summary["workflow_config_alignment"]["ok"] is True
+    assert summary["workflow_config_alignment"]["issues"] == []
     literature = json.loads((harness_dir / summary["node_results"]["literature_discover"]["artifact_path"]).read_text(encoding="utf-8"))
     assert literature["status"] == "completed"
     assert literature["outputs"]["mode"] == "discover_literature_runtime_verified"
@@ -669,9 +845,10 @@ def test_scientific_lifecycle_smoke_uses_experiment_runtime_evidence(tmp_path: P
         check=False,
     )
 
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.returncode == 3, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
-    assert summary["lifecycle_status"] == "passed"
+    assert summary["lifecycle_status"] == "blocked"
+    assert set(summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
     run_evidence = json.loads((harness_dir / summary["node_results"]["experiment_run"]["artifact_path"]).read_text(encoding="utf-8"))
     result = run_evidence["outputs"]["result"]
     assert result["execution_mode"] == "human_approved"
@@ -756,9 +933,10 @@ def test_scientific_lifecycle_smoke_executes_approved_experiment_command(tmp_pat
         check=False,
     )
 
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.returncode == 3, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
-    assert summary["lifecycle_status"] == "passed"
+    assert summary["lifecycle_status"] == "blocked"
+    assert set(summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
     run_evidence = json.loads((harness_dir / summary["node_results"]["experiment_run"]["artifact_path"]).read_text(encoding="utf-8"))
     result = run_evidence["outputs"]["result"]
     assert result["execution_mode"] == "human_approved"

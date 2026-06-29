@@ -11,6 +11,10 @@ ROUTE_CONFIG = HARNESS / "plugins" / "autosci" / "config" / "feature_parity_rout
 
 def payload_with_items(items: list[dict]) -> dict:
     native_skills = [item["native_skill"] for item in items]
+    proof_levels = ("E0", "E1", "E2", "E3", "E4", "E5")
+    execution_policies = ("pure", "bounded_local", "approval_required", "provider_required")
+    runtime_statuses = ("not_required", "pending", "supplied", "verified")
+    requirement_statuses = ("ok", "pending", "supplied", "missing", "blocked")
     return {
         "schema": "autosci_feature_parity.v1",
         "task_id": "test-autosci-feature-parity",
@@ -34,6 +38,30 @@ def payload_with_items(items: list[dict]) -> dict:
                 "partial_count": len([item for item in items if item["coverage_status"] == "partial"]),
                 "gated_count": len([item for item in items if item["coverage_status"] == "gated"]),
                 "blocked_count": len([item for item in items if item["coverage_status"] == "blocked"]),
+                "semantic_full_count": len([item for item in items if item["semantic_parity"] == "full"]),
+                "semantic_partial_count": len([item for item in items if item["semantic_parity"] == "partial"]),
+                "semantic_missing_count": len([item for item in items if item["semantic_parity"] == "missing"]),
+                "execution_policy_counts": {
+                    value: len([item for item in items if item["execution_policy"] == value])
+                    for value in execution_policies
+                },
+                "proof_level_counts": {
+                    value: len([item for item in items if item["proof_level"] == value])
+                    for value in proof_levels
+                },
+                "runtime_proof_status_counts": {
+                    value: len([item for item in items if item["runtime_proof_status"] == value])
+                    for value in runtime_statuses
+                },
+                "proof_requirement_status_counts": {
+                    value: sum(
+                        1
+                        for item in items
+                        for requirement in item["proof_requirements"]
+                        if requirement["status"] == value
+                    )
+                    for value in requirement_statuses
+                },
                 "native_skills": native_skills,
                 "items": items,
             }
@@ -48,7 +76,74 @@ def payload_with_items(items: list[dict]) -> dict:
     }
 
 
-def base_item(skill: str, *, coverage_status: str = "full", side_effect_policy: str = "none") -> dict:
+def base_item(
+    skill: str,
+    *,
+    coverage_status: str = "full",
+    side_effect_policy: str = "none",
+    semantic_parity: str | None = None,
+    execution_policy: str | None = None,
+    proof_level: str | None = None,
+) -> dict:
+    semantic = semantic_parity or ("full" if coverage_status == "full" else "missing" if coverage_status == "missing" else "partial")
+    execution = execution_policy or (
+        "pure"
+        if side_effect_policy == "none"
+        else "bounded_local"
+        if side_effect_policy == "dry_run_only"
+        else "approval_required"
+        if side_effect_policy == "approval_required"
+        else "provider_required"
+    )
+    proof = proof_level or ("E3" if coverage_status == "full" else "E0" if coverage_status == "missing" else "E2")
+    runtime_status = "pending" if execution in {"approval_required", "provider_required"} else "not_required"
+    proof_requirements = [
+        {
+            "category": "route_definition",
+            "status": "ok" if coverage_status != "missing" else "missing",
+            "description": "Solar route declaration exists.",
+            "evidence_refs": [f"route:{skill}"],
+        },
+        {
+            "category": "native_skill_presence",
+            "status": "ok",
+            "description": "Native AutoSci skill exists.",
+            "evidence_refs": [f"native:{skill}"],
+        },
+        {
+            "category": "primary_tool_abi",
+            "status": "ok",
+            "description": "Primary tool references resolve.",
+            "evidence_refs": ["plugins/autosci/bin/autosci_bridge.py"],
+        },
+    ]
+    if semantic != "full":
+        proof_requirements.append(
+            {
+                "category": "semantic_equivalence_evidence",
+                "status": "pending",
+                "description": "Non-full semantic parity still needs proof.",
+                "evidence_refs": [f"route:{skill}"],
+            }
+        )
+    if runtime_status == "pending":
+        proof_requirements.append(
+            {
+                "category": "external_runtime_evidence",
+                "status": "pending",
+                "description": "External runtime proof is still required.",
+                "evidence_refs": [],
+            }
+        )
+    if side_effect_policy == "approval_required":
+        proof_requirements.append(
+            {
+                "category": "approval_boundary_evidence",
+                "status": "pending",
+                "description": "Approval boundary proof is still required.",
+                "evidence_refs": [],
+            }
+        )
     return {
         "autosci_feature": f"/{skill}",
         "native_skill": skill,
@@ -60,6 +155,15 @@ def base_item(skill: str, *, coverage_status: str = "full", side_effect_policy: 
         "coverage_status": coverage_status,
         "backend_mode": "solar_native" if coverage_status == "full" else "route_plan",
         "side_effect_policy": side_effect_policy,
+        "semantic_parity": semantic,
+        "execution_policy": execution,
+        "proof_level": proof,
+        "proof_refs": [f"route:{skill}", f"native:{skill}"],
+        "remaining_requirements": [] if semantic == "full" else ["Complete route-specific parity proof."],
+        "runtime_proof_refs": [],
+        "runtime_proof_sources": [],
+        "runtime_proof_status": runtime_status,
+        "proof_requirements": proof_requirements,
         "evidence_schema": "literature_discovery.v1",
         "primary_tools": ["plugins/autosci/bin/autosci_bridge.py"],
         "required_capabilities": ["route coverage"],
@@ -119,3 +223,109 @@ def test_autosci_feature_parity_gate_rejects_full_route_with_fixture_limitation(
     assert result.ok is False
     assert result.status == "failed"
     assert "full coverage cannot describe fixture" in " ".join(result.reasons)
+
+
+def test_autosci_feature_parity_gate_rejects_semantic_full_without_e3_proof() -> None:
+    item = base_item("discover", semantic_parity="full", proof_level="E2")
+    payload = payload_with_items([item])
+
+    result = autosci_feature_parity_gate.evaluate(payload)
+
+    assert result.ok is False
+    assert "semantic_parity=full requires proof_level E3 or higher" in " ".join(result.reasons)
+
+
+def test_autosci_feature_parity_gate_rejects_bridge_primary_tool_action_drift() -> None:
+    item = base_item("paper-plan", coverage_status="partial", side_effect_policy="dry_run_only")
+    item["solar_backend_action"] = "plan_report"
+    item["primary_tools"] = ["plugins/autosci/bin/autosci_bridge.py run --action write_report"]
+    payload = payload_with_items([item])
+
+    result = autosci_feature_parity_gate.evaluate(payload)
+
+    assert result.ok is False
+    joined = " ".join(result.reasons)
+    assert "primary_tools bridge action" in joined
+    assert "solar_backend_action plan_report" in joined
+
+
+def test_autosci_feature_parity_gate_rejects_pending_runtime_without_requirement() -> None:
+    item = base_item("daily-arxiv", coverage_status="gated", side_effect_policy="approval_required")
+    item["proof_requirements"] = [
+        requirement for requirement in item["proof_requirements"] if requirement["category"] != "external_runtime_evidence"
+    ]
+    payload = payload_with_items([item])
+
+    result = autosci_feature_parity_gate.evaluate(payload)
+
+    assert result.ok is False
+    assert "runtime_proof_status=pending requires external_runtime_evidence requirement" in " ".join(result.reasons)
+
+
+def test_autosci_feature_parity_gate_rejects_runtime_status_count_drift() -> None:
+    item = base_item("daily-arxiv", coverage_status="gated", side_effect_policy="approval_required")
+    payload = payload_with_items([item])
+    payload["outputs"]["parity"]["runtime_proof_status_counts"]["pending"] = 0
+
+    result = autosci_feature_parity_gate.evaluate(payload)
+
+    assert result.ok is False
+    assert "runtime_proof_status_counts.pending=0 does not match actual 1" in " ".join(result.reasons)
+
+
+def test_autosci_feature_parity_gate_rejects_runtime_source_skill_mismatch() -> None:
+    item = base_item("daily-arxiv", coverage_status="gated", side_effect_policy="approval_required")
+    item["runtime_proof_status"] = "supplied"
+    item["runtime_proof_refs"] = ["runtime:wrong-skill:test"]
+    item["runtime_proof_sources"] = [
+        {
+            "proof_id": "runtime:wrong-skill:test",
+            "native_skill": "novelty",
+            "status": "supplied",
+            "manifest_path": "/tmp/runtime-proof.json",
+            "categories": ["external_runtime_evidence"],
+            "evidence_refs": ["runtime:wrong-skill:test"],
+            "evidence_ref_statuses": [
+                {"ref": "runtime:wrong-skill:test", "status": "external_ref", "kind": "external"}
+            ],
+            "description": "Wrong skill proof should be rejected.",
+        }
+    ]
+    for requirement in item["proof_requirements"]:
+        if requirement["category"] == "external_runtime_evidence":
+            requirement["status"] = "supplied"
+            requirement["evidence_refs"] = ["runtime:wrong-skill:test"]
+    payload = payload_with_items([item])
+
+    result = autosci_feature_parity_gate.evaluate(payload)
+
+    assert result.ok is False
+    assert "runtime_proof_sources[0].native_skill must match item native_skill" in " ".join(result.reasons)
+
+
+def test_autosci_feature_parity_gate_rejects_unknown_runtime_source_category() -> None:
+    item = base_item("daily-arxiv", coverage_status="gated", side_effect_policy="approval_required")
+    item["runtime_proof_status"] = "supplied"
+    item["runtime_proof_refs"] = ["runtime:daily-arxiv:unknown-category"]
+    item["runtime_proof_sources"] = [
+        {
+            "proof_id": "runtime:daily-arxiv:unknown-category",
+            "native_skill": "daily-arxiv",
+            "status": "supplied",
+            "manifest_path": "/tmp/runtime-proof.json",
+            "categories": ["unknown_runtime_category"],
+            "evidence_refs": ["runtime:daily-arxiv:unknown-category"],
+            "evidence_ref_statuses": [
+                {"ref": "runtime:daily-arxiv:unknown-category", "status": "external_ref", "kind": "external"}
+            ],
+            "description": "Unknown proof category should be rejected.",
+        }
+    ]
+    payload = payload_with_items([item])
+
+    result = autosci_feature_parity_gate.evaluate(payload)
+
+    assert result.ok is False
+    joined = " ".join(result.reasons)
+    assert "runtime_proof_status=supplied requires at least one supplied proof requirement" in joined
+    assert "unknown_runtime_category" in joined

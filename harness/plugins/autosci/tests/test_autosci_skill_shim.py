@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -9,6 +10,7 @@ import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -17,6 +19,28 @@ REPO = HARNESS.parent
 SHIM = HARNESS / "plugins" / "autosci" / "bin" / "autosci_skill_shim.py"
 GATE = HARNESS / "evaluators" / "scientific" / "autosci_skill_run_gate.py"
 PAPER = HARNESS / "plugins" / "autosci" / "tests" / "fixtures" / "skillgen_operator_smoke_paper.md"
+FULL_LIFECYCLE_NODES = [
+    "literature_discover",
+    "paper_ingest",
+    "paper_analyze",
+    "memory_update_initial",
+    "graph_update",
+    "claim_extract",
+    "method_extract",
+    "code_evidence_map",
+    "idea_generate",
+    "idea_evaluate",
+    "experiment_design",
+    "experiment_run",
+    "experiment_monitor",
+    "claim_verify",
+    "report_draft",
+    "artifact_review",
+    "memory_update_final",
+    "workflow_evolve",
+    "report_plan",
+    "publication_produce",
+]
 
 
 def run_shim(tmp_path: Path, *args: str, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
@@ -46,6 +70,14 @@ def run_gate(path: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
+def assert_gate_inconclusive_without_reasons(proc: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+    assert proc.returncode == 3, proc.stdout + proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "inconclusive"
+    assert result["reasons"] == []
+    return result
+
+
 def write_pdf(path: Path, text: str) -> None:
     fitz = pytest.importorskip("fitz")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -54,6 +86,140 @@ def write_pdf(path: Path, text: str) -> None:
     page.insert_text((72, 72), text, fontsize=11)
     doc.save(path)
     doc.close()
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _rel(path: Path, root: Path) -> str:
+    return str(path.resolve().relative_to(root.resolve()))
+
+
+def write_weak_lifecycle_summary(tmp_path: Path, path: Path) -> None:
+    _write_json(
+        path,
+        {
+            "schema": "scientific_lifecycle.v1",
+            "workflow_id": "scientific_research_lifecycle_full_v1",
+            "job_id": "job-scheduler-lifecycle-weak",
+            "sprint_id": "job-scheduler-lifecycle-weak",
+            "lifecycle_status": "passed",
+            "required_nodes": FULL_LIFECYCLE_NODES,
+            "node_results": {
+                node_id: {
+                    "node_id": node_id,
+                    "status": "passed",
+                }
+                for node_id in FULL_LIFECYCLE_NODES
+            },
+            "gate_results": {
+                node_id: {
+                    "node_id": node_id,
+                    "status": "passed",
+                    "ok": True,
+                }
+                for node_id in FULL_LIFECYCLE_NODES
+            },
+            "blocked_nodes": {},
+            "lifecycle_gate_result": {"ok": True, "status": "passed"},
+        },
+    )
+
+
+def write_strict_lifecycle_summary(tmp_path: Path, path: Path) -> None:
+    job_id = "job-scheduler-lifecycle-strict"
+    node_results: dict[str, Any] = {}
+    gate_results: dict[str, Any] = {}
+    for node_id in FULL_LIFECYCLE_NODES:
+        node_dir = tmp_path / "artifacts/scientific/lifecycle-handoff" / node_id
+        artifact_path = node_dir / "workflow_evolution.json"
+        bridge_result_path = node_dir / "bridge_result.json"
+        operator_result_path = node_dir / "operator_result.json"
+        artifact = {
+            "schema": "workflow_evolution.v1",
+            "task_id": f"task-{node_id}",
+            "sprint_id": job_id,
+            "node_id": node_id,
+            "status": "completed",
+            "inputs": {"handoff_test": True},
+            "outputs": {
+                "evolution": {
+                    "proposal_id": f"proposal-{node_id}",
+                    "scope": "scheduler lifecycle handoff",
+                    "change_type": "other",
+                    "rationale": f"Strict handoff fixture for {node_id}.",
+                    "expected_effect": "Proves lifecycle summary handoff has runtime sidecars.",
+                    "approval_state": "approved",
+                    "evidence_ids": [f"evidence:{node_id}"],
+                    "review": {
+                        "human_accept_reject_required": False,
+                        "protected_core_edits_applied": False,
+                        "application_state": "not_applied",
+                    },
+                }
+            },
+            "artifacts": [],
+            "provenance": {
+                "operator_id": f"operator-{node_id}",
+                "implementation_package": "harness.plugins.autosci.tests",
+                "timestamp": "2026-06-26T00:00:00Z",
+            },
+            "limitations": ["Synthetic strict lifecycle handoff fixture."],
+        }
+        _write_json(artifact_path, artifact)
+        artifact_hash = _sha256(artifact_path)
+        _write_json(bridge_result_path, {"node_id": node_id, "status": "completed", "artifact_sha256": artifact_hash})
+        _write_json(operator_result_path, {"node_id": node_id, "status": "completed", "bridge_result_path": _rel(bridge_result_path, tmp_path)})
+        node_results[node_id] = {
+            "job_id": job_id,
+            "node_id": node_id,
+            "logical_operator": f"Logical{node_id}",
+            "operator_id": f"operator-{node_id}",
+            "action": f"action_{node_id}",
+            "status": "passed",
+            "artifact_path": _rel(artifact_path, tmp_path),
+            "artifact_sha256": artifact_hash,
+            "bridge_result_path": _rel(bridge_result_path, tmp_path),
+            "expected_schema": "workflow_evolution.v1",
+            "gate": f"G_{node_id.upper()}",
+            "operator_result_path": _rel(operator_result_path, tmp_path),
+        }
+        gate_results[node_id] = {
+            "job_id": job_id,
+            "node_id": node_id,
+            "gate": f"G_{node_id.upper()}",
+            "status": "passed",
+            "ok": True,
+            "reasons": [],
+            "warnings": [],
+        }
+    _write_json(
+        path,
+        {
+            "schema": "scientific_lifecycle.v1",
+            "workflow_id": "scientific_research_lifecycle_full_v1",
+            "job_id": job_id,
+            "sprint_id": job_id,
+            "execution_owner": "solar.operator_runtime.scheduler_lifecycle_handoff_test",
+            "lifecycle_status": "passed",
+            "required_nodes": FULL_LIFECYCLE_NODES,
+            "node_results": node_results,
+            "gate_results": gate_results,
+            "blocked_nodes": {},
+            "workflow_config_alignment": {
+                "ok": True,
+                "status": "aligned",
+                "issues": [],
+            },
+            "lifecycle_gate_result": {"ok": True, "status": "passed"},
+        },
+    )
 
 
 def test_autosci_skill_shim_lists_configured_skills(tmp_path: Path) -> None:
@@ -90,12 +256,14 @@ def test_autosci_skill_shim_runs_ingest_and_gate(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["skill"] == "ingest"
+    assert summary["status"] == "inconclusive"
     assert summary["execution_status"] == "partial"
     assert summary["action_count"] == 2
     assert summary["workspace_updated_count"] > 0
 
     evidence_path = Path(summary["evidence_path"])
     payload = json.loads(evidence_path.read_text(encoding="utf-8"))
+    assert payload["status"] == "inconclusive"
     actions = payload["outputs"]["skill_run"]["actions"]
     assert [action["action"] for action in actions] == ["ingest_paper", "analyze_paper"]
     assert Path(actions[0]["evidence_path"]).exists()
@@ -108,7 +276,7 @@ def test_autosci_skill_shim_runs_ingest_and_gate(tmp_path: Path) -> None:
     assert (tmp_path / "artifacts/autosci/workspace/wiki/index.md").exists()
 
     gate = run_gate(evidence_path)
-    assert gate.returncode == 0, gate.stdout + gate.stderr
+    assert_gate_inconclusive_without_reasons(gate)
 
 
 def test_autosci_skill_shim_runs_ingest_with_dollar_skill_alias(tmp_path: Path) -> None:
@@ -240,13 +408,105 @@ def test_autosci_skill_shim_ingests_pdf_with_extracted_text_and_no_fixture_leaka
     assert "SKILLGEN" in paper["title"]
     assert "Fixture abstract" not in json.dumps(evidence)
     artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
-    assert {"extracted_pdf_text", "synthetic_latex"} <= artifact_types
+    assert {
+        "extracted_pdf_text",
+        "ingest_final_source_registration_boundary_json",
+        "research_graph_update_json",
+        "research_memory_update_json",
+        "synthetic_latex",
+    } <= artifact_types
+    boundary = paper["final_source_registration_boundary"]
+    assert boundary["schema"] == "autosci_ingest_final_source_registration_boundary.v1"
+    assert boundary["status"] == "ingest_source_registration_incomplete"
+    assert boundary["source_preparation_verified"] is True
+    assert boundary["parse_quality_ready"] is True
+    assert boundary["raw_artifact_provenance_ready"] is True
+    assert boundary["downstream_handoff_ready"] is True
+    assert boundary["wiki_registration_ready"] is False
+    assert "wiki_registration_ready" in boundary["missing"]
     prepared_paths = [
         artifact["path"]
         for artifact in evidence["artifacts"]
         if artifact["type"] in {"extracted_pdf_text", "synthetic_latex"}
     ]
     assert all(path.startswith("artifacts/autosci/workspace/raw/tmp/papers/") for path in prepared_paths)
+
+
+def test_autosci_skill_shim_ingest_final_source_registration_boundary_ready_with_wiki_state(tmp_path: Path) -> None:
+    source_path = tmp_path / "raw" / "papers" / "registered_source.md"
+    source_path.parent.mkdir(parents=True)
+    source_path.write_text(
+        "\n".join(
+            [
+                "# Registered SkillGen Source",
+                "",
+                "## Abstract",
+                "This paper source is already registered in the AutoSci wiki graph.",
+                "",
+                "## Method",
+                "It records source preparation, graph handoff, and wiki registration evidence.",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    wiki_root = tmp_path / "custom-wiki"
+    (wiki_root / "papers").mkdir(parents=True)
+    (wiki_root / "graph").mkdir(parents=True)
+    paper_id = "paper-registered-source"
+    paper_page = wiki_root / "papers" / f"{paper_id}.md"
+    paper_page.write_text(
+        f"# Registered SkillGen Source\n\nPaper id: `{paper_id}`\n",
+        encoding="utf-8",
+    )
+    (wiki_root / "log.md").write_text(f"## Ingest\n\nRegistered `{paper_id}`.\n", encoding="utf-8")
+    (wiki_root / "graph" / "edges.jsonl").write_text(
+        json.dumps(
+            {
+                "source": "ingest",
+                "edge_type": "source_candidate_ingested",
+                "target": paper_id,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (wiki_root / "index.md").write_text(f"# Wiki\n\n## Papers\n\n- [{paper_id}](papers/{paper_page.name})\n", encoding="utf-8")
+    (wiki_root / "graph" / "context_brief.md").write_text("# Context\n\nRegistered source context.\n", encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$ingest",
+        str(source_path),
+        "--wiki-root",
+        str(wiki_root),
+        "--run-id",
+        "shim-ingest-final-source-registration",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "ingest"
+    assert summary["execution_status"] == "partial"
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert evidence["inputs"]["wiki_root"] == str(wiki_root)
+    boundary = evidence["outputs"]["final_source_registration_boundary"]
+    assert boundary["status"] == "ingest_source_registration_ready"
+    assert boundary["final_registration_ready"] is True
+    assert boundary["source_preparation_verified"] is True
+    assert boundary["parse_quality_ready"] is True
+    assert boundary["raw_artifact_provenance_ready"] is True
+    assert boundary["downstream_handoff_ready"] is True
+    assert boundary["wiki_registration_ready"] is True
+    assert boundary["missing"] == []
+    artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
+    assert {
+        "ingest_final_source_registration_boundary_json",
+        "research_graph_update_json",
+        "research_memory_update_json",
+    } <= artifact_types
 
 
 def test_autosci_skill_shim_accepts_original_ingest_followup_flags(tmp_path: Path) -> None:
@@ -312,7 +572,82 @@ def test_autosci_skill_shim_accepts_discover_from_wiki_limit(tmp_path: Path) -> 
     assert discovery["outputs"]["mode"] == "wiki"
     assert discovery["outputs"]["limit"] == 10
     assert discovery["outputs"]["candidates"] == []
+    boundary = discovery["outputs"]["source_provider_boundary"]["final_shortlist_boundary"]
+    assert boundary["schema"] == "autosci_discover_final_shortlist_boundary.v1"
+    assert boundary["final_shortlist_ready"] is False
+    assert boundary["status"] == "discover_shortlist_incomplete"
+    assert "discovery shortlist is empty" in boundary["blocking_reasons"]
+    assert any(artifact["type"] == "discover_final_shortlist_boundary_json" for artifact in discovery["artifacts"])
     assert "local_fixture" not in json.dumps(discovery)
+
+
+def test_autosci_skill_shim_discover_runtime_requires_provider_boundary(tmp_path: Path) -> None:
+    external_dir = tmp_path / "external-discover-runtime"
+    external_dir.mkdir()
+    allowlist = external_dir / "allowlist.json"
+    before = external_dir / "before.json"
+    after = external_dir / "after.json"
+    runtime = external_dir / "source-runtime.json"
+    allowlist.write_text('{"allowed": ["source-fetch"]}\n', encoding="utf-8")
+    before.write_text('{"state": "before-source-fetch"}\n', encoding="utf-8")
+    after.write_text('{"state": "after-source-fetch"}\n', encoding="utf-8")
+    runtime.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_runtime_evidence.v1",
+                "task_id": "task-source-runtime-generic",
+                "status": "completed",
+                "outputs": {
+                    "runtime": {
+                        "action": "discover_literature",
+                        "status": "completed",
+                        "exit_code": 0,
+                        "candidates": [
+                            {
+                                "candidate_id": "generic-runtime-source",
+                                "title": "Generic Runtime Source Without Provider Channel",
+                            }
+                        ],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$discover",
+        "skill generation",
+        "--approval-ref",
+        "approval-source-runtime-generic",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--runtime-evidence",
+        str(runtime),
+        "--before-artifact",
+        str(before),
+        "--after-artifact",
+        str(after),
+        "--run-id",
+        "shim-discover-generic-runtime-boundary",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    discovery = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert discovery["status"] == "inconclusive"
+    assert discovery["outputs"]["mode"] == "discover_literature_runtime_pending"
+    boundary = discovery["outputs"]["source_provider_boundary"]
+    assert boundary["status"] == "incomplete"
+    assert boundary["completed"] is False
+    assert boundary["generic_channels"] == ["approved_runtime"]
+    assert "no non-fixture provider source channel was present" in boundary["invalid_reasons"]
+    final_boundary = boundary["final_shortlist_boundary"]
+    assert final_boundary["final_shortlist_ready"] is False
+    assert final_boundary["status"] == "discover_shortlist_incomplete"
+    assert "provider-backed source channel is missing" in final_boundary["blocking_reasons"]
 
 
 def test_autosci_skill_shim_runs_research_pipeline(tmp_path: Path) -> None:
@@ -331,6 +666,7 @@ def test_autosci_skill_shim_runs_research_pipeline(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["skill"] == "research"
+    assert summary["status"] == "inconclusive"
     assert summary["execution_status"] == "gated"
     assert summary["action_count"] == 16
     assert summary["failed_count"] == 0
@@ -363,7 +699,7 @@ def test_autosci_skill_shim_runs_research_pipeline(tmp_path: Path) -> None:
     assert (tmp_path / "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md").exists()
 
     gate = run_gate(evidence_path)
-    assert gate.returncode == 0, gate.stdout + gate.stderr
+    assert_gate_inconclusive_without_reasons(gate)
 
 
 def test_autosci_skill_shim_research_start_from_writes_pipeline_artifacts(tmp_path: Path) -> None:
@@ -567,60 +903,9 @@ def test_autosci_skill_shim_research_lifecycle_completes_from_verified_stage_evi
     assert (tmp_path / "artifacts/autosci/workspace/paper/main.pdf").exists()
 
 
-def test_autosci_skill_shim_research_lifecycle_completes_from_scheduler_summary(tmp_path: Path) -> None:
+def test_autosci_skill_shim_research_lifecycle_ignores_weak_scheduler_summary(tmp_path: Path) -> None:
     lifecycle_summary = tmp_path / "scientific-lifecycle-summary.json"
-    required_nodes = [
-        "literature_discover",
-        "paper_ingest",
-        "paper_analyze",
-        "memory_update_initial",
-        "graph_update",
-        "claim_extract",
-        "method_extract",
-        "code_evidence_map",
-        "idea_generate",
-        "idea_evaluate",
-        "experiment_design",
-        "experiment_run",
-        "experiment_monitor",
-        "claim_verify",
-        "report_draft",
-        "artifact_review",
-        "memory_update_final",
-        "workflow_evolve",
-        "report_plan",
-        "publication_produce",
-    ]
-    lifecycle_summary.write_text(
-        json.dumps(
-            {
-                "schema": "scientific_lifecycle.v1",
-                "workflow_id": "scientific_research_lifecycle_full_v1",
-                "job_id": "job-scheduler-lifecycle-proof",
-                "sprint_id": "job-scheduler-lifecycle-proof",
-                "lifecycle_status": "passed",
-                "required_nodes": required_nodes,
-                "node_results": {
-                    node_id: {
-                        "node_id": node_id,
-                        "status": "passed",
-                    }
-                    for node_id in required_nodes
-                },
-                "gate_results": {
-                    node_id: {
-                        "node_id": node_id,
-                        "status": "passed",
-                        "ok": True,
-                    }
-                    for node_id in required_nodes
-                },
-                "blocked_nodes": {},
-                "lifecycle_gate_result": {"ok": True, "status": "passed"},
-            }
-        ),
-        encoding="utf-8",
-    )
+    write_weak_lifecycle_summary(tmp_path, lifecycle_summary)
 
     proc = run_shim(
         tmp_path,
@@ -630,6 +915,40 @@ def test_autosci_skill_shim_research_lifecycle_completes_from_scheduler_summary(
         str(lifecycle_summary),
         "--run-id",
         "shim-research-scheduler-summary",
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "research"
+    assert summary["passed_count"] == 0
+    assert summary["schema_only_count"] == 1
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "run_research_lifecycle"
+    assert action["gate_status"] == "schema_only"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    evolution = evidence["outputs"]["evolution"]
+    assert evidence["status"] == "inconclusive"
+    assert evolution["pipeline"]["status"] != "completed"
+    assert any(stage["state"] != "completed" for stage in evolution["stage_plan"])
+    state_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "pipeline_state_json")
+    state = json.loads((tmp_path / state_artifact["path"]).read_text(encoding="utf-8"))
+    assert state["evidence_report"]["scheduler_lifecycle_completed"] is False
+
+
+def test_autosci_skill_shim_research_lifecycle_completes_from_strict_scheduler_summary(tmp_path: Path) -> None:
+    lifecycle_summary = tmp_path / "scientific-lifecycle-summary.json"
+    write_strict_lifecycle_summary(tmp_path, lifecycle_summary)
+
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen-main",
+        "--lifecycle-summary",
+        str(lifecycle_summary),
+        "--run-id",
+        "shim-research-strict-scheduler-summary",
     )
 
     assert proc.returncode == 0, proc.stderr
@@ -648,8 +967,11 @@ def test_autosci_skill_shim_research_lifecycle_completes_from_scheduler_summary(
     assert {stage["state"] for stage in evolution["stage_plan"]} == {"completed"}
     state_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "pipeline_state_json")
     state = json.loads((tmp_path / state_artifact["path"]).read_text(encoding="utf-8"))
+    scheduler_lifecycle = state["evidence_report"]["scheduler_lifecycle"]
     assert state["evidence_report"]["scheduler_lifecycle_completed"] is True
-    assert state["evidence_report"]["scheduler_lifecycle"]["node_count"] == len(required_nodes)
+    assert scheduler_lifecycle["node_count"] == len(FULL_LIFECYCLE_NODES)
+    assert scheduler_lifecycle["lifecycle_runtime_gate_status"] == "passed"
+    assert scheduler_lifecycle["workflow_config_alignment_status"] == "aligned"
 
 
 def test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary(tmp_path: Path) -> None:
@@ -670,19 +992,30 @@ def test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary(tmp_
     assert summary["skill"] == "research"
     assert summary["execution_status"] == "gated"
     assert summary["scheduler_lifecycle_status"] == "blocked"
-    assert summary["scheduler_lifecycle_node_count"] == 18
+    assert summary["scheduler_lifecycle_node_count"] == 14
     assert summary["scheduler_lifecycle_blocked_node_count"] == 2
+    assert summary["scheduler_workflow_config_alignment_status"] == "drift"
+    assert summary["scheduler_workflow_config_alignment_ok"] is False
+    assert "configured_nodes_not_required_by_run" in summary["scheduler_workflow_config_alignment_issues"]
+    assert summary["scheduler_dispatch_boundary_status"] == "bounded_smoke"
+    assert summary["scheduler_dispatch_boundary_production_ready"] is False
+    assert "runner_contract=bounded_smoke_runner" in summary["scheduler_dispatch_boundary_blocking_reasons"]
 
     scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
     assert scheduler_summary["schema"] == "scientific_lifecycle.v1"
     assert scheduler_summary["execution_owner"] == "solar.operator_runtime.scheduler_lifecycle_smoke"
     assert scheduler_summary["lifecycle_status"] == "blocked"
+    assert scheduler_summary["workflow_config_alignment"]["status"] == "drift"
+    assert scheduler_summary["dispatch_boundary"]["status"] == "bounded_smoke"
     assert set(scheduler_summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
-    assert len(scheduler_summary["node_results"]) == 18
+    assert len(scheduler_summary["node_results"]) == 14
 
     payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert payload["status"] == "inconclusive"
+    assert any("workflow-config drift" in item for item in payload["limitations"])
     skill_run = payload["outputs"]["skill_run"]
     assert skill_run["scheduler_lifecycle"]["summary_path"] == summary["scheduler_lifecycle_summary_path"]
+    assert skill_run["scheduler_lifecycle"]["workflow_config_alignment_status"] == "drift"
     assert payload["inputs"]["lifecycle_summary"] == [summary["scheduler_lifecycle_summary_path"]]
     action = skill_run["actions"][0]
     assert action["action"] == "run_research_lifecycle"
@@ -692,6 +1025,66 @@ def test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary(tmp_
     state = json.loads((tmp_path / state_artifact["path"]).read_text(encoding="utf-8"))
     assert state["evidence_report"]["scheduler_lifecycle_completed"] is False
     assert any(stage["state"] in {"pending", "pending_evidence"} for stage in evolution["stage_plan"])
+
+
+def test_autosci_skill_shim_research_scheduler_strict_workflow_config_alignment_fails(tmp_path: Path) -> None:
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--scheduler-require-workflow-config-alignment",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-scheduler-strict-config",
+    )
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["status"] == "failed"
+    assert summary["scheduler_lifecycle_status"] == "failed"
+    assert summary["scheduler_workflow_config_alignment_status"] == "drift"
+    assert "configured_nodes_not_required_by_run" in summary["scheduler_workflow_config_alignment_issues"]
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert any("workflow-config drift" in item for item in payload["limitations"])
+    scheduler_lifecycle = payload["outputs"]["skill_run"]["scheduler_lifecycle"]
+    assert scheduler_lifecycle["workflow_config_alignment_status"] == "drift"
+
+
+def test_autosci_skill_shim_research_scheduler_strict_production_dispatch_fails(tmp_path: Path) -> None:
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--scheduler-require-production-dispatch",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-scheduler-production-boundary",
+    )
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["status"] == "failed"
+    assert summary["scheduler_lifecycle_status"] == "failed"
+    assert summary["scheduler_dispatch_boundary_status"] == "bounded_smoke"
+    assert summary["scheduler_dispatch_boundary_production_ready"] is False
+    assert "runner_contract=bounded_smoke_runner" in summary["scheduler_dispatch_boundary_blocking_reasons"]
+
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    assert scheduler_summary["dispatch_boundary"]["production_ready"] is False
+    assert any(
+        item["check"] == "production_dispatch_boundary" and item["status"] == "error"
+        for item in scheduler_summary["checks"]
+    )
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    scheduler_lifecycle = payload["outputs"]["skill_run"]["scheduler_lifecycle"]
+    assert scheduler_lifecycle["dispatch_boundary_status"] == "bounded_smoke"
+    assert scheduler_lifecycle["dispatch_boundary_production_ready"] is False
 
 
 def test_autosci_skill_shim_research_scheduler_run_records_human_gate(tmp_path: Path) -> None:
@@ -807,13 +1200,20 @@ def test_autosci_skill_shim_research_scheduler_online_uses_source_runtime_eviden
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
-    assert summary["scheduler_lifecycle_status"] == "passed"
-    assert summary["scheduler_lifecycle_node_count"] == 18
+    assert summary["scheduler_lifecycle_status"] == "blocked"
+    assert summary["scheduler_lifecycle_node_count"] == 14
+    assert summary["scheduler_lifecycle_blocked_node_count"] == 2
     scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
     literature_path = tmp_path / scheduler_summary["node_results"]["literature_discover"]["artifact_path"]
     literature = json.loads(literature_path.read_text(encoding="utf-8"))
     assert literature["outputs"]["mode"] == "discover_literature_runtime_verified"
     assert literature["outputs"]["candidates"][0]["source_channels"] == ["search_s2"]
+    assert literature["outputs"]["source_provider_boundary"]["status"] == "completed"
+    assert literature["outputs"]["source_provider_boundary"]["provider_channels"] == ["search_s2"]
+    final_boundary = literature["outputs"]["source_provider_boundary"]["final_shortlist_boundary"]
+    assert final_boundary["final_shortlist_ready"] is True
+    assert final_boundary["status"] == "final_shortlist_ready"
+    assert final_boundary["provider_channels"] == ["search_s2"]
     assert "fixture" not in literature["outputs"]["candidates"][0]["candidate_id"]
 
 
@@ -886,8 +1286,9 @@ def test_autosci_skill_shim_research_scheduler_uses_experiment_runtime_evidence(
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
-    assert summary["scheduler_lifecycle_status"] == "passed"
-    assert summary["scheduler_lifecycle_node_count"] == 18
+    assert summary["scheduler_lifecycle_status"] == "blocked"
+    assert summary["scheduler_lifecycle_node_count"] == 14
+    assert summary["scheduler_lifecycle_blocked_node_count"] == 2
     scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
     run_path = tmp_path / scheduler_summary["node_results"]["experiment_run"]["artifact_path"]
     run_evidence = json.loads(run_path.read_text(encoding="utf-8"))
@@ -962,7 +1363,9 @@ def test_autosci_skill_shim_research_scheduler_executes_approved_experiment_comm
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
-    assert summary["scheduler_lifecycle_status"] == "passed"
+    assert summary["scheduler_lifecycle_status"] == "blocked"
+    assert summary["scheduler_lifecycle_node_count"] == 14
+    assert summary["scheduler_lifecycle_blocked_node_count"] == 2
     scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
     run_evidence = json.loads((tmp_path / scheduler_summary["node_results"]["experiment_run"]["artifact_path"]).read_text(encoding="utf-8"))
     result = run_evidence["outputs"]["result"]
@@ -1041,6 +1444,7 @@ def test_autosci_skill_shim_research_scheduler_executes_approved_publication_com
         "skillgen lifecycle",
         "--scheduler-run",
         "--scheduler-dispatch-external-evidence",
+        "--scheduler-require-workflow-config-alignment",
         "--review-llm-evidence",
         str(review_llm_path),
         "--compile-target",
@@ -1065,7 +1469,11 @@ def test_autosci_skill_shim_research_scheduler_executes_approved_publication_com
     summary = json.loads(proc.stdout)
     assert summary["scheduler_lifecycle_status"] == "passed"
     assert summary["scheduler_lifecycle_node_count"] == 20
+    assert summary["scheduler_workflow_config_alignment_status"] == "aligned"
+    assert summary["scheduler_workflow_config_alignment_ok"] is True
+    assert summary["scheduler_workflow_config_alignment_issues"] == []
     scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    assert scheduler_summary["workflow_config_alignment"]["status"] == "aligned"
     compile_evidence = json.loads((tmp_path / scheduler_summary["node_results"]["publication_produce"]["artifact_path"]).read_text(encoding="utf-8"))
     assert compile_evidence["status"] == "completed"
     bundle_files = compile_evidence["outputs"]["bundle"]["files"]
@@ -1337,7 +1745,77 @@ def test_autosci_skill_shim_exp_design_attaches_review_llm_validation(tmp_path: 
     assert plan["review_llm"]["recommendation"] == "pass_with_caveats"
     assert "review-exp-design" in plan["evidence_ids"]
     assert "review_llm_design_validation == completed" in plan["success_criteria"]
-    assert any(artifact["type"] == "experiment_design_review_llm_evidence_json" for artifact in evidence["artifacts"])
+    boundary = plan["source_context"]["final_execution_boundary"]
+    assert boundary["status"] == "execution_readiness_incomplete"
+    assert boundary["review_llm_completed"] is True
+    assert "approved runtime preflight contract is incomplete" in boundary["blocking_reasons"]
+    artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
+    assert "experiment_design_review_llm_evidence_json" in artifact_types
+    assert "experiment_design_final_execution_boundary_json" in artifact_types
+
+
+def test_autosci_skill_shim_exp_design_marks_execution_ready_with_approval_preflight(tmp_path: Path) -> None:
+    review = tmp_path / "exp-design-review-ready.json"
+    review.write_text(
+        json.dumps(
+            {
+                "schema": "artifact_review.v1",
+                "task_id": "review-exp-design-ready",
+                "status": "completed",
+                "outputs": {
+                    "review": {
+                        "artifact_id": "artifact:idea-skillgen-ready",
+                        "target": "idea-skillgen-ready",
+                        "review_mode": "review_llm",
+                        "review_available": True,
+                        "score": 0.9,
+                        "recommendation": "accept",
+                        "evidence_ids": ["review:exp-design-ready"],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    allowlist = tmp_path / "exp-design-allowlist.json"
+    before = tmp_path / "exp-design-before.json"
+    allowlist.write_text(json.dumps({"executables": ["python3"]}), encoding="utf-8")
+    before.write_text(json.dumps({"workspace": "prepared"}), encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-design",
+        "idea-skillgen-ready",
+        "--review",
+        "--review-llm-evidence",
+        str(review),
+        "--approval-ref",
+        "approval-exp-design-ready",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--run-id",
+        "shim-exp-design-execution-ready",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "exp-design"
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    plan = evidence["outputs"]["experiment_plan"]
+    boundary = plan["source_context"]["final_execution_boundary"]
+    assert boundary["status"] == "execution_ready"
+    assert boundary["execution_ready"] is True
+    assert boundary["approval_ready_for_execution"] is True
+    assert boundary["review_llm_completed"] is True
+    assert "final_execution_boundary == execution_ready" in plan["success_criteria"]
+    artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
+    assert "experiment_design_final_execution_boundary_json" in artifacts
+    sidecar = json.loads((tmp_path / artifacts["experiment_design_final_execution_boundary_json"]).read_text(encoding="utf-8"))
+    assert sidecar["status"] == "execution_ready"
 
 
 def test_autosci_skill_shim_exp_run_uses_verified_runtime_evidence_and_mutates_wiki(tmp_path: Path) -> None:
@@ -1428,7 +1906,15 @@ def test_autosci_skill_shim_exp_run_uses_verified_runtime_evidence_and_mutates_w
         "wiki_experiment_state",
         "wiki_log",
         "wiki_graph_edges",
+        "experiment_run_final_runtime_audit_boundary_json",
     }.issubset(artifact_types)
+    boundary = experiment_result["final_runtime_audit_boundary"]
+    assert boundary["schema"] == "autosci_experiment_run_final_runtime_audit_boundary.v1"
+    assert boundary["stage"] == "run"
+    assert boundary["status"] == "stage_runtime_audit_ready"
+    assert boundary["stage_audit_ready"] is True
+    assert boundary["final_runtime_audit_ready"] is False
+    assert boundary["wiki_state_mutated"] is True
 
     state_path = tmp_path / "artifacts/autosci/workspace/wiki/experiments/exp-approved.md"
     assert state_path.exists()
@@ -1805,6 +2291,175 @@ def test_autosci_skill_shim_exp_status_reads_persistent_session_registry(tmp_pat
     assert any(artifact["type"] == "experiment_session_registry_json" for artifact in evidence["artifacts"])
 
 
+def test_autosci_skill_shim_exp_status_executes_approved_remote_check(tmp_path: Path) -> None:
+    run_dir = tmp_path / "remote-status-run"
+    run_dir.mkdir()
+    (run_dir / "status.json").write_text(
+        json.dumps({"status": "running", "evidence_ids": ["remote-status:exp-remote-check"]}),
+        encoding="utf-8",
+    )
+    before = tmp_path / "remote-status-before.json"
+    before.write_text(json.dumps({"approved": True, "state": "before-check"}), encoding="utf-8")
+    command = " ".join(
+        [
+            shlex.quote(str(sys.executable)),
+            shlex.quote(str(REPO / "tools/remote.py")),
+            "check",
+            "--experiment",
+            "exp-remote-check",
+            "--run-dir",
+            shlex.quote(str(run_dir)),
+        ]
+    )
+    allowlist = tmp_path / "remote-status-allowlist.json"
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    status = run_shim(
+        tmp_path,
+        "$exp-status",
+        "exp-remote-check",
+        "--env",
+        "remote",
+        "--approval-ref",
+        "approval-remote-status-check",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--remote-check-command",
+        command,
+        "--remote-run-dir",
+        str(run_dir),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-status-remote-check",
+    )
+
+    assert status.returncode == 0, status.stderr
+    summary = json.loads(status.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = evidence["outputs"]["status_report"]
+    assert evidence["status"] == "completed"
+    assert report["experiment_id"] == "exp-remote-check"
+    assert report["state"] == "running"
+    assert any("Approved remote status check" in item for item in report["observations"])
+    assert any("remote_poll_boundary_status=local_run_dir_check" in item for item in report["observations"])
+    assert any("no result collection" in item for item in evidence["limitations"])
+    assert any("not a proven live SSH/provider poll" in item for item in evidence["limitations"])
+    artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
+    assert {"approval_contract_json", "remote_status_runtime_evidence_json", "remote_status_file"} <= artifact_types
+    runtime_path = next(
+        artifact["path"]
+        for artifact in evidence["artifacts"]
+        if artifact["type"] == "remote_status_runtime_evidence_json"
+    )
+    runtime = json.loads((tmp_path / runtime_path).read_text(encoding="utf-8"))
+    runtime_detail = runtime["outputs"]["runtime"]
+    assert runtime["schema"] == "autosci_runtime_evidence.v1"
+    assert runtime_detail["action"] == "monitor_experiment"
+    assert runtime_detail["remote_cli_command"] == "check"
+    assert runtime_detail["remote_status_state"] == "running"
+    boundary = runtime_detail["remote_poll_boundary"]
+    assert boundary["schema"] == "autosci_remote_poll_boundary.v1"
+    assert boundary["status"] == "local_run_dir_check"
+    assert boundary["live_remote_poll_verified"] is False
+    assert boundary["local_artifact_check"] is True
+    assert "status was derived from local run-dir artifacts" in boundary["invalid_reasons"]
+
+
+def test_autosci_skill_shim_exp_status_executes_approved_live_remote_check(tmp_path: Path) -> None:
+    run_dir = tmp_path / "live-remote-status-run"
+    run_dir.mkdir()
+    before = tmp_path / "live-remote-status-before.json"
+    before.write_text(json.dumps({"approved": True, "state": "before-live-check"}), encoding="utf-8")
+    provider_script = tmp_path / "fake_live_status_provider.py"
+    provider_script.write_text(
+        "import json\n"
+        "print(json.dumps({'remote_state': 'running', 'provider': 'ssh'}))\n",
+        encoding="utf-8",
+    )
+    provider_command = shlex.join([str(sys.executable), str(provider_script)])
+    provider_allowlist = tmp_path / "live-provider-allowlist.json"
+    provider_allowlist.write_text(json.dumps({"commands": [provider_command]}), encoding="utf-8")
+    command = " ".join(
+        [
+            shlex.quote(str(sys.executable)),
+            shlex.quote(str(REPO / "tools/remote.py")),
+            "check",
+            "--experiment",
+            "exp-live-remote-check",
+            "--run-dir",
+            shlex.quote(str(run_dir)),
+            "--approval-ref",
+            "approval-live-remote-status-provider",
+            "--allowlist-evidence",
+            shlex.quote(str(provider_allowlist)),
+            "--status-command",
+            shlex.quote(provider_command),
+            "--transport",
+            "ssh",
+            "--session-id",
+            "ssh-session-123",
+            "--execute-approved",
+        ]
+    )
+    allowlist = tmp_path / "live-remote-status-allowlist.json"
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    status = run_shim(
+        tmp_path,
+        "$exp-status",
+        "exp-live-remote-check",
+        "--env",
+        "remote",
+        "--approval-ref",
+        "approval-live-remote-status-check",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--remote-check-command",
+        command,
+        "--remote-run-dir",
+        str(run_dir),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-status-live-remote-check",
+    )
+
+    assert status.returncode == 0, status.stderr
+    summary = json.loads(status.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = evidence["outputs"]["status_report"]
+    assert evidence["status"] == "completed"
+    assert report["experiment_id"] == "exp-live-remote-check"
+    assert report["state"] == "running"
+    assert any("remote_poll_boundary_status=live_remote_poll" in item for item in report["observations"])
+    assert not any("not a proven live SSH/provider poll" in item for item in evidence["limitations"])
+    runtime_path = next(
+        artifact["path"]
+        for artifact in evidence["artifacts"]
+        if artifact["type"] == "remote_status_runtime_evidence_json"
+    )
+    runtime = json.loads((tmp_path / runtime_path).read_text(encoding="utf-8"))
+    runtime_detail = runtime["outputs"]["runtime"]
+    assert runtime_detail["remote_status_state"] == "running"
+    assert "Remote check payload reported `running`." in runtime_detail["logs"]
+    boundary = runtime_detail["remote_poll_boundary"]
+    assert boundary["schema"] == "autosci_remote_poll_boundary.v1"
+    assert boundary["status"] == "live_remote_poll"
+    assert boundary["live_remote_poll_verified"] is True
+    assert boundary["local_artifact_check"] is True
+    assert boundary["transport"] == "ssh"
+    assert boundary["session_id"] == "ssh-session-123"
+
+
 def test_autosci_skill_shim_exp_collect_uses_verified_runtime_evidence(tmp_path: Path) -> None:
     allowlist = tmp_path / "collect-allowlist.json"
     runtime = tmp_path / "collect-runtime.json"
@@ -1946,8 +2601,11 @@ def test_autosci_skill_shim_exp_collect_executes_approved_remote_pull_results(tm
     assert "remote-collect:exp-remote-collect" in report["evidence_ids"]
     assert "result:exp-remote-collect" in report["evidence_ids"]
     assert any("collect_executor_result=True" in item for item in report["observations"])
+    assert any("remote_collection_boundary_status=local_result_dir_collection" in item for item in report["observations"])
+    assert any("not a proven live SSH/provider pull-results operation" in item for item in evidence["limitations"])
     artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
     assert {"experiment_runtime_evidence_json", "executor_stdout", "executor_stderr", "remote_collected_file", "wiki_experiment_state"}.issubset(artifact_types)
+    assert "experiment_run_final_runtime_audit_boundary_json" in artifact_types
     runtime_path = next(artifact["path"] for artifact in evidence["artifacts"] if artifact["type"] == "experiment_runtime_evidence_json")
     runtime = json.loads((tmp_path / runtime_path).read_text(encoding="utf-8"))
     runtime_payload = runtime["outputs"]["runtime"]
@@ -1955,10 +2613,115 @@ def test_autosci_skill_shim_exp_collect_executes_approved_remote_pull_results(tm
     assert runtime_payload["metrics"] == [{"name": "accuracy", "value": 0.94}]
     assert runtime_payload["outcome"] == "partially_supports"
     assert runtime_payload["remote_cli_command"] == "pull-results"
+    boundary = runtime_payload["remote_collection_boundary"]
+    assert boundary["schema"] == "autosci_remote_collection_boundary.v1"
+    assert boundary["status"] == "local_result_dir_collection"
+    assert boundary["live_remote_collection_verified"] is False
+    assert boundary["local_result_dir_collection"] is True
+    runtime_audit = report["final_runtime_audit_boundary"]
+    assert runtime_audit["stage"] == "collect"
+    assert runtime_audit["status"] == "stage_runtime_audit_ready"
+    assert runtime_audit["stage_audit_ready"] is True
+    assert runtime_audit["final_runtime_audit_ready"] is False
+    assert runtime_audit["collection_ledger_recorded"] is True
+    assert runtime_audit["live_remote_collection_verified"] is False
 
     state_text = (tmp_path / "artifacts/autosci/workspace/wiki/experiments/exp-remote-collect.md").read_text(encoding="utf-8")
     assert "outcome: partially_supports" in state_text
     assert "- accuracy: 0.94" in state_text
+
+
+def test_autosci_skill_shim_exp_collect_executes_approved_live_remote_pull_results(tmp_path: Path) -> None:
+    allowlist = tmp_path / "live-remote-collect-allowlist.json"
+    provider_allowlist = tmp_path / "live-remote-provider-allowlist.json"
+    before = tmp_path / "live-remote-collect-before.json"
+    result_dir = tmp_path / "live-remote-results"
+    result_dir.mkdir()
+    provider_script = tmp_path / "fake_live_pull_results_provider.py"
+    provider_script.write_text(
+        "import json\n"
+        "from pathlib import Path\n"
+        "Path('results.json').write_text(json.dumps({\n"
+        "    'outcome': 'supports',\n"
+        "    'metrics': [{'name': 'accuracy', 'value': 0.97}],\n"
+        "    'evidence_ids': ['result:exp-live-remote-collect'],\n"
+        "    'logs': ['live provider pull-results collected metrics'],\n"
+        "}))\n",
+        encoding="utf-8",
+    )
+    provider_command = shlex.join([str(sys.executable), str(provider_script)])
+    provider_allowlist.write_text(json.dumps({"commands": [provider_command]}), encoding="utf-8")
+    before.write_text(json.dumps({"state": "running", "approved": True}), encoding="utf-8")
+    command = " ".join(
+        [
+            shlex.quote(str(sys.executable)),
+            shlex.quote(str(REPO / "tools" / "remote.py")),
+            "pull-results",
+            "--result-dir",
+            shlex.quote(str(result_dir)),
+            "--approval-ref",
+            "approval-live-remote-pull-provider",
+            "--allowlist-evidence",
+            shlex.quote(str(provider_allowlist)),
+            "--pull-command",
+            shlex.quote(provider_command),
+            "--transport",
+            "ssh",
+            "--session-id",
+            "ssh-session-collect-123",
+            "--execute-approved",
+        ]
+    )
+    allowlist.write_text(json.dumps({"commands": [command]}), encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-run",
+        "exp-live-remote-collect",
+        "--collect",
+        "--approval-ref",
+        "approval-exp-live-remote-collect",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--before-artifact",
+        str(before),
+        "--execute-approved",
+        "--run-id",
+        "shim-exp-live-remote-collect",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "monitor_experiment"
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    report = evidence["outputs"]["status_report"]
+    assert evidence["status"] == "completed"
+    assert report["experiment_id"] == "exp-live-remote-collect"
+    assert report["state"] == "completed"
+    assert "result:exp-live-remote-collect" in report["evidence_ids"]
+    assert any("remote_collection_boundary_status=live_remote_collection" in item for item in report["observations"])
+    assert not any("not a proven live SSH/provider pull-results operation" in item for item in evidence["limitations"])
+    runtime_path = next(artifact["path"] for artifact in evidence["artifacts"] if artifact["type"] == "experiment_runtime_evidence_json")
+    runtime = json.loads((tmp_path / runtime_path).read_text(encoding="utf-8"))
+    runtime_payload = runtime["outputs"]["runtime"]
+    assert runtime_payload["result_collected"] is True
+    assert runtime_payload["metrics"] == [{"name": "accuracy", "value": 0.97}]
+    assert runtime_payload["outcome"] == "supports"
+    boundary = runtime_payload["remote_collection_boundary"]
+    assert boundary["schema"] == "autosci_remote_collection_boundary.v1"
+    assert boundary["status"] == "live_remote_collection"
+    assert boundary["live_remote_collection_verified"] is True
+    assert boundary["transport"] == "ssh"
+    assert boundary["session_id"] == "ssh-session-collect-123"
+    runtime_audit = report["final_runtime_audit_boundary"]
+    assert runtime_audit["stage"] == "collect"
+    assert runtime_audit["status"] == "final_runtime_audit_ready"
+    assert runtime_audit["stage_audit_ready"] is True
+    assert runtime_audit["final_runtime_audit_ready"] is True
+    assert runtime_audit["collection_ledger_recorded"] is True
+    assert runtime_audit["live_remote_collection_verified"] is True
 
 
 def test_autosci_skill_shim_exp_collect_rejects_empty_remote_pull_results(tmp_path: Path) -> None:
@@ -2121,7 +2884,7 @@ def test_autosci_skill_shim_accepts_paper_plan_title_without_topic_fallback(tmp_
     assert (tmp_path / "artifacts/autosci/runs/shim-paper-plan-native/paper_plan.md").exists()
 
 
-def test_autosci_skill_shim_paper_plan_completes_with_citations_and_review_llm(tmp_path: Path) -> None:
+def test_autosci_skill_shim_paper_plan_blocks_final_acceptance_without_compile(tmp_path: Path) -> None:
     discovery = tmp_path / "discovery.json"
     discovery.write_text(
         json.dumps(
@@ -2189,16 +2952,94 @@ def test_autosci_skill_shim_paper_plan_completes_with_citations_and_review_llm(t
     payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
     action = payload["outputs"]["skill_run"]["actions"][0]
     evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
-    assert evidence["status"] == "completed"
+    assert evidence["status"] == "inconclusive"
     report = evidence["outputs"]["report"]
     figure_plan = next(section for section in report["sections"] if section["section_id"] == "figure-citation-plan")
     assert "SkillGen: Generating Skills for Agents" in figure_plan["body"]
+    assert any(section["section_id"] == "final-plan-acceptance-boundary" for section in report["sections"])
     artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
     citation_map = json.loads((tmp_path / artifacts["citation_map_json"]).read_text(encoding="utf-8"))
     assert citation_map["status"] == "completed"
     assert citation_map["citation_count"] == 1
+    assert "paper_plan_final_acceptance_boundary_json" in artifacts
     plan_json = json.loads((tmp_path / artifacts["paper_plan_json"]).read_text(encoding="utf-8"))
     assert plan_json["review_llm_completed"] is True
+    assert plan_json["review_boundary"]["status"] == "completed"
+    assert plan_json["review_boundary"]["invocation_mode"] == "evidence"
+    assert plan_json["review_boundary"]["evidence_ids"] == ["review:paper-plan"]
+    assert plan_json["final_acceptance_boundary"]["status"] == "paper_plan_final_acceptance_incomplete"
+    assert plan_json["final_acceptance_boundary"]["final_plan_accepted"] is False
+    assert "verified downstream compile/PDF handoff is missing" in plan_json["final_acceptance_boundary"]["blocking_reasons"]
+
+
+def test_autosci_skill_shim_paper_plan_rejects_weak_review_llm_boundary(tmp_path: Path) -> None:
+    discovery = tmp_path / "discovery.json"
+    discovery.write_text(
+        json.dumps(
+            {
+                "schema": "literature_discovery.v1",
+                "task_id": "lit-weak-review-boundary",
+                "status": "completed",
+                "outputs": {
+                    "query": "skill generation",
+                    "candidates": [
+                        {
+                            "candidate_id": "arxiv:2601.00002",
+                            "title": "Skill Learning for Agents",
+                            "arxiv_id": "2601.00002",
+                            "source_ref": "https://arxiv.org/abs/2601.00002",
+                        }
+                    ],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    weak_review = tmp_path / "weak-review-llm.json"
+    weak_review.write_text(
+        json.dumps(
+            {
+                "schema": "artifact_review.v1",
+                "task_id": "weak-review-paper-plan",
+                "status": "completed",
+                "outputs": {
+                    "review": {
+                        "review_mode": "review_llm",
+                        "score": 0.91,
+                        "recommendation": "accept",
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$paper-plan",
+        "idea-skillgen",
+        "--title",
+        "SkillGen Weak Review Plan",
+        "--discovery-evidence",
+        str(discovery),
+        "--review-llm-evidence",
+        str(weak_review),
+        "--run-id",
+        "shim-paper-plan-weak-review-boundary",
+    )
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(Path(json.loads(proc.stdout)["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert evidence["status"] == "inconclusive"
+    artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
+    plan_json = json.loads((tmp_path / artifacts["paper_plan_json"]).read_text(encoding="utf-8"))
+    assert plan_json["review_llm_completed"] is False
+    assert plan_json["review_boundary"]["status"] == "invalid"
+    assert plan_json["review_boundary"]["completed"] is False
+    assert any("review_available is not true" in reason for reason in plan_json["review_boundary"]["invalid_reasons"])
+    assert plan_json["final_acceptance_boundary"]["status"] == "paper_plan_final_acceptance_incomplete"
+    assert "completed Review LLM boundary evidence is missing" in plan_json["final_acceptance_boundary"]["blocking_reasons"]
 
 
 def test_autosci_skill_shim_paper_plan_attaches_verified_compile_handoff(tmp_path: Path) -> None:
@@ -2310,10 +3151,20 @@ def test_autosci_skill_shim_paper_plan_attaches_verified_compile_handoff(tmp_pat
     assert report["compile_handoff"]["status"] == "completed"
     assert any(section["section_id"] == "compile-audit" for section in report["sections"])
     artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
-    assert {"paper_draft_compile_handoff_json", "paper_compile_runtime_evidence_json", "compiled_pdf"} <= set(artifacts)
+    assert {
+        "paper_draft_compile_handoff_json",
+        "paper_compile_runtime_evidence_json",
+        "compiled_pdf",
+        "paper_plan_final_acceptance_boundary_json",
+    } <= set(artifacts)
     plan_json = json.loads((tmp_path / artifacts["paper_plan_json"]).read_text(encoding="utf-8"))
     assert plan_json["compile_handoff"]["verified"] is True
     assert "runtime:paper-plan-compile" in plan_json["compile_handoff"]["evidence_ids"]
+    assert plan_json["final_acceptance_boundary"]["status"] == "final_plan_accepted"
+    assert plan_json["final_acceptance_boundary"]["final_plan_accepted"] is True
+    assert plan_json["final_acceptance_boundary"]["draft_compile_ready"] is True
+    boundary = json.loads((tmp_path / artifacts["paper_plan_final_acceptance_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["status"] == "final_plan_accepted"
 
 
 def test_autosci_skill_shim_paper_draft_writes_latex_source(tmp_path: Path) -> None:
@@ -2333,18 +3184,33 @@ def test_autosci_skill_shim_paper_draft_writes_latex_source(tmp_path: Path) -> N
     assert summary["skill"] == "paper-draft"
     assert summary["execution_status"] == "partial"
     assert summary["action_count"] == 1
-    assert summary["passed_count"] == 1
+    assert summary["passed_count"] == 0
+    assert summary["schema_only_count"] == 1
 
     payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
     assert payload["inputs"]["target"] == "idea-001"
     action = payload["outputs"]["skill_run"]["actions"][0]
     assert action["action"] == "write_report"
     assert action["schema"] == "scientific_report.v1"
-    assert action["gate_status"] == "passed"
+    assert action["gate_status"] == "schema_only"
     report_evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert report_evidence["status"] == "inconclusive"
     assert report_evidence["outputs"]["report"]["title"] == "Skill Generation for Inference-Time Agents"
-    artifact_types = {artifact["type"] for artifact in report_evidence["artifacts"]}
-    assert {"latex_source", "paper_sections_directory", "markdown_report", "report_plan_json"}.issubset(artifact_types)
+    artifacts = {artifact["type"]: artifact["path"] for artifact in report_evidence["artifacts"]}
+    assert {
+        "latex_source",
+        "paper_sections_directory",
+        "markdown_report",
+        "report_plan_json",
+        "citation_map_json",
+        "paper_draft_final_manuscript_boundary_json",
+    }.issubset(artifacts)
+    boundary = json.loads((tmp_path / artifacts["paper_draft_final_manuscript_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["status"] == "paper_draft_final_manuscript_incomplete"
+    assert boundary["final_manuscript_ready"] is False
+    assert boundary["publication_ready_claim_allowed"] is False
+    assert "completed Review LLM boundary evidence is missing" in boundary["blocking_reasons"]
+    assert "verified compile/PDF handoff is missing" in boundary["blocking_reasons"]
 
     paper_dir = tmp_path / "artifacts/autosci/runs/shim-paper-draft-native/paper"
     main_tex = paper_dir / "main.tex"
@@ -2354,9 +3220,53 @@ def test_autosci_skill_shim_paper_draft_writes_latex_source(tmp_path: Path) -> N
     bundle = json.loads((tmp_path / "artifacts/autosci/runs/shim-paper-draft-native/publication_bundle.json").read_text(encoding="utf-8"))
     bundle_file_types = {item["type"] for item in bundle["outputs"]["bundle"]["files"]}
     assert "latex_source" in bundle_file_types
+    assert "paper_draft_final_manuscript_boundary_json" in bundle_file_types
 
 
 def test_autosci_skill_shim_paper_draft_includes_verified_compile_pdf_handoff(tmp_path: Path) -> None:
+    discovery = tmp_path / "paper-draft-discovery.json"
+    discovery.write_text(
+        json.dumps(
+            {
+                "schema": "literature_discovery.v1",
+                "task_id": "lit-paper-draft",
+                "status": "completed",
+                "outputs": {
+                    "query": "skill generation",
+                    "candidates": [
+                        {
+                            "candidate_id": "arxiv:2601.00003",
+                            "title": "SkillGen Draft Evidence",
+                            "arxiv_id": "2601.00003",
+                            "source_ref": "https://arxiv.org/abs/2601.00003",
+                            "source_channels": ["search_s2"],
+                        }
+                    ],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    review = tmp_path / "paper-draft-review-llm.json"
+    review.write_text(
+        json.dumps(
+            {
+                "schema": "artifact_review.v1",
+                "task_id": "review-paper-draft",
+                "status": "completed",
+                "outputs": {
+                    "review": {
+                        "review_available": True,
+                        "review_mode": "review_llm",
+                        "recommendation": "accept",
+                        "evidence_ids": ["review:paper-draft"],
+                        "review_llm": {"status": "completed"},
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     compiled_dir = tmp_path / "compiled"
     compiled_dir.mkdir()
     pdf = compiled_dir / "main.pdf"
@@ -2395,6 +3305,10 @@ def test_autosci_skill_shim_paper_draft_includes_verified_compile_pdf_handoff(tm
         "idea-001",
         "--title",
         "Skill Generation for Inference-Time Agents",
+        "--discovery-evidence",
+        str(discovery),
+        "--review-llm-evidence",
+        str(review),
         "--approval-ref",
         "approval-paper-draft-compile",
         "--allowlist-evidence",
@@ -2417,13 +3331,28 @@ def test_autosci_skill_shim_paper_draft_includes_verified_compile_pdf_handoff(tm
     assert action["gate_status"] == "passed"
 
     report_evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert report_evidence["status"] == "completed"
     report = report_evidence["outputs"]["report"]
     assert report["compile_handoff"]["status"] == "completed"
     assert report["compile_handoff"]["verified"] is True
     assert "runtime:paper-draft-compile" in report["compile_handoff"]["evidence_ids"]
     assert any(section["section_id"] == "compiled-paper" for section in report["sections"])
-    artifact_types = {artifact["type"] for artifact in report_evidence["artifacts"]}
-    assert {"paper_draft_compile_handoff_json", "paper_compile_runtime_evidence_json", "compiled_pdf"} <= artifact_types
+    assert any(section["section_id"] == "final-manuscript-boundary" for section in report["sections"])
+    artifacts = {artifact["type"]: artifact["path"] for artifact in report_evidence["artifacts"]}
+    assert {
+        "paper_draft_compile_handoff_json",
+        "paper_compile_runtime_evidence_json",
+        "compiled_pdf",
+        "citation_map_json",
+        "paper_draft_final_manuscript_boundary_json",
+    } <= set(artifacts)
+    boundary = json.loads((tmp_path / artifacts["paper_draft_final_manuscript_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["status"] == "final_manuscript_ready"
+    assert boundary["final_manuscript_ready"] is True
+    assert boundary["publication_ready_claim_allowed"] is True
+    assert boundary["citation_count"] == 1
+    assert boundary["review_llm_completed"] is True
+    assert boundary["compile_handoff_verified"] is True
 
     bundle = json.loads(
         (tmp_path / "artifacts/autosci/runs/shim-paper-draft-compile-handoff/publication_bundle.json").read_text(
@@ -2432,6 +3361,7 @@ def test_autosci_skill_shim_paper_draft_includes_verified_compile_pdf_handoff(tm
     )
     bundle_file_types = {item["type"] for item in bundle["outputs"]["bundle"]["files"]}
     assert {"compiled_pdf", "paper_draft_compile_handoff_json", "paper_compile_runtime_evidence_json"} <= bundle_file_types
+    assert {"citation_map_json", "paper_draft_final_manuscript_boundary_json"} <= bundle_file_types
 
 
 def test_autosci_skill_shim_runs_paper_compile_fix_diagnostics(tmp_path: Path) -> None:
@@ -2549,6 +3479,11 @@ def test_autosci_skill_shim_runs_survey_rebuttal_and_poster_native_sidecars(tmp_
         if expected_schema == "scientific_report.v1":
             assert evidence["outputs"]["report"]["title"] == f"SkillGen {expected_action}"
             assert any(artifact["type"] == "survey_markdown" for artifact in evidence["artifacts"])
+            artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
+            boundary = json.loads((tmp_path / artifacts["survey_final_coverage_boundary_json"]).read_text(encoding="utf-8"))
+            assert boundary["schema"] == "autosci_survey_final_coverage_boundary.v1"
+            assert boundary["final_coverage_ready"] is False
+            assert boundary["status"] == "survey_coverage_incomplete"
         else:
             files = evidence["outputs"]["bundle"]["files"]
             assert files
@@ -2605,6 +3540,13 @@ def test_autosci_skill_shim_survey_completes_with_citation_evidence(tmp_path: Pa
     artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
     citation_map = json.loads((tmp_path / artifacts["citation_map_json"]).read_text(encoding="utf-8"))
     assert citation_map["citation_count"] == 1
+    boundary = json.loads((tmp_path / artifacts["survey_final_coverage_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["final_coverage_ready"] is True
+    assert boundary["status"] == "final_coverage_ready"
+    assert boundary["coverage_scope"] == "bounded_source_backed"
+    assert boundary["exhaustive_coverage_verified"] is False
+    plan = json.loads((tmp_path / artifacts["survey_plan_json"]).read_text(encoding="utf-8"))
+    assert plan["final_coverage_boundary"] == boundary
 
 
 def test_autosci_skill_shim_rebuttal_maps_review_llm_findings(tmp_path: Path) -> None:
@@ -2804,7 +3746,7 @@ def test_autosci_skill_shim_runs_ask_check_and_init_diagnostics(tmp_path: Path) 
     cases = [
         ("$ask", "What supports SkillGen?", "ask_wiki", "research_memory_update.v1", "partial", "schema_only"),
         ("$check", "autosci wiki", "check_wiki_health", "workflow_evolution.v1", "partial", "passed"),
-        ("$init", "agent skill learning", "init_sources", "literature_discovery.v1", "partial", "schema_only"),
+        ("$init", "agent skill learning", "init_sources", "literature_discovery.v1", "gated", "schema_only"),
     ]
     for command, target, expected_action, expected_schema, expected_status, expected_action_status in cases:
         run_id = f"shim-{expected_action}"
@@ -2893,6 +3835,14 @@ def test_autosci_skill_shim_init_uses_verified_runtime_source_manifest(tmp_path:
     assert evidence["status"] == "completed"
     assert evidence["outputs"]["mode"] == "init_runtime_verified"
     assert evidence["outputs"]["candidates"][0]["title"] == "SkillGen Source Candidate"
+    boundary = evidence["outputs"]["final_fan_in_boundary"]
+    assert boundary["schema"] == "autosci_init_sources_final_fan_in_boundary.v1"
+    assert boundary["status"] == "init_sources_provider_ready"
+    assert boundary["stage_provider_ready"] is True
+    assert boundary["final_fan_in_ready"] is False
+    assert boundary["provider_boundary_completed"] is True
+    assert boundary["fan_in_completed"] is False
+    assert any(artifact["type"] == "init_sources_final_fan_in_boundary_json" for artifact in evidence["artifacts"])
     contract_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "approval_contract_json")
     contract = json.loads((tmp_path / contract_artifact["path"]).read_text(encoding="utf-8"))
     assert contract["semantic_runtime"]["verified"] is True
@@ -2962,6 +3912,13 @@ def test_autosci_skill_shim_init_write_fans_runtime_sources_into_wiki(tmp_path: 
     fan_in_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "source_fan_in_writeback_json")
     fan_in_evidence = json.loads((tmp_path / fan_in_artifact["path"]).read_text(encoding="utf-8"))
     assert fan_in_evidence["status"] == "completed"
+    boundary = evidence["outputs"]["final_fan_in_boundary"]
+    assert boundary["status"] == "init_sources_final_fan_in_ready"
+    assert boundary["stage_provider_ready"] is True
+    assert boundary["final_fan_in_ready"] is True
+    assert boundary["fan_in_completed"] is True
+    assert boundary["graph_log_rebuild_ready"] is True
+    assert boundary["written_count"] == 1
     page = wiki_root / "papers/skillgen-source.md"
     assert page.exists()
     assert "SkillGen Source Candidate" in page.read_text(encoding="utf-8")
@@ -3027,6 +3984,15 @@ def test_autosci_skill_shim_daily_arxiv_uses_verified_runtime_digest(tmp_path: P
     assert evidence["status"] == "completed"
     assert evidence["outputs"]["mode"] == "daily_arxiv_runtime_verified"
     assert evidence["outputs"]["candidates"][0]["title"] == "Daily SkillGen Paper"
+    boundary = evidence["outputs"]["final_provider_delivery_boundary"]
+    assert boundary["schema"] == "autosci_daily_arxiv_final_provider_delivery_boundary.v1"
+    assert boundary["status"] == "daily_provider_ready"
+    assert boundary["stage_provider_ready"] is True
+    assert boundary["final_delivery_ready"] is False
+    assert boundary["provider_boundary_completed"] is True
+    assert boundary["ranking_ready"] is True
+    assert boundary["fan_in_completed"] is False
+    assert any(artifact["type"] == "daily_arxiv_final_provider_delivery_boundary_json" for artifact in evidence["artifacts"])
     contract_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "approval_contract_json")
     contract = json.loads((tmp_path / contract_artifact["path"]).read_text(encoding="utf-8"))
     assert contract["semantic_runtime"]["verified"] is True
@@ -3094,6 +4060,13 @@ def test_autosci_skill_shim_daily_arxiv_write_auto_ingests_runtime_digest(tmp_pa
     assert fan_in["applied"] is True
     assert fan_in["written_count"] == 1
     assert any(artifact["type"] == "source_fan_in_writeback_json" for artifact in evidence["artifacts"])
+    boundary = evidence["outputs"]["final_provider_delivery_boundary"]
+    assert boundary["status"] == "daily_final_delivery_ready"
+    assert boundary["stage_provider_ready"] is True
+    assert boundary["final_delivery_ready"] is True
+    assert boundary["fan_in_completed"] is True
+    assert boundary["provider_boundary_completed"] is True
+    assert "arxiv" in boundary["source_channels"]
     page = wiki_root / "papers/daily-skillgen.md"
     assert page.exists()
     assert "Daily SkillGen Paper" in page.read_text(encoding="utf-8")
@@ -3145,7 +4118,14 @@ def test_autosci_skill_shim_ask_and_check_read_workspace_wiki(tmp_path: Path) ->
     assert retrieval["status"] == "completed"
     assert retrieval["answer_status"] == "completed"
     assert retrieval["hits"]
+    boundary = retrieval["final_answer_boundary"]
+    assert boundary["schema"] == "autosci_ask_final_answer_boundary.v1"
+    assert boundary["final_answer_ready"] is False
+    assert boundary["status"] == "ask_final_answer_incomplete"
+    assert boundary["retrieval_source_count"] == 1
+    assert boundary["model_status"] == "unavailable"
     assert retrieval["hits"][0]["path"].endswith("papers/skillgen.md")
+    assert any(artifact["type"] == "ask_final_answer_boundary_json" for artifact in ask_evidence["artifacts"])
     answer_artifact = next(item for item in ask_evidence["artifacts"] if item["type"] == "ask_answer_markdown")
     answer_text = (tmp_path / answer_artifact["path"]).read_text(encoding="utf-8")
     assert "SkillGen validates generated skills" in answer_text
@@ -3166,6 +4146,12 @@ def test_autosci_skill_shim_ask_and_check_read_workspace_wiki(tmp_path: Path) ->
     check_action = check_payload["outputs"]["skill_run"]["actions"][0]
     check_evidence = json.loads(Path(check_action["evidence_path"]).read_text(encoding="utf-8"))
     evolution = check_evidence["outputs"]["evolution"]
+    boundary = evolution["review"]["final_quality_boundary"]
+    assert boundary["schema"] == "autosci_check_final_quality_boundary.v1"
+    assert boundary["final_quality_ready"] is False
+    assert boundary["local_structure_ready"] is True
+    assert boundary["model_status"] == "unavailable"
+    assert any(artifact["type"] == "check_final_quality_boundary_json" for artifact in check_evidence["artifacts"])
     markdown = (tmp_path / evolution["recommended_changes_path"]).read_text(encoding="utf-8")
     assert re.search(r"Markdown pages: `[1-9][0-9]*`", markdown)
     assert "Edge errors: `0`" in markdown
@@ -3236,11 +4222,33 @@ def test_autosci_skill_shim_ask_uses_model_command_with_retrieved_sources(tmp_pa
     assert "explicit model evidence" in change["summary"]
 
     artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
-    assert {"ask_answer_markdown", "ask_retrieval_json", "model_command_stdout_json", "model_command_stderr"} <= artifact_types
+    assert {
+        "ask_answer_markdown",
+        "ask_retrieval_json",
+        "ask_final_answer_boundary_json",
+        "model_command_request_json",
+        "model_command_stdout_json",
+        "model_command_stderr",
+    } <= artifact_types
+    request_artifact = next(item for item in evidence["artifacts"] if item["type"] == "model_command_request_json")
+    assert re.fullmatch(r"[a-f0-9]{64}", request_artifact["sha256"])
+    request_payload = json.loads((tmp_path / request_artifact["path"]).read_text(encoding="utf-8"))
+    assert request_payload["schema"] == "autosci_model_request.v1"
+    assert request_payload["action"] == "ask_wiki"
     retrieval_artifact = next(item for item in evidence["artifacts"] if item["type"] == "ask_retrieval_json")
     retrieval = json.loads((tmp_path / retrieval_artifact["path"]).read_text(encoding="utf-8"))
     assert retrieval["model_output"]["status"] == "completed"
     assert retrieval["model_output"]["evidence_ids"] == ["model:skillgen-support"]
+    assert re.fullmatch(r"[a-f0-9]{64}", retrieval["model_output"]["request_sha256"])
+    assert re.fullmatch(r"[a-f0-9]{64}", retrieval["model_output"]["response_sha256"])
+    boundary = retrieval["final_answer_boundary"]
+    assert boundary["final_answer_ready"] is True
+    assert boundary["status"] == "final_answer_ready"
+    assert boundary["retrieval_source_count"] == 1
+    assert boundary["model_status"] == "completed"
+    assert boundary["model_evidence_ids"] == ["model:skillgen-support"]
+    assert re.fullmatch(r"[a-f0-9]{64}", boundary["request_sha256"])
+    assert re.fullmatch(r"[a-f0-9]{64}", boundary["response_sha256"])
     answer_artifact = next(item for item in evidence["artifacts"] if item["type"] == "ask_answer_markdown")
     answer_text = (tmp_path / answer_artifact["path"]).read_text(encoding="utf-8")
     assert "## Model Synthesis" in answer_text
@@ -3315,9 +4323,28 @@ def test_autosci_skill_shim_check_uses_model_command_for_quality_review(tmp_path
     assert evolution["collected"]["ambiguous_manuals_or_prompts"] == []
     assert evolution["collected"]["gate_rejection_reasons"][0]["status"] == "passed"
     assert "Model/reviewer evidence completed" in evolution["collected"]["gate_rejection_reasons"][0]["reasons"][0]
+    boundary = evolution["review"]["final_quality_boundary"]
+    assert boundary["final_quality_ready"] is True
+    assert boundary["status"] == "final_quality_ready"
+    assert boundary["local_structure_ready"] is True
+    assert boundary["model_status"] == "completed"
+    assert boundary["model_evidence_ids"] == ["model:wiki-health-review"]
+    assert re.fullmatch(r"[a-f0-9]{64}", boundary["request_sha256"])
+    assert re.fullmatch(r"[a-f0-9]{64}", boundary["response_sha256"])
 
     artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
-    assert {"recommended_changes_markdown", "patch_candidates_directory", "model_command_stdout_json", "model_command_stderr"} <= artifact_types
+    assert {
+        "recommended_changes_markdown",
+        "patch_candidates_directory",
+        "check_final_quality_boundary_json",
+        "model_command_request_json",
+        "model_command_stdout_json",
+        "model_command_stderr",
+    } <= artifact_types
+    request_artifact = next(item for item in evidence["artifacts"] if item["type"] == "model_command_request_json")
+    assert re.fullmatch(r"[a-f0-9]{64}", request_artifact["sha256"])
+    request_payload = json.loads((tmp_path / request_artifact["path"]).read_text(encoding="utf-8"))
+    assert request_payload["action"] == "check_wiki_health"
     markdown = (tmp_path / evolution["recommended_changes_path"]).read_text(encoding="utf-8")
     assert "## Model Evidence" in markdown
     assert "valid source-linked graph edge" in markdown
@@ -3326,7 +4353,7 @@ def test_autosci_skill_shim_check_uses_model_command_for_quality_review(tmp_path
 def test_autosci_skill_shim_runs_remaining_gated_backend_actions(tmp_path: Path) -> None:
     cases = [
         ("$daily-arxiv", "agents", "daily_arxiv_prepare_finalize", "literature_discovery.v1", "gated", "schema_only"),
-        ("$exp-pilot-eval", "pilot-claim-001", "evaluate_pilot_result", "claim_verdict.v1", "partial", "schema_only"),
+        ("$exp-pilot-eval", "pilot-claim-001", "evaluate_pilot_result", "claim_verdict.v1", "gated", "schema_only"),
         ("$exp-pilot-run", "pilot-001", "run_pilot_experiment", "experiment_result.v1", "gated", "schema_only"),
         ("$refine", "report-001", "refine_artifact", "workflow_evolution.v1", "gated", "passed"),
         ("$research", "skillgen lifecycle", "run_research_lifecycle", "workflow_evolution.v1", "gated", "schema_only"),
@@ -3460,6 +4487,13 @@ def test_autosci_skill_shim_pilot_eval_uses_runtime_evidence(tmp_path: Path) -> 
     assert verdict["evidence_outcome"] == "supports"
     assert "runtime:pilot-skillgen" in verdict["evidence_ids"]
     assert any(artifact["type"] == "pilot_runtime_evidence_json" for artifact in evidence["artifacts"])
+    assert any(artifact["type"] == "pilot_eval_final_acceptance_boundary_json" for artifact in evidence["artifacts"])
+    boundary = verdict["pilot_final_acceptance_boundary"]
+    assert boundary["status"] == "pilot_acceptance_incomplete"
+    assert boundary["pilot_runtime_ready"] is True
+    assert boundary["pilot_verdict_ready"] is True
+    assert boundary["writeback_status"]["status"] == "not_requested"
+    assert boundary["final_pilot_acceptance_ready"] is False
 
 
 def test_autosci_skill_shim_pilot_eval_write_updates_wiki_with_approval(tmp_path: Path) -> None:
@@ -3513,6 +4547,15 @@ def test_autosci_skill_shim_pilot_eval_write_updates_wiki_with_approval(tmp_path
     assert writeback["outputs"]["write"]["applied"] is True
     assert "claim_verdict: supported" in idea_path.read_text(encoding="utf-8")
     assert "claim_verdict_written" in (wiki_root / "graph/edges.jsonl").read_text(encoding="utf-8")
+    boundary_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "pilot_eval_final_acceptance_boundary_json")
+    boundary = json.loads((tmp_path / boundary_artifact["path"]).read_text(encoding="utf-8"))
+    assert boundary["status"] == "final_pilot_acceptance_ready"
+    assert boundary["pilot_runtime_ready"] is True
+    assert boundary["pilot_verdict_ready"] is True
+    assert boundary["writeback_completed"] is True
+    assert boundary["final_pilot_acceptance_ready"] is True
+    verdict = evidence["outputs"]["verdicts"][0]
+    assert verdict["final_pilot_acceptance_ready"] is True
 
 
 def test_autosci_skill_shim_exp_eval_merges_experiment_code_and_review_llm_evidence(tmp_path: Path) -> None:
@@ -3647,6 +4690,15 @@ def test_autosci_skill_shim_exp_eval_merges_experiment_code_and_review_llm_evide
     assert "code-map-skillgen" in verdict["code_evidence_ids"]
     assert "Review LLM evidence" in verdict["basis"]
     assert any(artifact["type"] == "claim_review_llm_evidence_json" for artifact in evidence["artifacts"])
+    assert any(artifact["type"] == "experiment_evaluation_final_verdict_boundary_json" for artifact in evidence["artifacts"])
+    boundary = verdict["final_verdict_boundary"]
+    assert boundary["status"] == "final_verdict_incomplete"
+    assert boundary["experiment_result_ready"] is True
+    assert boundary["claim_evidence_linked"] is True
+    assert boundary["code_evidence_linked"] is True
+    assert boundary["review_llm_completed"] is True
+    assert boundary["writeback_status"]["status"] == "not_requested"
+    assert boundary["final_verdict_ready"] is False
 
 
 def test_autosci_skill_shim_exp_eval_write_updates_wiki_with_approval(tmp_path: Path) -> None:
@@ -3683,6 +4735,27 @@ def test_autosci_skill_shim_exp_eval_write_updates_wiki_with_approval(tmp_path: 
         ),
         encoding="utf-8",
     )
+    code = tmp_path / "code-write.json"
+    code.write_text(
+        json.dumps(
+            {
+                "schema": "code_evidence_map.v1",
+                "task_id": "code-write",
+                "status": "completed",
+                "outputs": {
+                    "mappings": [
+                        {
+                            "mapping_id": "code-map-write",
+                            "claim_id": claim_id,
+                            "evidence_ids": ["code:write"],
+                            "files": ["experiments/write_eval.py"],
+                        }
+                    ]
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     review = tmp_path / "review-write.json"
     review.write_text(
         json.dumps(
@@ -3713,6 +4786,8 @@ def test_autosci_skill_shim_exp_eval_write_updates_wiki_with_approval(tmp_path: 
         str(claims),
         "--experiment-result-evidence",
         str(result),
+        "--code-evidence",
+        str(code),
         "--review-llm-evidence",
         str(review),
         "--write",
@@ -3737,6 +4812,19 @@ def test_autosci_skill_shim_exp_eval_write_updates_wiki_with_approval(tmp_path: 
     assert (wiki_root / "log.md").exists()
     assert "Claim Verdict Writeback" in (wiki_root / "log.md").read_text(encoding="utf-8")
     assert "claim_verdict_written" in (wiki_root / "graph/edges.jsonl").read_text(encoding="utf-8")
+    boundary_artifact = next(
+        artifact for artifact in evidence["artifacts"] if artifact["type"] == "experiment_evaluation_final_verdict_boundary_json"
+    )
+    boundary = json.loads((tmp_path / boundary_artifact["path"]).read_text(encoding="utf-8"))
+    assert boundary["status"] == "final_verdict_ready"
+    assert boundary["final_verdict_ready"] is True
+    assert boundary["experiment_result_ready"] is True
+    assert boundary["claim_evidence_linked"] is True
+    assert boundary["code_evidence_linked"] is True
+    assert boundary["review_llm_completed"] is True
+    assert boundary["writeback_completed"] is True
+    verdict = evidence["outputs"]["verdicts"][0]
+    assert verdict["final_verdict_ready"] is True
 
 
 def test_autosci_web_visualization_compatibility_tools_generate_graph_artifacts(tmp_path: Path) -> None:
@@ -4031,6 +5119,12 @@ def test_autosci_skill_shim_uses_semantic_runtime_evidence_for_gated_results(tmp
     assert pilot_evidence["status"] == "completed"
     assert pilot_evidence["outputs"]["result"]["outcome"] == "supports"
     assert pilot_evidence["outputs"]["result"]["metrics"] == [{"name": "accuracy", "value": 0.91}]
+    pilot_boundary = pilot_evidence["outputs"]["result"]["pilot_final_acceptance_boundary"]
+    assert pilot_boundary["stage"] == "pilot_run"
+    assert pilot_boundary["status"] == "pilot_runtime_ready"
+    assert pilot_boundary["pilot_runtime_ready"] is True
+    assert pilot_boundary["final_pilot_acceptance_ready"] is False
+    assert any(artifact["type"] == "pilot_run_final_acceptance_boundary_json" for artifact in pilot_evidence["artifacts"])
 
     paper_dir = tmp_path / "runtime-paper"
     paper_dir.mkdir()
@@ -4328,6 +5422,10 @@ def test_autosci_skill_shim_paper_compile_checklist_records_submission_checks(tm
     evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
     checklist_artifact = next(item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_checklist_json")
     checklist = json.loads((tmp_path / checklist_artifact["path"]).read_text(encoding="utf-8"))
+    boundary_artifact = next(
+        item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "publication_submission_boundary_json"
+    )
+    boundary = json.loads((tmp_path / boundary_artifact["path"]).read_text(encoding="utf-8"))
     submission = {row["check"]: row for row in checklist["submission_checks"]}
     assert submission["unconfirmed_marker_scan"]["status"] == "warn"
     assert submission["anonymity_check"]["status"] == "warn"
@@ -4335,11 +5433,366 @@ def test_autosci_skill_shim_paper_compile_checklist_records_submission_checks(tm
     assert submission["font_size_check"]["status"] == "warn"
     assert "paper-submission-checks/main.tex" in submission["unconfirmed_marker_scan"]["evidence"]
     assert any(row["check"] == "unconfirmed_marker_scan" for row in checklist["checks"])
+    assert checklist["submission_boundary"]["schema"] == "autosci_publication_submission_boundary.v1"
+    assert checklist["submission_boundary"]["status"] == "submission_incomplete"
+    assert checklist["submission_boundary"]["submission_ready"] is False
+    assert boundary == checklist["submission_boundary"]
+    assert "unconfirmed_marker_scan" in boundary["blocking_checks"]
+    assert "anonymity_check" in boundary["blocking_checks"]
+    assert "page_limit_check" in boundary["blocking_checks"]
+    assert "font_size_check" in boundary["blocking_checks"]
+    assert any(row["check"] == "publication_submission_boundary" for row in checklist["checks"])
     diagnostics_path = next(item["path"] for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_diagnostics_markdown")
     diagnostics = (tmp_path / diagnostics_path).read_text(encoding="utf-8")
     assert "Submission Checks" in diagnostics
+    assert "Submission Boundary" in diagnostics
     assert "Font-size compliance is unconfirmed" in diagnostics
     assert any("Submission readiness includes warnings" in item for item in evidence["limitations"])
+    assert any("does not prove submission readiness" in item for item in evidence["limitations"])
+
+
+def test_autosci_skill_shim_paper_compile_submission_boundary_accepts_cli_evidence(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "paper-submission-ready"
+    paper_dir.mkdir()
+    (paper_dir / "main.tex").write_text(
+        "\\documentclass{article}\n"
+        "\\author{Anonymous Authors}\n"
+        "\\begin{document}\n"
+        "SkillGen paper draft with resolved citations.\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    (paper_dir / "main.pdf").write_text("%PDF-1.4\n", encoding="utf-8")
+    proc = run_shim(
+        tmp_path,
+        "$paper-compile",
+        str(paper_dir),
+        "--checklist",
+        "--anonymous",
+        "--page-limit",
+        "8",
+        "--verified-page-count",
+        "6",
+        "--min-font-size",
+        "10",
+        "--verified-min-font-size",
+        "11",
+        "--run-id",
+        "shim-paper-compile-submission-ready",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert payload["inputs"]["native_options"]["anonymous"] is True
+    assert payload["inputs"]["native_options"]["page_limit"] == 8.0
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    checklist_artifact = next(item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_checklist_json")
+    checklist = json.loads((tmp_path / checklist_artifact["path"]).read_text(encoding="utf-8"))
+    boundary_artifact = next(
+        item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "publication_submission_boundary_json"
+    )
+    boundary = json.loads((tmp_path / boundary_artifact["path"]).read_text(encoding="utf-8"))
+    assert boundary == checklist["submission_boundary"]
+    assert boundary["status"] == "submission_ready"
+    assert boundary["submission_ready"] is True
+    assert boundary["blocking_checks"] == []
+    assert boundary["check_statuses"]["unconfirmed_marker_scan"] == "ok"
+    assert boundary["check_statuses"]["anonymity_check"] == "ok"
+    assert boundary["check_statuses"]["page_limit_check"] == "ok"
+    assert boundary["check_statuses"]["font_size_check"] == "ok"
+    assert not any("does not prove submission readiness" in item for item in evidence["limitations"])
+
+
+def test_autosci_skill_shim_paper_compile_submission_profile_supplies_venue_requirements(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "paper-submission-profile"
+    paper_dir.mkdir()
+    (paper_dir / "main.tex").write_text(
+        "\\documentclass{article}\n"
+        "\\author{Anonymous Authors}\n"
+        "\\begin{document}\n"
+        "SkillGen paper draft with resolved citations.\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    (paper_dir / "main.pdf").write_text("%PDF-1.4\n", encoding="utf-8")
+    profile = tmp_path / "iclr-submission-profile.json"
+    profile.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_submission_profile.v1",
+                "venue": "ICLR",
+                "evidence_ids": ["venue-profile:iclr"],
+                "requirements": {
+                    "submission_mode": "double_blind",
+                    "anonymous": True,
+                    "page_limit": 8,
+                    "min_font_size": 10,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    proc = run_shim(
+        tmp_path,
+        "$paper-compile",
+        str(paper_dir),
+        "--checklist",
+        "--submission-profile",
+        str(profile),
+        "--verified-page-count",
+        "6",
+        "--verified-min-font-size",
+        "11",
+        "--run-id",
+        "shim-paper-compile-submission-profile",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert payload["inputs"]["native_options"]["submission_profile"] == str(profile)
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    checklist_artifact = next(item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_checklist_json")
+    checklist = json.loads((tmp_path / checklist_artifact["path"]).read_text(encoding="utf-8"))
+    boundary = checklist["submission_boundary"]
+    assert boundary["submission_ready"] is True
+    assert boundary["venue_submission_ready"] is False
+    assert boundary["venue_status"] == "venue_submission_incomplete"
+    assert boundary["venue_blocking_checks"] == ["pdf_inspection"]
+    assert boundary["submission_profile"]["status"] == "loaded"
+    assert boundary["submission_profile"]["venue"] == "ICLR"
+    assert boundary["submission_profile"]["evidence_ids"] == ["venue-profile:iclr"]
+    assert set(boundary["submission_profile"]["applied_fields"]) >= {
+        "anonymous",
+        "page_limit",
+        "min_font_size",
+        "submission_mode",
+    }
+    assert boundary["check_statuses"]["anonymity_check"] == "ok"
+    assert boundary["check_statuses"]["page_limit_check"] == "ok"
+    assert boundary["check_statuses"]["font_size_check"] == "ok"
+    profile_artifact = next(
+        item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "venue_submission_profile_json"
+    )
+    assert profile_artifact["sha256"]
+    diagnostics_path = next(
+        item["path"] for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_diagnostics_markdown"
+    )
+    diagnostics = (tmp_path / diagnostics_path).read_text(encoding="utf-8")
+    assert "venue_submission_ready: False" in diagnostics
+    assert "pdf_inspection_status: missing" in diagnostics
+
+
+def test_autosci_skill_shim_paper_compile_pdf_inspection_satisfies_venue_readiness(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "paper-pdf-inspection"
+    paper_dir.mkdir()
+    (paper_dir / "main.tex").write_text(
+        "\\documentclass{article}\n"
+        "\\author{Anonymous Authors}\n"
+        "\\begin{document}\n"
+        "SkillGen paper draft with resolved citations.\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    pdf_path = paper_dir / "main.pdf"
+    pdf_path.write_text("%PDF-1.4\n", encoding="utf-8")
+    profile = tmp_path / "iclr-pdf-profile.json"
+    profile.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_submission_profile.v1",
+                "venue": "ICLR",
+                "evidence_ids": ["venue-profile:iclr"],
+                "requirements": {
+                    "submission_mode": "double_blind",
+                    "anonymous": True,
+                    "page_limit": 8,
+                    "min_font_size": 10,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    inspection = tmp_path / "pdf-inspection.json"
+    inspection.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_pdf_inspection.v1",
+                "status": "completed",
+                "evidence_ids": ["pdf-inspection:main"],
+                "outputs": {
+                    "inspection": {
+                        "pdf_path": str(pdf_path),
+                        "pdf_sha256": hashlib.sha256(pdf_path.read_bytes()).hexdigest(),
+                        "page_count": 6,
+                        "min_font_size": 11,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    proc = run_shim(
+        tmp_path,
+        "$paper-compile",
+        str(paper_dir),
+        "--checklist",
+        "--submission-profile",
+        str(profile),
+        "--pdf-inspection",
+        str(inspection),
+        "--run-id",
+        "shim-paper-compile-pdf-inspection",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert payload["inputs"]["native_options"]["pdf_inspection"] == str(inspection)
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    checklist_artifact = next(item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_checklist_json")
+    checklist = json.loads((tmp_path / checklist_artifact["path"]).read_text(encoding="utf-8"))
+    boundary = checklist["submission_boundary"]
+    assert boundary["submission_ready"] is True
+    assert boundary["venue_submission_ready"] is True
+    assert boundary["venue_status"] == "venue_submission_ready"
+    assert boundary["venue_blocking_checks"] == []
+    assert boundary["pdf_inspection"]["status"] == "loaded"
+    assert boundary["pdf_inspection"]["evidence_ids"] == ["pdf-inspection:main"]
+    assert set(boundary["pdf_inspection"]["applied_fields"]) == {
+        "verified_page_count",
+        "verified_min_font_size",
+    }
+    assert boundary["check_statuses"]["page_limit_check"] == "ok"
+    assert boundary["check_statuses"]["font_size_check"] == "ok"
+    inspection_artifact = next(
+        item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "pdf_inspection_json"
+    )
+    assert inspection_artifact["sha256"]
+    diagnostics_path = next(
+        item["path"] for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_diagnostics_markdown"
+    )
+    diagnostics = (tmp_path / diagnostics_path).read_text(encoding="utf-8")
+    assert "venue_submission_ready: True" in diagnostics
+    assert "pdf_inspection_status: loaded" in diagnostics
+
+
+def test_autosci_skill_shim_paper_compile_submission_audit_marks_audit_ready(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "paper-submission-audit"
+    paper_dir.mkdir()
+    (paper_dir / "main.tex").write_text(
+        "\\documentclass{article}\n"
+        "\\author{Anonymous Authors}\n"
+        "\\begin{document}\n"
+        "SkillGen paper draft with resolved citations.\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    pdf_path = paper_dir / "main.pdf"
+    pdf_path.write_text("%PDF-1.4\n", encoding="utf-8")
+    profile = tmp_path / "audit-profile.json"
+    profile.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_submission_profile.v1",
+                "venue": "ICLR",
+                "evidence_ids": ["venue-profile:iclr"],
+                "requirements": {
+                    "submission_mode": "double_blind",
+                    "anonymous": True,
+                    "page_limit": 8,
+                    "min_font_size": 10,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    inspection = tmp_path / "audit-pdf-inspection.json"
+    inspection.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_pdf_inspection.v1",
+                "status": "completed",
+                "evidence_ids": ["pdf-inspection:audit-main"],
+                "outputs": {
+                    "inspection": {
+                        "pdf_path": str(pdf_path),
+                        "pdf_sha256": hashlib.sha256(pdf_path.read_bytes()).hexdigest(),
+                        "page_count": 6,
+                        "min_font_size": 11,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    audit = tmp_path / "submission-audit.json"
+    audit.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_publication_submission_audit.v1",
+                "status": "completed",
+                "evidence_ids": ["submission-audit:iclr"],
+                "outputs": {
+                    "audit": {
+                        "venue": "ICLR",
+                        "submission_ready": True,
+                        "portal_submission_completed": False,
+                        "checks": [
+                            {"check": "anonymity", "status": "ok"},
+                            {"check": "page_limit", "status": "ok"},
+                            {"check": "font_size", "status": "ok"},
+                            {"check": "unconfirmed_markers", "status": "ok"},
+                        ],
+                        "blocking_checks": [],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    proc = run_shim(
+        tmp_path,
+        "$paper-compile",
+        str(paper_dir),
+        "--checklist",
+        "--submission-profile",
+        str(profile),
+        "--pdf-inspection",
+        str(inspection),
+        "--submission-audit",
+        str(audit),
+        "--run-id",
+        "shim-paper-compile-submission-audit",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert payload["inputs"]["native_options"]["submission_audit"] == str(audit)
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    checklist_artifact = next(item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_checklist_json")
+    checklist = json.loads((tmp_path / checklist_artifact["path"]).read_text(encoding="utf-8"))
+    boundary = checklist["submission_boundary"]
+    assert boundary["venue_submission_ready"] is True
+    assert boundary["submission_audit_ready"] is True
+    assert boundary["submission_audit_status"] == "submission_audit_ready"
+    assert boundary["submission_audit_blocking_checks"] == []
+    assert boundary["portal_submission_completed"] is False
+    assert boundary["submission_audit"]["status"] == "loaded"
+    assert boundary["submission_audit"]["audit_verified"] is True
+    assert boundary["submission_audit"]["evidence_ids"] == ["submission-audit:iclr"]
+    audit_artifact = next(
+        item for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "publication_submission_audit_json"
+    )
+    assert audit_artifact["sha256"]
+    diagnostics_path = next(
+        item["path"] for item in evidence["outputs"]["bundle"]["files"] if item["type"] == "paper_compile_diagnostics_markdown"
+    )
+    diagnostics = (tmp_path / diagnostics_path).read_text(encoding="utf-8")
+    assert "submission_audit_ready: True" in diagnostics
+    assert "portal_submission_completed: False" in diagnostics
 
 
 def test_autosci_skill_shim_runs_ideate_from_wiki_and_discovery_sources(tmp_path: Path) -> None:
@@ -4416,7 +5869,17 @@ def test_autosci_skill_shim_runs_ideate_from_wiki_and_discovery_sources(tmp_path
     ideas = idea_evidence["outputs"]["ideas"]
     assert ideas
     assert ideas[0]["source_mode"] == "mixed"
+    assert ideas[0]["promotion_ready"] is False
+    assert ideas[0]["final_promotion_boundary"]["status"] == "idea_promotion_incomplete"
     assert all("fixture" not in json.dumps(idea).lower() for idea in ideas)
+    artifacts = {artifact["type"]: artifact["path"] for artifact in idea_evidence["artifacts"]}
+    assert "ideate_final_promotion_boundary_json" in artifacts
+    boundary = json.loads((tmp_path / artifacts["ideate_final_promotion_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["schema"] == "autosci_ideate_final_promotion_boundary.v1"
+    assert boundary["status"] == "ideate_promotion_incomplete"
+    assert boundary["source_evidence_ready"] is True
+    assert boundary["failed_idea_banlist_checked"] is True
+    assert boundary["novelty_review_gate_references_present"] is False
     evaluation = evaluation_evidence["outputs"]["evaluations"][0]
     assert evaluation["recommendation"] in {"advance", "revise"}
     assert evaluation["review_mode"] == "local_surrogate"
@@ -4493,8 +5956,21 @@ def test_autosci_skill_shim_ideate_uses_model_command_for_brainstorm(tmp_path: P
     assert idea["generation_path"] == "model-command"
     assert idea["model"] == "gpt-5.5-test-double"
     assert "wiki:papers/skillgen" in idea["origin_evidence_ids"]
-    artifact_types = {artifact["type"] for artifact in idea_evidence["artifacts"]}
-    assert {"model_command_stdout_json", "model_command_stderr"} <= artifact_types
+    assert idea["promotion_ready"] is False
+    assert idea["final_promotion_boundary"]["status"] == "idea_promotion_incomplete"
+    artifacts = {artifact["type"]: artifact["path"] for artifact in idea_evidence["artifacts"]}
+    artifact_types = set(artifacts)
+    assert {"model_command_request_json", "model_command_stdout_json", "model_command_stderr"} <= artifact_types
+    assert "ideate_final_promotion_boundary_json" in artifacts
+    request_artifact = next(item for item in idea_evidence["artifacts"] if item["type"] == "model_command_request_json")
+    assert re.fullmatch(r"[a-f0-9]{64}", request_artifact["sha256"])
+    request_payload = json.loads((tmp_path / request_artifact["path"]).read_text(encoding="utf-8"))
+    assert request_payload["action"] == "generate_ideas"
+    boundary = json.loads((tmp_path / artifacts["ideate_final_promotion_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["model_brainstorm_completed"] is True
+    assert boundary["model_name"] == "gpt-5.5-test-double"
+    assert boundary["final_promotion_ready"] is False
+    assert "novelty/review gate evidence references are missing" in boundary["blocking_reasons"]
 
     evaluation_evidence = json.loads(Path(actions[1]["evidence_path"]).read_text(encoding="utf-8"))
     evaluation = evaluation_evidence["outputs"]["evaluations"][0]
@@ -4667,6 +6143,12 @@ def test_autosci_skill_shim_ideate_without_sources_is_inconclusive_not_fixture(t
     assert idea_evidence["status"] == "inconclusive"
     assert idea["source_mode"] == "missing"
     assert idea["status"] == "blocked"
+    assert idea["promotion_ready"] is False
+    artifacts = {artifact["type"]: artifact["path"] for artifact in idea_evidence["artifacts"]}
+    assert "ideate_final_promotion_boundary_json" in artifacts
+    boundary = json.loads((tmp_path / artifacts["ideate_final_promotion_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["source_evidence_ready"] is False
+    assert "source-backed idea evidence is missing" in boundary["blocking_reasons"]
     assert evaluation["recommendation"] == "inconclusive"
     assert "fixture" not in json.dumps(idea_evidence).lower()
 
@@ -4691,6 +6173,7 @@ def test_autosci_skill_shim_runs_novelty_target_with_local_sources(tmp_path: Pat
         "--from-wiki",
         "--run-id",
         "shim-novelty-local",
+        extra_env={"AUTOSCI_DISABLE_NETWORK_FETCH": "1"},
     )
     assert proc.returncode == 0, proc.stderr
     summary = json.loads(proc.stdout)
@@ -4707,6 +6190,15 @@ def test_autosci_skill_shim_runs_novelty_target_with_local_sources(tmp_path: Pat
     assert evaluation["review_mode"] == "local_surrogate"
     assert evaluation["review_llm"]["status"] == "unavailable"
     assert evaluation["external_novelty"]["status"] == "unavailable"
+    boundary = evaluation["final_acceptance_boundary"]
+    assert boundary["schema"] == "autosci_novelty_final_acceptance_boundary.v1"
+    assert boundary["final_acceptance_ready"] is False
+    assert boundary["status"] == "novelty_acceptance_incomplete"
+    assert any("external_novelty status" in reason for reason in boundary["blocking_reasons"])
+    assert any(
+        artifact["type"] == "novelty_final_acceptance_boundary_json"
+        for artifact in evaluation_evidence["artifacts"]
+    )
     assert evaluation["recommendation"] in {"revise", "reject", "inconclusive"}
     assert "fixture" not in json.dumps(evaluation_evidence).lower()
 
@@ -4816,6 +6308,12 @@ def test_autosci_skill_shim_novelty_uses_supplied_external_evidence(tmp_path: Pa
     assert evaluation["review_llm"]["status"] == "unavailable"
     assert evaluation["external_novelty"]["status"] == "completed"
     assert evaluation["external_novelty"]["provenance"]["status"] == "passed"
+    boundary = evaluation["final_acceptance_boundary"]
+    assert boundary["final_acceptance_ready"] is False
+    assert boundary["external_novelty_status"] == "completed"
+    assert boundary["external_novelty_provenance_status"] == "passed"
+    assert boundary["review_llm_status"] == "unavailable"
+    assert any("review_llm status" in reason for reason in boundary["blocking_reasons"])
     assert "raw_payload_sha256" in evaluation["external_novelty"]["provenance"]["required_fields"]
     provider_status = evaluation["external_novelty"]["provider_statuses"][0]
     assert re.fullmatch(r"[a-f0-9]{64}", provider_status["raw_payload_sha256"])
@@ -5182,6 +6680,12 @@ def test_autosci_skill_shim_novelty_write_updates_with_external_and_review_llm_e
     assert evaluation["review_mode"] == "review_llm"
     assert evaluation["review_available"] is True
     assert evaluation["review_llm"]["status"] == "completed"
+    boundary = evaluation["final_acceptance_boundary"]
+    assert boundary["final_acceptance_ready"] is True
+    assert boundary["status"] == "final_acceptance_ready"
+    assert boundary["external_novelty_status"] == "completed"
+    assert boundary["external_novelty_provenance_status"] == "passed"
+    assert boundary["review_llm_status"] == "completed"
     assert "review-llm:writeback" in evaluation["evidence_ids"]
 
     result_path = tmp_path / "artifacts/autosci/runs/shim-novelty-write-reviewed/evaluate_ideas.result.json"
@@ -5192,6 +6696,8 @@ def test_autosci_skill_shim_novelty_write_updates_with_external_and_review_llm_e
     assert writeback["outputs"]["write"]["external_novelty_status"] == "completed"
     assert writeback["outputs"]["write"]["external_novelty_provenance_status"] == "passed"
     assert writeback["outputs"]["write"]["review_llm_status"] == "completed"
+    assert writeback["outputs"]["write"]["final_acceptance_status"] == "final_acceptance_ready"
+    assert writeback["outputs"]["write"]["final_acceptance_ready"] is True
     assert writeback["outputs"]["write"]["edge_path"].endswith("wiki/graph/edges.jsonl")
     assert any(path.endswith("wiki/index.md") for path in writeback["outputs"]["write"]["rebuilt_paths"])
     artifact_types = {artifact["type"] for artifact in writeback["artifacts"]}
@@ -5406,6 +6912,12 @@ def test_autosci_skill_shim_runs_review_as_artifact_review(tmp_path: Path) -> No
     assert review["review_llm"]["status"] == "unavailable"
     assert review["review_llm"]["tool"] == "mcp__llm-review__chat"
     assert review["recommendation"] in {"pass_with_review_required", "revise", "revise_required"}
+    boundary = review_evidence["outputs"]["final_acceptance_boundary"]
+    assert boundary["schema"] == "autosci_review_final_acceptance_boundary.v1"
+    assert boundary["final_acceptance_ready"] is False
+    assert boundary["status"] == "review_llm_incomplete"
+    assert any("review_mode" in reason for reason in boundary["blocking_reasons"])
+    assert any(artifact["type"] == "review_final_acceptance_boundary_json" for artifact in review_evidence["artifacts"])
     assert "fixture" not in json.dumps(review_evidence).lower()
 
 
@@ -5558,6 +7070,10 @@ def test_autosci_skill_shim_review_uses_supplied_review_llm_evidence(tmp_path: P
     assert review["review_available"] is True
     assert review["review_llm"]["status"] == "completed"
     assert review["review_llm"]["source_path"] == str(llm_evidence)
+    boundary = review_evidence["outputs"]["final_acceptance_boundary"]
+    assert boundary["final_acceptance_ready"] is True
+    assert boundary["status"] == "final_acceptance_ready"
+    assert "review-llm:001" in boundary["evidence_ids"]
     assert review["score"] <= 0.42
     assert review["recommendation"] == "revise_required"
     finding_ids = {finding["finding_id"] for finding in review_evidence["outputs"]["findings"]}
@@ -5634,6 +7150,10 @@ print(json.dumps({
     assert review["review_llm"]["status"] == "completed"
     assert review["review_llm"]["invocation_mode"] == "command"
     assert "review-llm:command" in review["evidence_ids"]
+    boundary = review_evidence["outputs"]["final_acceptance_boundary"]
+    assert boundary["final_acceptance_ready"] is True
+    assert boundary["invocation_mode"] == "command"
+    assert "review-llm:command" in boundary["evidence_ids"]
 
 
 def test_autosci_skill_shim_review_invokes_openai_compatible_provider(tmp_path: Path) -> None:
@@ -5746,6 +7266,11 @@ def test_autosci_skill_shim_review_invokes_openai_compatible_provider(tmp_path: 
     assert review_llm["provider"] == "openai_compatible"
     assert Path(review_llm["source_path"]).exists()
     assert "review-llm:provider" in review["evidence_ids"]
+    boundary = review_evidence["outputs"]["final_acceptance_boundary"]
+    assert boundary["final_acceptance_ready"] is True
+    assert boundary["invocation_mode"] == "provider"
+    assert boundary["provider"] == "openai_compatible"
+    assert boundary["model"] == "gpt-5.5"
 
 
 def test_autosci_skill_shim_keeps_setup_gated(tmp_path: Path) -> None:
@@ -5767,6 +7292,5 @@ def test_autosci_skill_shim_keeps_setup_gated(tmp_path: Path) -> None:
 
     evidence_path = Path(summary["evidence_path"])
     gate = run_gate(evidence_path)
-    assert gate.returncode == 0, gate.stdout + gate.stderr
-    result = json.loads(gate.stdout)
+    result = assert_gate_inconclusive_without_reasons(gate)
     assert result["warnings"]

@@ -24,6 +24,7 @@ import run_scientific_node_smoke as node_smoke  # noqa: E402
 
 DEFAULT_PAPER = "plugins/autosci/tests/fixtures/sample_paper.md"
 DEFAULT_WORKFLOW_ID = "scientific_research_lifecycle_full_v1"
+DEFAULT_WORKFLOW_CONFIG = REPO_HARNESS_DIR / "workflows" / f"{DEFAULT_WORKFLOW_ID}.json"
 NODE_SPECS = [
     {
         "node_id": "literature_discover",
@@ -189,6 +190,21 @@ EXTERNAL_NODE_SPECS = [
     },
 ]
 EXTERNAL_NODE_BY_ID = {spec["node_id"]: spec for spec in EXTERNAL_NODE_SPECS}
+TAIL_NODE_IDS = {"report_draft", "artifact_review", "memory_update_final", "workflow_evolve"}
+NODE_SPEC_BY_ID = {spec["node_id"]: spec for spec in NODE_SPECS}
+BASE_NODE_SPECS = [spec for spec in NODE_SPECS if spec["node_id"] not in TAIL_NODE_IDS]
+CONFIGURED_TAIL_NODE_IDS = [
+    "report_plan",
+    "report_draft",
+    "artifact_review",
+    "publication_produce",
+    "memory_update_final",
+    "workflow_evolve",
+]
+CONFIGURED_TAIL_NODE_SPECS = [
+    EXTERNAL_NODE_BY_ID.get(node_id) or NODE_SPEC_BY_ID[node_id]
+    for node_id in CONFIGURED_TAIL_NODE_IDS
+]
 BLOCKED_EXTERNAL_NODE_DETAILS = {
     "report_plan": {
         "node_id": "report_plan",
@@ -274,6 +290,188 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _contains_fixture_reference(value: Any) -> bool:
+    if isinstance(value, str):
+        normalized = value.replace("\\", "/")
+        return "fixtures/" in normalized or "/fixtures/" in normalized
+    if isinstance(value, list):
+        return any(_contains_fixture_reference(item) for item in value)
+    if isinstance(value, dict):
+        return any(_contains_fixture_reference(item) for item in value.values())
+    return False
+
+
+def _dispatch_input_profile(spec: dict[str, str], node_args: argparse.Namespace) -> dict[str, Any]:
+    extra_inputs = node_args.extra_inputs if isinstance(getattr(node_args, "extra_inputs", None), dict) else {}
+    markers: list[str] = []
+    if extra_inputs.get("smoke_mode") is True:
+        markers.append("smoke_mode=true")
+    if extra_inputs.get("fixture_fallback") is True:
+        markers.append("fixture_fallback=true")
+    execution_mode = str(extra_inputs.get("execution_mode") or "").strip().lower()
+    if execution_mode == "fixture":
+        markers.append("execution_mode=fixture")
+    if _contains_fixture_reference(extra_inputs):
+        markers.append("fixture_reference_in_inputs")
+    if _contains_fixture_reference(getattr(node_args, "paper", "")):
+        markers.append("fixture_reference_in_paper")
+    return {
+        "node_id": spec["node_id"],
+        "logical_operator": spec["logical_operator"],
+        "operator_id": spec["operator_id"],
+        "action": spec["action"],
+        "runner_mode": "bounded_runtime_smoke",
+        "smoke_mode": extra_inputs.get("smoke_mode") is True,
+        "execution_mode": str(extra_inputs.get("execution_mode") or "N/A"),
+        "fixture_markers": _unique_list(markers),
+        "uses_fixture_or_smoke_input": bool(markers),
+    }
+
+
+def _unique_list(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for value in values:
+        if value and value not in seen:
+            seen.add(value)
+            unique.append(value)
+    return unique
+
+
+def _load_configured_workflow_nodes(workflow_config: Path) -> list[dict[str, str]]:
+    payload = json.loads(workflow_config.read_text(encoding="utf-8"))
+    nodes = payload.get("nodes") if isinstance(payload, dict) else None
+    if not isinstance(nodes, list):
+        raise ValueError(f"Workflow config must contain a nodes array: {workflow_config}")
+    configured: list[dict[str, str]] = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        configured.append({
+            "node_id": str(node.get("id") or ""),
+            "logical_operator": str(node.get("logical_operator") or ""),
+            "gate": str(node.get("gate") or ""),
+        })
+    return [node for node in configured if node["node_id"]]
+
+
+def _workflow_config_alignment(
+    *,
+    workflow_config: Path,
+    required_nodes: list[str],
+    available_specs: list[dict[str, str]],
+) -> dict[str, Any]:
+    configured_nodes = _load_configured_workflow_nodes(workflow_config)
+    configured_ids = [node["node_id"] for node in configured_nodes]
+    available_ids = [spec["node_id"] for spec in available_specs]
+    configured_set = set(configured_ids)
+    available_set = set(available_ids)
+    required_set = set(required_nodes)
+    missing_available = [node_id for node_id in configured_ids if node_id not in available_set]
+    extra_available = [node_id for node_id in available_ids if node_id not in configured_set]
+    missing_required = [node_id for node_id in configured_ids if node_id not in required_set]
+    extra_required = [node_id for node_id in required_nodes if node_id not in configured_set]
+    configured_required_order = [node_id for node_id in configured_ids if node_id in required_set]
+    runner_configured_order = [node_id for node_id in required_nodes if node_id in configured_set]
+    order_matches = runner_configured_order == configured_required_order
+    issues: list[str] = []
+    if missing_available:
+        issues.append("configured_nodes_missing_from_runner")
+    if extra_available:
+        issues.append("runner_nodes_not_declared_in_config")
+    if missing_required:
+        issues.append("configured_nodes_not_required_by_run")
+    if extra_required:
+        issues.append("required_run_nodes_not_declared_in_config")
+    if not order_matches:
+        issues.append("required_node_order_drift")
+    return {
+        "ok": not issues,
+        "status": "aligned" if not issues else "drift",
+        "workflow_config_path": _rel(workflow_config, REPO_HARNESS_DIR),
+        "configured_nodes": configured_ids,
+        "runner_available_nodes": available_ids,
+        "required_nodes": required_nodes,
+        "configured_nodes_missing_from_runner": missing_available,
+        "runner_nodes_not_declared_in_config": extra_available,
+        "configured_nodes_not_required_by_run": missing_required,
+        "required_run_nodes_not_declared_in_config": extra_required,
+        "configured_required_order": configured_required_order,
+        "runner_configured_order": runner_configured_order,
+        "order_matches": order_matches,
+        "issues": issues,
+    }
+
+
+def _record_workflow_config_alignment(
+    lifecycle: dict[str, Any],
+    args: argparse.Namespace,
+    *,
+    required_nodes: list[str],
+    checks: list[dict[str, str]],
+) -> None:
+    workflow_config = _resolve_harness_path(Path(args.harness_dir).expanduser().resolve(), args.workflow_config)
+    alignment = _workflow_config_alignment(
+        workflow_config=workflow_config,
+        required_nodes=required_nodes,
+        available_specs=[*NODE_SPECS, *EXTERNAL_NODE_SPECS],
+    )
+    lifecycle["workflow_config_alignment"] = alignment
+    if bool(getattr(args, "require_workflow_config_alignment", False)) and not alignment["ok"]:
+        checks.append({
+            "check": "workflow_config_alignment",
+            "status": "error",
+            "detail": ",".join(alignment["issues"]),
+        })
+
+
+def _scheduler_dispatch_boundary(
+    args: argparse.Namespace,
+    *,
+    required_nodes: list[str],
+    dispatch_input_profiles: dict[str, Any],
+) -> dict[str, Any]:
+    harness_dir = Path(args.harness_dir).expanduser().resolve()
+    workflow_config = _resolve_harness_path(harness_dir, args.workflow_config)
+    fixture_nodes = [
+        node_id
+        for node_id, profile in sorted(dispatch_input_profiles.items())
+        if isinstance(profile, dict) and profile.get("uses_fixture_or_smoke_input")
+    ]
+    smoke_nodes = [
+        node_id
+        for node_id, profile in sorted(dispatch_input_profiles.items())
+        if isinstance(profile, dict) and profile.get("smoke_mode") is True
+    ]
+    blocking_reasons = [
+        "runner_contract=bounded_smoke_runner",
+    ]
+    if smoke_nodes:
+        blocking_reasons.append("node_inputs_include_smoke_mode")
+    if fixture_nodes:
+        blocking_reasons.append("node_inputs_include_fixture_or_fixture_fallback")
+    workflow_hash = _sha256(workflow_config) if workflow_config.exists() and workflow_config.is_file() else ""
+    return {
+        "schema": "autosci_scheduler_dispatch_boundary.v1",
+        "status": "bounded_smoke",
+        "production_ready": False,
+        "runner": _rel(Path(__file__).resolve(), REPO_HARNESS_DIR),
+        "runner_contract": "bounded_smoke_runner",
+        "workflow_id": DEFAULT_WORKFLOW_ID,
+        "workflow_config_path": _rel(workflow_config, REPO_HARNESS_DIR),
+        "workflow_config_sha256": workflow_hash,
+        "required_nodes": list(required_nodes),
+        "profiled_nodes": sorted(dispatch_input_profiles),
+        "smoke_nodes": smoke_nodes,
+        "fixture_nodes": fixture_nodes,
+        "blocking_reasons": _unique_list(blocking_reasons),
+        "limitations": [
+            "This lifecycle is dispatched through the bounded smoke runner, not a generic production scheduler.",
+            "Production parity requires a non-smoke workflow dispatcher with no fixture/smoke input markers and durable resume/runtime proof.",
+        ],
+    }
+
+
 def _gate_lifecycle(summary_path: Path, harness_dir: Path) -> dict[str, Any]:
     env = os.environ.copy()
     env["HARNESS_DIR"] = str(harness_dir)
@@ -328,15 +526,24 @@ def _human_gate_approval_result(
     approval_ref: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     node_id = spec["node_id"]
+    task_id = f"task-{job_id}-{node_id}"
+    timestamp = dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     output_dir = _resolve_harness_path(
         harness_dir,
         f"artifacts/scientific/scheduler-lifecycle-smoke/{job_id}/{node_id}",
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     artifact_path = output_dir / spec["evidence_name"]
+    bridge_result_path = output_dir / f"{spec['action']}.result.json"
+    operator_result_dir = _resolve_harness_path(
+        harness_dir,
+        f"run/operator-results/{spec['operator_id']}/{task_id}",
+    )
+    operator_result_dir.mkdir(parents=True, exist_ok=True)
+    operator_result_path = operator_result_dir / "result.json"
     payload = {
         "schema": "workflow_evolution.v1",
-        "task_id": f"task-{job_id}-{node_id}",
+        "task_id": task_id,
         "sprint_id": job_id,
         "node_id": node_id,
         "status": "completed",
@@ -376,11 +583,45 @@ def _human_gate_approval_result(
         "provenance": {
             "operator_id": spec["operator_id"],
             "implementation_package": "harness.tools.run_scientific_lifecycle_smoke",
-            "timestamp": dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "timestamp": timestamp,
         },
         "limitations": ["Approval ref was supplied explicitly; no external side effect was executed by this gate."],
     }
     artifact_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    artifact_hash = _sha256(artifact_path)
+    bridge_result = {
+        "action": spec["action"],
+        "approval_ref": approval_ref,
+        "artifact_sha256": artifact_hash,
+        "evidence_path": _rel(artifact_path, harness_dir),
+        "gate": spec["gate"],
+        "job_id": job_id,
+        "node_id": node_id,
+        "ok": True,
+        "result_path": _rel(bridge_result_path, harness_dir),
+        "schema": "workflow_evolution.v1",
+        "status": "completed",
+        "task_id": task_id,
+    }
+    bridge_result_path.write_text(json.dumps(bridge_result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    operator_result = {
+        "action": spec["action"],
+        "approval_ref": approval_ref,
+        "bridge_result_path": _rel(bridge_result_path, harness_dir),
+        "effective_model": "human-approval-ref",
+        "effective_provider": "human",
+        "exit_code": 0,
+        "finished_at": timestamp,
+        "node_id": node_id,
+        "operator_id": spec["operator_id"],
+        "requested_model": "human-approval-ref",
+        "routing_model": "human-approval-ref",
+        "sprint_id": job_id,
+        "started_at": timestamp,
+        "status": "completed",
+        "task_id": task_id,
+    }
+    operator_result_path.write_text(json.dumps(operator_result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     node_result = {
         "job_id": job_id,
         "node_id": node_id,
@@ -389,9 +630,11 @@ def _human_gate_approval_result(
         "action": spec["action"],
         "status": "passed",
         "artifact_path": _rel(artifact_path, harness_dir),
-        "artifact_sha256": _sha256(artifact_path),
+        "artifact_sha256": artifact_hash,
+        "bridge_result_path": _rel(bridge_result_path, harness_dir),
         "expected_schema": "workflow_evolution.v1",
         "gate": spec["gate"],
+        "operator_result_path": _rel(operator_result_path, harness_dir),
         "approval_ref": approval_ref,
     }
     gate_result = {
@@ -425,6 +668,7 @@ def _extra_inputs_for(
     experiment_result_path = (node_results.get("experiment_run") or {}).get("artifact_path")
     claim_verdict_path = (node_results.get("claim_verify") or {}).get("artifact_path")
     report_path = (node_results.get("report_draft") or {}).get("artifact_path")
+    report_plan_path = (node_results.get("report_plan") or {}).get("artifact_path")
     review_llm_evidence = list(getattr(args, "review_llm_evidence", None) or []) if args else []
     compile_target = str(getattr(args, "compile_target", "") or "") if args else ""
     experiment_approval_ref = str(getattr(args, "experiment_approval_ref", "") or "") if args else ""
@@ -557,7 +801,11 @@ def _extra_inputs_for(
             "experiment_id": "exp-supported-001",
             "report_id": "report-scheduler-lifecycle-smoke",
             "report_title": "Scheduler Lifecycle Smoke Report",
+            "paper_draft": True,
+            "target": "scheduler-lifecycle-draft",
         })
+        if discovery_path:
+            inputs["discovery_evidence"] = discovery_path
         if claims_path:
             inputs["claims_evidence"] = claims_path
         if claim_verdict_path:
@@ -572,6 +820,10 @@ def _extra_inputs_for(
             inputs["idea_evaluation_evidence"] = idea_eval_path
         if paper_path:
             inputs["paper_evidence"] = paper_path
+        if report_plan_path:
+            inputs["report_plan_evidence"] = report_plan_path
+        _attach_review_llm_inputs(inputs, args)
+        _attach_compile_handoff_inputs(inputs, args)
     if node_id == "memory_update_final" and report_path:
         inputs["source_evidence"] = report_path
     if node_id == "artifact_review":
@@ -651,30 +903,16 @@ def _extra_inputs_for(
             inputs["method_evidence"] = method_path
         if idea_eval_path:
             inputs["idea_evaluation_evidence"] = idea_eval_path
-        if review_llm_evidence:
-            inputs["review_llm_evidence"] = review_llm_evidence
-            inputs["artifact_review_evidence"] = review_llm_evidence
+        _attach_review_llm_inputs(inputs, args)
+        _attach_compile_handoff_inputs(inputs, args)
     if node_id == "publication_produce":
         inputs.update({
             "checklist": True,
             "title": "Scheduler Lifecycle Resumed Publication",
         })
         if compile_target:
-            inputs["paper_path"] = compile_target
             inputs["target"] = compile_target
-        if compile_approval_ref:
-            inputs["approval_ref"] = compile_approval_ref
-        if compile_runtime_evidence:
-            inputs["runtime_evidence"] = compile_runtime_evidence
-        if compile_allowlist:
-            inputs["allowlist_evidence"] = compile_allowlist
-        if compile_before:
-            inputs["before_artifacts"] = compile_before
-        if compile_after:
-            inputs["after_artifacts"] = compile_after
-        if compile_execute_approved:
-            inputs["execute_approved_side_effect"] = True
-            inputs["executor_timeout_seconds"] = compile_executor_timeout
+        _attach_compile_handoff_inputs(inputs, args)
     return inputs
 
 
@@ -706,6 +944,19 @@ def _node_args(
         lease_ttl_seconds=int(args.lease_ttl_seconds),
         allow_existing_result=bool(args.allow_existing_result),
     )
+
+
+def _run_scheduler_node(
+    args: argparse.Namespace,
+    harness_dir: Path,
+    job_id: str,
+    spec: dict[str, str],
+    node_results: dict[str, Any],
+    dispatch_input_profiles: dict[str, Any],
+) -> tuple[int, dict[str, Any]]:
+    node_args = _node_args(args, harness_dir, job_id, spec, node_results)
+    dispatch_input_profiles[spec["node_id"]] = _dispatch_input_profile(spec, node_args)
+    return node_smoke.run(node_args)
 
 
 def _node_result_from_summary(
@@ -746,6 +997,106 @@ def _node_result_from_summary(
     return node_result, gate_result
 
 
+def _resume_node_fingerprint(node_result: dict[str, Any]) -> dict[str, Any]:
+    fields = (
+        "status",
+        "artifact_path",
+        "artifact_sha256",
+        "operator_result_path",
+        "bridge_result_path",
+        "gate",
+    )
+    return {field: node_result.get(field) for field in fields if field in node_result}
+
+
+def _scheduler_resume_boundary(
+    *,
+    resume_audit: dict[str, Any],
+    changed_reused_nodes: list[str],
+) -> dict[str, Any]:
+    reused_nodes = resume_audit.get("reused_nodes") if isinstance(resume_audit.get("reused_nodes"), dict) else {}
+    dispatched_nodes = resume_audit.get("dispatched_nodes") if isinstance(resume_audit.get("dispatched_nodes"), list) else []
+    approved_human_gates = (
+        resume_audit.get("approved_human_gates")
+        if isinstance(resume_audit.get("approved_human_gates"), list)
+        else []
+    )
+    source_summary_path = str(resume_audit.get("source_summary_path") or "").strip()
+    no_rerun_verified = bool(source_summary_path and reused_nodes and not changed_reused_nodes)
+    blocking_reasons: list[str] = []
+    if not source_summary_path:
+        blocking_reasons.append("missing_resume_source_summary")
+    if not reused_nodes:
+        blocking_reasons.append("no_reused_node_fingerprints")
+    if changed_reused_nodes:
+        blocking_reasons.append("reused_node_fingerprint_changed")
+    return {
+        "schema": "autosci_scheduler_resume_boundary.v1",
+        "status": "resume_no_rerun_verified" if no_rerun_verified else "incomplete",
+        "no_rerun_verified": no_rerun_verified,
+        "source_summary_path": source_summary_path,
+        "reused_node_count": len(reused_nodes),
+        "reused_nodes": reused_nodes,
+        "changed_reused_nodes": list(changed_reused_nodes),
+        "dispatched_nodes": list(dispatched_nodes),
+        "dispatched_node_count": len(dispatched_nodes),
+        "approved_human_gates": list(approved_human_gates),
+        "blocking_reasons": _unique_list(blocking_reasons),
+        "limitations": [] if no_rerun_verified else [
+            "Scheduler resume did not prove that prior node artifacts were reused without rerun."
+        ],
+    }
+
+
+def _scheduler_lease_boundary(
+    *,
+    harness_dir: Path,
+    job_id: str,
+    required_nodes: list[str],
+    lease_dir: Path,
+    resume: bool,
+) -> dict[str, Any]:
+    lease_dir.mkdir(parents=True, exist_ok=True)
+    lease_path = lease_dir / "scheduler_lease.json"
+    lease_id = hashlib.sha1(
+        json.dumps(
+            {"job_id": job_id, "required_nodes": required_nodes, "resume": resume},
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()
+    timestamp = dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    lease = {
+        "schema": "autosci_scheduler_lease.v1",
+        "lease_id": lease_id,
+        "job_id": job_id,
+        "scope": "local_smoke_runner_resume" if resume else "local_smoke_runner",
+        "owner": "harness.tools.run_scientific_lifecycle_smoke",
+        "acquired_at": timestamp,
+        "required_nodes": list(required_nodes),
+        "distributed": False,
+        "production_ready": False,
+        "limitations": [
+            "This is a local smoke-run lease record, not a distributed scheduler lease.",
+        ],
+    }
+    lease_path.write_text(json.dumps(lease, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {
+        "schema": "autosci_scheduler_lease_boundary.v1",
+        "status": "local_smoke_lease",
+        "local_lease_recorded": True,
+        "distributed_lease_verified": False,
+        "production_ready": False,
+        "lease_id": lease_id,
+        "lease_path": _rel(lease_path, harness_dir),
+        "lease_scope": lease["scope"],
+        "required_nodes": list(required_nodes),
+        "blocking_reasons": ["lease_scope=local_smoke_runner", "distributed_lease_not_verified"],
+        "limitations": [
+            "Scheduler lease ownership is recorded locally for auditability; production parity requires a distributed lease/quota manager.",
+        ],
+    }
+
+
 def _ensure_lifecycle_node(lifecycle: dict[str, Any], spec: dict[str, str]) -> None:
     required_nodes = lifecycle.setdefault("required_nodes", [])
     if isinstance(required_nodes, list) and spec["node_id"] not in required_nodes:
@@ -764,12 +1115,91 @@ def _ensure_lifecycle_node(lifecycle: dict[str, Any], spec: dict[str, str]) -> N
         })
 
 
+def _append_required_node(
+    required_nodes: list[str],
+    nodes: list[dict[str, str]],
+    spec: dict[str, str],
+) -> None:
+    node_id = spec["node_id"]
+    if node_id not in required_nodes:
+        required_nodes.append(node_id)
+    if not any(node.get("id") == node_id for node in nodes):
+        nodes.append({
+            "id": node_id,
+            "logical_operator": spec["logical_operator"],
+            "operator_id": spec["operator_id"],
+            "action": spec["action"],
+            "gate": spec["gate"],
+        })
+
+
+def _record_unsupplied_external_tail_blockers(
+    *,
+    lifecycle: dict[str, Any],
+    args: argparse.Namespace,
+    job_id: str,
+    node_results: dict[str, Any],
+    blocked_nodes: dict[str, Any],
+    checks: list[dict[str, str]],
+    start_index: int,
+) -> None:
+    for pending_spec in CONFIGURED_TAIL_NODE_SPECS[start_index:]:
+        pending_id = pending_spec["node_id"]
+        if pending_id not in EXTERNAL_NODE_BY_ID or pending_id in node_results:
+            continue
+        if _resume_evidence_supplied(args, pending_id):
+            continue
+        _ensure_lifecycle_node(lifecycle, pending_spec)
+        blocked_nodes[pending_id] = _blocked_external_node(job_id, pending_id)
+        checks.append({
+            "check": f"{pending_id}_resume_waiting",
+            "status": "ok",
+            "detail": "required external evidence was not supplied",
+        })
+
+
 def _resume_evidence_supplied(args: argparse.Namespace, node_id: str) -> bool:
     if node_id == "report_plan":
         return bool(getattr(args, "review_llm_evidence", None))
     if node_id == "publication_produce":
         return bool(str(getattr(args, "compile_target", "") or "").strip())
     return False
+
+
+def _attach_review_llm_inputs(inputs: dict[str, Any], args: argparse.Namespace | None) -> None:
+    review_llm_evidence = list(getattr(args, "review_llm_evidence", None) or []) if args else []
+    if review_llm_evidence:
+        inputs["review_llm_evidence"] = review_llm_evidence
+        inputs["artifact_review_evidence"] = review_llm_evidence
+
+
+def _attach_compile_handoff_inputs(inputs: dict[str, Any], args: argparse.Namespace | None) -> None:
+    if args is None:
+        return
+    compile_target = str(getattr(args, "compile_target", "") or "").strip()
+    compile_approval_ref = str(getattr(args, "compile_approval_ref", "") or "").strip()
+    compile_runtime_evidence = list(getattr(args, "compile_runtime_evidence", None) or [])
+    compile_allowlist = list(getattr(args, "compile_allowlist_evidence", None) or [])
+    compile_before = list(getattr(args, "compile_before_artifact", None) or [])
+    compile_after = list(getattr(args, "compile_after_artifact", None) or [])
+    compile_execute_approved = bool(getattr(args, "compile_execute_approved", False))
+    compile_executor_timeout = int(getattr(args, "compile_executor_timeout_seconds", 120) or 120)
+    if compile_target:
+        inputs["paper_path"] = compile_target
+        inputs["supplied_compile_target_evidence"] = True
+    if compile_approval_ref:
+        inputs["approval_ref"] = compile_approval_ref
+    if compile_runtime_evidence:
+        inputs["runtime_evidence"] = compile_runtime_evidence
+    if compile_allowlist:
+        inputs["allowlist_evidence"] = compile_allowlist
+    if compile_before:
+        inputs["before_artifacts"] = compile_before
+    if compile_after:
+        inputs["after_artifacts"] = compile_after
+    if compile_execute_approved:
+        inputs["execute_approved_side_effect"] = True
+        inputs["executor_timeout_seconds"] = compile_executor_timeout
 
 
 def _write_and_gate_lifecycle(
@@ -827,6 +1257,7 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
     gate_results = lifecycle.setdefault("gate_results", {})
     blocked_nodes = lifecycle.setdefault("blocked_nodes", {})
     checks = lifecycle.setdefault("checks", [])
+    dispatch_input_profiles = lifecycle.setdefault("dispatch_input_profiles", {})
     if not isinstance(node_summaries, dict):
         node_summaries = lifecycle["node_summaries"] = {}
     if not isinstance(node_results, dict):
@@ -837,6 +1268,21 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
         blocked_nodes = lifecycle["blocked_nodes"] = {}
     if not isinstance(checks, list):
         checks = lifecycle["checks"] = []
+    if not isinstance(dispatch_input_profiles, dict):
+        dispatch_input_profiles = lifecycle["dispatch_input_profiles"] = {}
+    reused_node_fingerprints = {
+        node_id: _resume_node_fingerprint(result)
+        for node_id, result in sorted(node_results.items())
+        if isinstance(result, dict) and node_id not in blocked_nodes
+    }
+    resume_audit = {
+        "source_summary_path": _rel(resume_summary_path, harness_dir),
+        "blocked_nodes_before": sorted(blocked_nodes),
+        "reused_nodes": reused_node_fingerprints,
+        "dispatched_nodes": [],
+        "approved_human_gates": [],
+    }
+    lifecycle["resume_audit"] = resume_audit
 
     stopped_for_human_gate = False
     resume_after_node: str | None = None
@@ -865,6 +1311,7 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
         )
         node_results[gate_node_id] = node_result
         gate_results[gate_node_id] = gate_result
+        resume_audit["approved_human_gates"].append(gate_node_id)
         blocked_nodes.pop(gate_node_id, None)
         checks.append({
             "check": f"{gate_node_id}_resumed_approved",
@@ -876,15 +1323,16 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
 
     if resume_after_node:
         start_index = next(
-            (index + 1 for index, spec in enumerate(NODE_SPECS) if spec["node_id"] == resume_after_node),
-            len(NODE_SPECS),
+            (index + 1 for index, spec in enumerate(BASE_NODE_SPECS) if spec["node_id"] == resume_after_node),
+            len(BASE_NODE_SPECS),
         )
-        for spec in NODE_SPECS[start_index:]:
+        for spec in BASE_NODE_SPECS[start_index:]:
             node_id = spec["node_id"]
             if node_id in node_results:
                 continue
             _ensure_lifecycle_node(lifecycle, spec)
-            code, node_summary = node_smoke.run(_node_args(args, harness_dir, job_id, spec, node_results))
+            code, node_summary = _run_scheduler_node(args, harness_dir, job_id, spec, node_results, dispatch_input_profiles)
+            resume_audit["dispatched_nodes"].append(node_id)
             node_summaries[node_id] = node_summary
             node_ok = code == 0 and node_summary.get("status") == "passed"
             checks.append({
@@ -919,6 +1367,7 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
                     )
                     node_results[gate_node_id] = node_result
                     gate_results[gate_node_id] = gate_result
+                    resume_audit["approved_human_gates"].append(gate_node_id)
                     checks.append({
                         "check": f"{gate_node_id}_resumed_approved",
                         "status": "ok",
@@ -934,25 +1383,30 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
                     stopped_for_human_gate = True
                     break
 
-    for spec in EXTERNAL_NODE_SPECS:
+    for tail_index, spec in enumerate(CONFIGURED_TAIL_NODE_SPECS):
         if stopped_for_human_gate:
             break
         node_id = spec["node_id"]
         _ensure_lifecycle_node(lifecycle, spec)
-        if node_id not in blocked_nodes and node_id not in node_results:
+        if node_id in node_results:
+            continue
+        if node_id in EXTERNAL_NODE_BY_ID and node_id not in blocked_nodes:
             blocked_nodes[node_id] = _blocked_external_node(job_id, node_id)
 
-        if node_id not in blocked_nodes:
-            continue
-        if not _resume_evidence_supplied(args, node_id):
-            checks.append({
-                "check": f"{node_id}_resume_waiting",
-                "status": "ok",
-                "detail": "required external evidence was not supplied",
-            })
-            continue
+        if node_id in EXTERNAL_NODE_BY_ID and node_id in blocked_nodes and not _resume_evidence_supplied(args, node_id):
+            _record_unsupplied_external_tail_blockers(
+                lifecycle=lifecycle,
+                args=args,
+                job_id=job_id,
+                node_results=node_results,
+                blocked_nodes=blocked_nodes,
+                checks=checks,
+                start_index=tail_index,
+            )
+            break
 
-        code, node_summary = node_smoke.run(_node_args(args, harness_dir, job_id, spec, node_results))
+        code, node_summary = _run_scheduler_node(args, harness_dir, job_id, spec, node_results, dispatch_input_profiles)
+        resume_audit["dispatched_nodes"].append(node_id)
         node_summaries[node_id] = node_summary
         node_ok = code == 0 and node_summary.get("status") == "passed"
         checks.append({
@@ -970,6 +1424,8 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
             node_results[node_id] = node_result
             gate_results[node_id] = gate_result
             blocked_nodes.pop(node_id, None)
+        else:
+            break
 
     output_root = _resolve_harness_path(
         harness_dir,
@@ -979,6 +1435,61 @@ def run_resume(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
         harness_dir,
         args.out or output_root / "scientific_lifecycle_runtime.resumed.json",
     )
+    changed_reused_nodes = [
+        node_id
+        for node_id, fingerprint in reused_node_fingerprints.items()
+        if _resume_node_fingerprint(node_results.get(node_id) or {}) != fingerprint
+    ]
+    lifecycle["resume_boundary"] = _scheduler_resume_boundary(
+        resume_audit=resume_audit,
+        changed_reused_nodes=changed_reused_nodes,
+    )
+    checks.append({
+        "check": "resume_reused_nodes_preserved",
+        "status": "error" if changed_reused_nodes else "ok",
+        "detail": ",".join(changed_reused_nodes) if changed_reused_nodes else f"{len(reused_node_fingerprints)} reused nodes",
+    })
+    checks.append({
+        "check": "scheduler_resume_no_rerun_boundary",
+        "status": "ok" if lifecycle["resume_boundary"]["no_rerun_verified"] else "error",
+        "detail": ",".join(lifecycle["resume_boundary"]["blocking_reasons"])
+        if lifecycle["resume_boundary"]["blocking_reasons"]
+        else f"{lifecycle['resume_boundary']['reused_node_count']} reused nodes",
+    })
+    required_nodes_for_alignment = [
+        str(node_id)
+        for node_id in lifecycle.get("required_nodes", [])
+        if isinstance(node_id, str)
+    ]
+    _record_workflow_config_alignment(
+        lifecycle,
+        args,
+        required_nodes=required_nodes_for_alignment,
+        checks=checks,
+    )
+    lifecycle["lease_boundary"] = _scheduler_lease_boundary(
+        harness_dir=harness_dir,
+        job_id=job_id,
+        required_nodes=required_nodes_for_alignment,
+        lease_dir=summary_path.parent,
+        resume=True,
+    )
+    checks.append({
+        "check": "scheduler_local_lease_boundary",
+        "status": "ok" if lifecycle["lease_boundary"]["local_lease_recorded"] else "error",
+        "detail": lifecycle["lease_boundary"]["lease_path"],
+    })
+    lifecycle["dispatch_boundary"] = _scheduler_dispatch_boundary(
+        args,
+        required_nodes=required_nodes_for_alignment,
+        dispatch_input_profiles=dispatch_input_profiles,
+    )
+    if bool(getattr(args, "require_production_dispatch", False)) and not lifecycle["dispatch_boundary"]["production_ready"]:
+        checks.append({
+            "check": "production_dispatch_boundary",
+            "status": "error",
+            "detail": ",".join(lifecycle["dispatch_boundary"]["blocking_reasons"]),
+        })
     lifecycle["lifecycle_status"] = "blocked" if blocked_nodes else "passed"
     return _write_and_gate_lifecycle(
         lifecycle,
@@ -1012,10 +1523,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
     checks: list[dict[str, str]] = []
     executed_specs: list[dict[str, str]] = []
     human_gate_specs: list[dict[str, str]] = []
+    dispatch_input_profiles: dict[str, Any] = {}
     stopped_for_human_gate = False
 
-    for spec in NODE_SPECS:
-        code, node_summary = node_smoke.run(_node_args(args, harness_dir, job_id, spec, node_results))
+    for spec in BASE_NODE_SPECS:
+        code, node_summary = _run_scheduler_node(args, harness_dir, job_id, spec, node_results, dispatch_input_profiles)
         executed_specs.append(spec)
         node_summaries[spec["node_id"]] = node_summary
         node_ok = code == 0 and node_summary.get("status") == "passed"
@@ -1064,7 +1576,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
                 stopped_for_human_gate = True
                 break
 
-    lifecycle_specs = [*executed_specs, *human_gate_specs] if args.include_human_gates else NODE_SPECS
+    lifecycle_specs = [*executed_specs, *human_gate_specs] if args.include_human_gates else BASE_NODE_SPECS
     required_nodes = [spec["node_id"] for spec in lifecycle_specs]
     nodes = [
         {
@@ -1076,26 +1588,19 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
         }
         for spec in lifecycle_specs
     ]
-    if args.dispatch_external_evidence and not stopped_for_human_gate and len(node_results) >= len(NODE_SPECS):
-        for spec in EXTERNAL_NODE_SPECS:
+    if args.dispatch_external_evidence and not stopped_for_human_gate and len(node_results) >= len(BASE_NODE_SPECS):
+        for spec in CONFIGURED_TAIL_NODE_SPECS:
             node_id = spec["node_id"]
-            required_nodes.append(node_id)
-            nodes.append({
-                "id": node_id,
-                "logical_operator": spec["logical_operator"],
-                "operator_id": spec["operator_id"],
-                "action": spec["action"],
-                "gate": spec["gate"],
-            })
-            if not _resume_evidence_supplied(args, node_id):
+            _append_required_node(required_nodes, nodes, spec)
+            if node_id in EXTERNAL_NODE_BY_ID and not _resume_evidence_supplied(args, node_id):
                 blocked_nodes[node_id] = _blocked_external_node(job_id, node_id)
                 checks.append({
                     "check": f"{node_id}_external_evidence_supplied",
                     "status": "error",
                     "detail": "required external evidence was not supplied",
                 })
-                continue
-            code, node_summary = node_smoke.run(_node_args(args, harness_dir, job_id, spec, node_results))
+                break
+            code, node_summary = _run_scheduler_node(args, harness_dir, job_id, spec, node_results, dispatch_input_profiles)
             node_summaries[node_id] = node_summary
             node_ok = code == 0 and node_summary.get("status") == "passed"
             checks.append({
@@ -1112,20 +1617,15 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
                 )
                 node_results[node_id] = node_result
                 gate_results[node_id] = gate_result
+            else:
+                break
 
-    if args.include_blocked_external and not stopped_for_human_gate:
+    if not args.dispatch_external_evidence and not stopped_for_human_gate and len(node_results) >= len(BASE_NODE_SPECS):
         for node_id in EXTERNAL_NODE_BY_ID:
             if node_id in node_results or node_id in blocked_nodes:
                 continue
             blocked = _blocked_external_node(job_id, node_id)
-            required_nodes.append(node_id)
-            nodes.append({
-                "id": node_id,
-                "logical_operator": blocked["logical_operator"],
-                "operator_id": blocked["operator_id"],
-                "action": blocked["action"],
-                "gate": blocked["gate"],
-            })
+            _append_required_node(required_nodes, nodes, EXTERNAL_NODE_BY_ID[node_id])
             blocked_nodes[node_id] = blocked
         checks.append({
             "check": "external_blocked_nodes_recorded",
@@ -1151,8 +1651,38 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
         "gate_results": gate_results,
         "blocked_nodes": blocked_nodes,
         "node_summaries": node_summaries,
+        "dispatch_input_profiles": dispatch_input_profiles,
         "checks": checks,
     }
+    _record_workflow_config_alignment(
+        lifecycle,
+        args,
+        required_nodes=required_nodes,
+        checks=checks,
+    )
+    lifecycle["lease_boundary"] = _scheduler_lease_boundary(
+        harness_dir=harness_dir,
+        job_id=job_id,
+        required_nodes=required_nodes,
+        lease_dir=summary_path.parent,
+        resume=False,
+    )
+    checks.append({
+        "check": "scheduler_local_lease_boundary",
+        "status": "ok" if lifecycle["lease_boundary"]["local_lease_recorded"] else "error",
+        "detail": lifecycle["lease_boundary"]["lease_path"],
+    })
+    lifecycle["dispatch_boundary"] = _scheduler_dispatch_boundary(
+        args,
+        required_nodes=required_nodes,
+        dispatch_input_profiles=dispatch_input_profiles,
+    )
+    if bool(getattr(args, "require_production_dispatch", False)) and not lifecycle["dispatch_boundary"]["production_ready"]:
+        checks.append({
+            "check": "production_dispatch_boundary",
+            "status": "error",
+            "detail": ",".join(lifecycle["dispatch_boundary"]["blocking_reasons"]),
+        })
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(json.dumps(lifecycle, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
@@ -1186,6 +1716,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--paper", default=DEFAULT_PAPER)
     parser.add_argument("--output-dir")
     parser.add_argument("--out", help="Optional lifecycle summary JSON path, relative to --harness-dir.")
+    parser.add_argument("--workflow-config", default=str(DEFAULT_WORKFLOW_CONFIG), help="Declared workflow config used for scheduler drift detection.")
+    parser.add_argument(
+        "--require-workflow-config-alignment",
+        action="store_true",
+        help="Fail when the smoke runner's required nodes or order diverge from the declared workflow config.",
+    )
+    parser.add_argument(
+        "--require-production-dispatch",
+        action="store_true",
+        help="Fail when the lifecycle is still backed by the bounded smoke runner or fixture/smoke inputs.",
+    )
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--lease-ttl-seconds", type=int, default=120)
     parser.add_argument("--allow-existing-result", action="store_true")

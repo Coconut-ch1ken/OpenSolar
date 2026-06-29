@@ -55,6 +55,7 @@
           "type": "string",
           "enum": [
             "init_sources",
+            "discover_literature",
             "daily_arxiv_prepare_finalize",
             "run_experiment",
             "run_pilot_experiment",

@@ -2684,3 +2684,1448 @@ Planned file changes (pre-fix):
 |---|---|
 | `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_review_resolves_harness_prefixed_workspace_path -q` | ok: 1 passed. |
 | `python3 harness/plugins/autosci/bin/autosci_skill_shim.py text "\$review --paper harness/artifacts/autosci/workspace/wiki/ideas/idea-001.md --difficulty hard --focus method --run-id harness-review-test-review-fixed"` | ok: resolved to `harness/artifacts/autosci/workspace/wiki/ideas/idea-001.md` with `status=completed`, `passed_count=1`, `schema_only_count=0`. |
+
+## Phase 19 Route Truthfulness Sync For Steps 45-48
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+### Route Sync Scope
+
+This documentation-only sync records route-parity changes already made during
+the scheduler/native lifecycle continuation:
+
+- Step 45: `$research` route limitations now say default scheduler runs block
+  at `report_plan` / `publication_produce` unless explicit Review LLM and
+  compile/PDF evidence are supplied with external-evidence dispatch.
+- Step 45: `$research.primary_tools` now points at the real
+  `harness/tools/run_scientific_lifecycle_smoke.py` path instead of the missing
+  `tools/run_scientific_lifecycle_smoke.py`.
+- Step 47: `/exp-status` route limitations now distinguish approved
+  `tools/remote.py check` execution from registry-only status and keep live
+  SSH/provider polling partial.
+- Step 48: `/ask`, `/check`, and `/ideate` route limitations now describe
+  persisted model-command request/response provenance without claiming hosted
+  provider parity.
+
+### Remaining After Route Truthfulness Sync
+
+| Block | Status | Notes |
+|---|---|---|
+| Route truthfulness for continuation steps | ok | Phase 19 now references the route config truthfulness updates made in Steps 45, 47, and 48. |
+| Full parity | blocked | Route inventory remains 0 full, 17 partial, 11 gated until live providers, generic scheduler dispatch, remote polling, and publication parity are proven. |
+
+### Route Truthfulness Sync Verification
+
+| Command | Result |
+|---|---|
+| `git diff --check -- docs/integrations/autosci/phase19-progress-log.md` | ok |
+| `rg -n "Phase 19 Route Truthfulness Sync|Step 45|Step 47|Step 48" docs/integrations/autosci/phase19-progress-log.md` | ok: sync section and referenced continuation steps are present. |
+
+## Phase 19 Publication Review Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten `$paper-plan` route truthfulness by recording an explicit
+Review LLM boundary object instead of only a permissive boolean completion flag.
+
+### Publication Review Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `$paper-plan` boundary object | ok | `paper_plan_json` now includes `autosci_publication_review_boundary.v1`. |
+| Boundary completion rules | ok | Completion requires `artifact_review.v1`, completed payload status, LLM review mode, `review_available=true`, and non-empty evidence ids. |
+| Weak Review LLM evidence | ok | Weak Review LLM-shaped JSON is recorded as invalid/inconclusive and does not complete the plan. |
+| Route limitation | ok | `/paper-plan` limitation now states explicit Review LLM boundary requirements. |
+
+### Publication Review Boundary Verification
+
+| Command | Result |
+|---|---|
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'paper_plan_completes_with_citations_and_review_llm or paper_plan_rejects_weak_review_llm_boundary or paper_plan_attaches_verified_compile_handoff' -q` | ok: 3 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'paper_plan or paper_draft or paper_compile or research_scheduler_executes_approved_publication_compile' -q` | ok: 13 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 101 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step49.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 49 files | ok before log write |
+
+## Phase 19 Scheduler Production Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten `$research` route truthfulness by adding a scheduler
+production-dispatch boundary and strict failure flag for smoke/fixture-backed
+lifecycle runs.
+
+### Scheduler Production Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `$research` dispatch boundary | ok | Scheduler lifecycle summaries now include `autosci_scheduler_dispatch_boundary.v1`. |
+| Strict production dispatch | ok | `--scheduler-require-production-dispatch` fails while bounded smoke runner or fixture/smoke input markers remain. |
+| Route limitation | ok | `/research` now documents the production-dispatch boundary failure condition without changing `coverage_status`. |
+
+### Scheduler Production Boundary Verification
+
+| Command | Result |
+|---|---|
+| Runner + shim targeted tests | ok: 2 passed |
+| Lifecycle smoke + runtime gate subset | ok: 25 passed |
+| `$research` scheduler shim subset | ok: 8 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 102 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step50.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 50 files | ok before log write |
+
+## Phase 19 Source Provider Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/adapters/autosci_to_literature_discovery.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten source/discover route truthfulness by requiring non-fixture
+provider channels before source runtime evidence is treated as completed.
+
+### Source Provider Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source provider boundary | ok | `literature_discovery.v1.outputs.source_provider_boundary` records `autosci_source_provider_boundary.v1`. |
+| Generic runtime candidates | ok | Generic `approved_runtime` candidates no longer complete source runtime evidence without provider channels. |
+| Provider-backed candidates | ok | `search_s2` channel runtime evidence completes and records provider boundary proof. |
+| Route limitation | ok | `/discover`, `/init`, and `$research --online` limitations now describe provider boundary requirements. |
+
+### Source Provider Boundary Verification
+
+| Command | Result |
+|---|---|
+| Source-boundary targeted tests | ok: 2 passed |
+| Literature backend/source CLI subset | ok: 6 passed |
+| Source-related shim subset | ok: 6 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 103 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step51.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 51 files | ok before log write |
+
+## Phase 19 Remote Poll Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten `$exp-status` route truthfulness by emitting an explicit
+remote poll boundary that separates local run-dir status-file checks from live
+SSH/provider polling.
+
+### Remote Poll Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Runtime boundary | ok | Approved `$exp-status` remote-check evidence includes `autosci_remote_poll_boundary.v1`. |
+| Local status check classification | ok | `tools/remote.py check` against local `run_dir/status.json` now reports boundary status `local_run_dir_check`, not live provider polling. |
+| Route limitation | ok | `/exp-status` documents that local run-dir status-file checks do not count as live SSH/provider polling. |
+
+### Remote Poll Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config `json.tool` | ok |
+| `$exp-status` approved remote-check boundary test | ok: 1 passed |
+| exp-status/run/collect remote subset | ok: 12 passed |
+| runtime binding audit | ok: 28 nodes, 2 workflows, 0 issues |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 103 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step52.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 52 files | ok before log write |
+
+## Phase 19 Approved Live Remote Status Command Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `tools/remote.py`
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add an approved live/provider status command path that can satisfy the
+remote poll boundary without weakening allowlist or approval requirements.
+
+### Approved Live Remote Status Command Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `tools/remote.py check --status-command` | ok | Live/provider status command path is approval-gated and allowlisted. |
+| Remote poll boundary | ok | Approved status command payload can satisfy `autosci_remote_poll_boundary.v1` with transport/session metadata and `remote_state`. |
+| Local check preservation | ok | Plain run-dir checks still report `local_run_dir_check`, not live polling. |
+| Route limitation | ok | `/exp-status` now names approved live/provider status command execution while keeping real external connectivity smoke pending. |
+
+### Approved Live Remote Status Command Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` tools/bridge/tests | ok |
+| route config `json.tool` | ok |
+| local + live `$exp-status` targeted tests | ok: 2 passed |
+| exp-status/run/collect remote subset | ok: 13 passed |
+| runtime binding audit | ok: 28 nodes, 2 workflows, 0 issues |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 104 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step53.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 53 files | ok before log write |
+
+## Phase 19 Remote Pull Results Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `tools/remote.py`
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add an approved remote/provider pull-results path and collection
+boundary so local result-dir reads are not counted as live provider collection.
+
+### Remote Pull Results Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `tools/remote.py pull-results --pull-command` | ok | Live/provider pull-results command path is approval-gated and allowlisted. |
+| Remote collection boundary | ok | Collect runtime evidence includes `autosci_remote_collection_boundary.v1`. |
+| Local collection preservation | ok | Plain result-dir reads report `local_result_dir_collection`, not live provider collection. |
+| Route limitation | ok | `/exp-run` names approved live/provider pull-results boundary and keeps distributed exactly-once/external smoke pending. |
+
+### Remote Pull Results Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` tools/bridge/tests | ok |
+| route config `json.tool` | ok |
+| local + live pull-results targeted tests | ok: 2 passed |
+| exp-status/run/collect remote subset | ok: 15 passed |
+| runtime binding audit | ok: 28 nodes, 2 workflows, 0 issues |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step54.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 54 files | ok before log write |
+
+## Phase 19 Scheduler Replay Resume Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add scheduler replay/resume evidence so lifecycle dispatch cannot be
+mistaken for production parity without durable node state and no-rerun proof.
+
+### Scheduler Replay Resume Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Resume boundary | ok | Resume summaries emit `autosci_scheduler_resume_boundary.v1`. |
+| No-rerun proof | ok | Boundary records reused-node fingerprints, changed reused nodes, dispatched nodes, and `no_rerun_verified`. |
+| Route limitation | ok | `/research` now names resume boundary while keeping non-smoke dispatcher and lease/runtime audit pending. |
+
+### Scheduler Replay Resume Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` runner/test | ok |
+| route config `json.tool` | ok |
+| human-gate resume targeted test | ok: 1 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `$research` scheduler shim subset | ok: 8 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step55.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 55 files | ok before log write |
+
+## Phase 19 Scheduler Lease Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add scheduler lease evidence and boundary fields so local smoke-run
+lease ownership is visible and not confused with distributed production leases.
+
+### Scheduler Lease Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Lease sidecar | ok | Lifecycle run/resume writes `autosci_scheduler_lease.v1` sidecar evidence. |
+| Lease boundary | ok | Lifecycle summaries include `autosci_scheduler_lease_boundary.v1`. |
+| Route limitation | ok | `/research` now names local lease boundary while keeping distributed lease/quota/runtime audit pending. |
+
+### Scheduler Lease Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` runner/test | ok |
+| route config `json.tool` | ok |
+| blocked lifecycle + resume targeted tests | ok: 2 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `$research` scheduler shim subset | ok: 8 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step56.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 56 files | ok before log write |
+
+## Phase 19 Publication Submission Checklist Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add publication submission checklist boundary so compile/PDF success is
+not confused with submission/anonymity/page/font readiness.
+
+### Publication Submission Checklist Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Submission boundary | ok | Paper compile writes `autosci_publication_submission_boundary.v1` sidecar evidence. |
+| Checklist/diagnostics | ok | Checklist embeds boundary and diagnostics render a Submission Boundary section. |
+| Bundle artifact | ok | Publication bundle includes `publication_submission_boundary_json`. |
+| Route limitation | ok | `/paper-compile` now separates compile/PDF evidence from submission readiness. |
+
+### Publication Submission Checklist Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config `json.tool` | ok |
+| submission checklist boundary targeted test | ok: 1 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 10 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step57.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 57 files | ok before log write |
+
+## Phase 19 Paper Compile Submission Evidence Flags Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose paper-compile submission evidence flags for anonymous mode,
+page-count/page-limit, and minimum font-size proof.
+
+### Paper Compile Submission Evidence Flags Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI flags | ok | `$paper-compile` now forwards anonymity, page, and font-size evidence flags into compile inputs. |
+| Submission boundary | ok | Explicit evidence can make `autosci_publication_submission_boundary.v1` report `submission_ready`. |
+| Route limitation | ok | `/paper-compile` now records that CLI flags satisfy readiness only with explicit proof. |
+
+### Paper Compile Submission Evidence Flags Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` shim/tests | ok |
+| route config JSON load | ok |
+| submission incomplete + submission-ready targeted tests | ok: 2 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 11 passed |
+| full shim suite with elevated local bind permission | ok: 106 passed |
+| default sandbox full shim suite | warn: local `127.0.0.1` bind was denied before elevated rerun |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step58.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 58 files | ok before log write |
+
+## Phase 19 Paper Compile Venue Submission Profile Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add source-backed venue submission profile input so compile readiness
+uses explicit venue requirements rather than loose CLI-only claims.
+
+### Paper Compile Venue Submission Profile Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Profile input | ok | `$paper-compile --submission-profile` forwards source-backed venue requirements into compile inputs. |
+| Venue boundary | ok | Publication boundary now includes `venue_submission_ready`, `venue_status`, `venue_blocking_checks`, and embedded profile evidence. |
+| Diagnostics/artifacts | ok | Diagnostics and bundle artifacts expose the loaded profile and SHA-256. |
+| Route limitation | ok | `/paper-compile` now requires source-backed profile evidence for venue-specific readiness. |
+
+### Paper Compile Venue Submission Profile Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| missing evidence + CLI evidence + venue profile targeted tests | ok: 3 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 12 passed |
+| full shim suite with elevated local bind permission | ok: 107 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step59.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 59 files | ok before log write |
+
+## Phase 19 Paper Compile PDF Inspection Evidence Ingestion Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: ingest explicit PDF inspection evidence for verified page count and
+minimum font size instead of relying only on loose numeric CLI flags.
+
+### Paper Compile PDF Inspection Evidence Ingestion Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| PDF inspection input | ok | `$paper-compile --pdf-inspection` forwards PDF inspection evidence to compile inputs. |
+| PDF evidence boundary | ok | Bridge validates inspection sidecars against discovered PDFs by path or SHA-256. |
+| Venue readiness | ok | `venue_submission_ready` now requires profile plus PDF inspection evidence. |
+| Diagnostics/artifacts | ok | Diagnostics and bundle artifacts expose PDF inspection status and SHA-256. |
+| Route limitation | ok | `/paper-compile` now distinguishes generic CLI checks from source-backed venue readiness. |
+
+### Paper Compile PDF Inspection Evidence Ingestion Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| missing evidence + CLI evidence + profile-only + profile/PDF-inspection targeted tests | ok: 4 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 13 passed |
+| full shim suite with elevated local bind permission | ok: 108 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step60.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 60 files | ok before log write |
+
+## Phase 19 Publication Submission Audit Evidence Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit publication submission audit evidence so venue readiness
+and final submission audit readiness are separate source-backed states.
+
+### Publication Submission Audit Evidence Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Submission audit input | ok | `$paper-compile --submission-audit` forwards explicit audit evidence into compile inputs. |
+| Audit boundary | ok | Publication boundary now includes audit readiness, audit blocking checks, and portal completion as separate fields. |
+| Portal truthfulness | ok | Portal completion is not implied by audit readiness. |
+| Diagnostics/artifacts | ok | Diagnostics and bundle artifacts expose submission audit status and SHA-256. |
+| Route limitation | ok | `/paper-compile` now names explicit submission audit evidence as required for audit readiness. |
+
+### Publication Submission Audit Evidence Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| paper-compile submission/profile/PDF/audit targeted tests | ok: 5 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 14 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step61.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 61 files | ok before log write |
+
+## Phase 19 Review LLM Final Acceptance Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit Review LLM final acceptance evidence so local surrogate
+review is not confused with provider/command/evidence-backed final review.
+
+### Review LLM Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Requirement flag | ok | `$review --require-review-llm` records that local surrogate review is insufficient for final acceptance. |
+| Final boundary | ok | Review evidence includes `autosci_review_final_acceptance_boundary.v1`. |
+| Local surrogate separation | ok | Local surrogate review now reports `review_llm_incomplete` rather than final acceptance. |
+| Provider/evidence readiness | ok | Supplied Review LLM evidence, command bridge, and OpenAI-compatible provider mode can report `final_acceptance_ready`. |
+| Route limitation | ok | `/review` now names the final acceptance boundary and local surrogate insufficiency. |
+
+### Review LLM Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| local/evidence/command/provider review boundary targeted tests | ok: 4 passed |
+| `-k review` subset | ok: 15 passed with elevated local bind permission |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step62.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 62 files | ok before log write |
+
+## Phase 19 Novelty Final Acceptance Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit novelty final acceptance boundary requiring external
+novelty evidence plus Review LLM proof, while keeping local/source-only checks
+incomplete for final acceptance.
+
+### Novelty Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Evaluation boundary | ok | Novelty evaluations embed `autosci_novelty_final_acceptance_boundary.v1`. |
+| Boundary sidecar | ok | Evaluate-ideas writes `novelty_final_acceptance_boundary.json`. |
+| Source/review requirements | ok | Final acceptance requires external novelty completion, provider provenance pass, Review LLM completion, and numeric novelty score. |
+| Writeback linkage | ok | Novelty writeback records final acceptance status without changing existing writeback gating order. |
+| Route limitation | ok | `/novelty` now names the final acceptance boundary and required evidence. |
+
+### Novelty Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| local/external-only/external+Review LLM/missing-review novelty targeted tests | ok: 4 passed |
+| `-k novelty` subset | ok: 11 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step63.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 63 files | ok before log write |
+
+## Phase 19 Ask Final Answer Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit final answer boundary for `/ask` requiring retrieval/source
+evidence plus model-backed synthesis, without treating retrieval-only local
+summaries as final.
+
+### Ask Final Answer Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final answer boundary | ok | `/ask` retrieval JSON embeds `autosci_ask_final_answer_boundary.v1`. |
+| Boundary sidecar | ok | Ask runs write `ask_final_answer_boundary.json`. |
+| Retrieval/model separation | ok | Retrieval-only answers report `ask_final_answer_incomplete`. |
+| Model-backed readiness | ok | Retrieval plus completed model synthesis reports `final_answer_ready`. |
+| Route limitation | ok | `/ask` now names the boundary and source/model requirements. |
+
+### Ask Final Answer Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| retrieval-only and model-command ask targeted tests | ok: 2 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step64.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 64 files | ok before log write |
+
+## Phase 19 Check Final Quality Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit final quality boundary for `/check` requiring local wiki
+checks plus model-backed recommendation evidence, without treating lint-only
+output as final review.
+
+### Check Final Quality Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final quality boundary | ok | `/check` embeds `autosci_check_final_quality_boundary.v1` in workflow evolution review metadata. |
+| Boundary sidecar | ok | Check runs write `check_final_quality_boundary.json`. |
+| Local/model separation | ok | Local structural checks alone remain incomplete for final quality. |
+| Model-backed readiness | ok | Completed model evidence plus passing local checks can report `final_quality_ready`. |
+| Route limitation | ok | `/check` now names the final quality boundary and local/model requirements. |
+
+### Check Final Quality Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| retrieval/check local and model-command check targeted tests | ok: 2 passed |
+| `-k 'ask or check'` subset | ok: 8 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step65.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 65 files | ok before log write |
+
+## Phase 19 Discover Final Shortlist Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit discovery final shortlist boundary requiring source-backed
+provider evidence, without treating local fallback/fixture candidates as final
+discovery.
+
+### Discover Final Shortlist Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final shortlist boundary | ok | Discover source provider boundary embeds `autosci_discover_final_shortlist_boundary.v1`. |
+| Boundary sidecar | ok | Discover writes `discover_final_shortlist_boundary.json`. |
+| Local/provider separation | ok | Empty/local/generic runtime candidates remain incomplete for final shortlist readiness. |
+| Provider-backed readiness | ok | Provider-backed candidates can report `final_shortlist_ready`. |
+| Route limitation | ok | `/discover` now names the final shortlist boundary and provider-channel requirements. |
+
+### Discover Final Shortlist Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| wiki/local, generic runtime, and provider-backed runtime discovery targeted tests | ok |
+| `-k 'discover or source_runtime_evidence'` subset | ok: 4 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step66.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 66 files | ok before log write |
+
+## Phase 19 Survey Final Coverage Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit survey final coverage boundary requiring source-backed
+citation coverage, without treating partial/local citation maps as exhaustive
+survey evidence.
+
+### Survey Final Coverage Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final coverage boundary | ok | `/survey` writes `autosci_survey_final_coverage_boundary.v1`. |
+| Boundary sidecar | ok | Survey artifacts include `survey_final_coverage_boundary_json`. |
+| Bounded/exhaustive separation | ok | Bounded source-backed coverage can pass while exhaustive coverage remains false without provider audit. |
+| Scaffold separation | ok | Survey scaffolds without citations remain incomplete. |
+| Route limitation | ok | `/survey` now names bounded coverage and keeps exhaustive live coverage pending. |
+
+### Survey Final Coverage Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| survey scaffold and citation-map completion targeted tests | ok: 2 passed |
+| `-k 'survey or paper_plan or paper_compile or paper_draft'` subset | ok: 19 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step67.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 67 files | ok before log write |
+
+## Phase 19 Paper Draft Final Manuscript Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit paper-draft final manuscript boundary requiring source
+evidence, citation map, Review LLM proof, and compile/PDF handoff before
+treating a draft as publication-ready.
+
+### Paper Draft Final Manuscript Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final manuscript boundary | ok | `/paper-draft` writes `autosci_paper_draft_final_manuscript_boundary.v1`. |
+| Boundary sidecar | ok | Draft artifacts include `paper_draft_final_manuscript_boundary_json`; publication bundle passthrough includes it. |
+| Citation map sidecar | ok | Draft artifacts include `citation_map_json` from `paper_draft_citation_map.json`. |
+| Publication-ready separation | ok | Plain LaTeX drafts stay incomplete for final manuscript readiness. |
+| Final-ready path | ok | Source citation evidence, completed Review LLM proof, and verified compile/PDF handoff can satisfy `final_manuscript_ready`. |
+| Route limitation | ok | `/paper-draft` now names final manuscript boundary requirements. |
+
+### Paper Draft Final Manuscript Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| paper-draft incomplete and final-ready boundary targeted tests | ok: 2 passed |
+| `-k 'survey or paper_plan or paper_compile or paper_draft'` subset | ok: 19 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step68.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 68 files | ok before log write |
+
+## Phase 19 Paper Plan Final Acceptance Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit paper-plan final acceptance boundary requiring source-backed
+citation plan, Review LLM proof, and downstream compile/PDF handoff before
+treating a plan as draft/compile-ready.
+
+Scope amendment before fix:
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+
+Reason: full shim verification showed scheduler `report_plan` did not receive
+compile/PDF handoff inputs, so the new paper-plan final acceptance boundary
+could not pass in the approved publication compile lifecycle. Propagate existing
+approved compile evidence only; do not loosen the boundary.
+
+### Paper Plan Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final plan acceptance boundary | ok | `/paper-plan` writes `autosci_paper_plan_final_acceptance_boundary.v1`. |
+| Boundary sidecar | ok | Plan artifacts include `paper_plan_final_acceptance_boundary_json`. |
+| Draft/compile readiness separation | ok | Citation plus Review LLM without compile/PDF stays incomplete for final acceptance. |
+| Final-ready path | ok | Source citation plan, Review LLM proof, and verified compile/PDF handoff can satisfy `final_plan_accepted`. |
+| Scheduler handoff | ok | Scheduler `report_plan` receives approved compile contract fields; approved compile execution can generate plan-boundary runtime/PDF handoff. |
+| Route limitation | ok | `/paper-plan` now names final acceptance boundary requirements. |
+
+### Paper Plan Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/scheduler/tests | ok |
+| route config JSON load | ok |
+| paper-plan final acceptance boundary targeted tests | ok: 3 passed |
+| approved publication compile scheduler regression | ok: 1 passed |
+| `-k 'survey or paper_plan or paper_compile or paper_draft or research_scheduler_executes_approved_publication_compile'` subset | ok: 20 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step69.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 69 files | ok before log write |
+
+## Phase 19 Ideate Final Promotion Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/ideate` final promotion boundary requiring wiki maturity
+scan, failed-idea banlist check, source-backed evidence, model brainstorm
+provenance, and novelty/review gate references before generated ideas are
+promotable.
+
+### Ideate Final Promotion Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final promotion boundary | ok | `/ideate` writes `autosci_ideate_final_promotion_boundary.v1`. |
+| Per-idea boundary | ok | Generated ideas include `autosci_ideate_idea_promotion_boundary.v1` and `promotion_ready`. |
+| Boundary sidecar | ok | Generate-ideas artifacts include `ideate_final_promotion_boundary_json`. |
+| Source/model/gate separation | ok | Source-grounded and model-command ideas remain non-promotable until novelty/review gate references are supplied. |
+| Missing-source separation | ok | Missing-source ideation remains inconclusive and boundary records missing source evidence. |
+| Route limitation | ok | `/ideate` now names final promotion boundary requirements. |
+
+### Ideate Final Promotion Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| ideate source/model/missing-source boundary targeted tests | ok: 3 passed |
+| `-k 'ideate or novelty'` subset | ok: 14 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step70.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 70 files | ok before log write |
+
+## Phase 19 Experiment Design Final Execution Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-design` final execution-readiness boundary requiring
+resolved idea/evaluation evidence, completed Review LLM design validation, and
+declared runtime/artifact handoff requirements before an experiment plan is
+executable.
+
+### Experiment Design Final Execution Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final execution boundary | ok | `/exp-design` writes `autosci_experiment_design_final_execution_boundary.v1`. |
+| Boundary sidecar | ok | Experiment-plan artifacts include `experiment_design_final_execution_boundary_json`. |
+| Plan embedding | ok | `source_context.final_execution_boundary` records target, Review LLM, approval preflight, command handoff, and artifact handoff state. |
+| Review-only separation | ok | Review-only designs remain incomplete for execution readiness. |
+| Execution-ready path | ok | Review LLM plus approval/allowlist/before preflight can satisfy `execution_ready`. |
+| Network isolation | ok | Local novelty test disables network fetch so live S2 availability cannot alter local-source expectations. |
+| Route limitation | ok | `/exp-design` now names final execution boundary requirements. |
+
+### Experiment Design Final Execution Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| exp-design final execution boundary targeted tests | ok: 2 passed |
+| failed full-suite cases after isolation fix | ok: 2 passed |
+| `-k 'exp_design or exp_run or exp_status or exp_pilot or novelty'` subset | ok: 28 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step71.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 71 files | ok before log write |
+
+## Phase 19 Experiment Evaluation Final Verdict Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-eval` final verdict boundary requiring experiment
+result evidence, linked claim/code evidence, completed Review LLM proof, and
+explicit writeback status before verdicts are treated as final.
+
+### Experiment Evaluation Final Verdict Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final verdict boundary | ok | `/exp-eval` writes `autosci_experiment_evaluation_final_verdict_boundary.v1`. |
+| Boundary sidecar | ok | Claim-verdict artifacts include `experiment_evaluation_final_verdict_boundary_json`. |
+| Verdict embedding | ok | Verdict payloads include `final_verdict_boundary` and `final_verdict_ready`. |
+| Non-final separation | ok | Evidence-backed verdicts without approved wiki writeback remain `final_verdict_incomplete`. |
+| Final-ready path | ok | Experiment result, claim/code evidence, Review LLM proof, and completed approved writeback satisfy `final_verdict_ready`. |
+| Route limitation | ok | `/exp-eval` now records approval-required writeback policy and final verdict boundary requirements. |
+
+### Experiment Evaluation Final Verdict Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| exp-eval final verdict boundary targeted tests | ok: 2 passed |
+| `-k 'exp_eval or exp_pilot_eval or exp_design or exp_run or exp_status or exp_pilot'` subset | ok: 19 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step72.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 72 files | ok before log write |
+
+## Phase 19 Experiment Run Final Runtime Audit Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-run` final runtime audit boundary requiring approved
+deploy/run evidence, monitor/collect evidence, collection ledger, and wiki state
+mutation proof before a run is treated as fully executed/collected.
+
+### Experiment Run Final Runtime Audit Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final runtime audit boundary | ok | `/exp-run` run/collect paths write `autosci_experiment_run_final_runtime_audit_boundary.v1`. |
+| Boundary sidecar | ok | Run/status artifacts include `experiment_run_final_runtime_audit_boundary_json`. |
+| Run-only separation | ok | Approved run plus wiki mutation is `stage_runtime_audit_ready`, not final lifecycle ready. |
+| Local collect separation | ok | Local result-dir collection records ledger evidence but remains non-final without live provider/SSH proof. |
+| Live collect final path | ok | Approved live/provider pull-results with ledger and wiki mutation satisfies `final_runtime_audit_ready`. |
+| Route limitation | ok | `/exp-run` now names final runtime audit boundary requirements. |
+
+### Experiment Run Final Runtime Audit Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| exp-run runtime/local collect/live collect boundary targeted tests | ok: 3 passed |
+| `-k 'exp_eval or exp_pilot_eval or exp_design or exp_run or exp_status or exp_pilot or exp_collect'` subset | ok: 24 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step73.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 73 files | ok before log write |
+
+## Phase 19 Pilot Experiment Final Acceptance Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-pilot-run` and `/exp-pilot-eval` final pilot
+acceptance boundaries requiring approved pilot runtime evidence, collected pilot
+result evidence, verdict linkage, and approved wiki writeback status before pilot
+success/evaluation is treated as final.
+
+### Pilot Experiment Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Pilot run boundary | ok | `/exp-pilot-run` writes `autosci_pilot_experiment_final_acceptance_boundary.v1` with `stage=pilot_run`. |
+| Pilot eval boundary | ok | `/exp-pilot-eval` writes `autosci_pilot_experiment_final_acceptance_boundary.v1` with `stage=pilot_eval`. |
+| Runtime/final separation | ok | Pilot runtime readiness is separate from final pilot acceptance. |
+| Final-ready path | ok | Runtime-linked verdict plus approved wiki writeback satisfies `final_pilot_acceptance_ready`. |
+| Route limitation | ok | Pilot run/eval limitations now name final acceptance boundary requirements. |
+
+### Pilot Experiment Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| pilot runtime/eval/writeback boundary targeted tests | ok: 3 passed |
+| `-k 'exp_pilot or pilot_eval or pilot_run or exp_eval or exp_run or exp_status or exp_design'` subset | ok: 21 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step74.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 74 files | ok before log write |
+
+## Phase 19 Daily Arxiv Final Provider Delivery Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/daily-arxiv` final provider/delivery boundary requiring
+approved live provider runtime, source-channel candidate evidence,
+ranking/finalize evidence, and explicit delivery or ingest status before a daily
+digest is treated as final.
+
+### Daily Arxiv Final Provider Delivery Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final provider/delivery boundary | ok | `/daily-arxiv` writes `autosci_daily_arxiv_final_provider_delivery_boundary.v1`. |
+| Boundary sidecar | ok | Daily artifacts include `daily_arxiv_final_provider_delivery_boundary_json`. |
+| Runtime/final separation | ok | Runtime provider/ranking evidence is stage-ready but non-final without delivery/ingest. |
+| Final-ready path | ok | Approved wiki fan-in/ingest after provider candidates satisfies `daily_final_delivery_ready`. |
+| Route limitation | ok | `/daily-arxiv` now names provider, ranking, delivery/ingest boundary requirements. |
+
+### Daily Arxiv Final Provider Delivery Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| daily runtime digest and auto-ingest boundary targeted tests | ok: 2 passed |
+| `-k 'daily_arxiv or discover or init_sources or source_fan_in or ingest'` subset | ok: 10 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step75.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 75 files | ok before log write |
+
+## Phase 19 Init Sources Final Fan-In Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/init` source initialization final fan-in boundary
+requiring approved provider runtime, provider-backed candidates, approved wiki
+fan-in, graph/log/index rebuild evidence, and visible incomplete status when any
+piece is missing.
+
+### Init Sources Final Fan-In Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Init final fan-in boundary | ok | `/init` writes `autosci_init_sources_final_fan_in_boundary.v1`. |
+| Boundary sidecar | ok | Init artifacts include `init_sources_final_fan_in_boundary_json`. |
+| Runtime/final separation | ok | Provider runtime source evidence is provider-ready but non-final without approved fan-in. |
+| Final-ready path | ok | Approved wiki fan-in plus log/edge/index/context rebuild satisfies `init_sources_final_fan_in_ready`. |
+| Route limitation | ok | `/init` now names final fan-in boundary requirements and approval-required side effects. |
+
+### Init Sources Final Fan-In Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| init diagnostics/runtime-only/approved fan-in targeted tests | ok: 3 passed |
+| `-k 'init or daily_arxiv or discover or source_fan_in or ingest'` subset | ok: 13 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step76.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 76 files | ok before log write |
+
+## Phase 19 Ingest Final Source Registration Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/ingest` final source registration boundary requiring
+verified source preparation, parsed paper metadata/text, raw artifact provenance,
+wiki paper registration/log/graph evidence, and downstream discovery handoff
+before an ingest is treated as final.
+
+Plan refinement: include `autosci_skill_shim.py` so `/ingest --wiki-root`
+propagates into bridge inputs and the boundary checks the intended wiki root.
+
+### Ingest Final Source Registration Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final source registration boundary | ok | `/ingest` writes `autosci_ingest_final_source_registration_boundary.v1`. |
+| Boundary sidecar | ok | Ingest artifacts include final boundary plus phase9 memory/graph sidecars. |
+| Custom wiki root | ok | `/ingest --wiki-root` propagates into bridge inputs. |
+| Runtime/final separation | ok | Parsed source without wiki paper/log/graph/index/context registration remains non-final. |
+| Final-ready path | ok | Pre-registered wiki evidence satisfies `ingest_source_registration_ready`. |
+| Targeted/subset tests | ok | Targeted ingest tests: 2 passed; source/ingest subset: 14 passed. |
+| Full suite | warn | Full shim suite: 105 passed, 6 failed because scheduler AutoSci worker entries are missing from `physical-operators.json`. |
+
+## Phase 19 Scheduler AutoSci Worker Registry Restore Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/config/physical-operators.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore bounded AutoSci worker entries required by scheduler lifecycle
+smoke so `$research --scheduler-run` can dispatch configured AutoSci bridge
+actions through `operator_runtime`.
+
+### Scheduler AutoSci Worker Registry Restore Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Physical workers | ok | `physical-operators.json` now has scheduler-referenced `autosci-*` bounded command workers. |
+| Scheduler regression group | ok | `$research --scheduler-run` group: 6 passed. |
+| Full shim suite | ok | Full AutoSci shim suite: 111 passed. |
+| Static binding audit | warn | Next blocker is missing Scientific* logical operators/bindings in `logical-operators.json`. |
+
+## Phase 19 Scientific Logical Operator Binding Restore Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/config/logical-operators.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore Scientific* logical operators and bindings to the bounded
+AutoSci workers so static runtime binding audit can validate workflow
+node-to-operator-to-bridge coverage.
+
+### Scientific Logical Operator Binding Restore Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Logical operators/bindings | ok | Scientific* definitions and bounded worker bindings restored. |
+| Static runtime binding audit | ok | 28 workflow nodes across 2 workflows, 0 issues. |
+| Scheduler/full shim regression | ok | Scheduler group: 6 passed; full shim suite: 111 passed. |
+| Inventory | warn | Route inventory remains 17 partial and 11 gated. |
+
+## Phase 19 Two-Axis Parity Status Model Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add authoritative two-axis parity/proof fields to generated inventory
+and gate validation without upgrading any route to semantic full absent E3/E4
+evidence.
+
+### Two-Axis Parity Status Model Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Inventory fields | ok | Parity inventory route items now expose `semantic_parity`, `execution_policy`, `proof_level`, `proof_refs`, and `remaining_requirements`. |
+| Gate enforcement | ok | `autosci_feature_parity_gate.py` validates semantic/execution/proof values and rejects semantic-full claims without enough proof. |
+| Truthfulness guard | ok | No route was promoted to semantic full; Step 80 inventory remains semantic partial for all 28 routes. |
+| Tests | ok | Parity bridge/gate targeted tests: 10 passed; full AutoSci plugin suite: 161 passed. |
+| Inventory | warn | `/tmp/autosci-parity-step80.json`: route coverage 0 full / 17 partial / 11 gated; semantic 0 full / 28 partial / 0 missing. |
+
+## Phase 19 Skill Run Terminal Status Truthfulness Gate Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/evaluators/scientific/autosci_skill_run_gate.py`
+- `harness/tests/evaluators/scientific/test_autosci_skill_run_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make the skill-run gate reject evidence that claims top-level
+`status: completed` while `outputs.skill_run.execution_status` is `partial` or
+`gated`.
+
+Non-goal: do not change route execution, side-effect policy, schema enums, or
+the shim's existing `inconclusive` status for partial/gated runs.
+
+### Skill Run Terminal Status Truthfulness Gate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Gate guard | ok | `autosci_skill_run_gate.py` rejects top-level `completed` for `partial`/`gated` execution status. |
+| Tests | ok | New skill-run gate tests: 3 passed; gated/partial shim subsets and operator smoke gate remain green. |
+| Full plugin suite | ok | Elevated local-bind AutoSci plugin suite: 161 passed. |
+| Inventory | warn | Step 81 parity inventory remains 17 partial and 11 gated; semantic inventory remains 28 partial. |
+| Broad evaluator suite | warn | Scientific evaluator suite exposed next blocker: full lifecycle external/resume tails drift from the 20-node workflow config. |
+
+## Phase 19 Scheduler Full Lifecycle Tail Alignment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make full external/resume lifecycle smoke paths dispatch the configured
+publication/finalization tail and treat an explicitly supplied compile-target
+PDF as handoff evidence without claiming approved executor runtime.
+
+Non-goal: do not make bounded smoke dispatch production-ready, execute
+unapproved TeX/remote effects, or relax lifecycle runtime gate requirements.
+
+### Scheduler Tail Alignment Adjustment Plan
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: keep the Step 82 boundary and wire supplied compile-target evidence
+into paper-plan handoff readiness so configured tail dispatch can proceed only
+after verified handoff.
+
+Non-goal: do not change test expectations, production readiness claims, TeX
+execution policy, or unrelated scheduler nodes.
+
+### Scheduler Resume Blocker Adjustment Plan
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: preserve all unresolved external unblock points during resume when
+earlier external evidence is missing, without dispatching downstream configured
+tail nodes.
+
+Non-goal: do not change human-gate behavior, node execution order, or
+publication/finalization dispatch semantics.
+
+### Scheduler Full Lifecycle Tail Alignment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Supplied compile handoff | ok | `plan_report` now treats `supplied_compile_target_evidence` as a compile handoff request and verifies existing PDF targets without claiming TeX execution. |
+| Full external tail | ok | Full external lifecycle dispatch reaches all configured tail nodes when Review LLM and compile-target evidence are supplied. |
+| Resume tail | ok | Resume dispatch reaches configured tail nodes after supplied external evidence and preserves no-rerun fingerprints. |
+| Resume blocked externals | ok | Human-gate resume with no external evidence records both `report_plan` and `publication_produce` blockers. |
+| Focused lifecycle tests | ok | 3 targeted lifecycle regressions passed. |
+| Broad evaluator suite | ok | Scientific evaluator suite: 91 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 161 passed. |
+| Inventory/gate | warn | Step 82 inventory still reports 17 partial and 11 gated route statuses; semantic parity remains 28 partial. |
+
+## Phase 19 External Runtime Proof Registry Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit external runtime proof references and required proof
+categories to parity inventory/gate output so remaining non-full routes are
+auditable.
+
+Non-goal: do not mark any route full, fabricate provider/runtime evidence, or
+execute external side effects.
+
+### External Runtime Proof Registry Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Inventory fields | ok | Route items now include `runtime_proof_status`, `runtime_proof_refs`, and `proof_requirements`. |
+| Gate enforcement | ok | Gate validates requirement shape/status, runtime proof status/counts, and approval/provider proof-category presence. |
+| Tests | ok | Parity bridge tests: 4 passed; feature parity gate tests: 8 passed; scientific evaluator suite: 93 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 161 passed. |
+| Inventory | warn | Step 83 inventory reports 25 pending runtime proof slots and 0 supplied/verified runtime proofs. |
+
+## Phase 19 Runtime Proof Manifest Ingestion Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: allow parity inventory to ingest explicit runtime proof manifests and
+mark matching route proof slots as supplied without promoting route/semantic
+full status.
+
+Non-goal: do not trust arbitrary manifests as verified runtime, mark routes
+full, execute providers, or execute side effects.
+
+### Runtime Proof Manifest Strictness Adjustment Plan
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: require supplied runtime proof source categories to match declared proof
+requirements and actually satisfy at least one requirement.
+
+Non-goal: do not change manifest ingestion semantics, route statuses, or proof
+verification level.
+
+### Runtime Proof Manifest Ingestion Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI ingestion | ok | `inventory` and `route` accept repeated `--runtime-proof-manifest` paths. |
+| Proof attachment | ok | Manifest proofs attach to matching native skills as `runtime_proof_sources` and supplied proof requirements. |
+| Gate strictness | ok | Gate rejects skill mismatch, unknown categories, supplied-without-supplied-requirement, and count drift. |
+| Tests | ok | Targeted bridge/gate group: 15 passed; scientific evaluator suite: 95 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 162 passed. |
+| Inventory | warn | No-manifest Step 84 inventory still has 25 pending runtime proof slots and no supplied/verified proof. |
+
+## Phase 19 Runtime Proof Evidence Ref Audit Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: audit runtime proof evidence refs so path-like local refs must resolve
+and missing local refs cannot satisfy supplied proof requirements.
+
+Non-goal: do not verify external provider ids as live, promote supplied proof
+to verified, or execute external side effects.
+
+### Runtime Proof Evidence Ref Audit Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Ref audit | ok | Manifest proof sources now include `evidence_ref_statuses`; local path refs must resolve. |
+| Blocked proof handling | ok | Missing local proof refs produce blocked proof sources and do not satisfy supplied requirements. |
+| Gate enforcement | ok | Gate rejects blocked sources and unresolved local refs. |
+| Tests | ok | Phase19 bridge tests: 6 passed; feature parity gate tests: 10 passed; scientific evaluator suite: 95 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 163 passed. |
+| Inventory | warn | Step 85 inventory remains non-full and has no verified live runtime proof. |
+
+## Phase 19 Runtime Proof CLI Summary Visibility Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: include runtime proof status counts in parity bridge CLI summaries so
+pending/supplied/verified proof state is visible without opening the JSON
+artifact.
+
+Non-goal: do not change inventory payload semantics, gate rules, route status,
+or proof verification.
+
+### Runtime Proof CLI Summary Visibility Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI summary | ok | Inventory/route stdout summaries now include `runtime_proof_status_counts`. |
+| Tests | ok | Phase19 bridge tests: 6 passed. |
+| Inventory/gate | ok | Step 86 inventory gates successfully and stdout reports 25 pending / 3 not_required / 0 supplied / 0 verified runtime proof states. |
+| Full parity claim | warn | Remaining work requires real runtime proof manifests or approved live provider execution. |

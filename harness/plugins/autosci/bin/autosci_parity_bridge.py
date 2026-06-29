@@ -16,6 +16,13 @@ OUTPUT_HARNESS = Path(os.environ.get("HARNESS_DIR", REPO_HARNESS)).resolve()
 CONFIG_PATH = REPO_HARNESS / "plugins" / "autosci" / "config" / "feature_parity_routes.v1.json"
 DEFAULT_AUTOSCI_REPO = REPO_ROOT.parent / "AutoSci"
 SCHEMA = "autosci_feature_parity.v1"
+SEMANTIC_PARITY_VALUES = {"full", "partial", "missing"}
+EXECUTION_POLICY_VALUES = {"pure", "bounded_local", "approval_required", "provider_required"}
+PROOF_LEVELS = ("E0", "E1", "E2", "E3", "E4", "E5")
+RUNTIME_PROOF_STATUS_VALUES = ("not_required", "pending", "supplied", "verified")
+PROOF_REQUIREMENT_STATUS_VALUES = ("ok", "pending", "supplied", "missing", "blocked")
+PATH_LIKE_SUFFIXES = (".json", ".jsonl", ".md", ".txt", ".pdf", ".tex", ".log", ".csv", ".tsv", ".yaml", ".yml")
+EXTERNAL_REF_PREFIXES = ("runtime:", "route:", "native:", "doi:", "s2:", "arxiv:", "http://", "https://")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -47,12 +54,22 @@ def discover_native_skills(autosci_repo: Path) -> tuple[list[str], list[str]]:
     return skills, []
 
 
-def route_items(routes: list[dict[str, Any]], native_skills: list[str]) -> list[dict[str, Any]]:
+def route_items(
+    routes: list[dict[str, Any]],
+    native_skills: list[str],
+    *,
+    runtime_proofs_by_skill: dict[str, list[dict[str, Any]]] | None = None,
+) -> list[dict[str, Any]]:
     native_set = set(native_skills)
+    runtime_proofs_by_skill = runtime_proofs_by_skill or {}
     items: list[dict[str, Any]] = []
     for route in sorted(routes, key=lambda item: str(item.get("native_skill") or "")):
         skill = str(route.get("native_skill") or "")
         item = dict(route)
+        runtime_proof_sources = runtime_proofs_by_skill.get(skill, [])
+        supplied_runtime_proofs = [
+            proof for proof in runtime_proof_sources if str(proof.get("status") or "") == "supplied"
+        ]
         tool_status = primary_tool_statuses(item.get("primary_tools") or [])
         missing_tools = [entry for entry in tool_status if entry["status"] == "missing"]
         item["autosci_feature"] = route.get("autosci_command") or f"/{skill}"
@@ -63,8 +80,348 @@ def route_items(routes: list[dict[str, Any]], native_skills: list[str]) -> list[
         item["tool_abi_status"] = "missing" if missing_tools else "ok"
         item["primary_tool_statuses"] = tool_status
         item["missing_primary_tools"] = missing_tools
+        item["semantic_parity"] = semantic_parity(route)
+        item["execution_policy"] = execution_policy(route)
+        item["proof_level"] = proof_level(route, missing_tools=missing_tools)
+        item["proof_refs"] = non_empty_string_list(route.get("proof_refs")) or list(item["evidence_ids"])
+        item["remaining_requirements"] = (
+            non_empty_string_list(route.get("remaining_requirements"))
+            or default_remaining_requirements(item)
+        )
+        runtime_refs = _unique_strings([
+            *non_empty_string_list(route.get("runtime_proof_refs")),
+            *runtime_proof_refs(supplied_runtime_proofs),
+        ])
+        supplied_categories = runtime_proof_categories(supplied_runtime_proofs)
+        item["runtime_proof_refs"] = runtime_refs
+        item["runtime_proof_sources"] = runtime_proof_sources
+        item["runtime_proof_status"] = runtime_proof_status(item, runtime_refs=runtime_refs)
+        item["proof_requirements"] = proof_requirements(
+            item,
+            route,
+            skill_in_native=skill in native_set,
+            missing_tools=missing_tools,
+            runtime_refs=runtime_refs,
+            supplied_categories=supplied_categories,
+        )
         items.append(item)
     return items
+
+
+def non_empty_string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item or "").strip()]
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for raw in values:
+        value = str(raw or "").strip()
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result
+
+
+def semantic_parity(route: dict[str, Any]) -> str:
+    configured = str(route.get("semantic_parity") or "").strip()
+    if configured in SEMANTIC_PARITY_VALUES:
+        return configured
+    coverage = str(route.get("coverage_status") or "").strip()
+    if coverage == "full":
+        return "full"
+    if coverage == "missing":
+        return "missing"
+    return "partial"
+
+
+def execution_policy(route: dict[str, Any]) -> str:
+    configured = str(route.get("execution_policy") or "").strip()
+    if configured in EXECUTION_POLICY_VALUES:
+        return configured
+    side_effect_policy = str(route.get("side_effect_policy") or "").strip()
+    backend_mode = str(route.get("backend_mode") or "").strip()
+    if side_effect_policy == "none":
+        return "pure"
+    if side_effect_policy == "dry_run_only":
+        return "bounded_local"
+    if side_effect_policy == "approval_required":
+        return "approval_required"
+    if backend_mode in {"external_optional", "side_effect_gated"}:
+        return "provider_required"
+    return "provider_required"
+
+
+def proof_level(route: dict[str, Any], *, missing_tools: list[dict[str, Any]]) -> str:
+    configured = str(route.get("proof_level") or "").strip()
+    if configured in PROOF_LEVELS:
+        return configured
+    coverage = str(route.get("coverage_status") or "").strip()
+    if coverage == "missing" or missing_tools:
+        return "E0"
+    if coverage == "full":
+        return "E3"
+    return "E2"
+
+
+def default_remaining_requirements(item: dict[str, Any]) -> list[str]:
+    semantic = str(item.get("semantic_parity") or "")
+    limits = non_empty_string_list(item.get("limitations"))
+    if semantic == "full":
+        return []
+    return limits or ["Complete and audit the remaining native AutoSci parity requirements for this route."]
+
+
+def runtime_proof_required(item: dict[str, Any]) -> bool:
+    backend_mode = str(item.get("backend_mode") or "")
+    side_effect_policy = str(item.get("side_effect_policy") or "")
+    execution = str(item.get("execution_policy") or "")
+    text = route_text(item)
+    return (
+        backend_mode in {"external_optional", "side_effect_gated"}
+        or side_effect_policy == "approval_required"
+        or execution in {"approval_required", "provider_required"}
+        or any(marker in text for marker in ("provider", "runtime evidence", "live ", "external", "remote", "api"))
+    )
+
+
+def runtime_proof_status(item: dict[str, Any], *, runtime_refs: list[str]) -> str:
+    if not runtime_proof_required(item):
+        return "not_required"
+    if runtime_refs:
+        return "supplied"
+    return "pending"
+
+
+def runtime_proof_refs(proofs: list[dict[str, Any]]) -> list[str]:
+    refs: list[str] = []
+    for proof in proofs:
+        refs.append(str(proof.get("proof_id") or ""))
+        refs.extend(non_empty_string_list(proof.get("evidence_refs")))
+    return _unique_strings(refs)
+
+
+def is_path_like_ref(ref: str) -> bool:
+    text = ref.strip()
+    if not text or text.startswith(EXTERNAL_REF_PREFIXES):
+        return False
+    if text.startswith(("/", "./", "../", "~")):
+        return True
+    if "/" in text:
+        return True
+    return text.lower().endswith(PATH_LIKE_SUFFIXES)
+
+
+def evidence_ref_status(ref: str) -> dict[str, str]:
+    text = str(ref or "").strip()
+    if not text:
+        return {"ref": text, "status": "missing", "kind": "empty"}
+    if not is_path_like_ref(text):
+        return {"ref": text, "status": "external_ref", "kind": "external"}
+    path = resolve_output(text).expanduser()
+    return {
+        "ref": text,
+        "status": "ok" if path.exists() else "missing",
+        "kind": "local_path",
+        "path": str(path),
+    }
+
+
+def runtime_proof_categories(proofs: list[dict[str, Any]]) -> set[str]:
+    categories: set[str] = set()
+    for proof in proofs:
+        for category in non_empty_string_list(proof.get("categories")):
+            categories.add(category)
+    return categories
+
+
+def route_text(item: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for field in ("native_skill", "backend_mode", "side_effect_policy", "solar_backend_action"):
+        parts.append(str(item.get(field) or ""))
+    for field in ("limitations", "required_capabilities", "primary_tools"):
+        value = item.get(field)
+        if isinstance(value, list):
+            parts.extend(str(entry or "") for entry in value)
+    return " ".join(parts).lower()
+
+
+def proof_requirement(
+    *,
+    category: str,
+    status: str,
+    description: str,
+    evidence_refs: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "category": category,
+        "status": status,
+        "description": description,
+        "evidence_refs": non_empty_string_list(evidence_refs or []),
+    }
+
+
+def proof_requirements(
+    item: dict[str, Any],
+    route: dict[str, Any],
+    *,
+    skill_in_native: bool,
+    missing_tools: list[dict[str, Any]],
+    runtime_refs: list[str],
+    supplied_categories: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    supplied_categories = supplied_categories or set()
+    skill = str(item.get("native_skill") or "")
+    tool_refs = [
+        str(entry.get("ref") or entry.get("path") or "")
+        for entry in item.get("primary_tool_statuses", [])
+        if isinstance(entry, dict)
+    ]
+    requirements = [
+        proof_requirement(
+            category="route_definition",
+            status="ok",
+            description="Solar route declaration exists in feature_parity_routes.v1.json.",
+            evidence_refs=[f"route:{skill}"],
+        ),
+        proof_requirement(
+            category="native_skill_presence",
+            status="ok" if skill_in_native else "missing",
+            description="Discovered AutoSci native skill file exists under i18n/en/skills.",
+            evidence_refs=[f"native:{skill}" if skill_in_native else f"config-only:{skill}"],
+        ),
+        proof_requirement(
+            category="primary_tool_abi",
+            status="missing" if missing_tools else "ok",
+            description="Primary Solar tool/config references resolve locally or are declared external.",
+            evidence_refs=tool_refs,
+        ),
+    ]
+    semantic = str(item.get("semantic_parity") or "")
+    if semantic != "full":
+        requirements.append(
+            proof_requirement(
+                category="semantic_equivalence_evidence",
+                status="pending",
+                description="Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+                evidence_refs=non_empty_string_list(item.get("proof_refs")),
+            )
+        )
+    if runtime_proof_required(item):
+        requirements.append(
+            proof_requirement(
+                category="external_runtime_evidence",
+                status="supplied" if "external_runtime_evidence" in supplied_categories else "pending",
+                description="Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+                evidence_refs=runtime_refs,
+            )
+        )
+    side_effect_policy = str(item.get("side_effect_policy") or "")
+    backend_mode = str(item.get("backend_mode") or "")
+    if side_effect_policy == "approval_required":
+        requirements.append(
+            proof_requirement(
+                category="approval_boundary_evidence",
+                status="supplied" if "approval_boundary_evidence" in supplied_categories else "pending",
+                description="Side-effecting route requires durable approval, allowlist, before/after, and result evidence.",
+                evidence_refs=runtime_refs,
+            )
+        )
+    if backend_mode == "side_effect_gated":
+        requirements.append(
+            proof_requirement(
+                category="side_effect_execution_evidence",
+                status="supplied" if "side_effect_execution_evidence" in supplied_categories else "pending",
+                description="Gated side-effect route needs approved execution or provider delivery proof.",
+                evidence_refs=runtime_refs,
+            )
+        )
+    text = route_text({**item, **route})
+    if "review llm" in text or "model" in text or "llm" in text:
+        requirements.append(
+            proof_requirement(
+                category="review_llm_or_model_evidence",
+                status="supplied" if "review_llm_or_model_evidence" in supplied_categories else "pending",
+                description="Model/Review LLM-dependent route needs persisted request/response or supplied review evidence.",
+                evidence_refs=runtime_refs,
+            )
+        )
+    source_markers = ("source", "provider", "semantic scholar", "arxiv", "deepxiv", "web search", "online", "feed")
+    if any(marker in text for marker in source_markers):
+        requirements.append(
+            proof_requirement(
+                category="provider_source_evidence",
+                status="supplied" if "provider_source_evidence" in supplied_categories else "pending",
+                description="Source-dependent route needs non-fixture provider/source-channel evidence.",
+                evidence_refs=runtime_refs,
+            )
+        )
+    if "wiki" in text and ("write" in text or "mutation" in text or "set-meta" in text or "add-edge" in text):
+        requirements.append(
+            proof_requirement(
+                category="wiki_mutation_evidence",
+                status="supplied" if "wiki_mutation_evidence" in supplied_categories else "pending",
+                description="Wiki-mutating route needs approved before/after mutation and rebuild evidence.",
+                evidence_refs=runtime_refs,
+            )
+        )
+    return requirements
+
+
+def load_runtime_proof_manifests(paths: list[str]) -> tuple[dict[str, list[dict[str, Any]]], list[dict[str, str]], list[str]]:
+    proofs_by_skill: dict[str, list[dict[str, Any]]] = {}
+    artifacts: list[dict[str, str]] = []
+    warnings: list[str] = []
+    for raw_path in paths:
+        path = resolve_output(raw_path)
+        artifacts.append({"type": "runtime_proof_manifest", "path": str(path)})
+        if not path.exists():
+            warnings.append(f"Runtime proof manifest not found: {path}")
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            warnings.append(f"Runtime proof manifest is not valid JSON: {path}: {exc}")
+            continue
+        proofs_raw = payload.get("proofs") if isinstance(payload, dict) else None
+        if isinstance(payload, dict) and isinstance(proofs_raw, list):
+            proofs_iter = proofs_raw
+        elif isinstance(payload, dict):
+            proofs_iter = [payload]
+        else:
+            warnings.append(f"Runtime proof manifest must be a JSON object or contain proofs list: {path}")
+            continue
+        for index, proof_raw in enumerate(proofs_iter):
+            if not isinstance(proof_raw, dict):
+                warnings.append(f"Runtime proof manifest entry {path}#{index} is not an object")
+                continue
+            skill = str(proof_raw.get("native_skill") or proof_raw.get("skill") or "").strip()
+            if not skill:
+                warnings.append(f"Runtime proof manifest entry {path}#{index} has no native_skill")
+                continue
+            proof_id = str(proof_raw.get("proof_id") or proof_raw.get("id") or f"{path.name}#{index}").strip()
+            evidence_refs = non_empty_string_list(proof_raw.get("evidence_refs"))
+            evidence_statuses = [evidence_ref_status(ref) for ref in evidence_refs]
+            missing_refs = [
+                status
+                for status in evidence_statuses
+                if status.get("kind") == "local_path" and status.get("status") != "ok"
+            ]
+            normalized = {
+                "proof_id": proof_id,
+                "native_skill": skill,
+                "status": "blocked" if missing_refs else "supplied",
+                "manifest_path": str(path),
+                "categories": non_empty_string_list(proof_raw.get("categories")) or ["external_runtime_evidence"],
+                "evidence_refs": evidence_refs,
+                "evidence_ref_statuses": evidence_statuses,
+                "description": str(proof_raw.get("description") or "Runtime proof was supplied via manifest.").strip(),
+            }
+            proofs_by_skill.setdefault(skill, []).append(normalized)
+    return proofs_by_skill, artifacts, warnings
 
 
 def primary_tool_statuses(primary_tools: list[Any]) -> list[dict[str, Any]]:
@@ -122,6 +479,34 @@ def add_missing_items(items: list[dict[str, Any]], native_skills: list[str]) -> 
                 "coverage_status": "missing",
                 "backend_mode": "route_plan",
                 "side_effect_policy": "unavailable",
+                "semantic_parity": "missing",
+                "execution_policy": "provider_required",
+                "proof_level": "E0",
+                "proof_refs": [f"missing:{skill}"],
+                "remaining_requirements": ["Configure a Solar route for this discovered AutoSci native skill."],
+                "runtime_proof_refs": [],
+                "runtime_proof_sources": [],
+                "runtime_proof_status": "pending",
+                "proof_requirements": [
+                    proof_requirement(
+                        category="route_definition",
+                        status="missing",
+                        description="No Solar route declaration exists for this discovered native skill.",
+                        evidence_refs=[f"missing:{skill}"],
+                    ),
+                    proof_requirement(
+                        category="native_skill_presence",
+                        status="ok",
+                        description="Discovered AutoSci native skill file exists under i18n/en/skills.",
+                        evidence_refs=[f"native:{skill}"],
+                    ),
+                    proof_requirement(
+                        category="semantic_equivalence_evidence",
+                        status="pending",
+                        description="No Solar semantic equivalence proof exists until a route is configured.",
+                        evidence_refs=[],
+                    ),
+                ],
                 "evidence_schema": SCHEMA,
                 "primary_tools": ["N/A"],
                 "required_capabilities": ["Solar route definition"],
@@ -136,10 +521,34 @@ def count(items: list[dict[str, Any]], status: str) -> int:
     return sum(1 for item in items if item.get("coverage_status") == status)
 
 
+def count_field(items: list[dict[str, Any]], field: str, value: str) -> int:
+    return sum(1 for item in items if item.get(field) == value)
+
+
+def value_counts(items: list[dict[str, Any]], field: str, values: tuple[str, ...] | set[str]) -> dict[str, int]:
+    return {value: count_field(items, field, value) for value in values}
+
+
+def proof_requirement_status_counts(items: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {value: 0 for value in PROOF_REQUIREMENT_STATUS_VALUES}
+    for item in items:
+        requirements = item.get("proof_requirements")
+        if not isinstance(requirements, list):
+            continue
+        for requirement in requirements:
+            if not isinstance(requirement, dict):
+                continue
+            status = str(requirement.get("status") or "")
+            if status in counts:
+                counts[status] += 1
+    return counts
+
+
 def build_evidence(
     *,
     autosci_repo: Path,
     requested_skill: str | None = None,
+    runtime_proof_manifests: list[str] | None = None,
 ) -> dict[str, Any]:
     config = load_json(CONFIG_PATH)
     routes = config.get("routes")
@@ -147,7 +556,14 @@ def build_evidence(
         raise ValueError(f"{CONFIG_PATH} routes must be a list")
 
     native_skills, discovery_warnings = discover_native_skills(autosci_repo)
-    configured_items = route_items([route for route in routes if isinstance(route, dict)], native_skills)
+    runtime_proofs, runtime_manifest_artifacts, runtime_manifest_warnings = load_runtime_proof_manifests(
+        runtime_proof_manifests or []
+    )
+    configured_items = route_items(
+        [route for route in routes if isinstance(route, dict)],
+        native_skills,
+        runtime_proofs_by_skill=runtime_proofs,
+    )
     if requested_skill:
         configured_items = [
             item for item in configured_items if item.get("native_skill") == requested_skill
@@ -159,7 +575,7 @@ def build_evidence(
 
     missing_count = count(items, "missing")
     status = "completed"
-    if discovery_warnings:
+    if discovery_warnings or runtime_manifest_warnings:
         status = "inconclusive"
     if missing_count:
         status = "failed"
@@ -170,6 +586,7 @@ def build_evidence(
         "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements.",
     ]
     limitations.extend(discovery_warnings)
+    limitations.extend(runtime_manifest_warnings)
     return {
         "schema": SCHEMA,
         "task_id": "phase19-autosci-feature-parity",
@@ -180,6 +597,7 @@ def build_evidence(
             "autosci_repo": str(autosci_repo),
             "route_config": str(CONFIG_PATH),
             "requested_skill": requested_skill or "N/A",
+            "runtime_proof_manifests": runtime_proof_manifests or [],
         },
         "outputs": {
             "parity": {
@@ -193,6 +611,13 @@ def build_evidence(
                 "partial_count": count(items, "partial"),
                 "gated_count": count(items, "gated"),
                 "blocked_count": count(items, "blocked"),
+                "semantic_full_count": count_field(items, "semantic_parity", "full"),
+                "semantic_partial_count": count_field(items, "semantic_parity", "partial"),
+                "semantic_missing_count": count_field(items, "semantic_parity", "missing"),
+                "execution_policy_counts": value_counts(items, "execution_policy", EXECUTION_POLICY_VALUES),
+                "proof_level_counts": value_counts(items, "proof_level", PROOF_LEVELS),
+                "runtime_proof_status_counts": value_counts(items, "runtime_proof_status", RUNTIME_PROOF_STATUS_VALUES),
+                "proof_requirement_status_counts": proof_requirement_status_counts(items),
                 "native_skills": native_skills,
                 "items": items,
             }
@@ -201,7 +626,8 @@ def build_evidence(
             {
                 "type": "route_config",
                 "path": str(CONFIG_PATH),
-            }
+            },
+            *runtime_manifest_artifacts,
         ],
         "provenance": {
             "operator_id": "AutoSciFeatureParityBridge",
@@ -219,7 +645,10 @@ def write_evidence(payload: dict[str, Any], out_path: Path) -> None:
 
 def run_inventory(args: argparse.Namespace) -> int:
     autosci_repo = Path(args.autosci_repo).expanduser().resolve()
-    payload = build_evidence(autosci_repo=autosci_repo)
+    payload = build_evidence(
+        autosci_repo=autosci_repo,
+        runtime_proof_manifests=list(args.runtime_proof_manifest or []),
+    )
     out_path = resolve_output(args.out) if args.out else default_output()
     write_evidence(payload, out_path)
     parity = payload["outputs"]["parity"]
@@ -235,6 +664,10 @@ def run_inventory(args: argparse.Namespace) -> int:
                 "full_count": parity["full_count"],
                 "partial_count": parity["partial_count"],
                 "gated_count": parity["gated_count"],
+                "semantic_full_count": parity["semantic_full_count"],
+                "semantic_partial_count": parity["semantic_partial_count"],
+                "semantic_missing_count": parity["semantic_missing_count"],
+                "runtime_proof_status_counts": parity["runtime_proof_status_counts"],
             },
             indent=2,
             sort_keys=True,
@@ -245,7 +678,11 @@ def run_inventory(args: argparse.Namespace) -> int:
 
 def run_route(args: argparse.Namespace) -> int:
     autosci_repo = Path(args.autosci_repo).expanduser().resolve()
-    payload = build_evidence(autosci_repo=autosci_repo, requested_skill=args.skill)
+    payload = build_evidence(
+        autosci_repo=autosci_repo,
+        requested_skill=args.skill,
+        runtime_proof_manifests=list(args.runtime_proof_manifest or []),
+    )
     out_path = resolve_output(args.out) if args.out else default_output(args.skill)
     write_evidence(payload, out_path)
     parity = payload["outputs"]["parity"]
@@ -258,6 +695,10 @@ def run_route(args: argparse.Namespace) -> int:
                 "skill": args.skill,
                 "routed_count": parity["routed_count"],
                 "missing_route_count": parity["missing_route_count"],
+                "semantic_full_count": parity["semantic_full_count"],
+                "semantic_partial_count": parity["semantic_partial_count"],
+                "semantic_missing_count": parity["semantic_missing_count"],
+                "runtime_proof_status_counts": parity["runtime_proof_status_counts"],
             },
             indent=2,
             sort_keys=True,
@@ -277,11 +718,23 @@ def build_parser() -> argparse.ArgumentParser:
 
     inventory = subparsers.add_parser("inventory", help="Write full native-skill route parity evidence")
     inventory.add_argument("--out", help="Output JSON path, relative to HARNESS_DIR when not absolute")
+    inventory.add_argument(
+        "--runtime-proof-manifest",
+        action="append",
+        default=[],
+        help="Explicit autosci_runtime_proof_manifest.v1 JSON file to attach as supplied runtime proof.",
+    )
     inventory.set_defaults(func=run_inventory)
 
     route = subparsers.add_parser("route", help="Write parity evidence for one native AutoSci skill")
     route.add_argument("--skill", required=True, help="Native AutoSci skill name, for example daily-arxiv")
     route.add_argument("--out", help="Output JSON path, relative to HARNESS_DIR when not absolute")
+    route.add_argument(
+        "--runtime-proof-manifest",
+        action="append",
+        default=[],
+        help="Explicit autosci_runtime_proof_manifest.v1 JSON file to attach as supplied runtime proof.",
+    )
     route.set_defaults(func=run_route)
     return parser
 

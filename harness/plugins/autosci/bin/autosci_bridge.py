@@ -20,8 +20,12 @@ from typing import Any, Callable
 PLUGIN_DIR = Path(__file__).resolve().parents[1]
 HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", Path(__file__).resolve().parents[3])).resolve()
 REPO_HARNESS_DIR = Path(__file__).resolve().parents[3]
+if str(REPO_HARNESS_DIR) not in sys.path:
+    sys.path.insert(0, str(REPO_HARNESS_DIR))
 if str(PLUGIN_DIR) not in sys.path:
     sys.path.insert(0, str(PLUGIN_DIR))
+
+from evaluators.scientific.lifecycle_runtime_gate import evaluate as evaluate_lifecycle_runtime
 
 from adapters.autosci_to_claim_verdict import convert as convert_claim_verdict
 from adapters.autosci_to_experiment_plan import convert as convert_experiment_plan
@@ -658,6 +662,122 @@ def _runtime_candidates(records: list[dict[str, Any]], *, limit: int) -> list[di
     return candidates
 
 
+GENERIC_SOURCE_CHANNELS = {
+    "approved_runtime",
+    "fixture",
+    "local_fixture",
+    "runtime",
+    "unknown",
+}
+
+
+def _source_provider_boundary(
+    records: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
+    *,
+    action: str,
+) -> dict[str, Any]:
+    channels = _unique_strings([
+        str(channel)
+        for candidate in candidates
+        if isinstance(candidate, dict)
+        for channel in (candidate.get("source_channels") if isinstance(candidate.get("source_channels"), list) else [])
+        if str(channel).strip()
+    ])
+    provider_channels = [channel for channel in channels if channel.strip().lower() not in GENERIC_SOURCE_CHANNELS]
+    candidate_ids = _unique_strings([
+        str(candidate.get("candidate_id") or candidate.get("paperId") or candidate.get("title") or "")
+        for candidate in candidates
+        if isinstance(candidate, dict)
+    ])
+    runtime_sources = _unique_strings([
+        str(record.get("source_path") or "")
+        for record in records
+        if isinstance(record, dict) and str(record.get("source_path") or "").strip()
+    ])
+    invalid_reasons: list[str] = []
+    if not candidates:
+        invalid_reasons.append("no source candidates were present")
+    if not provider_channels:
+        invalid_reasons.append("no non-fixture provider source channel was present")
+    completed = bool(candidates and provider_channels)
+    return {
+        "schema": "autosci_source_provider_boundary.v1",
+        "action": action,
+        "status": "completed" if completed else "incomplete",
+        "completed": completed,
+        "candidate_count": len(candidates),
+        "candidate_ids": candidate_ids,
+        "source_channels": channels,
+        "provider_channels": provider_channels,
+        "generic_channels": [channel for channel in channels if channel.strip().lower() in GENERIC_SOURCE_CHANNELS],
+        "runtime_record_sources": runtime_sources,
+        "invalid_reasons": invalid_reasons,
+        "limitations": [] if completed else ["Source runtime evidence did not prove a non-fixture provider channel."],
+    }
+
+
+def _discover_final_shortlist_boundary(
+    source_boundary: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    mode: str,
+) -> dict[str, Any]:
+    provider_channels = list(source_boundary.get("provider_channels") or []) if isinstance(source_boundary, dict) else []
+    invalid_reasons = list(source_boundary.get("invalid_reasons") or []) if isinstance(source_boundary, dict) else []
+    blocking_reasons: list[str] = []
+    if not candidates:
+        blocking_reasons.append("discovery shortlist is empty")
+    if not provider_channels:
+        blocking_reasons.append("provider-backed source channel is missing")
+    if invalid_reasons:
+        blocking_reasons.extend(str(item) for item in invalid_reasons)
+    final_shortlist_ready = not blocking_reasons
+    return {
+        "schema": "autosci_discover_final_shortlist_boundary.v1",
+        "status": "final_shortlist_ready" if final_shortlist_ready else "discover_shortlist_incomplete",
+        "final_shortlist_ready": final_shortlist_ready,
+        "mode": mode,
+        "candidate_count": len(candidates),
+        "candidate_ids": _unique_strings([
+            str(candidate.get("candidate_id") or candidate.get("paperId") or candidate.get("title") or "")
+            for candidate in candidates
+            if isinstance(candidate, dict)
+        ]),
+        "provider_channels": provider_channels,
+        "source_provider_boundary_status": str(source_boundary.get("status") or "missing") if isinstance(source_boundary, dict) else "missing",
+        "blocking_reasons": _unique_strings(blocking_reasons),
+        "limitations": [] if final_shortlist_ready else [
+            "Final discovery shortlist requires non-empty candidates backed by non-fixture provider source channels."
+        ],
+    }
+
+
+def _attach_discover_final_shortlist_boundary(
+    envelope: dict[str, Any],
+    raw: dict[str, Any],
+    *,
+    mode: str,
+) -> dict[str, Any]:
+    candidates = raw.get("candidates") if isinstance(raw.get("candidates"), list) else []
+    source_boundary = raw.get("source_provider_boundary") if isinstance(raw.get("source_provider_boundary"), dict) else {}
+    final_boundary = _discover_final_shortlist_boundary(source_boundary, candidates, mode=mode)
+    source_boundary = dict(source_boundary)
+    source_boundary["final_shortlist_boundary"] = final_boundary
+    raw["source_provider_boundary"] = source_boundary
+    boundary_path = _output_dir(envelope, "discover_literature") / "discover_final_shortlist_boundary.json"
+    boundary_artifact = _write_json_sidecar(boundary_path, final_boundary)
+    artifacts = list(raw.get("artifacts") or [])
+    artifacts.append({"type": "discover_final_shortlist_boundary_json", "path": boundary_artifact})
+    raw["artifacts"] = artifacts
+    if not final_boundary.get("final_shortlist_ready"):
+        raw["limitations"] = [
+            *list(raw.get("limitations") or []),
+            *list(final_boundary.get("limitations") or []),
+        ]
+    return raw
+
+
 def _runtime_metrics(record: dict[str, Any]) -> list[dict[str, Any]]:
     raw_metrics = _field(record, "metrics")
     if not isinstance(raw_metrics, list):
@@ -820,12 +940,22 @@ def _approval_semantic_runtime(contract: dict[str, Any], action: str, *, limit: 
     elif action in {"daily_arxiv_prepare_finalize", "init_sources", "discover_literature"}:
         candidates = _runtime_candidates(records, limit=limit)
         fetch_ok = bool(candidates) and any(_runtime_exit_ok(record) for record in records)
+        provider_boundary = _source_provider_boundary(records, candidates, action=action)
         checks.extend([
             {"check": "source_fetch_ok", "status": "ok" if fetch_ok else "error", "detail": str(fetch_ok)},
             {"check": "candidates_present", "status": "ok" if candidates else "error", "detail": str(len(candidates))},
+            {
+                "check": "source_provider_boundary",
+                "status": "ok" if provider_boundary.get("completed") else "error",
+                "detail": ",".join(provider_boundary.get("invalid_reasons") or []),
+            },
         ])
-        verified = verified and fetch_ok and bool(candidates)
-        detail.update({"candidates": candidates, "source_fetch_ok": fetch_ok})
+        verified = verified and fetch_ok and bool(candidates) and bool(provider_boundary.get("completed"))
+        detail.update({
+            "candidates": candidates,
+            "source_fetch_ok": fetch_ok,
+            "source_provider_boundary": provider_boundary,
+        })
 
     status = "verified" if verified else "incomplete"
     return {
@@ -1982,6 +2112,11 @@ def _model_output(
             },
         },
     }
+    output_dir = _output_dir(envelope, action)
+    request_path = output_dir / f"{action}_model_request.json"
+    request_rel = _write_json_sidecar(request_path, request)
+    request_sha256 = hashlib.sha256(request_path.read_bytes()).hexdigest()
+    artifacts.append({"type": "model_command_request_json", "path": request_rel, "sha256": request_sha256})
     timeout = int(os.environ.get("AUTOSCI_MODEL_COMMAND_TIMEOUT", "60"))
     try:
         proc = subprocess.run(
@@ -1994,14 +2129,21 @@ def _model_output(
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return {"status": "failed", "reason": f"model command invocation failed: {exc}", "command": command, "checked_paths": checked}, artifacts
-    output_dir = _output_dir(envelope, action)
+        return {
+            "status": "failed",
+            "reason": f"model command invocation failed: {exc}",
+            "command": command,
+            "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+        }, artifacts
     stdout_path = output_dir / f"{action}_model_stdout.json"
     stderr_path = output_dir / f"{action}_model_stderr.txt"
     stdout_rel = _write_text_sidecar(stdout_path, proc.stdout)
     stderr_rel = _write_text_sidecar(stderr_path, proc.stderr)
+    response_sha256 = hashlib.sha256(stdout_path.read_bytes()).hexdigest()
     artifacts.extend([
-        {"type": "model_command_stdout_json", "path": stdout_rel},
+        {"type": "model_command_stdout_json", "path": stdout_rel, "sha256": response_sha256},
         {"type": "model_command_stderr", "path": stderr_rel},
     ])
     if proc.returncode != 0:
@@ -2010,23 +2152,92 @@ def _model_output(
             "reason": f"model command exited {proc.returncode}: {proc.stderr.strip()[:500]}",
             "command": command,
             "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+            "response_path": stdout_rel,
+            "response_sha256": response_sha256,
         }, artifacts
     try:
         payload = json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        return {"status": "invalid", "reason": f"model command returned invalid JSON: {exc}", "command": command, "checked_paths": checked}, artifacts
+        return {
+            "status": "invalid",
+            "reason": f"model command returned invalid JSON: {exc}",
+            "command": command,
+            "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+            "response_path": stdout_rel,
+            "response_sha256": response_sha256,
+        }, artifacts
     if not isinstance(payload, dict):
-        return {"status": "invalid", "reason": "model command must return a JSON object.", "command": command, "checked_paths": checked}, artifacts
+        return {
+            "status": "invalid",
+            "reason": "model command must return a JSON object.",
+            "command": command,
+            "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+            "response_path": stdout_rel,
+            "response_sha256": response_sha256,
+        }, artifacts
     normalized = _normalize_model_response(payload, "model-command")
     normalized["invocation_mode"] = "command"
     normalized["command"] = command
     normalized["checked_paths"] = checked
+    normalized["request_path"] = request_rel
+    normalized["request_sha256"] = request_sha256
+    normalized["response_path"] = stdout_rel
+    normalized["response_sha256"] = response_sha256
     return normalized, artifacts
 
 
 def _model_output_requested(envelope: dict[str, Any]) -> bool:
     inputs = dict(envelope.get("inputs") or {})
     return bool(_input_path_values(inputs, "model_evidence", "model_output_evidence") or _model_command(inputs))
+
+
+def _ask_final_answer_boundary(
+    *,
+    query: str,
+    hits: list[dict[str, Any]],
+    model_output: dict[str, Any],
+    answer_status: str,
+) -> dict[str, Any]:
+    retrieval_ready = bool(hits)
+    model_ready = (
+        model_output.get("status") == "completed"
+        and bool(str(model_output.get("answer") or "").strip())
+        and bool(model_output.get("evidence_ids"))
+    )
+    blocking_reasons: list[str] = []
+    if not retrieval_ready:
+        blocking_reasons.append("retrieval sources are missing")
+    if not model_ready:
+        blocking_reasons.append(f"model synthesis status is `{model_output.get('status') or 'missing'}`, not completed with answer and evidence ids")
+    final_answer_ready = retrieval_ready and model_ready
+    return {
+        "schema": "autosci_ask_final_answer_boundary.v1",
+        "status": "final_answer_ready" if final_answer_ready else "ask_final_answer_incomplete",
+        "final_answer_ready": final_answer_ready,
+        "query": query,
+        "retrieval_status": "completed" if retrieval_ready else "missing",
+        "retrieval_source_count": len(hits),
+        "retrieval_paths": [str(hit.get("path") or "") for hit in hits],
+        "answer_status": answer_status,
+        "model_status": str(model_output.get("status") or "missing"),
+        "model_source": str(model_output.get("source") or ""),
+        "model_provider": str(model_output.get("provider") or ""),
+        "model_name": str(model_output.get("model") or ""),
+        "model_confidence": model_output.get("confidence", "N/A"),
+        "model_evidence_ids": _unique_strings([str(item) for item in model_output.get("evidence_ids") or []]),
+        "request_sha256": str(model_output.get("request_sha256") or ""),
+        "response_sha256": str(model_output.get("response_sha256") or ""),
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if final_answer_ready else [
+            "Final ask answer requires retrieved source evidence and completed model-backed synthesis with evidence ids."
+        ],
+    }
 
 
 def _idea_candidates_from_model_output(
@@ -2086,12 +2297,148 @@ def _idea_candidates_from_model_output(
     return ideas, skipped
 
 
+def _input_path_references(inputs: dict[str, Any], keys: tuple[str, ...]) -> list[str]:
+    refs: list[str] = []
+    for key in keys:
+        raw = inputs.get(key)
+        values = raw if isinstance(raw, list) else [raw] if raw else []
+        refs.extend(str(item) for item in values if str(item).strip())
+    return _unique_strings(refs)
+
+
+def _ideate_final_promotion_boundary(
+    *,
+    ideas: list[dict[str, Any]],
+    inputs: dict[str, Any],
+    source_summary: dict[str, Any],
+    wiki_state: dict[str, Any] | None,
+    model_output: dict[str, Any] | None,
+) -> dict[str, Any]:
+    model_output = model_output if isinstance(model_output, dict) else {}
+    source_mode = str(source_summary.get("source_mode") or (ideas[0].get("source_mode") if ideas else "") or "missing")
+    wiki_state = wiki_state if isinstance(wiki_state, dict) else {}
+    wiki_resolution = wiki_state.get("resolution") if isinstance(wiki_state.get("resolution"), dict) else {}
+    wiki_maturity_scan_completed = bool(wiki_state) and str(wiki_state.get("status") or "") == "completed"
+    failed_banlist_checked = "failed_idea_count" in source_summary
+    source_ready = source_mode not in {"", "missing", "fixture"} and any(
+        str(idea.get("status") or "") not in {"blocked", "filtered"}
+        and str(idea.get("source_mode") or source_mode) not in {"missing", "fixture"}
+        for idea in ideas
+        if isinstance(idea, dict)
+    )
+    model_completed = (
+        str(model_output.get("status") or "") == "completed"
+        and bool(model_output.get("evidence_ids"))
+        and bool(str(model_output.get("model") or model_output.get("source") or model_output.get("provider") or "").strip())
+    )
+    gate_references = _input_path_references(
+        inputs,
+        ("novelty_evidence", "idea_evaluation_evidence", "review_llm_evidence", "review_evidence"),
+    )
+    novelty_review_refs_present = bool(gate_references)
+    global_blocking: list[str] = []
+    if not wiki_maturity_scan_completed:
+        global_blocking.append("wiki maturity scan was not completed")
+    if not failed_banlist_checked:
+        global_blocking.append("failed-idea banlist was not checked")
+    if not source_ready:
+        global_blocking.append("source-backed idea evidence is missing")
+    if not model_completed:
+        global_blocking.append("model brainstorm provenance is missing or incomplete")
+    if not novelty_review_refs_present:
+        global_blocking.append("novelty/review gate evidence references are missing")
+    idea_boundaries: list[dict[str, Any]] = []
+    for idea in ideas:
+        if not isinstance(idea, dict):
+            continue
+        idea_reasons = list(global_blocking)
+        if str(idea.get("duplicate_status") or "") == "duplicate":
+            idea_reasons.append("idea overlaps failed or duplicate idea banlist")
+        if str(idea.get("status") or "") in {"blocked", "filtered"}:
+            idea_reasons.append(f"idea status is `{idea.get('status')}`")
+        ready = not idea_reasons
+        idea_boundary = {
+            "schema": "autosci_ideate_idea_promotion_boundary.v1",
+            "idea_id": str(idea.get("idea_id") or "N/A"),
+            "status": "idea_promotion_ready" if ready else "idea_promotion_incomplete",
+            "promotion_ready": ready,
+            "source_mode": str(idea.get("source_mode") or source_mode),
+            "duplicate_status": str(idea.get("duplicate_status") or "unknown"),
+            "generation_path": str(idea.get("generation_path") or "N/A"),
+            "blocking_reasons": idea_reasons,
+        }
+        idea["final_promotion_boundary"] = idea_boundary
+        idea["promotion_ready"] = ready
+        idea_boundaries.append(idea_boundary)
+    final_ready = bool(idea_boundaries) and all(bool(item.get("promotion_ready")) for item in idea_boundaries)
+    return {
+        "schema": "autosci_ideate_final_promotion_boundary.v1",
+        "status": "final_promotion_ready" if final_ready else "ideate_promotion_incomplete",
+        "final_promotion_ready": final_ready,
+        "wiki_maturity_scan_completed": wiki_maturity_scan_completed,
+        "wiki_resolution_status": str(wiki_state.get("status") or "missing"),
+        "wiki_target_type": str(wiki_resolution.get("target_type") or "N/A"),
+        "wiki_fallback_used": bool(wiki_resolution.get("fallback_used")) if wiki_resolution else False,
+        "failed_idea_banlist_checked": failed_banlist_checked,
+        "failed_idea_count": int(source_summary.get("failed_idea_count") or 0),
+        "source_evidence_ready": source_ready,
+        "source_mode": source_mode,
+        "wiki_source_count": int(source_summary.get("wiki_source_count") or 0),
+        "discovery_source_count": int(source_summary.get("discovery_source_count") or 0),
+        "model_brainstorm_completed": model_completed,
+        "model_status": str(model_output.get("status") or "not_requested"),
+        "model_source": str(model_output.get("source") or ""),
+        "model_provider": str(model_output.get("provider") or ""),
+        "model_name": str(model_output.get("model") or ""),
+        "model_evidence_ids": _unique_strings([str(item) for item in model_output.get("evidence_ids") or []]),
+        "novelty_review_gate_references_present": novelty_review_refs_present,
+        "novelty_review_gate_references": gate_references,
+        "idea_boundaries": idea_boundaries,
+        "blocking_reasons": global_blocking,
+        "limitations": [] if final_ready else [
+            "Final idea promotion requires wiki maturity scan, failed-idea banlist check, source-backed evidence, model brainstorm provenance, and novelty/review gate evidence references."
+        ],
+    }
+
+
+def _attach_ideate_final_promotion_boundary(
+    envelope: dict[str, Any],
+    *,
+    ideas: list[dict[str, Any]],
+    artifacts: list[dict[str, str]],
+    limitations: list[str],
+    source_summary: dict[str, Any],
+    wiki_state: dict[str, Any] | None,
+    model_output: dict[str, Any] | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]], list[str]]:
+    inputs = dict(envelope.get("inputs") or {})
+    boundary = _ideate_final_promotion_boundary(
+        ideas=ideas,
+        inputs=inputs,
+        source_summary=source_summary,
+        wiki_state=wiki_state,
+        model_output=model_output,
+    )
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "generate_ideas") / "ideate_final_promotion_boundary.json",
+        boundary,
+    )
+    out_artifacts = [*artifacts, {"type": "ideate_final_promotion_boundary_json", "path": boundary_path}]
+    out_limitations = [*limitations, *[str(item) for item in boundary.get("limitations") or []]]
+    return ideas, out_artifacts, out_limitations
+
+
 def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     query = str(inputs.get("query") or inputs.get("target") or inputs.get("topic") or "N/A")
     output_dir = _output_dir(envelope, "ask_wiki")
     answer_path = _configured_output_path(envelope, "answer_markdown_path", output_dir / "ask_wiki_answer.md")
     retrieval_path = _configured_output_path(envelope, "retrieval_json_path", output_dir / "ask_wiki_retrieval.json")
+    final_boundary_path = _configured_output_path(
+        envelope,
+        "ask_final_answer_boundary_path",
+        output_dir / "ask_final_answer_boundary.json",
+    )
     hits = _wiki_retrieval_hits(envelope, query, limit=int(inputs.get("limit") or 5))
     source_lines = [f"- `{hit['path']}` score={hit['score']}: {hit['snippet']}" for hit in hits] or ["- N/A"]
     answer_lines = [
@@ -2107,6 +2454,12 @@ def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
     )
     model_completed = model_output.get("status") == "completed"
     answer_status = "completed" if answer_lines or model_completed else "inconclusive"
+    final_boundary = _ask_final_answer_boundary(
+        query=query,
+        hits=hits,
+        model_output=model_output,
+        answer_status=answer_status,
+    )
     model_section = [
         "## Model Synthesis",
         "",
@@ -2135,10 +2488,12 @@ def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
             f"- Retrieval-backed extractive answer: `{answer_status}`",
             f"- Source count: `{len(hits)}`",
             f"- Model evidence status: `{model_output.get('status')}`",
+            f"- Final answer boundary: `{final_boundary.get('status')}`",
             "",
         ]
     )
     answer_artifact = _write_text_sidecar(answer_path, body)
+    final_boundary_artifact = _write_json_sidecar(final_boundary_path, final_boundary)
     retrieval_artifact = _write_json_sidecar(
         retrieval_path,
         {
@@ -2148,6 +2503,7 @@ def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
             "answer_status": answer_status,
             "answer_lines": answer_lines,
             "model_output": model_output,
+            "final_answer_boundary": final_boundary,
             "limitations": [
                 "Extractive answer is grounded in retrieved wiki snippets.",
                 "Model synthesis is included only when explicit model evidence or a model command was supplied.",
@@ -2179,6 +2535,7 @@ def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
         "artifacts": [
             {"type": "ask_answer_markdown", "path": answer_artifact},
             {"type": "ask_retrieval_json", "path": retrieval_artifact},
+            {"type": "ask_final_answer_boundary_json", "path": final_boundary_artifact},
             *model_artifacts,
         ],
         "status": "completed" if hits else "inconclusive",
@@ -2430,6 +2787,102 @@ def _source_candidate_wiki_fan_in(
     }
 
 
+def _init_sources_final_fan_in_boundary(
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    fan_in_summary = fan_in_summary if isinstance(fan_in_summary, dict) else {}
+    semantic_verified = semantic.get("verified") is True
+    provider_boundary_completed = source_boundary.get("completed") is True
+    provider_candidates_ready = bool(candidates) and provider_boundary_completed
+    fan_in_completed = fan_in_summary.get("applied") is True and str(fan_in_summary.get("status") or "") == "completed"
+    edge_paths = [str(item) for item in fan_in_summary.get("edge_paths") or [] if str(item).strip()]
+    rebuilt_paths = [str(item) for item in fan_in_summary.get("rebuilt_paths") or [] if str(item).strip()]
+    graph_log_rebuild_ready = bool(
+        fan_in_summary.get("log_path")
+        and edge_paths
+        and any(path.endswith("index.md") for path in rebuilt_paths)
+        and any(path.endswith("context_brief.md") for path in rebuilt_paths)
+    )
+    stage_provider_ready = (
+        contract.get("execution_verified") is True
+        and semantic_verified
+        and provider_candidates_ready
+    )
+    final_ready = stage_provider_ready and fan_in_completed and graph_log_rebuild_ready
+    limitations: list[str] = []
+    if contract.get("execution_verified") is not True:
+        limitations.append("Init source finality requires a verified approval contract with runtime and after-artifact evidence.")
+    if not semantic_verified:
+        limitations.append("Init source finality requires semantic runtime verification to pass.")
+    if not provider_boundary_completed:
+        limitations.append("Init source finality requires completed non-fixture provider source-channel evidence.")
+    if not candidates:
+        limitations.append("Init source finality requires provider-backed source candidates.")
+    if not fan_in_completed:
+        limitations.append("Init source finality requires approved wiki fan-in writeback.")
+    if not graph_log_rebuild_ready:
+        limitations.append("Init source finality requires wiki log, graph edge, index, and context rebuild evidence.")
+    if not limitations:
+        limitations.append("Init source final fan-in boundary passed with provider candidates and wiki mutation/rebuild evidence.")
+    return {
+        "schema": "autosci_init_sources_final_fan_in_boundary.v1",
+        "status": "init_sources_final_fan_in_ready" if final_ready else (
+            "init_sources_provider_ready" if stage_provider_ready else "init_sources_fan_in_incomplete"
+        ),
+        "stage_provider_ready": stage_provider_ready,
+        "final_fan_in_ready": final_ready,
+        "approval_contract_verified": contract.get("execution_verified") is True,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "semantic_runtime_verified": semantic_verified,
+        "semantic_runtime_status": str(semantic.get("status") or "missing"),
+        "provider_boundary_completed": provider_boundary_completed,
+        "provider_boundary_status": str(source_boundary.get("status") or "missing"),
+        "candidate_count": len(candidates),
+        "fan_in_completed": fan_in_completed,
+        "written_count": int(fan_in_summary.get("written_count") or 0),
+        "graph_log_rebuild_ready": graph_log_rebuild_ready,
+        "log_path": str(fan_in_summary.get("log_path") or ""),
+        "edge_paths": edge_paths,
+        "rebuilt_paths": rebuilt_paths,
+        "limitations": limitations,
+    }
+
+
+def _attach_init_sources_final_fan_in_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    boundary = _init_sources_final_fan_in_boundary(
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary,
+        fan_in_summary=fan_in_summary,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    outputs["final_fan_in_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "init_sources") / "init_sources_final_fan_in_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "init_sources_final_fan_in_boundary_json", "path": boundary_path}
+    )
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
+
+
 def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     query = str(inputs.get("query") or inputs.get("topic") or inputs.get("target") or "AutoSci source initialization")
@@ -2463,17 +2916,150 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations = [
             "Init source runtime was verified from supplied approval-gated evidence; this bridge did not execute the fetch.",
         ]
+    source_boundary = (semantic.get("detail") or {}).get("source_provider_boundary") if isinstance(semantic.get("detail"), dict) else {}
+    if isinstance(source_boundary, dict):
+        limitations.extend(str(item) for item in source_boundary.get("limitations") or [])
     limitations.extend(str(item) for item in fan_in.get("limitations") or [])
-    return convert_literature_discovery({
+    evidence = convert_literature_discovery({
         "query": query,
         "mode": "init_runtime_verified" if semantic.get("verified") else "init_plan",
         "limit": int(inputs.get("limit") or 10),
         "candidates": candidates,
+        "source_provider_boundary": source_boundary,
         "source_fan_in": fan_in.get("summary"),
         "status": "completed" if semantic.get("verified") else "inconclusive",
         "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
+    return _attach_init_sources_final_fan_in_boundary(
+        envelope,
+        evidence,
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary if isinstance(source_boundary, dict) else {},
+        fan_in_summary=fan_in.get("summary") if isinstance(fan_in, dict) else {},
+    )
+
+
+def _daily_arxiv_delivery_completed(contract: dict[str, Any]) -> tuple[bool, list[str]]:
+    records, errors = _runtime_records(contract)
+    delivery_evidence: list[str] = []
+    completed = False
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        sent = (
+            _truthy(_field(record, "email_sent", "digest_sent", "delivery_completed", "sent"))
+            or str(_field(record, "delivery_status", "email_status", "digest_status") or "").strip().lower()
+            in {"sent", "delivered", "completed", "ok", "success"}
+        )
+        if sent:
+            completed = True
+            delivery_evidence.append(str(_field(record, "delivery_id", "message_id", "digest_id") or "runtime-delivery:completed"))
+    if errors:
+        delivery_evidence.extend(f"runtime_error:{error}" for error in errors)
+    return completed, _unique_strings(delivery_evidence)
+
+
+def _daily_arxiv_final_provider_delivery_boundary(
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    fan_in_summary = fan_in_summary if isinstance(fan_in_summary, dict) else {}
+    semantic_verified = semantic.get("verified") is True
+    provider_boundary_completed = source_boundary.get("completed") is True
+    candidate_count = len(candidates)
+    source_channels = _unique_strings(
+        [
+            str(channel)
+            for candidate in candidates
+            if isinstance(candidate, dict)
+            for channel in (candidate.get("source_channels") if isinstance(candidate.get("source_channels"), list) else [])
+            if str(channel).strip()
+        ]
+    )
+    ranking_ready = bool(candidates) and all(
+        isinstance(candidate, dict)
+        and candidate.get("ranking_score") is not None
+        and str(candidate.get("ranking_rationale") or "").strip()
+        for candidate in candidates
+    )
+    fan_in_completed = fan_in_summary.get("applied") is True and str(fan_in_summary.get("status") or "") == "completed"
+    delivery_completed, delivery_evidence = _daily_arxiv_delivery_completed(contract)
+    delivery_or_ingest_completed = fan_in_completed or delivery_completed
+    stage_provider_ready = semantic_verified and provider_boundary_completed and bool(candidates) and ranking_ready
+    final_ready = stage_provider_ready and delivery_or_ingest_completed
+    limitations: list[str] = []
+    if contract.get("execution_verified") is not True:
+        limitations.append("Daily arXiv finality requires a verified approval contract with runtime and after-artifact evidence.")
+    if not semantic_verified:
+        limitations.append("Daily arXiv finality requires semantic runtime verification to pass.")
+    if not provider_boundary_completed:
+        limitations.append("Daily arXiv finality requires completed non-fixture provider source-channel evidence.")
+    if not candidates:
+        limitations.append("Daily arXiv finality requires at least one candidate.")
+    if not ranking_ready:
+        limitations.append("Daily arXiv finality requires ranking score and rationale for every candidate.")
+    if not delivery_or_ingest_completed:
+        limitations.append("Daily arXiv finality requires explicit digest delivery or approved wiki ingest/fan-in status.")
+    if not limitations:
+        limitations.append("Daily arXiv final boundary passed with provider candidates plus delivery or ingest evidence.")
+    return {
+        "schema": "autosci_daily_arxiv_final_provider_delivery_boundary.v1",
+        "status": "daily_final_delivery_ready" if final_ready else (
+            "daily_provider_ready" if stage_provider_ready else "daily_provider_delivery_incomplete"
+        ),
+        "stage_provider_ready": stage_provider_ready,
+        "final_delivery_ready": final_ready,
+        "approval_contract_verified": contract.get("execution_verified") is True,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "semantic_runtime_verified": semantic_verified,
+        "semantic_runtime_status": str(semantic.get("status") or "missing"),
+        "provider_boundary_completed": provider_boundary_completed,
+        "provider_boundary_status": str(source_boundary.get("status") or "missing"),
+        "candidate_count": candidate_count,
+        "source_channels": source_channels,
+        "ranking_ready": ranking_ready,
+        "fan_in_completed": fan_in_completed,
+        "delivery_completed": delivery_completed,
+        "delivery_evidence_ids": delivery_evidence,
+        "limitations": limitations,
+    }
+
+
+def _attach_daily_arxiv_final_provider_delivery_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    boundary = _daily_arxiv_final_provider_delivery_boundary(
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary,
+        fan_in_summary=fan_in_summary,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    outputs["final_provider_delivery_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "daily_arxiv_prepare_finalize") / "daily_arxiv_final_provider_delivery_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "daily_arxiv_final_provider_delivery_boundary_json", "path": boundary_path}
+    )
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
 
 
 def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -2513,17 +3099,30 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
         limitations = [
             "Daily arXiv runtime was verified from supplied approval-gated evidence; this bridge did not execute network/email side effects.",
         ]
+    source_boundary = (semantic.get("detail") or {}).get("source_provider_boundary") if isinstance(semantic.get("detail"), dict) else {}
+    if isinstance(source_boundary, dict):
+        limitations.extend(str(item) for item in source_boundary.get("limitations") or [])
     limitations.extend(str(item) for item in fan_in.get("limitations") or [])
-    return convert_literature_discovery({
+    evidence = convert_literature_discovery({
         "query": query,
         "mode": "daily_arxiv_runtime_verified" if semantic.get("verified") else "daily_arxiv_plan",
         "limit": int(inputs.get("limit") or 10),
         "candidates": candidates,
+        "source_provider_boundary": source_boundary,
         "source_fan_in": fan_in.get("summary"),
         "status": "completed" if semantic.get("verified") else "inconclusive",
         "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
+    return _attach_daily_arxiv_final_provider_delivery_boundary(
+        envelope,
+        evidence,
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary if isinstance(source_boundary, dict) else {},
+        fan_in_summary=fan_in.get("summary") if isinstance(fan_in, dict) else {},
+    )
 
 
 def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -2562,15 +3161,27 @@ def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
             limitations = [
                 "Literature discovery runtime was verified from supplied approval-gated source evidence; this bridge did not execute the fetch.",
             ]
-        return convert_literature_discovery({
+        source_boundary = (semantic.get("detail") or {}).get("source_provider_boundary") if isinstance(semantic.get("detail"), dict) else {}
+        if isinstance(source_boundary, dict):
+            limitations.extend(str(item) for item in source_boundary.get("limitations") or [])
+        raw = {
             "query": query,
             "mode": "discover_literature_runtime_verified" if semantic.get("verified") else "discover_literature_runtime_pending",
             "limit": limit,
             "candidates": candidates,
+            "source_provider_boundary": source_boundary,
             "status": "completed" if semantic.get("verified") else "inconclusive",
             "artifacts": [contract_artifact, *runtime_artifacts],
             "limitations": limitations,
-        }, envelope)
+        }
+        return convert_literature_discovery(
+            _attach_discover_final_shortlist_boundary(
+                envelope,
+                raw,
+                mode=str(raw["mode"]),
+            ),
+            envelope,
+        )
 
     allow_network_fetch = str(inputs.get("allow_network_fetch", "true")).lower() not in {"0", "false", "no"}
     if os.environ.get("AUTOSCI_DISABLE_NETWORK_FETCH", "").lower() in {"1", "true", "yes"}:
@@ -2608,7 +3219,19 @@ def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
         no_citation_expand=bool(inputs.get("no_citation_expand")),
         fixture_fallback=fixture_fallback,
     )
-    return convert_literature_discovery(raw, envelope)
+    raw["source_provider_boundary"] = _source_provider_boundary(
+        [],
+        raw.get("candidates") if isinstance(raw.get("candidates"), list) else [],
+        action="discover_literature",
+    )
+    return convert_literature_discovery(
+        _attach_discover_final_shortlist_boundary(
+            envelope,
+            raw,
+            mode=str(raw.get("mode") or "unknown"),
+        ),
+        envelope,
+    )
 
 
 def _phase9_sidecar_paths(envelope: dict[str, Any]) -> tuple[Path, Path]:
@@ -2633,6 +3256,177 @@ def _write_phase9_foundation_sidecars(envelope: dict[str, Any], paper_evidence: 
         _write_evidence_payload(memory_path, memory_evidence),
         _write_evidence_payload(graph_path, graph_evidence),
     ]
+
+
+def _artifact_path_exists(raw_path: Any) -> bool:
+    if not raw_path:
+        return False
+    raw_text = str(raw_path)
+    if raw_text.startswith(("http://", "https://")):
+        return False
+    return _resolve_harness_path(raw_text).exists()
+
+
+def _ingest_wiki_registration_state(envelope: dict[str, Any], paper: dict[str, Any]) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    wiki_root = _resolve_harness_path(str(inputs.get("wiki_root") or "artifacts/autosci/workspace/wiki"))
+    paper_id = str(paper.get("paper_id") or "paper-unresolved")
+    title = str(paper.get("title") or "")
+    paper_page = wiki_root / "papers" / f"{_slug(paper_id)}.md"
+    matched_page = paper_page if paper_page.exists() else None
+    if matched_page is None and (wiki_root / "papers").exists():
+        needles = [item.lower() for item in (paper_id, title) if item]
+        for candidate in sorted((wiki_root / "papers").glob("*.md")):
+            try:
+                text = candidate.read_text(encoding="utf-8").lower()
+            except OSError:
+                continue
+            if any(needle and needle in text for needle in needles):
+                matched_page = candidate
+                break
+
+    log_path = wiki_root / "log.md"
+    edge_path = wiki_root / "graph" / "edges.jsonl"
+    index_path = wiki_root / "index.md"
+    context_path = wiki_root / "graph" / "context_brief.md"
+
+    def _contains(path: Path, values: list[str]) -> bool:
+        if not path.exists():
+            return False
+        try:
+            text = path.read_text(encoding="utf-8").lower()
+        except OSError:
+            return False
+        return any(value and value.lower() in text for value in values)
+
+    page_values = [paper_id, title, matched_page.name if matched_page else ""]
+    return {
+        "wiki_root": _rel(wiki_root),
+        "paper_page": _rel(matched_page) if matched_page else _rel(paper_page),
+        "paper_registered": bool(matched_page and matched_page.exists()),
+        "log_path": _rel(log_path),
+        "log_registered": _contains(log_path, page_values + ["ingest"]),
+        "graph_edges_path": _rel(edge_path),
+        "graph_registered": _contains(edge_path, page_values + ["source_candidate_ingested", "paper_ingested"]),
+        "index_path": _rel(index_path),
+        "index_rebuilt": _contains(index_path, [matched_page.name if matched_page else paper_page.name, paper_id, title, "papers"]),
+        "context_brief_path": _rel(context_path),
+        "context_rebuilt": context_path.exists(),
+    }
+
+
+def _ingest_final_source_registration_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    sidecar_paths: list[str],
+) -> dict[str, Any]:
+    outputs = evidence.get("outputs") if isinstance(evidence.get("outputs"), dict) else {}
+    paper = outputs.get("paper") if isinstance(outputs.get("paper"), dict) else {}
+    preparation = paper.get("preparation") if isinstance(paper.get("preparation"), dict) else {}
+    artifacts = evidence.get("artifacts") if isinstance(evidence.get("artifacts"), list) else []
+    sections = paper.get("sections") if isinstance(paper.get("sections"), list) else []
+    section_text_ready = any(
+        isinstance(section, dict) and str(section.get("text") or section.get("title") or "").strip()
+        for section in sections
+    )
+    prep_paths = [
+        preparation.get("source_path"),
+        preparation.get("canonical_ingest_path"),
+        preparation.get("prepared_path"),
+        preparation.get("extracted_text_path"),
+    ]
+    artifact_paths = [
+        artifact.get("path")
+        for artifact in artifacts
+        if isinstance(artifact, dict) and artifact.get("type") in {
+            "arxiv_source",
+            "extracted_pdf_text",
+            "prepared_archive_source",
+            "synthetic_latex",
+        }
+    ]
+    source_preparation_verified = (
+        str(preparation.get("status") or "").lower() == "completed"
+        and bool(preparation.get("canonical_ingest_path") or preparation.get("source_path"))
+    )
+    parse_quality_ready = (
+        evidence.get("status") == "completed"
+        and str(paper.get("parse_status") or "") in {"parsed", "partial"}
+        and bool(str(paper.get("paper_id") or "").strip())
+        and bool(str(paper.get("title") or "").strip())
+        and section_text_ready
+    )
+    raw_artifact_provenance_ready = any(_artifact_path_exists(path) for path in [*prep_paths, *artifact_paths])
+    memory_sidecar_ready = len(sidecar_paths) >= 1 and _artifact_path_exists(sidecar_paths[0])
+    graph_sidecar_ready = len(sidecar_paths) >= 2 and _artifact_path_exists(sidecar_paths[1])
+    downstream_handoff_ready = memory_sidecar_ready and graph_sidecar_ready
+    wiki_state = _ingest_wiki_registration_state(envelope, paper)
+    wiki_registration_ready = all(
+        bool(wiki_state.get(key))
+        for key in ("paper_registered", "log_registered", "graph_registered", "index_rebuilt", "context_rebuilt")
+    )
+
+    checks = [
+        {"name": "source_preparation_verified", "status": "ok" if source_preparation_verified else "missing"},
+        {"name": "parse_quality_ready", "status": "ok" if parse_quality_ready else "missing"},
+        {"name": "raw_artifact_provenance_ready", "status": "ok" if raw_artifact_provenance_ready else "missing"},
+        {"name": "downstream_handoff_ready", "status": "ok" if downstream_handoff_ready else "missing"},
+        {"name": "wiki_registration_ready", "status": "ok" if wiki_registration_ready else "missing"},
+    ]
+    missing = [check["name"] for check in checks if check["status"] != "ok"]
+    final_ready = not missing
+    return {
+        "schema": "autosci_ingest_final_source_registration_boundary.v1",
+        "status": "ingest_source_registration_ready" if final_ready else "ingest_source_registration_incomplete",
+        "final_registration_ready": final_ready,
+        "paper_id": str(paper.get("paper_id") or ""),
+        "source_preparation_verified": source_preparation_verified,
+        "parse_quality_ready": parse_quality_ready,
+        "raw_artifact_provenance_ready": raw_artifact_provenance_ready,
+        "downstream_handoff_ready": downstream_handoff_ready,
+        "memory_sidecar_ready": memory_sidecar_ready,
+        "graph_sidecar_ready": graph_sidecar_ready,
+        "wiki_registration_ready": wiki_registration_ready,
+        "wiki_registration": wiki_state,
+        "sidecar_evidence_paths": list(sidecar_paths),
+        "checks": checks,
+        "missing": missing,
+    }
+
+
+def _attach_ingest_final_source_registration_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    sidecar_paths: list[str],
+) -> dict[str, Any]:
+    artifacts = evidence.setdefault("artifacts", [])
+    for artifact_type, sidecar_path in zip(
+        ("research_memory_update_json", "research_graph_update_json"),
+        sidecar_paths,
+        strict=False,
+    ):
+        if not any(isinstance(item, dict) and item.get("path") == sidecar_path for item in artifacts):
+            artifacts.append({"type": artifact_type, "path": sidecar_path})
+    boundary = _ingest_final_source_registration_boundary(envelope, evidence, sidecar_paths)
+    output_dir = _output_dir(envelope, "ingest_paper")
+    boundary_path = _configured_output_path(
+        envelope,
+        "ingest_final_source_registration_boundary_path",
+        output_dir / "ingest_final_source_registration_boundary.json",
+    )
+    boundary_artifact = _write_json_sidecar(boundary_path, boundary)
+    artifacts.append({"type": "ingest_final_source_registration_boundary_json", "path": boundary_artifact})
+    outputs = evidence.setdefault("outputs", {})
+    outputs["final_source_registration_boundary"] = boundary
+    paper = outputs.get("paper")
+    if isinstance(paper, dict):
+        paper["final_source_registration_boundary"] = boundary
+    if not boundary["final_registration_ready"]:
+        limitation = "Ingest final source registration incomplete: " + ", ".join(boundary["missing"])
+        limitations = evidence.setdefault("limitations", [])
+        if limitation not in limitations:
+            limitations.append(limitation)
+    return evidence
 
 
 def _load_optional_evidence(raw_path: Any) -> dict[str, Any] | None:
@@ -2873,43 +3667,69 @@ def _action_generate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
                 source_mode=str(source_summary.get("source_mode") or "external"),
             )
             if model.get("status") == "completed" and model_ideas:
+                boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+                    envelope,
+                    ideas=model_ideas,
+                    artifacts=[*wiki_artifacts, *model_artifacts],
+                    limitations=[
+                        "Ideas came from explicit model evidence or a model-command bridge; novelty/review validation remains required.",
+                        *(
+                            [f"Skipped incomplete model ideas: {'; '.join(skipped_model_ideas)}"]
+                            if skipped_model_ideas
+                            else []
+                        ),
+                        *_wiki_state_limitations(wiki_state),
+                    ],
+                    source_summary=source_summary,
+                    wiki_state=wiki_state,
+                    model_output=model,
+                )
                 return convert_idea_candidate(
                     {
-                        "ideas": model_ideas,
-                        "artifacts": [*wiki_artifacts, *model_artifacts],
-                        "limitations": [
-                            "Ideas came from explicit model evidence or a model-command bridge; novelty/review validation remains required.",
-                            *(
-                                [f"Skipped incomplete model ideas: {'; '.join(skipped_model_ideas)}"]
-                                if skipped_model_ideas
-                                else []
-                            ),
-                            *_wiki_state_limitations(wiki_state),
-                        ],
+                        "ideas": boundary_ideas,
+                        "artifacts": boundary_artifacts,
+                        "limitations": boundary_limitations,
                     },
                     envelope,
                     status="completed",
                 )
             if model.get("status") in {"failed", "invalid", "inconclusive"}:
+                boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+                    envelope,
+                    ideas=sourced["ideas"],
+                    artifacts=[*wiki_artifacts, *model_artifacts],
+                    limitations=[
+                        f"Explicit model brainstorm did not complete: {model.get('reason') or model.get('status')}.",
+                        "Returned source-grounded local candidates as inconclusive fallback evidence, not as model brainstorm parity.",
+                        *list(sourced["limitations"]),
+                        *_wiki_state_limitations(wiki_state),
+                    ],
+                    source_summary=source_summary,
+                    wiki_state=wiki_state,
+                    model_output=model,
+                )
                 return convert_idea_candidate(
                     {
-                        "ideas": sourced["ideas"],
-                        "artifacts": [*wiki_artifacts, *model_artifacts],
-                        "limitations": [
-                            f"Explicit model brainstorm did not complete: {model.get('reason') or model.get('status')}.",
-                            "Returned source-grounded local candidates as inconclusive fallback evidence, not as model brainstorm parity.",
-                            *list(sourced["limitations"]),
-                            *_wiki_state_limitations(wiki_state),
-                        ],
+                        "ideas": boundary_ideas,
+                        "artifacts": boundary_artifacts,
+                        "limitations": boundary_limitations,
                     },
                     envelope,
                     status="inconclusive",
                 )
+        boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+            envelope,
+            ideas=sourced["ideas"],
+            artifacts=wiki_artifacts,
+            limitations=[*list(sourced["limitations"]), *_wiki_state_limitations(wiki_state)],
+            source_summary=source_summary,
+            wiki_state=wiki_state,
+        )
         return convert_idea_candidate(
             {
-                "ideas": sourced["ideas"],
-                "artifacts": wiki_artifacts,
-                "limitations": [*list(sourced["limitations"]), *_wiki_state_limitations(wiki_state)],
+                "ideas": boundary_ideas,
+                "artifacts": boundary_artifacts,
+                "limitations": boundary_limitations,
             },
             envelope,
             status=str(sourced.get("status") or "completed"),
@@ -2962,10 +3782,23 @@ def _action_generate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
             "status": "filtered",
         },
     ]
+    boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+        envelope,
+        ideas=ideas,
+        artifacts=wiki_artifacts,
+        limitations=["Fixture ideas are generated from supplied local evidence only; external novelty is not proven."],
+        source_summary={
+            "wiki_source_count": 0,
+            "discovery_source_count": 0,
+            "failed_idea_count": 0,
+            "source_mode": "fixture",
+        },
+        wiki_state=wiki_state,
+    )
     return convert_idea_candidate({
-        "ideas": ideas,
-        "artifacts": wiki_artifacts,
-        "limitations": ["Fixture ideas are generated from supplied local evidence only; external novelty is not proven."],
+        "ideas": boundary_ideas,
+        "artifacts": boundary_artifacts,
+        "limitations": boundary_limitations,
     }, envelope)
 
 
@@ -2996,6 +3829,47 @@ def _novelty_payload_archive_artifacts(evaluations: list[dict[str, Any]]) -> lis
         seen.add(path_text)
         artifacts.append({"type": "external_novelty_payload_json", "path": path_text})
     return artifacts
+
+
+def _novelty_final_acceptance_boundary(evaluation: dict[str, Any]) -> dict[str, Any]:
+    external_status = _external_novelty_status(evaluation)
+    provenance_status = _external_novelty_provenance_status(evaluation)
+    review_status = _review_llm_status(evaluation)
+    score = _novelty_score_from_evaluation(evaluation)
+    blocking_reasons: list[str] = []
+    if external_status != "completed":
+        blocking_reasons.append(f"external_novelty status is `{external_status}`, not `completed`")
+    if provenance_status != "passed":
+        blocking_reasons.append(f"external_novelty provenance status is `{provenance_status}`, not `passed`")
+    if review_status != "completed":
+        blocking_reasons.append(f"review_llm status is `{review_status}`, not `completed`")
+    if score is None:
+        blocking_reasons.append("numeric novelty score is missing")
+    final_acceptance_ready = not blocking_reasons
+    review_llm = evaluation.get("review_llm") if isinstance(evaluation.get("review_llm"), dict) else {}
+    external = evaluation.get("external_novelty") if isinstance(evaluation.get("external_novelty"), dict) else {}
+    return {
+        "schema": "autosci_novelty_final_acceptance_boundary.v1",
+        "status": "final_acceptance_ready" if final_acceptance_ready else "novelty_acceptance_incomplete",
+        "final_acceptance_ready": final_acceptance_ready,
+        "idea_id": str(evaluation.get("idea_id") or "N/A"),
+        "external_novelty_status": external_status,
+        "external_novelty_provenance_status": provenance_status,
+        "external_source_count": evaluation.get("external_source_count", external.get("source_count", "N/A")),
+        "review_llm_status": review_status,
+        "review_mode": str(evaluation.get("review_mode") or "N/A"),
+        "review_available": bool(evaluation.get("review_available")),
+        "review_invocation_mode": str(review_llm.get("invocation_mode") or "N/A"),
+        "recommendation": str(evaluation.get("recommendation") or "N/A"),
+        "novelty": evaluation.get("novelty", "N/A"),
+        "novelty_score": score,
+        "evidence_ids": _unique_strings([str(item) for item in evaluation.get("evidence_ids") or []]),
+        "provider_statuses": list(external.get("provider_statuses") or []) if isinstance(external, dict) else [],
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if final_acceptance_ready else [
+            "Novelty final acceptance requires completed external novelty evidence, passed provider provenance, and completed Review LLM evidence."
+        ],
+    }
 
 
 def _action_evaluate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -3109,22 +3983,87 @@ def _action_evaluate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
                 "external_source_count": validation.get("external_source_count", "N/A") if validation else "N/A",
                 "external_novelty": validation.get("external_novelty", {"status": "N/A"}) if validation else {"status": "N/A"},
             })
+    final_boundaries = []
+    for evaluation in evaluations:
+        if not isinstance(evaluation, dict):
+            continue
+        boundary = _novelty_final_acceptance_boundary(evaluation)
+        evaluation["final_acceptance_boundary"] = boundary
+        final_boundaries.append(boundary)
+    boundary_path = _output_dir(envelope, "evaluate_ideas") / "novelty_final_acceptance_boundary.json"
+    boundary_artifact = _write_json_sidecar(
+        boundary_path,
+        {
+            "schema": "autosci_novelty_final_acceptance_boundary_set.v1",
+            "status": "final_acceptance_ready"
+            if final_boundaries and all(bool(item.get("final_acceptance_ready")) for item in final_boundaries)
+            else "novelty_acceptance_incomplete",
+            "boundaries": final_boundaries,
+        },
+    )
     limitations = ["Fixture evaluation uses local evidence and does not update idea status directly."]
     if mode != "fixture" and not inputs.get("smoke_mode"):
         limitations = [
             "Novelty/review signals are derived from local wiki/discovery evidence.",
             "Independent Review LLM and live external search are still required before promotion.",
         ]
+    if any(not bool(item.get("final_acceptance_ready")) for item in final_boundaries):
+        limitations.append("Novelty final acceptance boundary is incomplete for at least one evaluated idea.")
     return convert_idea_evaluation({
         "evaluations": evaluations,
-        "artifacts": [*_novelty_payload_archive_artifacts(evaluations), *wiki_artifacts],
+        "artifacts": [
+            {"type": "novelty_final_acceptance_boundary_json", "path": boundary_artifact},
+            *_novelty_payload_archive_artifacts(evaluations),
+            *wiki_artifacts,
+        ],
         "limitations": [*limitations, *_wiki_state_limitations(wiki_state)],
     }, envelope)
 
 
+def _review_final_acceptance_boundary(inputs: dict[str, Any], raw: dict[str, Any]) -> dict[str, Any]:
+    review = raw.get("review") if isinstance(raw.get("review"), dict) else {}
+    review_llm = review.get("review_llm") if isinstance(review.get("review_llm"), dict) else {}
+    review_mode = str(review.get("review_mode") or "").strip()
+    llm_status = str(review_llm.get("status") or "").strip()
+    evidence_ids = _review_evidence_ids(review, review_llm)
+    invalid_reasons: list[str] = []
+    if review_mode != "review_llm":
+        invalid_reasons.append(f"review_mode is `{review_mode or 'missing'}`, not `review_llm`")
+    if review.get("review_available") is not True:
+        invalid_reasons.append("review_available is not true")
+    if llm_status != "completed":
+        invalid_reasons.append(f"review_llm status is `{llm_status or 'missing'}`, not `completed`")
+    if not evidence_ids:
+        invalid_reasons.append("Review LLM evidence ids are missing")
+    final_acceptance_ready = not invalid_reasons
+    return {
+        "schema": "autosci_review_final_acceptance_boundary.v1",
+        "status": "final_acceptance_ready" if final_acceptance_ready else "review_llm_incomplete",
+        "required": bool(inputs.get("require_review_llm")),
+        "final_acceptance_ready": final_acceptance_ready,
+        "review_mode": review_mode or "missing",
+        "review_available": bool(review.get("review_available")),
+        "review_llm_status": llm_status or "missing",
+        "invocation_mode": str(review_llm.get("invocation_mode") or "local_surrogate"),
+        "provider": str(review_llm.get("provider") or ""),
+        "model": str(review_llm.get("model") or ""),
+        "source_path": str(review_llm.get("source_path") or review_llm.get("archive_path") or ""),
+        "request_sha256": str(review_llm.get("request_sha256") or ""),
+        "response_sha256": str(review_llm.get("response_sha256") or ""),
+        "score": review.get("score", review_llm.get("score")),
+        "recommendation": str(review.get("recommendation") or review_llm.get("recommendation") or "inconclusive"),
+        "evidence_ids": evidence_ids,
+        "blocking_reasons": invalid_reasons,
+        "limitations": [] if final_acceptance_ready else [
+            "Final review acceptance requires Review LLM evidence from supplied evidence, command bridge, or provider mode."
+        ],
+    }
+
+
 def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
     raw = review_artifact(
-        dict(envelope.get("inputs") or {}),
+        inputs,
         workspace_root=HARNESS_DIR,
         repository_root=REPO_HARNESS_DIR,
     )
@@ -3140,6 +4079,15 @@ def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(report_markdown, encoding="utf-8")
         artifacts.append({"type": "artifact_review_markdown", "path": _rel(report_path)})
+    final_boundary = _review_final_acceptance_boundary(inputs, raw)
+    final_boundary_path = output_dir / "review_final_acceptance_boundary.json"
+    final_boundary_artifact_path = _write_json_sidecar(final_boundary_path, final_boundary)
+    artifacts.append({
+        "type": "review_final_acceptance_boundary_json",
+        "path": final_boundary_artifact_path,
+    })
+    limitations = list(raw.get("limitations") or ["Review LLM MCP evidence is unavailable."])
+    limitations.extend(str(item) for item in final_boundary.get("limitations") or [])
     timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     return {
         "schema": "artifact_review.v1",
@@ -3147,11 +4095,12 @@ def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
         "sprint_id": str(envelope.get("sprint_id") or "sprint-autosci-review"),
         "node_id": str(envelope.get("node_id") or "node-review-artifact"),
         "status": str(raw.get("status") or "inconclusive"),
-        "inputs": dict(envelope.get("inputs") or {}),
+        "inputs": inputs,
         "outputs": {
             "review": raw.get("review") if isinstance(raw.get("review"), dict) else {},
             "findings": list(raw.get("findings") or []),
             "artifact": artifact,
+            "final_acceptance_boundary": final_boundary,
         },
         "artifacts": artifacts,
         "provenance": {
@@ -3159,7 +4108,7 @@ def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
             "implementation_package": "plugins/autosci",
             "timestamp": timestamp,
         },
-        "limitations": list(raw.get("limitations") or ["Review LLM MCP evidence is unavailable."]),
+        "limitations": _unique_strings(limitations),
     }
 
 
@@ -3440,6 +4389,16 @@ def _write_novelty_writeback_sidecar(envelope: dict[str, Any], evaluation_eviden
         "external_novelty_status": _external_novelty_status(evaluation) if isinstance(evaluation, dict) else "missing",
         "external_novelty_provenance_status": _external_novelty_provenance_status(evaluation) if isinstance(evaluation, dict) else "missing",
         "review_llm_status": _review_llm_status(evaluation) if isinstance(evaluation, dict) else "missing",
+        "final_acceptance_status": (
+            (evaluation.get("final_acceptance_boundary") or {}).get("status")
+            if isinstance(evaluation, dict) and isinstance(evaluation.get("final_acceptance_boundary"), dict)
+            else "missing"
+        ),
+        "final_acceptance_ready": (
+            bool((evaluation.get("final_acceptance_boundary") or {}).get("final_acceptance_ready"))
+            if isinstance(evaluation, dict) and isinstance(evaluation.get("final_acceptance_boundary"), dict)
+            else False
+        ),
     }
     artifacts: list[dict[str, Any]] = []
     limitations: list[str] = []
@@ -3764,6 +4723,129 @@ def _record_collection_ledger(
     }
 
 
+def _experiment_run_final_runtime_audit_boundary(
+    *,
+    stage: str,
+    experiment_id: str,
+    contract: dict[str, Any] | None,
+    semantic: dict[str, Any] | None,
+    result_collected: bool,
+    artifacts: list[dict[str, str]],
+    collection_boundary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    contract = contract if isinstance(contract, dict) else {}
+    semantic = semantic if isinstance(semantic, dict) else {}
+    detail = semantic.get("detail") if isinstance(semantic.get("detail"), dict) else {}
+    artifact_types = {str(artifact.get("type") or "") for artifact in artifacts if isinstance(artifact, dict)}
+    runtime_semantic_verified = semantic.get("verified") is True
+    approval_contract_verified = contract.get("execution_verified") is True
+    wiki_state_mutated = {"wiki_experiment_state", "wiki_log", "wiki_graph_edges"}.issubset(artifact_types)
+    collection_ledger_recorded = any(
+        str(artifact.get("type") or "") == "collection_ledger_json" and str(artifact.get("path") or "").strip()
+        for artifact in artifacts
+        if isinstance(artifact, dict)
+    )
+    if not collection_ledger_recorded and str(detail.get("collection_ledger_path") or "").strip():
+        collection_ledger_recorded = True
+    collection_boundary = collection_boundary if isinstance(collection_boundary, dict) else {}
+    live_remote_collection_verified = collection_boundary.get("live_remote_collection_verified") is True
+    stage_audit_ready = all(
+        [
+            approval_contract_verified,
+            runtime_semantic_verified,
+            result_collected,
+            wiki_state_mutated,
+        ]
+    )
+    if stage == "collect":
+        stage_audit_ready = stage_audit_ready and collection_ledger_recorded
+    final_runtime_audit_ready = stage == "collect" and stage_audit_ready and live_remote_collection_verified
+    limitations: list[str] = []
+    if not approval_contract_verified:
+        limitations.append("Final runtime audit requires a fully verified approval contract with runtime and after-artifact evidence.")
+    if not runtime_semantic_verified:
+        limitations.append("Final runtime audit requires semantic runtime verification to pass.")
+    if not result_collected:
+        limitations.append("Final runtime audit requires collected experiment result evidence.")
+    if not wiki_state_mutated:
+        limitations.append("Final runtime audit requires wiki experiment state, log, and graph mutation proof.")
+    if stage == "run":
+        limitations.append("Final lifecycle audit also requires an approved monitor/collect stage with collection ledger evidence.")
+    if stage == "collect" and not collection_ledger_recorded:
+        limitations.append("Final collect audit requires a collection ledger entry.")
+    if stage == "collect" and not live_remote_collection_verified:
+        limitations.append("Final collect audit requires live remote/provider collection boundary proof.")
+    if not limitations:
+        limitations.append("Final runtime audit passed with approved runtime, live collection, collection ledger, and wiki mutation evidence.")
+    status = (
+        "final_runtime_audit_ready"
+        if final_runtime_audit_ready
+        else "stage_runtime_audit_ready"
+        if stage_audit_ready
+        else "runtime_audit_incomplete"
+    )
+    return {
+        "schema": "autosci_experiment_run_final_runtime_audit_boundary.v1",
+        "stage": stage,
+        "experiment_id": experiment_id,
+        "status": status,
+        "stage_audit_ready": stage_audit_ready,
+        "final_runtime_audit_ready": final_runtime_audit_ready,
+        "approval_contract_verified": approval_contract_verified,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "runtime_semantic_verified": runtime_semantic_verified,
+        "runtime_semantic_status": str(semantic.get("status") or "missing"),
+        "result_collected": result_collected,
+        "wiki_state_mutated": wiki_state_mutated,
+        "collection_ledger_recorded": collection_ledger_recorded,
+        "live_remote_collection_verified": live_remote_collection_verified,
+        "remote_collection_boundary_status": str(collection_boundary.get("status") or "N/A"),
+        "artifact_types": sorted(item for item in artifact_types if item),
+        "limitations": limitations,
+    }
+
+
+def _attach_experiment_run_runtime_audit_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    action: str,
+    stage: str,
+    experiment_id: str,
+    contract: dict[str, Any] | None,
+    semantic: dict[str, Any] | None,
+    result_collected: bool,
+    collection_boundary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    artifacts = [artifact for artifact in evidence.get("artifacts") or [] if isinstance(artifact, dict)]
+    boundary = _experiment_run_final_runtime_audit_boundary(
+        stage=stage,
+        experiment_id=experiment_id,
+        contract=contract,
+        semantic=semantic,
+        result_collected=result_collected,
+        artifacts=artifacts,
+        collection_boundary=collection_boundary,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    if isinstance(outputs.get("result"), dict):
+        outputs["result"]["final_runtime_audit_boundary"] = boundary
+        outputs["result"]["final_runtime_audit_ready"] = boundary.get("final_runtime_audit_ready") is True
+    if isinstance(outputs.get("status_report"), dict):
+        outputs["status_report"]["final_runtime_audit_boundary"] = boundary
+        outputs["status_report"]["final_runtime_audit_ready"] = boundary.get("final_runtime_audit_ready") is True
+    outputs["final_runtime_audit_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, action) / "experiment_run_final_runtime_audit_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "experiment_run_final_runtime_audit_boundary_json", "path": boundary_path}
+    )
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
+
+
 def _experiment_session_registry_path(envelope: dict[str, Any]) -> Path:
     root = _wiki_roots_for_write(envelope)[0]
     return root / "experiments" / "session-registry.json"
@@ -3878,6 +4960,72 @@ def _session_status_raw(
     }
 
 
+def _experiment_design_final_execution_boundary(
+    envelope: dict[str, Any],
+    *,
+    target_ref: str,
+    review_llm: dict[str, Any],
+    execution_mode: str,
+    approval_required: bool,
+    command_allowlist: list[str],
+    expected_artifacts: list[str],
+) -> dict[str, Any]:
+    contract = _approval_contract(
+        envelope,
+        "run_experiment",
+        ["local_process_launch", "remote_execution", "result_collection", "artifact_handoff"],
+    )
+    target_resolved = bool(str(target_ref or "").strip())
+    review_completed = str(review_llm.get("status") or "") == "completed"
+    approval_ready = bool(contract.get("ready_for_execution"))
+    command_handoff_declared = bool(command_allowlist)
+    artifact_handoff_declared = bool(expected_artifacts)
+    blocking_reasons: list[str] = []
+    if not target_resolved:
+        blocking_reasons.append("target idea/claim evidence was not resolved")
+    if not review_completed:
+        blocking_reasons.append("completed Review LLM design validation is missing")
+    if not approval_required:
+        blocking_reasons.append("experiment execution approval is not required by this plan")
+    if not approval_ready:
+        blocking_reasons.append("approved runtime preflight contract is incomplete")
+    if not command_handoff_declared:
+        blocking_reasons.append("runtime command handoff is missing")
+    if not artifact_handoff_declared:
+        blocking_reasons.append("expected artifact handoff is missing")
+    execution_ready = not blocking_reasons
+    return {
+        "schema": "autosci_experiment_design_final_execution_boundary.v1",
+        "status": "execution_ready" if execution_ready else "execution_readiness_incomplete",
+        "execution_ready": execution_ready,
+        "target_resolved": target_resolved,
+        "target_ref": target_ref or "N/A",
+        "execution_mode": execution_mode,
+        "approval_required": approval_required,
+        "approval_state": str(contract.get("approval_state") or "N/A"),
+        "approval_ready_for_execution": approval_ready,
+        "review_llm_status": str(review_llm.get("status") or "missing"),
+        "review_llm_completed": review_completed,
+        "review_evidence_ids": _unique_strings([str(item) for item in review_llm.get("evidence_ids") or []]),
+        "command_handoff_declared": command_handoff_declared,
+        "command_allowlist": command_allowlist,
+        "artifact_handoff_declared": artifact_handoff_declared,
+        "expected_artifacts": expected_artifacts,
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if execution_ready else [
+            "Experiment design final execution readiness requires resolved target evidence, completed Review LLM validation, approval preflight, command handoff, and expected artifact handoff."
+        ],
+    }
+
+
+def _write_experiment_design_boundary(
+    envelope: dict[str, Any],
+    boundary: dict[str, Any],
+) -> dict[str, str]:
+    path = _output_dir(envelope, "design_experiment") / "experiment_design_final_execution_boundary.json"
+    return {"type": "experiment_design_final_execution_boundary_json", "path": _write_json_sidecar(path, boundary)}
+
+
 def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     execution_mode = _experiment_execution_mode(envelope)
@@ -3900,6 +5048,16 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         raw_target = raw_target or claim_id or idea_id
     target_ref = raw_target or claim_id or idea_id
     if not target_ref:
+        boundary = _experiment_design_final_execution_boundary(
+            envelope,
+            target_ref="",
+            review_llm={},
+            execution_mode=execution_mode,
+            approval_required=False,
+            command_allowlist=[],
+            expected_artifacts=[],
+        )
+        boundary_artifact = _write_experiment_design_boundary(envelope, boundary)
         return convert_experiment_plan({
             "experiment_id": "experiment-unresolved",
             "objective": "No claim, idea, target, or experiment plan evidence was resolved for experiment design.",
@@ -3915,10 +5073,12 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             "success_criteria": ["target evidence resolved"],
             "command_allowlist": [],
             "resource_limits": {"network": "denied", "write_scope": "none"},
+            "source_context": {"final_execution_boundary": boundary},
             "status": "inconclusive",
-            "artifacts": wiki_artifacts,
+            "artifacts": [*wiki_artifacts, boundary_artifact],
             "limitations": [
                 "Experiment design was skipped because no target evidence was resolved; no default idea-001 fallback was used.",
+                *[str(item) for item in boundary.get("limitations") or []],
                 *_wiki_state_limitations(wiki_state),
             ],
         }, envelope)
@@ -3980,6 +5140,25 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     native_experiment_id = _slug(target_ref)
     if not native_experiment_id.startswith(("exp-", "experiment-")):
         native_experiment_id = f"exp-{native_experiment_id}"
+    expected_artifacts = ["experiment_result.json", "experiment_status.json", "experiment_run.log"]
+    command_allowlist = [
+        "python3 plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
+        "python3 plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment",
+    ]
+    boundary = _experiment_design_final_execution_boundary(
+        envelope,
+        target_ref=target_ref,
+        review_llm=review_llm,
+        execution_mode=execution_mode,
+        approval_required=approval_required,
+        command_allowlist=command_allowlist,
+        expected_artifacts=expected_artifacts,
+    )
+    boundary_artifact = _write_experiment_design_boundary(envelope, boundary)
+    if boundary.get("execution_ready"):
+        success_criteria.append("final_execution_boundary == execution_ready")
+    else:
+        limitations.extend(str(item) for item in boundary.get("limitations") or [])
     return convert_experiment_plan({
         "experiment_id": "exp-001" if _fixture_like_envelope(envelope) else native_experiment_id,
         "objective": objective,
@@ -3988,19 +5167,17 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         "metrics": metrics,
         "procedure": procedure,
         "approval_required": approval_required,
-        "expected_artifacts": ["experiment_result.json", "experiment_status.json", "experiment_run.log"],
+        "expected_artifacts": expected_artifacts,
         "execution_mode": execution_mode,
         "baseline": baseline,
         "baseline_absence_reason": baseline_absence_reason,
         "success_criteria": success_criteria,
-        "command_allowlist": [
-            "python3 plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
-            "python3 plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment",
-        ],
+        "command_allowlist": command_allowlist,
         "resource_limits": resource_limits,
         "review_llm": review_llm,
+        "source_context": {"final_execution_boundary": boundary},
         "evidence_ids": _unique_strings([target_ref, *review_evidence_ids]),
-        "artifacts": [*wiki_artifacts, *review_artifacts],
+        "artifacts": [*wiki_artifacts, *review_artifacts, boundary_artifact],
         "limitations": limitations,
     }, envelope)
 
@@ -4072,7 +5249,8 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             log_lines.append("blocked missing approval for non-fixture execution")
             artifact = _experiment_log_artifact(envelope, experiment_id, log_lines)
             blocked_status = "inconclusive" if execution_mode == "human_approved" else "failed"
-            return convert_experiment_result({
+            semantic = _approval_semantic_runtime(contract, "run_experiment")
+            evidence = convert_experiment_result({
                 "experiment_id": experiment_id,
                 "outcome": blocked_status,
                 "status": blocked_status,
@@ -4087,6 +5265,16 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     *_approval_contract_limitations(contract),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="run_experiment",
+                stage="run",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=False,
+            )
         contract, executor_result = _execute_experiment_if_approved(envelope, contract, plan)
         semantic = _approval_semantic_runtime(contract, "run_experiment")
         contract["semantic_runtime"] = semantic
@@ -4099,7 +5287,7 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                 "blocked missing verified runtime evidence for approval-gated execution",
             ])
             artifact = _experiment_log_artifact(envelope, experiment_id, log_lines)
-            return convert_experiment_result({
+            evidence = convert_experiment_result({
                 "experiment_id": experiment_id,
                 "outcome": "inconclusive",
                 "status": "inconclusive",
@@ -4117,6 +5305,16 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     *_approval_contract_limitations(contract),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="run_experiment",
+                stage="run",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=False,
+            )
         if executor_result.get("executed"):
             log_lines.append(f"experiment_executor_result={executor_result.get('result_collected')}")
             log_lines.append(f"executor_exit_code={executor_result.get('exit_code')}")
@@ -4162,7 +5360,7 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             evidence_ids=completed_evidence_ids,
             metrics=metrics,
         )
-        return convert_experiment_result({
+        evidence = convert_experiment_result({
             "experiment_id": experiment_id,
             "outcome": outcome,
             "status": "completed",
@@ -4176,6 +5374,16 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                 "Experiment result was completed from approved runtime evidence and mutated wiki state.",
             ],
         }, envelope)
+        return _attach_experiment_run_runtime_audit_boundary(
+            envelope,
+            evidence,
+            action="run_experiment",
+            stage="run",
+            experiment_id=experiment_id,
+            contract=contract,
+            semantic=semantic,
+            result_collected=True,
+        )
 
     raw["experiment_id"] = str(raw.get("experiment_id") or experiment_id)
     raw["execution_mode"] = execution_mode
@@ -4185,6 +5393,143 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     raw["artifacts"] = [_experiment_log_artifact(envelope, experiment_id, raw["logs"])]
     raw["limitations"] = list(raw.get("limitations") or ["Fixture result is deterministic and not a real benchmark run."])
     return convert_experiment_result(raw, envelope)
+
+
+def _pilot_run_final_acceptance_boundary(
+    *,
+    experiment_id: str,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    result_collected: bool,
+) -> dict[str, Any]:
+    runtime_ready = (
+        contract.get("execution_verified") is True
+        and semantic.get("verified") is True
+        and result_collected
+    )
+    limitations: list[str] = []
+    if contract.get("execution_verified") is not True:
+        limitations.append("Pilot runtime acceptance requires a verified approval contract with runtime and after-artifact evidence.")
+    if semantic.get("verified") is not True:
+        limitations.append("Pilot runtime acceptance requires semantic runtime verification to pass.")
+    if not result_collected:
+        limitations.append("Pilot runtime acceptance requires collected pilot result evidence.")
+    limitations.append("Final pilot acceptance also requires `/exp-pilot-eval` verdict linkage and approved wiki writeback.")
+    return {
+        "schema": "autosci_pilot_experiment_final_acceptance_boundary.v1",
+        "stage": "pilot_run",
+        "experiment_id": experiment_id,
+        "status": "pilot_runtime_ready" if runtime_ready else "pilot_runtime_incomplete",
+        "pilot_runtime_ready": runtime_ready,
+        "pilot_verdict_ready": False,
+        "writeback_completed": False,
+        "final_pilot_acceptance_ready": False,
+        "approval_contract_verified": contract.get("execution_verified") is True,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "runtime_semantic_verified": semantic.get("verified") is True,
+        "runtime_semantic_status": str(semantic.get("status") or "missing"),
+        "result_collected": result_collected,
+        "limitations": limitations,
+    }
+
+
+def _attach_pilot_run_final_acceptance_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    experiment_id: str,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    result_collected: bool,
+) -> dict[str, Any]:
+    boundary = _pilot_run_final_acceptance_boundary(
+        experiment_id=experiment_id,
+        contract=contract,
+        semantic=semantic,
+        result_collected=result_collected,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    if isinstance(outputs.get("result"), dict):
+        outputs["result"]["pilot_final_acceptance_boundary"] = boundary
+        outputs["result"]["final_pilot_acceptance_ready"] = False
+    outputs["pilot_final_acceptance_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "run_pilot_experiment") / "pilot_final_acceptance_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "pilot_run_final_acceptance_boundary_json", "path": boundary_path}
+    )
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
+
+
+def _pilot_eval_final_acceptance_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    outputs = verdict_evidence.get("outputs") if isinstance(verdict_evidence.get("outputs"), dict) else {}
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    verdict = dict(verdicts[0]) if verdicts and isinstance(verdicts[0], dict) else {}
+    claim_id = str(verdict.get("claim_id") or "pilot-claim")
+    evidence_ids = [str(item) for item in verdict.get("evidence_ids") or [] if str(item).strip()]
+    runtime_evidence_linked = any(item != claim_id for item in evidence_ids)
+    pilot_verdict_ready = str(verdict.get("verdict") or "inconclusive") != "inconclusive" and verdict_evidence.get("status") == "completed"
+    writeback = _claim_verdict_writeback_status(envelope, writeback_path)
+    writeback_completed = writeback.get("status") == "completed" and writeback.get("applied") is True
+    final_ready = pilot_verdict_ready and runtime_evidence_linked and writeback_completed
+    limitations: list[str] = []
+    if not pilot_verdict_ready:
+        limitations.append("Final pilot acceptance requires a non-inconclusive pilot verdict.")
+    if not runtime_evidence_linked:
+        limitations.append("Final pilot acceptance requires linked pilot result/runtime evidence.")
+    if not writeback_completed:
+        limitations.append("Final pilot acceptance requires completed approved wiki writeback.")
+    if not limitations:
+        limitations.append("Final pilot acceptance passed with runtime evidence, pilot verdict, and approved wiki writeback.")
+    return {
+        "schema": "autosci_pilot_experiment_final_acceptance_boundary.v1",
+        "stage": "pilot_eval",
+        "claim_id": claim_id,
+        "status": "final_pilot_acceptance_ready" if final_ready else "pilot_acceptance_incomplete",
+        "pilot_runtime_ready": runtime_evidence_linked,
+        "pilot_verdict_ready": pilot_verdict_ready,
+        "writeback_completed": writeback_completed,
+        "writeback_status": writeback,
+        "final_pilot_acceptance_ready": final_ready,
+        "evidence_ids": _unique_strings(evidence_ids),
+        "limitations": limitations,
+    }
+
+
+def _attach_pilot_eval_final_acceptance_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    boundary = _pilot_eval_final_acceptance_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
+    outputs = verdict_evidence.setdefault("outputs", {})
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    if verdicts and isinstance(verdicts[0], dict):
+        verdicts[0]["pilot_final_acceptance_boundary"] = boundary
+        verdicts[0]["final_pilot_acceptance_ready"] = boundary.get("final_pilot_acceptance_ready") is True
+    outputs["pilot_final_acceptance_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "evaluate_pilot_result") / "pilot_final_acceptance_boundary.json",
+        boundary,
+    )
+    verdict_evidence.setdefault("artifacts", []).append(
+        {"type": "pilot_eval_final_acceptance_boundary_json", "path": boundary_path}
+    )
+    verdict_evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return verdict_evidence
 
 
 def _action_run_pilot_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -4218,7 +5563,7 @@ def _action_run_pilot_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         ]
     else:
         limitations.extend(_approval_contract_limitations(contract))
-    return convert_experiment_result({
+    evidence = convert_experiment_result({
         "experiment_id": experiment_id,
         "outcome": outcome,
         "status": status,
@@ -4235,6 +5580,14 @@ def _action_run_pilot_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         "artifacts": [contract_artifact],
         "limitations": limitations,
     }, envelope)
+    return _attach_pilot_run_final_acceptance_boundary(
+        envelope,
+        evidence,
+        experiment_id=experiment_id,
+        contract=contract,
+        semantic=semantic,
+        result_collected=bool(semantic_detail.get("result_collected")),
+    )
 
 
 def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -4253,6 +5606,7 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     )
     collect_requested = bool(inputs.get("collect"))
     session, session_artifact = _experiment_session_from_registry(envelope, experiment_id)
+    remote_check_requested = bool(inputs.get("remote_check_command") or inputs.get("remote_run_dir")) and bool(inputs.get("execute_approved_side_effect"))
     if result_payload and result_payload.get("schema") == "experiment_result.v1":
         result = ((result_payload.get("outputs") or {}).get("result") or {})
         experiment_id = str(result.get("experiment_id") or experiment_id)
@@ -4281,6 +5635,70 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             "artifacts": wiki_artifacts,
             "limitations": [
                 "Status was derived from a raw fixture result, not a persisted result evidence artifact.",
+                *_wiki_state_limitations(wiki_state),
+            ],
+        }, envelope)
+    if remote_check_requested and not collect_requested and not inputs.get("runtime_evidence"):
+        contract = _approval_contract(
+            envelope,
+            "monitor_experiment",
+            ["remote_status_poll"],
+        )
+        contract, remote_check = _execute_remote_check_if_approved(
+            envelope,
+            contract,
+            experiment_id=experiment_id,
+            session=session,
+        )
+        contract_artifact = _write_approval_contract_sidecar(envelope, "monitor_experiment", contract)
+        remote_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "remote_status_runtime_evidence_json")
+        for key, artifact_type in (
+            ("stdout_path", "executor_stdout"),
+            ("stderr_path", "executor_stderr"),
+        ):
+            raw_path = str(remote_check.get(key) or "").strip()
+            if raw_path:
+                artifact_path = _resolve_harness_path(raw_path)
+                if artifact_path.exists():
+                    remote_artifacts.append({"type": artifact_type, "path": _rel(artifact_path)})
+        remote_artifacts.extend(
+            {"type": "remote_status_file", "path": str(path)}
+            for path in remote_check.get("evidence_paths") or []
+            if str(path).strip()
+        )
+        state = str(remote_check.get("state") or "unknown")
+        status = "completed" if state != "unknown" and remote_check.get("status") == "completed" else "inconclusive"
+        poll_boundary = remote_check.get("remote_poll_boundary") if isinstance(remote_check.get("remote_poll_boundary"), dict) else {}
+        observations = [
+            f"Approved remote status check for `{experiment_id}` returned state `{state}`.",
+            *[str(item) for item in remote_check.get("observations") or [] if str(item).strip()],
+        ]
+        if poll_boundary:
+            observations.append(f"remote_poll_boundary_status={poll_boundary.get('status') or 'unknown'}")
+        if remote_check.get("reason"):
+            observations.append(f"remote_check_reason={remote_check.get('reason')}")
+        next_actions = (
+            ["Use linked run/result evidence for claim verification and reporting."]
+            if state == "completed"
+            else ["Continue monitoring or run approved collect when result artifacts are ready."]
+            if state == "running"
+            else ["Inspect remote check diagnostics before treating the experiment as running or complete."]
+        )
+        return convert_experiment_status({
+            "experiment_id": experiment_id,
+            "state": state,
+            "observations": observations,
+            "next_actions": next_actions,
+            "evidence_ids": _unique_strings([experiment_id, *[str(item) for item in remote_check.get("evidence_paths") or []]]),
+            "status": status,
+            "artifacts": [
+                *wiki_artifacts,
+                contract_artifact,
+                *remote_artifacts,
+            ],
+            "limitations": [
+                "Experiment status was read by an approved remote status check command; no result collection was performed.",
+                *[str(item) for item in poll_boundary.get("limitations", []) if str(item).strip()],
                 *_wiki_state_limitations(wiki_state),
             ],
         }, envelope)
@@ -4404,6 +5822,9 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     f"collector_exit_code={collector_result.get('exit_code')}",
                     f"collection_duplicate={collector_result.get('collection_duplicate')}",
                 ])
+                boundary = collector_result.get("remote_collection_boundary")
+                if isinstance(boundary, dict):
+                    observations.append(f"remote_collection_boundary_status={boundary.get('status') or 'unknown'}")
             if collector_result.get("collection_duplicate"):
                 wiki_update_artifacts = _existing_experiment_state_artifacts(envelope, experiment_id)
                 if not wiki_update_artifacts:
@@ -4422,7 +5843,7 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     evidence_ids=evidence_ids,
                     metrics=metrics,
                 )
-            return convert_experiment_status({
+            evidence = convert_experiment_status({
                 "experiment_id": experiment_id,
                 "state": state,
                 "observations": observations,
@@ -4431,11 +5852,29 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                 "artifacts": [*wiki_artifacts, contract_artifact, *runtime_artifacts, *wiki_update_artifacts],
                 "limitations": [
                     "Experiment status was completed from approved runtime evidence; this bridge verified evidence and mutated wiki state but did not pull remote results directly.",
+                    *[
+                        str(item)
+                        for item in (collector_result.get("remote_collection_boundary") or {}).get("limitations", [])
+                        if str(item).strip()
+                    ],
                     *_wiki_state_limitations(wiki_state),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="monitor_experiment",
+                stage="collect",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=bool(detail.get("result_collected") or collector_result.get("result_collected")),
+                collection_boundary=collector_result.get("remote_collection_boundary")
+                if isinstance(collector_result.get("remote_collection_boundary"), dict)
+                else None,
+            )
         if inputs.get("runtime_evidence") or inputs.get("approval_ref"):
-            return convert_experiment_status({
+            evidence = convert_experiment_status({
                 "experiment_id": experiment_id,
                 "state": "unknown",
                 "observations": [
@@ -4453,6 +5892,19 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     *_wiki_state_limitations(wiki_state),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="monitor_experiment",
+                stage="collect",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=False,
+                collection_boundary=collector_result.get("remote_collection_boundary")
+                if isinstance(collector_result.get("remote_collection_boundary"), dict)
+                else None,
+            )
     observations = []
     if target_ref:
         observations.append(f"Status target requested: {target_ref}.")
@@ -4467,7 +5919,7 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     if collect_requested:
         limitations.append("Collect mode is diagnostics-only without approved runtime artifact retrieval.")
     limitations.extend(_wiki_state_limitations(wiki_state))
-    return convert_experiment_status({
+    evidence = convert_experiment_status({
         "experiment_id": experiment_id,
         "state": "unknown",
         "observations": observations,
@@ -4480,6 +5932,18 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         "artifacts": wiki_artifacts,
         "limitations": limitations,
     }, envelope)
+    if collect_requested:
+        return _attach_experiment_run_runtime_audit_boundary(
+            envelope,
+            evidence,
+            action="monitor_experiment",
+            stage="collect",
+            experiment_id=experiment_id,
+            contract=None,
+            semantic=None,
+            result_collected=False,
+        )
+    return evidence
 
 
 def _action_evaluate_pilot_result(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -4560,6 +6024,11 @@ def _action_evaluate_pilot_result(envelope: dict[str, Any]) -> dict[str, Any]:
     writeback_path = _write_claim_verdict_writeback_sidecar(envelope, verdict_evidence, require_review_llm=False)
     if writeback_path:
         verdict_evidence.setdefault("artifacts", []).append({"type": "pilot_verdict_writeback_json", "path": writeback_path})
+    verdict_evidence = _attach_pilot_eval_final_acceptance_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
     return verdict_evidence
 
 
@@ -4719,6 +6188,164 @@ def _verdict_confidence(verdict: str, outcome: str) -> float:
     return 0.32
 
 
+def _claim_verdict_writeback_status(envelope: dict[str, Any], writeback_path: str | None) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    native_options = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
+    requested = bool(native_options.get("write"))
+    if not requested:
+        return {
+            "requested": False,
+            "status": "not_requested",
+            "applied": False,
+            "path": "",
+            "approval_ref": str(inputs.get("approval_ref") or native_options.get("approval_ref") or "N/A"),
+            "limitations": ["Claim verdict writeback was not requested."],
+        }
+    if not writeback_path:
+        return {
+            "requested": True,
+            "status": "missing_sidecar",
+            "applied": False,
+            "path": "",
+            "approval_ref": str(inputs.get("approval_ref") or native_options.get("approval_ref") or "N/A"),
+            "limitations": ["Claim verdict writeback was requested but no writeback sidecar was produced."],
+        }
+    path = _resolve_harness_path(writeback_path)
+    summary = {
+        "requested": True,
+        "status": "unreadable",
+        "applied": False,
+        "path": _rel(path),
+        "approval_ref": str(inputs.get("approval_ref") or native_options.get("approval_ref") or "N/A"),
+        "limitations": [],
+    }
+    try:
+        payload = _load_json(path)
+    except (OSError, json.JSONDecodeError) as exc:
+        summary["limitations"] = [f"Claim verdict writeback sidecar could not be read: {exc}"]
+        return summary
+    write = ((payload.get("outputs") or {}).get("write") or {})
+    if not isinstance(write, dict):
+        write = {}
+    summary.update(
+        {
+            "status": str(payload.get("status") or "unknown"),
+            "applied": write.get("applied") is True,
+            "approval_ref": str(write.get("approval_ref") or summary["approval_ref"]),
+            "target_path": str(write.get("target_path") or ""),
+            "edge_path": str(write.get("edge_path") or ""),
+            "log_path": str(write.get("log_path") or ""),
+            "review_llm_status": str(write.get("review_llm_status") or "missing"),
+            "limitations": [str(item) for item in payload.get("limitations") or []],
+        }
+    )
+    return summary
+
+
+def _experiment_evaluation_final_verdict_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    outputs = verdict_evidence.get("outputs") if isinstance(verdict_evidence.get("outputs"), dict) else {}
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    verdict = dict(verdicts[0]) if verdicts and isinstance(verdicts[0], dict) else {}
+    claim_id = str(verdict.get("claim_id") or "claim")
+    experiment_payload = _experiment_result_payload(envelope)
+    experiment_schema = str((experiment_payload or {}).get("schema") or "missing")
+    experiment_status = str((experiment_payload or {}).get("status") or "missing")
+    experiment_evidence_ids = [str(item) for item in verdict.get("experiment_evidence_ids") or [] if str(item).strip()]
+    claim_evidence_ids = [str(item) for item in verdict.get("claim_evidence_ids") or [] if str(item).strip()]
+    code_evidence_ids = [str(item) for item in verdict.get("code_evidence_ids") or [] if str(item).strip()]
+    review_llm = verdict.get("review_llm") if isinstance(verdict.get("review_llm"), dict) else {}
+    writeback = _claim_verdict_writeback_status(envelope, writeback_path)
+    non_inconclusive_verdict = str(verdict.get("verdict") or "inconclusive") != "inconclusive"
+    experiment_result_ready = (
+        experiment_schema == "experiment_result.v1"
+        and experiment_status == "completed"
+        and bool(experiment_evidence_ids)
+    )
+    claim_evidence_linked = any(item != claim_id for item in claim_evidence_ids)
+    code_evidence_linked = bool(code_evidence_ids)
+    review_llm_completed = review_llm.get("status") == "completed"
+    writeback_completed = writeback.get("status") == "completed" and writeback.get("applied") is True
+    final_ready = all(
+        [
+            non_inconclusive_verdict,
+            experiment_result_ready,
+            claim_evidence_linked,
+            code_evidence_linked,
+            review_llm_completed,
+            writeback_completed,
+        ]
+    )
+    limitations: list[str] = []
+    if not non_inconclusive_verdict:
+        limitations.append("Final experiment evaluation requires a non-inconclusive claim verdict.")
+    if not experiment_result_ready:
+        limitations.append("Final experiment evaluation requires completed experiment_result.v1 evidence.")
+    if not claim_evidence_linked:
+        limitations.append("Final experiment evaluation requires linked claim evidence beyond the claim id.")
+    if not code_evidence_linked:
+        limitations.append("Final experiment evaluation requires linked code evidence for the evaluated claim.")
+    if not review_llm_completed:
+        limitations.append("Final experiment evaluation requires completed Review LLM proof.")
+    if not writeback_completed:
+        limitations.append("Final experiment evaluation requires completed approved wiki writeback before treating the verdict as final.")
+    if not limitations:
+        limitations.append("Final experiment evaluation boundary passed with result, claim, code, Review LLM, and wiki writeback evidence.")
+    return {
+        "schema": "autosci_experiment_evaluation_final_verdict_boundary.v1",
+        "status": "final_verdict_ready" if final_ready else "final_verdict_incomplete",
+        "final_verdict_ready": final_ready,
+        "claim_id": claim_id,
+        "verdict": str(verdict.get("verdict") or "inconclusive"),
+        "experiment_result_ready": experiment_result_ready,
+        "experiment_schema": experiment_schema,
+        "experiment_status": experiment_status,
+        "experiment_evidence_ids": experiment_evidence_ids,
+        "claim_evidence_linked": claim_evidence_linked,
+        "claim_evidence_ids": claim_evidence_ids,
+        "code_evidence_linked": code_evidence_linked,
+        "code_evidence_ids": code_evidence_ids,
+        "review_llm_completed": review_llm_completed,
+        "review_llm_status": str(review_llm.get("status") or "missing"),
+        "writeback_completed": writeback_completed,
+        "writeback_status": writeback,
+        "evidence_ids": _unique_strings([str(item) for item in verdict.get("evidence_ids") or []]),
+        "limitations": limitations,
+    }
+
+
+def _attach_experiment_evaluation_final_verdict_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    boundary = _experiment_evaluation_final_verdict_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
+    outputs = verdict_evidence.setdefault("outputs", {})
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    if verdicts and isinstance(verdicts[0], dict):
+        verdicts[0]["final_verdict_boundary"] = boundary
+        verdicts[0]["final_verdict_ready"] = boundary.get("final_verdict_ready") is True
+    outputs["final_verdict_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "verify_claim") / "experiment_evaluation_final_verdict_boundary.json",
+        boundary,
+    )
+    verdict_evidence.setdefault("artifacts", []).append(
+        {"type": "experiment_evaluation_final_verdict_boundary_json", "path": boundary_path}
+    )
+    verdict_evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return verdict_evidence
+
+
 def _action_verify_claim(envelope: dict[str, Any]) -> dict[str, Any]:
     claim = _claim_under_verification(envelope)
     claim_id = str(claim.get("claim_id") or "claim-001")
@@ -4774,6 +6401,11 @@ def _action_verify_claim(envelope: dict[str, Any]) -> dict[str, Any]:
     writeback_path = _write_claim_verdict_writeback_sidecar(envelope, verdict_evidence)
     if writeback_path:
         verdict_evidence.setdefault("artifacts", []).append({"type": "claim_verdict_writeback_json", "path": writeback_path})
+    verdict_evidence = _attach_experiment_evaluation_final_verdict_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
     return verdict_evidence
 
 
@@ -4953,6 +6585,16 @@ def _phase14_report_paths(envelope: dict[str, Any]) -> dict[str, Path]:
         "paper_dir": paper_dir,
         "paper_main_tex": _configured_output_path(envelope, "paper_main_tex_path", paper_dir / "main.tex"),
         "paper_sections_dir": _configured_output_path(envelope, "paper_sections_dir_path", paper_dir / "sections"),
+        "paper_draft_citation_map": _configured_output_path(
+            envelope,
+            "paper_draft_citation_map_path",
+            output_dir / "paper_draft_citation_map.json",
+        ),
+        "paper_draft_final_manuscript_boundary": _configured_output_path(
+            envelope,
+            "paper_draft_final_manuscript_boundary_path",
+            output_dir / "paper_draft_final_manuscript_boundary.json",
+        ),
     }
 
 
@@ -5092,10 +6734,53 @@ def _phase14_compile_handoff(
         "compile_paper",
         ["tex_executor_execution", "pdf_generation"],
     )
+    executor_result: dict[str, Any] = {}
+    if bool(inputs.get("execute_approved_side_effect")) and contract.get("ready_for_execution"):
+        _target_raw, target_path = _paper_compile_target(envelope)
+        candidates = _compile_source_candidates(target_path)
+        contract, executor_result = _execute_paper_compile_if_approved(
+            envelope,
+            contract,
+            candidates["latex"],
+            _latex_tool_paths(),
+        )
     semantic = _approval_semantic_runtime(contract, "compile_paper")
     contract["semantic_runtime"] = semantic
     pdf_paths = _compile_pdf_paths_from_contract(contract)
     verified = bool(semantic.get("verified")) and bool(pdf_paths)
+    supplied_compile_target = bool(inputs.get("supplied_compile_target_evidence"))
+    if not verified and supplied_compile_target:
+        _target_raw, target_path = _paper_compile_target(envelope)
+        candidates = _compile_source_candidates(target_path)
+        supplied_pdf_paths = candidates["pdf"]
+        if supplied_pdf_paths:
+            pdf_paths = supplied_pdf_paths
+            verified = True
+            semantic = {
+                "status": "verified_supplied_compile_target",
+                "verified": True,
+                "checks": [
+                    {
+                        "check": "supplied_compile_target_evidence",
+                        "status": "ok",
+                        "detail": "Existing supplied compile target contains at least one PDF.",
+                    },
+                    {
+                        "check": "tex_executor_not_run_by_bridge",
+                        "status": "ok",
+                        "detail": "No TeX executor was run by this bridge for the supplied handoff.",
+                    },
+                ],
+                "detail": {
+                    "pdf_paths": [_rel(path) for path in supplied_pdf_paths],
+                    "latex_paths": [_rel(path) for path in candidates["latex"]],
+                    "evidence_ids": _unique_strings(
+                        ["supplied-compile-target-handoff", *[_rel(path) for path in supplied_pdf_paths]]
+                    ),
+                },
+            }
+            contract["semantic_runtime"] = semantic
+            contract["approval_state"] = "supplied_compile_target"
     output_dir = _output_dir(envelope, "write_report")
     handoff_path = output_dir / "paper_draft_compile_handoff.json"
     runtime_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "paper_compile_runtime_evidence_json")
@@ -5107,6 +6792,7 @@ def _phase14_compile_handoff(
         "verified": verified,
         "approval_state": contract.get("approval_state", "N/A"),
         "semantic_runtime": semantic,
+        "executor_result": executor_result,
         "pdf_paths": [_rel(path) for path in pdf_paths],
         "evidence_ids": _unique_strings(
             [
@@ -5116,7 +6802,12 @@ def _phase14_compile_handoff(
             ]
         ),
         "limitations": (
-            ["Paper draft includes verified compile/PDF handoff evidence."]
+            [
+                "Paper draft includes verified compile/PDF handoff evidence.",
+                "Compile/PDF handoff used an existing supplied PDF target; no TeX executor was run by this bridge.",
+            ]
+            if verified and supplied_compile_target and semantic.get("status") == "verified_supplied_compile_target"
+            else ["Paper draft includes verified compile/PDF handoff evidence."]
             if verified
             else [
                 "Paper draft compile/PDF handoff is incomplete; supply approved compile runtime evidence and compiled PDF artifacts."
@@ -5130,11 +6821,72 @@ def _phase14_compile_handoff(
         *after_artifacts,
         *pdf_artifacts,
     ]
-    limitations = [] if verified else [
-        "Paper draft has no verified compile/PDF handoff evidence.",
-        *_approval_contract_limitations(contract),
-    ]
+    limitations = (
+        ["Compile/PDF handoff used an existing supplied PDF target; no TeX executor was run by this bridge."]
+        if verified and supplied_compile_target and semantic.get("status") == "verified_supplied_compile_target"
+        else []
+        if verified
+        else [
+            "Paper draft has no verified compile/PDF handoff evidence.",
+            *_approval_contract_limitations(contract),
+        ]
+    )
     return handoff, artifacts, limitations
+
+
+def _paper_draft_final_manuscript_boundary(
+    citation_map: dict[str, Any],
+    review_boundary: dict[str, Any],
+    compile_handoff: dict[str, Any],
+    *,
+    has_source_evidence: bool,
+) -> dict[str, Any]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    review_completed = bool(review_boundary.get("completed"))
+    compile_verified = bool(compile_handoff.get("verified")) and str(compile_handoff.get("status") or "") == "completed"
+    pdf_paths = [str(item) for item in compile_handoff.get("pdf_paths") or [] if str(item).strip()]
+    blocking_reasons: list[str] = []
+    if not has_source_evidence:
+        blocking_reasons.append("source evidence was not supplied")
+    if not citations:
+        blocking_reasons.append("source-backed citation map is missing")
+    if not review_completed:
+        blocking_reasons.append("completed Review LLM boundary evidence is missing")
+    if not compile_verified:
+        blocking_reasons.append("verified compile/PDF handoff is missing")
+    if compile_verified and not pdf_paths:
+        blocking_reasons.append("compiled PDF path is missing")
+    final_ready = not blocking_reasons
+    return {
+        "schema": "autosci_paper_draft_final_manuscript_boundary.v1",
+        "status": "final_manuscript_ready" if final_ready else "paper_draft_final_manuscript_incomplete",
+        "final_manuscript_ready": final_ready,
+        "publication_ready_claim_allowed": final_ready,
+        "manuscript_scope": "evidence_linked_local_final_candidate" if final_ready else "draft_scaffold",
+        "source_evidence_supplied": has_source_evidence,
+        "citation_count": len(citations),
+        "citation_ids": _unique_strings([
+            str(item.get("citation_id") or item.get("title") or "")
+            for item in citations
+            if isinstance(item, dict)
+        ]),
+        "review_llm_completed": review_completed,
+        "review_boundary_status": str(review_boundary.get("status") or "missing"),
+        "review_evidence_ids": _unique_strings([str(item) for item in review_boundary.get("evidence_ids") or []]),
+        "compile_handoff_status": str(compile_handoff.get("status") or "not_requested"),
+        "compile_handoff_verified": compile_verified,
+        "compiled_pdf_paths": pdf_paths,
+        "blocking_reasons": blocking_reasons,
+        "limitations": (
+            [
+                "Final manuscript readiness is bounded to supplied source evidence, Review LLM proof, and verified compile/PDF handoff."
+            ]
+            if final_ready
+            else [
+                "Final manuscript readiness requires source evidence, a source-backed citation map, completed Review LLM proof, and verified compile/PDF handoff."
+            ]
+        ),
+    }
 
 
 def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -5220,11 +6972,47 @@ def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         _artifact("optional_rebuttal_markdown", paths["rebuttal_md"]),
         *compile_artifacts,
     ]
+    report_status = "completed"
     if inputs.get("paper_draft"):
+        has_source_evidence = _native_publication_has_source_evidence(envelope)
+        citation_map = _native_publication_citation_map(envelope)
+        review_boundary = _native_publication_review_boundary(envelope)
+        final_manuscript_boundary = _paper_draft_final_manuscript_boundary(
+            citation_map,
+            review_boundary,
+            compile_handoff,
+            has_source_evidence=has_source_evidence,
+        )
+        citation_map_path = _write_json_sidecar(paths["paper_draft_citation_map"], citation_map)
+        final_boundary_path = _write_json_sidecar(
+            paths["paper_draft_final_manuscript_boundary"],
+            final_manuscript_boundary,
+        )
+        evidence_ids = _unique_strings([
+            *evidence_ids,
+            *[str(item) for item in review_boundary.get("evidence_ids") or []],
+            *[str(item) for item in final_manuscript_boundary.get("citation_ids") or []],
+        ])
         artifacts.extend([
             _artifact("latex_source", paths["paper_main_tex"]),
             _artifact("paper_sections_directory", paths["paper_sections_dir"]),
+            {"type": "citation_map_json", "path": citation_map_path},
+            {"type": "paper_draft_final_manuscript_boundary_json", "path": final_boundary_path},
         ])
+        sections.insert(
+            -1,
+            {
+                "section_id": "final-manuscript-boundary",
+                "title": "Final Manuscript Boundary",
+                "evidence_ids": evidence_ids,
+                "body": (
+                    f"Final manuscript boundary status: `{final_manuscript_boundary.get('status')}`. "
+                    f"Publication-ready claim allowed: `{final_manuscript_boundary.get('publication_ready_claim_allowed')}`. "
+                    f"Review LLM completed: `{final_manuscript_boundary.get('review_llm_completed')}`. "
+                    f"Compile handoff verified: `{final_manuscript_boundary.get('compile_handoff_verified')}`."
+                ),
+            },
+        )
         if compile_handoff.get("status") == "completed":
             sections.insert(
                 -1,
@@ -5240,6 +7028,11 @@ def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
                 str(sections[-1].get("body") or "")
                 + " Paper draft compile/PDF handoff is incomplete."
             )
+        limitations.extend(str(item) for item in citation_map.get("limitations") or [])
+        limitations.extend(str(item) for item in review_boundary.get("limitations") or [])
+        limitations.extend(str(item) for item in final_manuscript_boundary.get("limitations") or [])
+        if not final_manuscript_boundary.get("final_manuscript_ready"):
+            report_status = "inconclusive"
     limitations.extend(compile_limitations)
     return {
         "report_id": str(inputs.get("report_id") or "report-autosci-phase14"),
@@ -5252,6 +7045,7 @@ def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "publication_bundle_path": _rel(paths["publication_bundle"]),
         "compile_handoff": compile_handoff,
         "artifacts": artifacts,
+        "status": report_status,
         "limitations": limitations,
     }
 
@@ -5396,6 +7190,8 @@ def _write_phase14_publication_sidecars(envelope: dict[str, Any], report_evidenc
         "paper_compile_runtime_evidence_json",
         "compile_runtime_after_artifact",
         "compiled_pdf",
+        "citation_map_json",
+        "paper_draft_final_manuscript_boundary_json",
     }
     seen_file_artifacts = {(artifact["type"], artifact["path"]) for artifact in file_artifacts}
     for artifact in report_evidence.get("artifacts") or []:
@@ -5606,17 +7402,176 @@ def _native_publication_citation_map(envelope: dict[str, Any]) -> dict[str, Any]
     }
 
 
+def _survey_final_coverage_boundary(
+    citation_map: dict[str, Any],
+    *,
+    has_source_evidence: bool,
+) -> dict[str, Any]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    blocking_reasons: list[str] = []
+    if not has_source_evidence:
+        blocking_reasons.append("literature/source evidence was not supplied")
+    if not citations:
+        blocking_reasons.append("source-backed citation entries are missing")
+    final_coverage_ready = not blocking_reasons
+    return {
+        "schema": "autosci_survey_final_coverage_boundary.v1",
+        "status": "final_coverage_ready" if final_coverage_ready else "survey_coverage_incomplete",
+        "final_coverage_ready": final_coverage_ready,
+        "coverage_scope": "bounded_source_backed" if final_coverage_ready else "incomplete",
+        "exhaustive_coverage_verified": False,
+        "source_evidence_supplied": has_source_evidence,
+        "citation_count": len(citations),
+        "citation_ids": _unique_strings([str(item.get("citation_id") or item.get("title") or "") for item in citations if isinstance(item, dict)]),
+        "blocking_reasons": blocking_reasons,
+        "limitations": [
+            "Survey coverage is bounded to supplied source/citation evidence and does not claim exhaustive live literature coverage."
+        ]
+        if final_coverage_ready
+        else [
+            "Final survey coverage requires supplied source evidence and at least one source-backed citation entry."
+        ],
+    }
+
+
+def _paper_plan_final_acceptance_boundary(
+    citation_map: dict[str, Any],
+    review_boundary: dict[str, Any],
+    compile_handoff: dict[str, Any],
+    *,
+    has_source_evidence: bool,
+    section_ids: list[str],
+) -> dict[str, Any]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    review_completed = bool(review_boundary.get("completed"))
+    compile_verified = bool(compile_handoff.get("verified")) and str(compile_handoff.get("status") or "") == "completed"
+    pdf_paths = [str(item) for item in compile_handoff.get("pdf_paths") or [] if str(item).strip()]
+    has_figure_citation_plan = "figure-citation-plan" in set(section_ids)
+    blocking_reasons: list[str] = []
+    if not has_source_evidence:
+        blocking_reasons.append("source evidence was not supplied")
+    if not citations:
+        blocking_reasons.append("source-backed citation plan is missing")
+    if not has_figure_citation_plan:
+        blocking_reasons.append("figure/citation plan section is missing")
+    if not review_completed:
+        blocking_reasons.append("completed Review LLM boundary evidence is missing")
+    if not compile_verified:
+        blocking_reasons.append("verified downstream compile/PDF handoff is missing")
+    final_ready = not blocking_reasons
+    return {
+        "schema": "autosci_paper_plan_final_acceptance_boundary.v1",
+        "status": "final_plan_accepted" if final_ready else "paper_plan_final_acceptance_incomplete",
+        "final_plan_accepted": final_ready,
+        "draft_compile_ready": final_ready,
+        "plan_scope": "source_review_compile_ready" if final_ready else "plan_scaffold",
+        "source_evidence_supplied": has_source_evidence,
+        "citation_count": len(citations),
+        "citation_ids": _unique_strings([
+            str(item.get("citation_id") or item.get("title") or "")
+            for item in citations
+            if isinstance(item, dict)
+        ]),
+        "figure_citation_plan_present": has_figure_citation_plan,
+        "review_llm_completed": review_completed,
+        "review_boundary_status": str(review_boundary.get("status") or "missing"),
+        "review_evidence_ids": _unique_strings([str(item) for item in review_boundary.get("evidence_ids") or []]),
+        "compile_handoff_status": str(compile_handoff.get("status") or "not_requested"),
+        "compile_handoff_verified": compile_verified,
+        "compiled_pdf_paths": pdf_paths,
+        "blocking_reasons": blocking_reasons,
+        "limitations": (
+            [
+                "Paper plan final acceptance is bounded to supplied source evidence, Review LLM proof, and verified compile/PDF handoff."
+            ]
+            if final_ready
+            else [
+                "Paper plan final acceptance requires source evidence, source-backed citation planning, completed Review LLM proof, and verified downstream compile/PDF handoff."
+            ]
+        ),
+    }
+
+
 def _native_publication_review_completed(envelope: dict[str, Any]) -> bool:
+    return bool(_native_publication_review_boundary(envelope).get("completed"))
+
+
+def _review_evidence_ids(review: dict[str, Any], review_llm: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    for source in (review, review_llm):
+        raw = source.get("evidence_ids") if isinstance(source, dict) else []
+        if isinstance(raw, list):
+            values.extend(str(item) for item in raw if str(item).strip())
+    return _unique_strings(values)
+
+
+def _native_publication_review_boundary(envelope: dict[str, Any]) -> dict[str, Any]:
+    checked: list[str] = []
+    invalid_reasons: list[str] = []
     for payload in _phase14_source_payloads(envelope):
         if payload.get("schema") != "artifact_review.v1" or payload.get("status") != "completed":
             continue
+        source_path = str(payload.get("source_path") or payload.get("task_id") or payload.get("node_id") or "artifact_review.v1")
+        checked.append(source_path)
         review = ((payload.get("outputs") or {}).get("review") or {})
         if not isinstance(review, dict):
+            invalid_reasons.append(f"{source_path}: missing outputs.review object")
             continue
         review_llm = review.get("review_llm") if isinstance(review.get("review_llm"), dict) else {}
-        if review.get("review_mode") == "review_llm" or review_llm.get("status") == "completed":
-            return True
-    return False
+        review_mode = str(review.get("review_mode") or "").strip()
+        review_available = review.get("review_available") is True
+        evidence_ids = _review_evidence_ids(review, review_llm)
+        llm_status = str(review_llm.get("status") or "").strip()
+        if review_mode not in {"review_llm", "llm_review", "external_review"}:
+            invalid_reasons.append(f"{source_path}: review_mode is not Review LLM-backed")
+            continue
+        if not review_available:
+            invalid_reasons.append(f"{source_path}: review_available is not true")
+            continue
+        if not evidence_ids:
+            invalid_reasons.append(f"{source_path}: Review LLM evidence ids are missing")
+            continue
+        if review_llm and llm_status != "completed":
+            invalid_reasons.append(f"{source_path}: nested review_llm status is not completed")
+            continue
+        invocation_mode = str(review_llm.get("invocation_mode") or "evidence").strip() or "evidence"
+        boundary = {
+            "schema": "autosci_publication_review_boundary.v1",
+            "status": "completed",
+            "completed": True,
+            "source_path": str(review_llm.get("source_path") or review_llm.get("archive_path") or source_path),
+            "source_task_id": str(payload.get("task_id") or ""),
+            "review_mode": review_mode,
+            "review_available": True,
+            "invocation_mode": invocation_mode,
+            "provider": str(review_llm.get("provider") or ""),
+            "model": str(review_llm.get("model") or ""),
+            "request_sha256": str(review_llm.get("request_sha256") or ""),
+            "response_sha256": str(review_llm.get("response_sha256") or ""),
+            "score": review.get("score", review_llm.get("score")),
+            "recommendation": str(review.get("recommendation") or review_llm.get("recommendation") or "inconclusive"),
+            "evidence_ids": evidence_ids,
+            "checked_reviews": checked,
+            "invalid_reasons": invalid_reasons,
+            "limitations": [],
+        }
+        if invocation_mode == "evidence":
+            boundary["limitations"].append(
+                "Review LLM evidence was supplied externally; hosted provider or command provenance is not claimed."
+            )
+        return boundary
+    return {
+        "schema": "autosci_publication_review_boundary.v1",
+        "status": "inconclusive" if not invalid_reasons else "invalid",
+        "completed": False,
+        "checked_reviews": checked,
+        "invalid_reasons": invalid_reasons,
+        "limitations": [
+            "No completed Review LLM boundary evidence was available for publication planning."
+            if not invalid_reasons
+            else "Supplied Review LLM evidence did not satisfy publication planning boundary checks."
+        ],
+    }
 
 
 def _native_report_paths(envelope: dict[str, Any], action: str) -> dict[str, Path]:
@@ -5653,13 +7608,26 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
     has_source_evidence = _native_publication_has_source_evidence(envelope)
     citation_map = _native_publication_citation_map(envelope)
     has_citations = bool(citation_map.get("citations"))
-    has_review_llm = _native_publication_review_completed(envelope)
+    if has_citations:
+        evidence_ids = _unique_strings([
+            *evidence_ids,
+            *[
+                str(item.get("citation_id") or item.get("title") or "")
+                for item in citation_map.get("citations") or []
+                if isinstance(item, dict)
+            ],
+        ])
+    review_boundary = _native_publication_review_boundary(envelope)
+    has_review_llm = bool(review_boundary.get("completed"))
+    if has_review_llm:
+        evidence_ids = _unique_strings([*evidence_ids, *[str(item) for item in review_boundary.get("evidence_ids") or []]])
     compile_requested = bool(
         inputs.get("approval_ref")
         or inputs.get("runtime_evidence")
         or inputs.get("after_artifacts")
         or inputs.get("allowlist_evidence")
         or inputs.get("before_artifacts")
+        or inputs.get("supplied_compile_target_evidence")
     )
     compile_handoff, compile_artifacts, compile_limitations = _phase14_compile_handoff(
         envelope,
@@ -5676,6 +7644,7 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("No source-backed citation map was available; citation slots remain incomplete.")
     if not has_review_llm:
         limitations.append("No completed Review LLM evidence was supplied; plan remains pre-review.")
+    limitations.extend(str(item) for item in review_boundary.get("limitations") or [])
     limitations.extend(compile_limitations)
     citation_preview = citation_map.get("citations") or []
     citation_body = "\n".join(
@@ -5705,7 +7674,12 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
             "section_id": "review-gates",
             "title": "Review Gates",
             "evidence_ids": evidence_ids,
-            "body": f"Review LLM evidence status: `{'completed' if has_review_llm else 'missing'}`. Novelty/relevance checks remain required before promotion beyond plan status.",
+            "body": (
+                f"Review LLM boundary status: `{review_boundary.get('status', 'missing')}`. "
+                f"Invocation mode: `{review_boundary.get('invocation_mode', 'N/A')}`. "
+                f"Source: `{review_boundary.get('source_path', 'N/A')}`. "
+                "Novelty/relevance checks remain required before promotion beyond plan status."
+            ),
         },
         {
             "section_id": "compile-audit",
@@ -5720,6 +7694,28 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
             "body": "This is a bounded planning artifact, not a compiled manuscript or external-review result.",
         },
     ]
+    final_acceptance_boundary = _paper_plan_final_acceptance_boundary(
+        citation_map,
+        review_boundary,
+        compile_handoff,
+        has_source_evidence=has_source_evidence,
+        section_ids=[str(section.get("section_id") or "") for section in sections if isinstance(section, dict)],
+    )
+    limitations.extend(str(item) for item in final_acceptance_boundary.get("limitations") or [])
+    sections.insert(
+        -1,
+        {
+            "section_id": "final-plan-acceptance-boundary",
+            "title": "Final Plan Acceptance Boundary",
+            "evidence_ids": evidence_ids,
+            "body": (
+                f"Final plan acceptance status: `{final_acceptance_boundary.get('status')}`. "
+                f"Draft/compile ready: `{final_acceptance_boundary.get('draft_compile_ready')}`. "
+                f"Review LLM completed: `{final_acceptance_boundary.get('review_llm_completed')}`. "
+                f"Compile handoff verified: `{final_acceptance_boundary.get('compile_handoff_verified')}`."
+            ),
+        },
+    )
     plan_payload = {
         "title": title,
         "target": target,
@@ -5735,10 +7731,16 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         "limitations": limitations,
         "citation_map": citation_map,
         "review_llm_completed": has_review_llm,
+        "review_boundary": review_boundary,
         "compile_handoff": compile_handoff,
+        "final_acceptance_boundary": final_acceptance_boundary,
     }
     plan_path = _write_json_sidecar(paths["plan_json"], plan_payload)
     citation_map_path = _write_json_sidecar(paths["citation_map"], citation_map)
+    final_boundary_path = _write_json_sidecar(
+        paths["markdown"].parent / "paper_plan_final_acceptance_boundary.json",
+        final_acceptance_boundary,
+    )
     markdown_path = _write_text_sidecar(paths["markdown"], _native_report_markdown(title, sections, limitations))
     return convert_scientific_report({
         "report_id": f"paper-plan-{_slug(title)}",
@@ -5747,11 +7749,12 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         "evidence_ids": evidence_ids,
         "unsupported_claims": [],
         "compile_handoff": compile_handoff,
-        "status": "completed" if has_source_evidence and has_citations and has_review_llm else "inconclusive",
+        "status": "completed" if final_acceptance_boundary.get("final_plan_accepted") else "inconclusive",
         "artifacts": [
             {"type": "paper_plan_json", "path": plan_path},
             {"type": "paper_plan_markdown", "path": markdown_path},
             {"type": "citation_map_json", "path": citation_map_path},
+            {"type": "paper_plan_final_acceptance_boundary_json", "path": final_boundary_path},
             *compile_artifacts,
         ],
         "limitations": limitations,
@@ -5766,8 +7769,10 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
     has_source_evidence = _native_publication_has_source_evidence(envelope)
     citation_map = _native_publication_citation_map(envelope)
     has_citations = bool(citation_map.get("citations"))
+    coverage_boundary = _survey_final_coverage_boundary(citation_map, has_source_evidence=has_source_evidence)
     limitations = [
         "Survey is assembled from local Solar evidence and supplied discovery/paper citation evidence.",
+        *list(coverage_boundary.get("limitations") or []),
     ]
     if not has_source_evidence:
         limitations.append("No literature/source evidence was supplied; survey remains an evidence scaffold.")
@@ -5803,15 +7808,30 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
             "evidence_ids": evidence_ids,
             "body": "This survey scaffold does not claim exhaustive literature coverage.",
         },
+        {
+            "section_id": "coverage-boundary",
+            "title": "Coverage Boundary",
+            "evidence_ids": evidence_ids,
+            "body": (
+                f"Survey final coverage boundary: `{coverage_boundary.get('status')}`. "
+                f"Coverage scope: `{coverage_boundary.get('coverage_scope')}`. "
+                f"Exhaustive coverage verified: `{coverage_boundary.get('exhaustive_coverage_verified')}`."
+            ),
+        },
     ]
     plan_path = _write_json_sidecar(paths["plan_json"], {
         "title": title,
         "target": target,
         "survey_evidence_ids": evidence_ids,
         "citation_map": citation_map,
+        "final_coverage_boundary": coverage_boundary,
         "limitations": limitations,
     })
     citation_map_path = _write_json_sidecar(paths["citation_map"], citation_map)
+    coverage_boundary_path = _write_json_sidecar(
+        paths["markdown"].parent / "survey_final_coverage_boundary.json",
+        coverage_boundary,
+    )
     markdown_path = _write_text_sidecar(paths["markdown"], _native_report_markdown(title, sections, limitations))
     return convert_scientific_report({
         "report_id": f"survey-{_slug(title)}",
@@ -5824,6 +7844,7 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
             {"type": "survey_plan_json", "path": plan_path},
             {"type": "survey_markdown", "path": markdown_path},
             {"type": "citation_map_json", "path": citation_map_path},
+            {"type": "survey_final_coverage_boundary_json", "path": coverage_boundary_path},
         ],
         "limitations": limitations,
     }, envelope)
@@ -6049,6 +8070,11 @@ def _paper_compile_paths(envelope: dict[str, Any]) -> dict[str, Path]:
             envelope,
             "compile_diagnostics_path",
             output_dir / "paper_compile_diagnostics.md",
+        ),
+        "submission_boundary": _configured_output_path(
+            envelope,
+            "publication_submission_boundary_path",
+            output_dir / "publication_submission_boundary.json",
         ),
         "fix_writeback": _configured_output_path(
             envelope,
@@ -6370,6 +8396,205 @@ def _pick_experiment_command(
     return [], f"{reason}; tried: {candidate_commands}"
 
 
+def _pick_remote_check_command(
+    contract: dict[str, Any],
+    *,
+    experiment_id: str,
+    run_dir: str,
+    explicit_command: str,
+) -> tuple[list[str], str]:
+    values = {"experiment_id": experiment_id, "run_dir": run_dir}
+    candidates: list[tuple[list[str], str]] = []
+    if explicit_command:
+        parsed = _format_command(explicit_command, values)
+        if parsed:
+            candidates.append((parsed, "inputs.remote_check_command"))
+    for payload in _allowlist_payloads(contract):
+        for key in ("remote_check_command", "remote_status_command"):
+            parsed = _format_command(payload.get(key), values)
+            if parsed:
+                candidates.append((parsed, f"allowlist:{key}"))
+    if run_dir:
+        candidates.append((
+            [
+                sys.executable,
+                str(REPO_HARNESS_DIR.parent / "tools" / "remote.py"),
+                "check",
+                "--experiment",
+                experiment_id,
+                "--run-dir",
+                run_dir,
+            ],
+            "default:tools/remote.py check",
+        ))
+    for command, source in candidates:
+        allowed, reason = _command_allowlisted(command, contract)
+        if allowed:
+            return command, f"Remote status command selected from {source}: {reason}"
+    if not candidates:
+        return [], "No remote status check command was supplied"
+    return [], "No remote status check command was allowlisted; tried: " + "; ".join(
+        " ".join(command) for command, _source in candidates
+    )
+
+
+def _remote_state_from_status_value(raw: str) -> str:
+    value = raw.strip().lower()
+    if value in {"completed", "complete", "collected", "succeeded", "success", "done", "passed"}:
+        return "completed"
+    if value in {"failed", "error", "errored", "crashed"}:
+        return "failed"
+    if value in {"running", "started", "launched", "queued", "pending", "in_progress"}:
+        return "running"
+    return "unknown"
+
+
+def _remote_check_state(record: dict[str, Any], evidence_paths: list[Path]) -> tuple[str, list[str]]:
+    observations: list[str] = []
+    raw_record_state = str(_field(record, "remote_state", "state", "job_state", "status_value") or "").strip()
+    if raw_record_state:
+        state = _remote_state_from_status_value(raw_record_state)
+        observations.append(f"Remote check payload reported `{raw_record_state}`.")
+        if state != "unknown":
+            return state, observations
+    for path in evidence_paths:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+        except (OSError, json.JSONDecodeError):
+            observations.append(f"Remote status artifact was present but not JSON: {_rel(path)}")
+            continue
+        if not isinstance(payload, dict):
+            continue
+        raw = str(_field(payload, "state", "status", "outcome") or "").strip()
+        if raw:
+            state = _remote_state_from_status_value(raw)
+            observations.append(f"Remote status artifact `{_rel(path)}` reported `{raw}`.")
+            if state != "unknown":
+                return state, observations
+        if path.name in {"results.json", "result.json", "metrics.json"}:
+            observations.append(f"Remote result artifact exists: `{_rel(path)}`.")
+            return "completed", observations
+    if str(record.get("status") or "").lower() == "completed" and evidence_paths:
+        observations.append("Remote check found status artifacts but no terminal state.")
+        return "running", observations
+    return "unknown", observations
+
+
+LIVE_REMOTE_POLL_TRANSPORTS = {
+    "ssh",
+    "screen",
+    "tmux",
+    "slurm",
+    "pbs",
+    "lsf",
+    "k8s",
+    "kubernetes",
+    "modal",
+    "ray",
+    "remote_provider",
+}
+
+
+def _remote_poll_boundary(
+    record: dict[str, Any],
+    *,
+    run_dir: str,
+    evidence_paths: list[Path],
+    remote_state: str,
+) -> dict[str, Any]:
+    checked_paths = [
+        str(item)
+        for item in record.get("checked_paths", [])
+        if str(item or "").strip()
+    ] if isinstance(record.get("checked_paths"), list) else []
+    transport = str(_field(record, "transport", "remote_transport", "provider", "remote_provider") or "").strip()
+    session_id = str(_field(record, "session_id", "remote_session_id", "provider_session_id", "job_id") or "").strip()
+    poll_scope = str(_field(record, "poll_scope", "poll_mode", "remote_poll_mode") or "").strip().lower()
+    explicit_live = bool(record.get("live_remote_poll")) or poll_scope in {"live", "provider", "ssh", "remote"}
+    transport_key = transport.lower()
+    live_transport = transport_key in LIVE_REMOTE_POLL_TRANSPORTS
+    live_remote_poll_verified = bool(
+        explicit_live
+        and live_transport
+        and session_id
+        and remote_state != "unknown"
+    )
+    local_artifact_check = bool(run_dir or checked_paths or evidence_paths)
+    invalid_reasons: list[str] = []
+    if not live_remote_poll_verified:
+        if not explicit_live:
+            invalid_reasons.append("remote check did not declare live provider polling")
+        if not live_transport:
+            invalid_reasons.append("remote check did not declare a recognized live transport")
+        if not session_id:
+            invalid_reasons.append("remote check did not include a provider/session identifier")
+        if remote_state == "unknown":
+            invalid_reasons.append("remote check did not resolve a concrete remote state")
+        if local_artifact_check:
+            invalid_reasons.append("status was derived from local run-dir artifacts")
+    status = "live_remote_poll" if live_remote_poll_verified else (
+        "local_run_dir_check" if local_artifact_check else "incomplete"
+    )
+    return {
+        "schema": "autosci_remote_poll_boundary.v1",
+        "status": status,
+        "live_remote_poll_verified": live_remote_poll_verified,
+        "local_artifact_check": local_artifact_check,
+        "transport": transport,
+        "session_id": session_id,
+        "poll_scope": poll_scope,
+        "run_dir": run_dir,
+        "checked_paths": checked_paths,
+        "evidence_paths": [_rel(path) for path in evidence_paths],
+        "remote_state": remote_state,
+        "invalid_reasons": _unique_strings(invalid_reasons),
+        "limitations": [] if live_remote_poll_verified else [
+            "Remote status was derived from local run-dir artifacts or unverified transport metadata, not a proven live SSH/provider poll."
+        ],
+    }
+
+
+def _remote_collection_boundary(record: dict[str, Any], *, existing_files: list[Path]) -> dict[str, Any]:
+    result_dir = str(record.get("result_dir") or "").strip()
+    transport = str(_field(record, "transport", "remote_transport", "provider", "remote_provider") or "").strip()
+    session_id = str(_field(record, "session_id", "remote_session_id", "provider_session_id", "job_id") or "").strip()
+    collection_scope = str(_field(record, "collection_scope", "collection_mode", "pull_mode") or "").strip().lower()
+    explicit_live = bool(record.get("live_remote_collection")) or collection_scope in {"live", "provider", "ssh", "remote"}
+    live_transport = transport.lower() in LIVE_REMOTE_POLL_TRANSPORTS
+    live_remote_collection_verified = bool(explicit_live and live_transport and session_id and existing_files)
+    local_result_dir_collection = bool(result_dir or existing_files)
+    invalid_reasons: list[str] = []
+    if not live_remote_collection_verified:
+        if not explicit_live:
+            invalid_reasons.append("pull-results did not declare live provider collection")
+        if not live_transport:
+            invalid_reasons.append("pull-results did not declare a recognized live transport")
+        if not session_id:
+            invalid_reasons.append("pull-results did not include a provider/session identifier")
+        if not existing_files:
+            invalid_reasons.append("pull-results did not produce local result files")
+        if local_result_dir_collection:
+            invalid_reasons.append("results were collected from a local result directory")
+    status = "live_remote_collection" if live_remote_collection_verified else (
+        "local_result_dir_collection" if local_result_dir_collection else "incomplete"
+    )
+    return {
+        "schema": "autosci_remote_collection_boundary.v1",
+        "status": status,
+        "live_remote_collection_verified": live_remote_collection_verified,
+        "local_result_dir_collection": local_result_dir_collection,
+        "transport": transport,
+        "session_id": session_id,
+        "collection_scope": collection_scope,
+        "result_dir": result_dir,
+        "result_paths": [_rel(path) for path in existing_files],
+        "invalid_reasons": _unique_strings(invalid_reasons),
+        "limitations": [] if live_remote_collection_verified else [
+            "Remote results were collected from local files or unverified transport metadata, not a proven live SSH/provider pull-results operation."
+        ],
+    }
+
+
 def _runtime_evidence_payload(
     envelope: dict[str, Any],
     *,
@@ -6558,7 +8783,7 @@ def _execute_paper_compile_if_approved(
         "executed": True,
         "executor": executor_name,
         "exit_code": proc.returncode,
-        "pdf_path": pdf_path,
+        "pdf_path": _rel(pdf_path) if pdf_path.exists() else "",
         "runtime_path": runtime_rel,
     }
 
@@ -6920,6 +9145,10 @@ def _execute_monitor_collect_if_approved(
     outcome = str(summary.get("outcome") or ("supports" if existing_files else "inconclusive"))
     evidence_ids = _unique_strings([f"remote-collect:{_slug(experiment_id)}", *[str(item) for item in summary.get("evidence_ids") or []]])
     result_collected = proc.returncode == 0 and bool(existing_files)
+    collection_boundary = _remote_collection_boundary(
+        result_record if isinstance(result_record, dict) else {},
+        existing_files=existing_files,
+    )
     runtime_status = "completed" if result_collected else ("failed" if proc.returncode else "inconclusive")
     ledger_result: dict[str, Any] = {}
     if result_collected:
@@ -6954,6 +9183,11 @@ def _execute_monitor_collect_if_approved(
             {"check": "exit_code", "status": "ok" if proc.returncode == 0 else "error", "detail": f"exit_code={proc.returncode}"},
             {"check": "remote_cli_output", "status": "ok" if result_source == "remote_cli_runtime_evidence" else "warn", "detail": result_source or "not-structured"},
             {"check": "collected_files_present", "status": "ok" if existing_files else "error", "detail": str(len(existing_files))},
+            {
+                "check": "remote_collection_boundary",
+                "status": "ok" if collection_boundary.get("live_remote_collection_verified") else "warn",
+                "detail": ",".join(collection_boundary.get("invalid_reasons") or []),
+            },
         ],
         runtime_fields={
             "result_collected": result_collected,
@@ -6966,10 +9200,14 @@ def _execute_monitor_collect_if_approved(
             "collection_identity": str(ledger_result.get("collection_identity") or ""),
             "collection_duplicate": bool(ledger_result.get("duplicate")),
             "collection_ledger_path": str(ledger_result.get("ledger_path") or ""),
+            "remote_collection_boundary": collection_boundary,
             "parsed_record_count": 1 if result_record else 0,
         },
         artifacts=artifacts,
-        limitations=["Approved collect executor ran a real command locally and verified collected result files."],
+        limitations=[
+            "Approved collect executor ran a real command locally and verified collected result files.",
+            *collection_boundary.get("limitations", []),
+        ],
     )
     runtime_rel = _write_json_sidecar(runtime_path, payload)
     contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
@@ -6985,6 +9223,170 @@ def _execute_monitor_collect_if_approved(
         "collection_identity": str(ledger_result.get("collection_identity") or ""),
         "collection_duplicate": bool(ledger_result.get("duplicate")),
         "collection_ledger_path": str(ledger_result.get("ledger_path") or ""),
+        "remote_collection_boundary": collection_boundary,
+    }
+
+
+def _execute_remote_check_if_approved(
+    envelope: dict[str, Any],
+    contract: dict[str, Any],
+    *,
+    experiment_id: str,
+    session: dict[str, Any] | None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    inputs = envelope.get("inputs") if isinstance(envelope.get("inputs"), dict) else {}
+    output_dir = _output_dir(envelope, "monitor_experiment")
+    runtime_path = _configured_output_path(envelope, "runtime_evidence_path", output_dir / "remote_status_runtime_evidence.json")
+    explicit_command = str(inputs.get("remote_check_command") or "").strip()
+    run_dir = str(inputs.get("remote_run_dir") or (session or {}).get("run_dir") or "").strip()
+    if not bool(inputs.get("execute_approved_side_effect")):
+        return contract, {"executed": False, "reason": "execute_approved_side_effect=false"}
+    if not contract.get("ready_for_execution"):
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="monitor_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:remote-status-approval-contract-incomplete",
+            exit_code=1,
+            evidence_ids=[f"remote-status:{_slug(experiment_id)}"],
+            checks=[{"check": "approval_preflight", "status": "error", "detail": "Approval contract was not ready for remote status check."}],
+            runtime_fields={"remote_status_state": "unknown", "result_collected": False},
+            artifacts=[],
+            limitations=["Remote status check did not run because approval preflight was incomplete."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "approval_preflight_incomplete", "runtime_path": runtime_rel}
+
+    command, command_reason = _pick_remote_check_command(
+        contract,
+        experiment_id=experiment_id,
+        run_dir=run_dir,
+        explicit_command=explicit_command,
+    )
+    if not command:
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="monitor_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:remote-status-command-availability",
+            exit_code=1,
+            evidence_ids=[f"remote-status:{_slug(experiment_id)}"],
+            checks=[{"check": "command_allowlisted", "status": "error", "detail": command_reason}],
+            runtime_fields={"remote_status_state": "unknown", "result_collected": False},
+            artifacts=[],
+            limitations=["Remote status check did not run because no allowlisted status command was selected."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "remote_status_command_missing", "runtime_path": runtime_rel}
+
+    command = _normalize_command(command)
+    proc = subprocess.run(
+        command,
+        cwd=REPO_HARNESS_DIR,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        timeout=int(inputs.get("executor_timeout_seconds") or 120),
+    )
+    stdout_rel = _write_text_sidecar(output_dir / "remote_status_executor_stdout.txt", proc.stdout)
+    stderr_rel = _write_text_sidecar(output_dir / "remote_status_executor_stderr.txt", proc.stderr)
+    record, source = _parse_experiment_output_record(proc.stdout)
+    record = record if isinstance(record, dict) else {}
+    is_check_record = (
+        source == "remote_cli_runtime_evidence"
+        and record.get("schema") == "autosci_remote_cli.v1"
+        and record.get("command") == "check"
+    )
+    evidence_paths = [
+        _resolve_harness_path(str(item))
+        for item in record.get("evidence_paths", [])
+        if str(item or "").strip()
+    ] if is_check_record and isinstance(record.get("evidence_paths"), list) else []
+    evidence_paths = [path for path in evidence_paths if path.exists() and path.is_file()]
+    remote_state, state_observations = _remote_check_state(record, evidence_paths)
+    poll_boundary = _remote_poll_boundary(
+        record,
+        run_dir=run_dir,
+        evidence_paths=evidence_paths,
+        remote_state=remote_state,
+    )
+    live_poll_verified = bool(poll_boundary.get("live_remote_poll_verified"))
+    state_resolved = remote_state != "unknown"
+    runtime_status = "completed" if proc.returncode == 0 and is_check_record and (
+        bool(evidence_paths) or live_poll_verified
+    ) and state_resolved else (
+        "failed" if proc.returncode else "inconclusive"
+    )
+    artifacts = [
+        {"type": "executor_stdout", "path": stdout_rel},
+        {"type": "executor_stderr", "path": stderr_rel},
+        *[{"type": "remote_status_file", "path": _rel(path)} for path in evidence_paths],
+    ]
+    evidence_ids = _unique_strings([
+        f"remote-status:{_slug(experiment_id)}",
+        *[_rel(path) for path in evidence_paths],
+    ])
+    payload = _runtime_evidence_payload(
+        envelope,
+        action="monitor_experiment",
+        status=runtime_status,
+        approval_ref=str(contract.get("approval_ref") or ""),
+        command_run=" ".join(command),
+        exit_code=int(proc.returncode),
+        evidence_ids=evidence_ids,
+        checks=[
+            {"check": "command_allowlisted", "status": "ok", "detail": command_reason},
+            {"check": "exit_code", "status": "ok" if proc.returncode == 0 else "error", "detail": f"exit_code={proc.returncode}"},
+            {"check": "remote_cli_check_output", "status": "ok" if is_check_record else "error", "detail": source or "not-structured"},
+            {
+                "check": "remote_status_artifacts_present",
+                "status": "ok" if evidence_paths or live_poll_verified else "error",
+                "detail": str(len(evidence_paths)) if evidence_paths else "live_provider_payload",
+            },
+            {
+                "check": "remote_poll_boundary",
+                "status": "ok" if poll_boundary.get("live_remote_poll_verified") else "warn",
+                "detail": ",".join(poll_boundary.get("invalid_reasons") or []),
+            },
+        ],
+        runtime_fields={
+            "remote_status_state": remote_state,
+            "remote_cli_command": str(record.get("command") or ""),
+            "remote_cli_status": str(record.get("status") or ""),
+            "checked_paths": [str(item) for item in record.get("checked_paths", []) if str(item).strip()]
+            if isinstance(record.get("checked_paths"), list)
+            else [],
+            "evidence_paths": [_rel(path) for path in evidence_paths],
+            "run_dir": run_dir,
+            "result_collected": False,
+            "logs": state_observations,
+            "remote_poll_boundary": poll_boundary,
+        },
+        artifacts=artifacts,
+        limitations=[
+            "Approved remote status check ran an allowlisted command and verified status artifacts; no results were collected.",
+            *poll_boundary.get("limitations", []),
+        ],
+    )
+    runtime_rel = _write_json_sidecar(runtime_path, payload)
+    contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+    return _refresh_approval_contract(contract), {
+        "executed": True,
+        "command": command,
+        "exit_code": proc.returncode,
+        "runtime_path": runtime_rel,
+        "stdout_path": stdout_rel,
+        "stderr_path": stderr_rel,
+        "state": remote_state,
+        "status": runtime_status,
+        "evidence_paths": [_rel(path) for path in evidence_paths],
+        "observations": state_observations,
+        "remote_poll_boundary": poll_boundary,
     }
 
 
@@ -7146,6 +9548,333 @@ def _optional_number(value: Any) -> float | None:
         return None
 
 
+def _optional_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if value is None or value == "":
+        return None
+    normalized = str(value).strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    return None
+
+
+def _submission_profile_first(payload: dict[str, Any], *keys: str) -> Any:
+    requirements = payload.get("requirements") if isinstance(payload.get("requirements"), dict) else {}
+    for source in (requirements, payload):
+        for key in keys:
+            if key in source and source.get(key) not in (None, ""):
+                return source.get(key)
+    return None
+
+
+def _submission_profile_requirements(payload: dict[str, Any]) -> dict[str, Any]:
+    mode = _submission_profile_first(payload, "submission_mode", "mode", "anonymity")
+    anonymous = _optional_bool(_submission_profile_first(payload, "anonymous", "anonymized", "anonymous_required"))
+    double_blind = _optional_bool(_submission_profile_first(payload, "double_blind", "double-blind", "double_blind_required"))
+    page_limit = _optional_number(_submission_profile_first(payload, "page_limit", "max_pages", "maximum_pages"))
+    min_font_size = _optional_number(
+        _submission_profile_first(payload, "min_font_size", "minimum_font_size", "minimum_font_pt")
+    )
+    venue = str(_submission_profile_first(payload, "venue", "venue_slug") or payload.get("venue") or "").strip()
+    return {
+        "venue": venue,
+        "submission_mode": str(mode or "").strip(),
+        "anonymous": anonymous,
+        "double_blind": double_blind,
+        "page_limit": page_limit,
+        "min_font_size": min_font_size,
+    }
+
+
+def _submission_profile_conflicts(inputs: dict[str, Any], requirements: dict[str, Any]) -> list[str]:
+    conflicts: list[str] = []
+    input_mode = str(inputs.get("submission_mode") or "").strip().lower()
+    requirement_mode = str(requirements.get("submission_mode") or "").strip().lower()
+    if input_mode and requirement_mode and input_mode != requirement_mode:
+        conflicts.append(f"submission_mode input `{input_mode}` conflicts with profile `{requirement_mode}`")
+    for key in ("anonymous", "double_blind"):
+        requirement_bool = requirements.get(key)
+        input_bool = _optional_bool(inputs.get(key))
+        if requirement_bool is not None and input_bool is not None and input_bool != requirement_bool:
+            conflicts.append(f"{key} input `{input_bool}` conflicts with profile `{requirement_bool}`")
+    for key in ("page_limit", "min_font_size"):
+        requirement_number = _optional_number(requirements.get(key))
+        input_number = _optional_number(inputs.get(key))
+        if requirement_number is not None and input_number is not None and abs(input_number - requirement_number) > 1e-9:
+            conflicts.append(f"{key} input `{input_number}` conflicts with profile `{requirement_number}`")
+    return conflicts
+
+
+def _submission_profile_boundary(inputs: dict[str, Any]) -> dict[str, Any]:
+    raw_path = str(inputs.get("submission_profile") or inputs.get("submission_profile_path") or "").strip()
+    boundary: dict[str, Any] = {
+        "schema": "autosci_submission_profile_boundary.v1",
+        "status": "missing",
+        "profile_loaded": False,
+        "profile_valid": False,
+        "path": raw_path,
+        "sha256": "",
+        "venue": str(inputs.get("venue") or ""),
+        "requirements": {},
+        "evidence_ids": [],
+        "applied_fields": [],
+        "conflicts": [],
+        "invalid_reasons": [],
+    }
+    if not raw_path:
+        boundary["invalid_reasons"] = ["No submission_profile evidence path was supplied."]
+        return boundary
+    path = _resolve_harness_path(raw_path)
+    boundary["path"] = _rel(path)
+    if not path.exists() or not path.is_file():
+        boundary["status"] = "invalid"
+        boundary["invalid_reasons"] = [f"Submission profile was not found: {_rel(path)}"]
+        return boundary
+    try:
+        payload = _load_json(path)
+    except Exception as exc:  # noqa: BLE001
+        boundary["status"] = "invalid"
+        boundary["sha256"] = _file_sha256(path)
+        boundary["invalid_reasons"] = [f"Submission profile JSON could not be loaded: {exc}"]
+        return boundary
+    requirements = _submission_profile_requirements(payload)
+    raw_evidence_ids = payload.get("evidence_ids")
+    raw_source_evidence_ids = payload.get("source_evidence_ids")
+    evidence_ids = _unique_strings([
+        *(list(raw_evidence_ids) if isinstance(raw_evidence_ids, list) else []),
+        *(list(raw_source_evidence_ids) if isinstance(raw_source_evidence_ids, list) else []),
+    ])
+    conflicts = _submission_profile_conflicts(inputs, requirements)
+    boundary.update({
+        "status": "conflict" if conflicts else "loaded",
+        "profile_loaded": True,
+        "profile_valid": not conflicts,
+        "sha256": _file_sha256(path),
+        "venue": requirements.get("venue") or str(inputs.get("venue") or ""),
+        "requirements": requirements,
+        "evidence_ids": evidence_ids,
+        "conflicts": conflicts,
+        "invalid_reasons": [],
+    })
+    return boundary
+
+
+def _apply_submission_profile_inputs(inputs: dict[str, Any], profile_boundary: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(inputs)
+    if not profile_boundary.get("profile_loaded"):
+        return merged
+    requirements = profile_boundary.get("requirements") if isinstance(profile_boundary.get("requirements"), dict) else {}
+    applied: list[str] = []
+    if requirements.get("venue") and not merged.get("venue"):
+        merged["venue"] = requirements["venue"]
+        applied.append("venue")
+    if requirements.get("submission_mode") and not merged.get("submission_mode"):
+        merged["submission_mode"] = requirements["submission_mode"]
+        applied.append("submission_mode")
+    for key in ("anonymous", "double_blind"):
+        if requirements.get(key) is not None and merged.get(key) in (None, ""):
+            merged[key] = bool(requirements[key])
+            applied.append(key)
+    for key in ("page_limit", "min_font_size"):
+        if requirements.get(key) is not None and merged.get(key) in (None, ""):
+            merged[key] = float(requirements[key])
+            applied.append(key)
+    profile_boundary["applied_fields"] = applied
+    return merged
+
+
+def _pdf_inspection_view(payload: dict[str, Any]) -> dict[str, Any]:
+    outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+    inspection = outputs.get("inspection") if isinstance(outputs.get("inspection"), dict) else {}
+    return inspection or payload
+
+
+def _pdf_inspection_first(payload: dict[str, Any], *keys: str) -> Any:
+    view = _pdf_inspection_view(payload)
+    for source in (view, payload):
+        for key in keys:
+            if key in source and source.get(key) not in (None, ""):
+                return source.get(key)
+    return None
+
+
+def _pdf_inspection_boundary(inputs: dict[str, Any], *, pdf_files: list[Path]) -> dict[str, Any]:
+    raw_path = str(inputs.get("pdf_inspection") or inputs.get("pdf_inspection_path") or "").strip()
+    boundary: dict[str, Any] = {
+        "schema": "autosci_pdf_inspection_boundary.v1",
+        "status": "missing",
+        "inspection_loaded": False,
+        "inspection_valid": False,
+        "path": raw_path,
+        "sha256": "",
+        "pdf_path": "",
+        "pdf_sha256": "",
+        "page_count": None,
+        "min_font_size": None,
+        "evidence_ids": [],
+        "applied_fields": [],
+        "invalid_reasons": [],
+    }
+    if not raw_path:
+        boundary["invalid_reasons"] = ["No pdf_inspection evidence path was supplied."]
+        return boundary
+    path = _resolve_harness_path(raw_path)
+    boundary["path"] = _rel(path)
+    if not path.exists() or not path.is_file():
+        boundary["status"] = "invalid"
+        boundary["invalid_reasons"] = [f"PDF inspection evidence was not found: {_rel(path)}"]
+        return boundary
+    try:
+        payload = _load_json(path)
+    except Exception as exc:  # noqa: BLE001
+        boundary["status"] = "invalid"
+        boundary["sha256"] = _file_sha256(path)
+        boundary["invalid_reasons"] = [f"PDF inspection JSON could not be loaded: {exc}"]
+        return boundary
+    raw_evidence_ids = payload.get("evidence_ids")
+    view = _pdf_inspection_view(payload)
+    raw_view_evidence_ids = view.get("evidence_ids") if isinstance(view.get("evidence_ids"), list) else []
+    page_count = _optional_number(_pdf_inspection_first(payload, "verified_page_count", "page_count", "pages"))
+    min_font_size = _optional_number(_pdf_inspection_first(payload, "verified_min_font_size", "min_font_size", "minimum_font_size"))
+    pdf_ref = str(_pdf_inspection_first(payload, "pdf_path", "path") or "").strip()
+    pdf_sha256 = str(_pdf_inspection_first(payload, "pdf_sha256", "sha256") or "").strip()
+    invalid_reasons: list[str] = []
+    matched_pdf = False
+    if pdf_ref:
+        resolved_pdf = _resolve_harness_path(pdf_ref)
+        boundary["pdf_path"] = _rel(resolved_pdf)
+        matched_pdf = any(existing.resolve() == resolved_pdf.resolve() for existing in pdf_files if existing.exists())
+        if not matched_pdf:
+            invalid_reasons.append(f"Inspection pdf_path does not match discovered compiled PDFs: {_rel(resolved_pdf)}")
+        if pdf_sha256 and resolved_pdf.exists() and _file_sha256(resolved_pdf) != pdf_sha256:
+            invalid_reasons.append("Inspection pdf_sha256 does not match the referenced PDF.")
+    elif pdf_sha256:
+        matched_pdf = any(existing.exists() and _file_sha256(existing) == pdf_sha256 for existing in pdf_files)
+        if not matched_pdf:
+            invalid_reasons.append("Inspection pdf_sha256 does not match any discovered compiled PDF.")
+    else:
+        invalid_reasons.append("PDF inspection evidence must include pdf_path or pdf_sha256.")
+    if page_count is None:
+        invalid_reasons.append("PDF inspection evidence is missing page_count.")
+    if min_font_size is None:
+        invalid_reasons.append("PDF inspection evidence is missing min_font_size.")
+    boundary.update({
+        "status": "invalid" if invalid_reasons else "loaded",
+        "inspection_loaded": True,
+        "inspection_valid": not invalid_reasons,
+        "sha256": _file_sha256(path),
+        "pdf_sha256": pdf_sha256,
+        "page_count": page_count,
+        "min_font_size": min_font_size,
+        "evidence_ids": _unique_strings([
+            *(list(raw_evidence_ids) if isinstance(raw_evidence_ids, list) else []),
+            *list(raw_view_evidence_ids),
+        ]),
+        "invalid_reasons": invalid_reasons,
+    })
+    return boundary
+
+
+def _apply_pdf_inspection_inputs(inputs: dict[str, Any], inspection_boundary: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(inputs)
+    if inspection_boundary.get("status") != "loaded":
+        return merged
+    applied: list[str] = []
+    if inspection_boundary.get("page_count") is not None and merged.get("verified_page_count") in (None, ""):
+        merged["verified_page_count"] = float(inspection_boundary["page_count"])
+        applied.append("verified_page_count")
+    if inspection_boundary.get("min_font_size") is not None and merged.get("verified_min_font_size") in (None, ""):
+        merged["verified_min_font_size"] = float(inspection_boundary["min_font_size"])
+        applied.append("verified_min_font_size")
+    inspection_boundary["applied_fields"] = applied
+    return merged
+
+
+def _submission_audit_view(payload: dict[str, Any]) -> dict[str, Any]:
+    outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+    audit = outputs.get("audit") if isinstance(outputs.get("audit"), dict) else {}
+    return audit or payload
+
+
+def _submission_audit_boundary(inputs: dict[str, Any]) -> dict[str, Any]:
+    raw_path = str(inputs.get("submission_audit") or inputs.get("submission_audit_path") or "").strip()
+    boundary: dict[str, Any] = {
+        "schema": "autosci_publication_submission_audit_boundary.v1",
+        "status": "missing",
+        "audit_loaded": False,
+        "audit_verified": False,
+        "path": raw_path,
+        "sha256": "",
+        "venue": str(inputs.get("venue") or ""),
+        "checks": [],
+        "blocking_checks": [],
+        "portal_submission_completed": False,
+        "evidence_ids": [],
+        "invalid_reasons": [],
+    }
+    if not raw_path:
+        boundary["invalid_reasons"] = ["No submission_audit evidence path was supplied."]
+        return boundary
+    path = _resolve_harness_path(raw_path)
+    boundary["path"] = _rel(path)
+    if not path.exists() or not path.is_file():
+        boundary["status"] = "invalid"
+        boundary["invalid_reasons"] = [f"Submission audit evidence was not found: {_rel(path)}"]
+        return boundary
+    try:
+        payload = _load_json(path)
+    except Exception as exc:  # noqa: BLE001
+        boundary["status"] = "invalid"
+        boundary["sha256"] = _file_sha256(path)
+        boundary["invalid_reasons"] = [f"Submission audit JSON could not be loaded: {exc}"]
+        return boundary
+    view = _submission_audit_view(payload)
+    raw_checks = view.get("checks") if isinstance(view.get("checks"), list) else payload.get("checks")
+    checks = [dict(item) for item in raw_checks or [] if isinstance(item, dict)]
+    explicit_blocking = view.get("blocking_checks") if isinstance(view.get("blocking_checks"), list) else []
+    blocking_checks = _unique_strings([
+        *[str(item) for item in explicit_blocking],
+        *[
+            str(check.get("check") or check.get("name") or "submission_audit_check")
+            for check in checks
+            if str(check.get("status") or "").lower() not in {"ok", "passed", "pass", "completed"}
+        ],
+    ])
+    audit_status = str(view.get("status") or payload.get("status") or "").strip().lower()
+    submission_ready_flag = _optional_bool(view.get("submission_ready"))
+    portal_submission_completed = bool(_optional_bool(view.get("portal_submission_completed")) or False)
+    raw_evidence_ids = payload.get("evidence_ids")
+    raw_view_evidence_ids = view.get("evidence_ids") if isinstance(view.get("evidence_ids"), list) else []
+    invalid_reasons: list[str] = []
+    if not checks:
+        invalid_reasons.append("Submission audit evidence must include at least one check row.")
+    audit_verified = (
+        not invalid_reasons
+        and not blocking_checks
+        and audit_status in {"completed", "passed", "pass", "ok"}
+        and submission_ready_flag is not False
+    )
+    boundary.update({
+        "status": "loaded" if not invalid_reasons else "invalid",
+        "audit_loaded": True,
+        "audit_verified": audit_verified,
+        "sha256": _file_sha256(path),
+        "venue": str(view.get("venue") or payload.get("venue") or inputs.get("venue") or ""),
+        "checks": checks,
+        "blocking_checks": blocking_checks,
+        "portal_submission_completed": portal_submission_completed,
+        "evidence_ids": _unique_strings([
+            *(list(raw_evidence_ids) if isinstance(raw_evidence_ids, list) else []),
+            *list(raw_view_evidence_ids),
+        ]),
+        "invalid_reasons": invalid_reasons,
+    })
+    return boundary
+
+
 def _submission_check_rows(
     inputs: dict[str, Any],
     *,
@@ -7219,6 +9948,85 @@ def _submission_check_rows(
     return rows
 
 
+def _publication_submission_boundary(
+    *,
+    submission_checks: list[dict[str, Any]],
+    pdf_files: list[Path],
+    semantic: dict[str, Any],
+    submission_profile: dict[str, Any],
+    pdf_inspection: dict[str, Any],
+    submission_audit: dict[str, Any],
+) -> dict[str, Any]:
+    check_statuses = {
+        str(row.get("check") or ""): str(row.get("status") or "")
+        for row in submission_checks
+        if isinstance(row, dict) and str(row.get("check") or "").strip()
+    }
+    blocking_checks = [
+        check
+        for check, status in sorted(check_statuses.items())
+        if status != "ok"
+    ]
+    compiled_pdf_verified = bool(pdf_files) or bool(semantic.get("verified"))
+    if not compiled_pdf_verified:
+        blocking_checks.append("compiled_pdf_verified")
+    submission_ready = compiled_pdf_verified and not blocking_checks
+    profile_status = str(submission_profile.get("status") or "missing")
+    inspection_status = str(pdf_inspection.get("status") or "missing")
+    venue_blocking_checks = []
+    if profile_status != "loaded":
+        venue_blocking_checks.append("venue_submission_profile")
+    if inspection_status != "loaded":
+        venue_blocking_checks.append("pdf_inspection")
+    venue_submission_ready = submission_ready and profile_status == "loaded" and inspection_status == "loaded"
+    audit_ready = bool(submission_audit.get("audit_verified"))
+    submission_audit_blocking_checks = []
+    if not venue_submission_ready:
+        submission_audit_blocking_checks.append("venue_submission_ready")
+    if not audit_ready:
+        submission_audit_blocking_checks.append("publication_submission_audit")
+    submission_audit_ready = venue_submission_ready and audit_ready
+    return {
+        "schema": "autosci_publication_submission_boundary.v1",
+        "status": "submission_ready" if submission_ready else "submission_incomplete",
+        "submission_ready": submission_ready,
+        "venue_status": "venue_submission_ready"
+        if venue_submission_ready
+        else "venue_submission_incomplete"
+        if profile_status != "missing"
+        else "venue_profile_missing",
+        "venue_submission_ready": venue_submission_ready,
+        "venue_blocking_checks": venue_blocking_checks,
+        "submission_audit_status": "submission_audit_ready"
+        if submission_audit_ready
+        else "submission_audit_incomplete"
+        if str(submission_audit.get("status") or "missing") != "missing"
+        else "submission_audit_missing",
+        "submission_audit_ready": submission_audit_ready,
+        "submission_audit_blocking_checks": submission_audit_blocking_checks,
+        "portal_submission_completed": bool(submission_audit.get("portal_submission_completed")),
+        "compiled_pdf_verified": compiled_pdf_verified,
+        "runtime_semantic_verified": bool(semantic.get("verified")),
+        "pdf_files": [_rel(path) for path in pdf_files],
+        "check_statuses": check_statuses,
+        "blocking_checks": _unique_strings(blocking_checks),
+        "submission_profile": submission_profile,
+        "pdf_inspection": pdf_inspection,
+        "submission_audit": submission_audit,
+        "limitations": [
+            *([] if submission_ready else [
+                "Publication compile evidence does not prove submission readiness; review blocking_checks and submission_checks."
+            ]),
+            *([] if venue_submission_ready else [
+                "Venue submission readiness is not proven; supply a valid submission_profile and pdf_inspection evidence."
+            ]),
+            *([] if submission_audit_ready else [
+                "Publication submission audit readiness is not proven; supply valid submission_audit evidence."
+            ]),
+        ],
+    }
+
+
 def _render_compile_diagnostics(checklist: dict[str, Any]) -> str:
     lines = [
         "# Paper Compile Checklist Diagnostics",
@@ -7243,6 +10051,53 @@ def _render_compile_diagnostics(checklist: dict[str, Any]) -> str:
                 continue
             detail = str(row.get("detail") or "N/A").replace("|", "\\|")
             lines.append(f"| {row.get('check', 'N/A')} | {row.get('status', 'N/A')} | {detail} |")
+    submission_boundary = checklist.get("submission_boundary") if isinstance(checklist.get("submission_boundary"), dict) else {}
+    if submission_boundary:
+        lines.extend([
+            "",
+            "## Submission Boundary",
+            "",
+            f"- status: {submission_boundary.get('status') or 'N/A'}",
+            f"- submission_ready: {submission_boundary.get('submission_ready')}",
+            f"- blocking_checks: {', '.join(submission_boundary.get('blocking_checks') or []) or 'N/A'}",
+            f"- venue_status: {submission_boundary.get('venue_status') or 'N/A'}",
+            f"- venue_submission_ready: {submission_boundary.get('venue_submission_ready')}",
+            f"- venue_blocking_checks: {', '.join(submission_boundary.get('venue_blocking_checks') or []) or 'N/A'}",
+            f"- submission_audit_status: {submission_boundary.get('submission_audit_status') or 'N/A'}",
+            f"- submission_audit_ready: {submission_boundary.get('submission_audit_ready')}",
+            f"- submission_audit_blocking_checks: {', '.join(submission_boundary.get('submission_audit_blocking_checks') or []) or 'N/A'}",
+            f"- portal_submission_completed: {submission_boundary.get('portal_submission_completed')}",
+        ])
+        submission_profile = (
+            submission_boundary.get("submission_profile")
+            if isinstance(submission_boundary.get("submission_profile"), dict)
+            else {}
+        )
+        if submission_profile:
+            lines.extend([
+                f"- submission_profile_status: {submission_profile.get('status') or 'N/A'}",
+                f"- submission_profile_path: {submission_profile.get('path') or 'N/A'}",
+            ])
+        pdf_inspection = (
+            submission_boundary.get("pdf_inspection")
+            if isinstance(submission_boundary.get("pdf_inspection"), dict)
+            else {}
+        )
+        if pdf_inspection:
+            lines.extend([
+                f"- pdf_inspection_status: {pdf_inspection.get('status') or 'N/A'}",
+                f"- pdf_inspection_path: {pdf_inspection.get('path') or 'N/A'}",
+            ])
+        submission_audit = (
+            submission_boundary.get("submission_audit")
+            if isinstance(submission_boundary.get("submission_audit"), dict)
+            else {}
+        )
+        if submission_audit:
+            lines.extend([
+                f"- submission_audit_evidence_status: {submission_audit.get('status') or 'N/A'}",
+                f"- submission_audit_path: {submission_audit.get('path') or 'N/A'}",
+            ])
     lines.extend(["", "## Files", ""])
     for key in ("latex_files", "pdf_files", "markdown_files", "bibliography_files"):
         values = checklist.get(key) if isinstance(checklist.get(key), list) else []
@@ -7379,8 +10234,53 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             [contract_artifact["path"]],
         ),
     ]
-    submission_checks = _submission_check_rows(inputs, latex_files=latex_files, markdown_files=markdown_files)
+    submission_profile = _submission_profile_boundary(inputs)
+    submission_inputs = _apply_submission_profile_inputs(inputs, submission_profile)
+    pdf_inspection = _pdf_inspection_boundary(inputs, pdf_files=pdf_files)
+    submission_inputs = _apply_pdf_inspection_inputs(submission_inputs, pdf_inspection)
+    submission_audit = _submission_audit_boundary(inputs)
+    submission_checks = _submission_check_rows(submission_inputs, latex_files=latex_files, markdown_files=markdown_files)
+    submission_boundary = _publication_submission_boundary(
+        submission_checks=submission_checks,
+        pdf_files=pdf_files,
+        semantic=semantic,
+        submission_profile=submission_profile,
+        pdf_inspection=pdf_inspection,
+        submission_audit=submission_audit,
+    )
     checks.extend(submission_checks)
+    checks.append(_check_row(
+        "venue_submission_profile",
+        "ok" if submission_profile.get("status") == "loaded" else "warn",
+        "Venue submission profile loaded with source-backed requirements."
+        if submission_profile.get("status") == "loaded"
+        else "Venue submission profile is missing, invalid, or conflicts with CLI evidence.",
+        [str(submission_profile.get("path") or "")] if submission_profile.get("path") else [],
+    ))
+    checks.append(_check_row(
+        "pdf_inspection",
+        "ok" if pdf_inspection.get("status") == "loaded" else "warn",
+        "PDF inspection evidence loaded with verified page and font measurements."
+        if pdf_inspection.get("status") == "loaded"
+        else "PDF inspection evidence is missing or invalid; page/font proof may be CLI-only.",
+        [str(pdf_inspection.get("path") or "")] if pdf_inspection.get("path") else [],
+    ))
+    checks.append(_check_row(
+        "publication_submission_audit",
+        "ok" if submission_audit.get("audit_verified") else "warn",
+        "Publication submission audit evidence verified checklist readiness."
+        if submission_audit.get("audit_verified")
+        else "Publication submission audit evidence is missing, invalid, or has blocking checks.",
+        [str(submission_audit.get("path") or "")] if submission_audit.get("path") else [],
+    ))
+    checks.append(_check_row(
+        "publication_submission_boundary",
+        "ok" if submission_boundary["submission_ready"] else "warn",
+        "Submission readiness boundary passed."
+        if submission_boundary["submission_ready"]
+        else "Submission readiness boundary is incomplete; see publication_submission_boundary.json.",
+        [str(paths["submission_boundary"])],
+    ))
     limitations = [
         "Paper compile currently performs a bounded checklist and diagnostics pass only.",
         "The bridge does not run a TeX executor, mutate source files, or claim PDF compilation without explicit approved execution.",
@@ -7403,6 +10303,7 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.extend(str(item) for item in fix_result.get("limitations") or [])
     if any(row.get("status") != "ok" for row in submission_checks):
         limitations.append("Submission readiness includes warnings or unconfirmed checks; see submission_checks in the compile checklist.")
+    limitations.extend(str(item) for item in submission_boundary.get("limitations") or [])
     status = (
         "completed"
         if target_exists and latex_files and (pdf_files or semantic.get("verified")) and (not fix_requested or bool(fix_result.get("applied")))
@@ -7429,17 +10330,50 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "fix_writeback": fix_result.get("write"),
         "checks": checks,
         "submission_checks": submission_checks,
+        "submission_profile": submission_profile,
+        "pdf_inspection": pdf_inspection,
+        "submission_audit": submission_audit,
+        "submission_boundary": submission_boundary,
         "latex_files": [_rel(path) for path in latex_files],
         "pdf_files": [_rel(path) for path in pdf_files],
         "markdown_files": [_rel(path) for path in markdown_files],
         "bibliography_files": [_rel(path) for path in bibliography_files],
         "limitations": limitations,
     }
+    submission_boundary_path = _write_json_sidecar(paths["submission_boundary"], submission_boundary)
     checklist_path = _write_json_sidecar(paths["checklist"], checklist_payload)
     diagnostics_path = _write_text_sidecar(paths["diagnostics"], _render_compile_diagnostics(checklist_payload))
     file_artifacts = [
+        {"type": "publication_submission_boundary_json", "path": submission_boundary_path},
         {"type": "paper_compile_checklist_json", "path": checklist_path},
         {"type": "paper_compile_diagnostics_markdown", "path": diagnostics_path},
+        *(
+            [{
+                "type": "venue_submission_profile_json",
+                "path": str(submission_profile.get("path")),
+                "sha256": str(submission_profile.get("sha256") or ""),
+            }]
+            if submission_profile.get("profile_loaded")
+            else []
+        ),
+        *(
+            [{
+                "type": "pdf_inspection_json",
+                "path": str(pdf_inspection.get("path")),
+                "sha256": str(pdf_inspection.get("sha256") or ""),
+            }]
+            if pdf_inspection.get("inspection_loaded")
+            else []
+        ),
+        *(
+            [{
+                "type": "publication_submission_audit_json",
+                "path": str(submission_audit.get("path")),
+                "sha256": str(submission_audit.get("sha256") or ""),
+            }]
+            if submission_audit.get("audit_loaded")
+            else []
+        ),
         contract_artifact,
         *([fix_result["artifact"]] if fix_result.get("artifact") else []),
         *[artifact for artifact in fix_result.get("artifacts") or [] if isinstance(artifact, dict)],
@@ -8248,8 +11182,20 @@ def _scheduler_lifecycle_summary(payloads: list[dict[str, Any]]) -> dict[str, An
             continue
         if str(payload.get("lifecycle_status") or "").lower() != "passed":
             continue
-        gate = payload.get("lifecycle_gate_result") if isinstance(payload.get("lifecycle_gate_result"), dict) else {}
-        if gate.get("ok") is not True:
+        source_path_raw = str(payload.get("source_path") or "").strip()
+        source_path = _resolve_harness_path(source_path_raw) if source_path_raw else None
+        runtime_gate = evaluate_lifecycle_runtime(
+            payload,
+            path=source_path if source_path and source_path.exists() else None,
+        ).to_dict()
+        if runtime_gate.get("ok") is not True:
+            continue
+        alignment = (
+            payload.get("workflow_config_alignment")
+            if isinstance(payload.get("workflow_config_alignment"), dict)
+            else {}
+        )
+        if alignment.get("ok") is not True or str(alignment.get("status") or "") != "aligned":
             continue
         blocked = payload.get("blocked_nodes")
         if isinstance(blocked, dict) and blocked:
@@ -8272,6 +11218,8 @@ def _scheduler_lifecycle_summary(payloads: list[dict[str, Any]]) -> dict[str, An
             "source_path": str(payload.get("source_path") or ""),
             "node_count": len(node_results),
             "required_node_count": len(SCHEDULER_FULL_LIFECYCLE_NODE_IDS),
+            "lifecycle_runtime_gate_status": str(runtime_gate.get("status") or ""),
+            "workflow_config_alignment_status": str(alignment.get("status") or ""),
         }
     return {}
 
@@ -8745,6 +11693,50 @@ def _action_reset_plan(envelope: dict[str, Any]) -> dict[str, Any]:
     return convert_workflow_evolution(_control_workflow_raw(envelope, "reset_plan", "reset plan"), envelope)
 
 
+def _check_final_quality_boundary(findings: dict[str, Any], model_output: dict[str, Any]) -> dict[str, Any]:
+    local_blocking: list[str] = []
+    if not findings.get("root_exists"):
+        local_blocking.append("wiki root is missing")
+    if int(findings.get("markdown_page_count") or 0) <= 0:
+        local_blocking.append("wiki markdown pages are missing")
+    missing_dirs = list(findings.get("missing_dirs") or [])
+    if missing_dirs:
+        local_blocking.append(f"wiki directories are missing: {', '.join(str(item) for item in missing_dirs)}")
+    edge_errors = list(findings.get("edge_errors") or [])
+    if edge_errors:
+        local_blocking.append("wiki graph edges are missing or invalid")
+    model_ready = (
+        model_output.get("status") == "completed"
+        and bool(str(model_output.get("answer") or "").strip())
+        and bool(model_output.get("evidence_ids"))
+    )
+    blocking_reasons = [*local_blocking]
+    if not model_ready:
+        blocking_reasons.append(
+            f"model quality review status is `{model_output.get('status') or 'missing'}`, not completed with answer and evidence ids"
+        )
+    final_quality_ready = not blocking_reasons
+    return {
+        "schema": "autosci_check_final_quality_boundary.v1",
+        "status": "final_quality_ready" if final_quality_ready else "check_final_quality_incomplete",
+        "final_quality_ready": final_quality_ready,
+        "local_structure_ready": not local_blocking,
+        "local_blocking_reasons": local_blocking,
+        "model_status": str(model_output.get("status") or "missing"),
+        "model_source": str(model_output.get("source") or ""),
+        "model_provider": str(model_output.get("provider") or ""),
+        "model_name": str(model_output.get("model") or ""),
+        "model_confidence": model_output.get("confidence", "N/A"),
+        "model_evidence_ids": _unique_strings([str(item) for item in model_output.get("evidence_ids") or []]),
+        "request_sha256": str(model_output.get("request_sha256") or ""),
+        "response_sha256": str(model_output.get("response_sha256") or ""),
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if final_quality_ready else [
+            "Final wiki quality readiness requires passing local wiki checks plus completed model-backed recommendation evidence."
+        ],
+    }
+
+
 def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     target = str(inputs.get("target") or inputs.get("wiki_root") or "autosci wiki")
@@ -8805,6 +11797,9 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         runtime_errors.append({"id": "wiki-edges-invalid", "description": "Graph edge file is missing or contains invalid rows."})
     if not runtime_errors and not model_completed:
         runtime_errors.append({"id": "wiki-health-review", "description": "Structural checks passed; content quality still requires model/reviewer evidence."})
+    final_boundary = _check_final_quality_boundary(findings, model_output)
+    final_boundary_path = paths["recommended_changes"].parent / "check_final_quality_boundary.json"
+    final_boundary_artifact = _write_json_sidecar(final_boundary_path, final_boundary)
     quality_reasons = [item["description"] for item in runtime_errors]
     if not quality_reasons:
         quality_reasons = [f"Model/reviewer evidence completed via `{model_output.get('source') or model_output.get('provider') or 'explicit evidence'}`."]
@@ -8872,6 +11867,11 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             f"Source: `{model_output.get('source', 'N/A')}`",
             f"Answer: {model_output.get('answer', 'N/A') if model_completed else 'N/A'}",
             "",
+            "## Final Quality Boundary",
+            "",
+            f"Status: `{final_boundary.get('status')}`",
+            f"Final quality ready: `{final_boundary.get('final_quality_ready')}`",
+            "",
             "## Findings JSON",
             "",
             "```json",
@@ -8896,16 +11896,19 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             "protected_core_edits_applied": False,
             "application_state": "proposed_only",
             "approval_ref": "N/A",
+            "final_quality_boundary": final_boundary,
         },
         "recommended_changes_path": _rel(paths["recommended_changes"]),
         "patch_candidates_path": _rel(paths["patch_candidates"]),
         "artifacts": [
             _artifact("recommended_changes_markdown", paths["recommended_changes"]),
             _artifact("patch_candidates_directory", paths["patch_candidates"]),
+            {"type": "check_final_quality_boundary_json", "path": final_boundary_artifact},
             *model_artifacts,
         ],
         "limitations": [
             "Wiki health check is structural and local only.",
+            *list(final_boundary.get("limitations") or []),
             (
                 "LLM-assisted content quality evidence was supplied and archived."
                 if model_completed
@@ -9226,8 +12229,10 @@ def cmd_run(args: argparse.Namespace) -> int:
     envelope = load_envelope(args.envelope)
     evidence = ACTIONS[args.action](envelope)
     extra: dict[str, Any] = {}
-    if args.action == "ingest_paper":
-        extra["sidecar_evidence_paths"] = _write_phase9_foundation_sidecars(envelope, evidence)
+    if args.action in {"ingest_paper", "prepare_paper_source"}:
+        sidecar_evidence_paths = _write_phase9_foundation_sidecars(envelope, evidence)
+        extra["sidecar_evidence_paths"] = sidecar_evidence_paths
+        evidence = _attach_ingest_final_source_registration_boundary(envelope, evidence, sidecar_evidence_paths)
     if args.action == "evaluate_ideas":
         sidecar_paths = [_write_phase11_idea_memory_sidecar(envelope, evidence)]
         novelty_writeback_path = _write_novelty_writeback_sidecar(envelope, evidence)
