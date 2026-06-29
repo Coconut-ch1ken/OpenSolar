@@ -1,0 +1,52 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/literature_discovery.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "allow_network_fetch": false,
+    "fixture_fallback": true,
+    "limit": 3,
+    "min_online_source_channels": 1,
+    "paper_id": "paper-autosci-scheduler-smoke-step38-final",
+    "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md",
+    "query": "scheduler lifecycle smoke",
+    "require_online_source_evidence": false,
+    "smoke_mode": true,
+    "topic": "scheduler lifecycle smoke"
+  },
+  "limitations": [
+    "Fixture discovery uses local candidates, not live literature search."
+  ],
+  "node_id": "literature_discover",
+  "outputs": {
+    "candidates": [
+      {
+        "candidate_id": "candidate-autosci-fixture-paper",
+        "dedup_status": "known",
+        "fetch_status": "fetched",
+        "ranking_rationale": "Fixture-mode candidate matches the requested Solar evidence adapter smoke test.",
+        "ranking_score": 1.0,
+        "source_channels": [
+          "local_fixture"
+        ],
+        "source_ref": "plugins/autosci/tests/fixtures/sample_paper.md",
+        "title": "AutoSci Adapter Fixture Paper"
+      }
+    ],
+    "limit": 3,
+    "mode": "fixture",
+    "query": "scheduler lifecycle smoke"
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-26T16:03:36Z"
+  },
+  "schema": "literature_discovery.v1",
+  "sprint_id": "autosci-scheduler-smoke-step38-final",
+  "status": "completed",
+  "task_id": "task-autosci-scheduler-smoke-step38-final-literature_discover"
+}

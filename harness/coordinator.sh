@@ -44,14 +44,22 @@ if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
   exit 1
 fi
 
-HARNESS_DIR="$HOME/.solar/harness"
+HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$HOME/.solar/harness}}"
 SPRINTS_DIR="$HARNESS_DIR/sprints"
-SESSION_NAME="solar-harness"
-LAB_SESSION_NAME="solar-harness-lab"
+export HARNESS_DIR SPRINTS_DIR
+SESSION_NAME="${SOLAR_HARNESS_SESSION:-solar-harness}"
+LAB_SESSION_NAME="${SOLAR_HARNESS_LAB_SESSION:-${SESSION_NAME}-lab}"
+HARNESS_MANAGE_LAB="${SOLAR_HARNESS_MANAGE_LAB:-${SOLAR_WATCHDOG_MANAGE_LAB:-0}}"
 COORD_STATE="$HARNESS_DIR/.coordinator-state"
 SESSION_SH="$HARNESS_DIR/session.sh"
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
+
+# LOCAL-ONLY product architecture: the shipped single-Mac .app has no remote operator
+# pool — dispatch must land on the 4 local cockpit panes. Default the builder/evaluator
+# operator pool OFF here (gate read by lib/graph_node_dispatcher.py). Dev rigs can still
+# scale out by exporting SOLAR_GRAPH_BUILDER_OPERATOR_POOL=1 before the coordinator launches.
+export SOLAR_GRAPH_BUILDER_OPERATOR_POOL="${SOLAR_GRAPH_BUILDER_OPERATOR_POOL:-0}"
 
 # sprint-20260503-163542 D3: bridge ledger
 [[ -f "$HARNESS_DIR/lib/bridge-ledger.sh" ]] && . "$HARNESS_DIR/lib/bridge-ledger.sh"
@@ -68,6 +76,7 @@ export LC_ALL="en_US.UTF-8"
 [[ -f "$HARNESS_DIR/lib/pane-lease.sh" ]] && . "$HARNESS_DIR/lib/pane-lease.sh"
 [[ -f "$HARNESS_DIR/lib/ack-watcher.sh" ]] && . "$HARNESS_DIR/lib/ack-watcher.sh"
 [[ -f "$HARNESS_DIR/lib/prompt-quarantine.sh" ]] && . "$HARNESS_DIR/lib/prompt-quarantine.sh"
+[[ -f "$HARNESS_DIR/lib/portable.sh" ]] && . "$HARNESS_DIR/lib/portable.sh"
 
 # Coordinator predates strict-mode helper libs and intentionally treats corrupt
 # sprint files as data-plane warnings. Do not let sourced libs' shell options
@@ -234,6 +243,9 @@ discover_pane_by_persona() {
 
 ensure_lab_session() {
   tmux has-session -t "$LAB_SESSION_NAME" 2>/dev/null && return 0
+  if [[ "$HARNESS_MANAGE_LAB" != "1" && "$HARNESS_MANAGE_LAB" != "true" ]]; then
+    return 1
+  fi
   log "${Y}[lab] Strategy Lab 未运行，自动启动独立第二屏${N}"
   TERM=dumb bash "$HARNESS_DIR/solar-harness.sh" 扩展 "$HOME" >> "$COORD_LOG" 2>&1 || {
     log "${Y}[lab] 自动启动 Strategy Lab 失败，使用 fallback pane${N}"
@@ -735,7 +747,7 @@ rollback_state_cache() {
   done
   local value="${kept%|}"
   local encoded
-  encoded=$(printf '%s' "$value" | base64)
+  encoded=$(printf '%s' "$value" | solar_base64_one_line)
   python3 -c "
 import tempfile, os, base64
 value = base64.b64decode('$encoded').decode('utf-8')
@@ -750,8 +762,10 @@ else:
 " 2>/dev/null || true
   local sid
   sid=$(basename "$sf" .status.json)
+  local event_extra="${extra:-}"
+  [[ -n "$event_extra" ]] || event_extra="{}"
   [[ -n "$sid" && -f "$HARNESS_DIR/lib/runtime_bridge.py" ]] && \
-    python3 "$HARNESS_DIR/lib/runtime_bridge.py" event "$sid" "$event" "$by" "${extra:-{}}" --quiet 2>/dev/null || true
+    python3 "$HARNESS_DIR/lib/runtime_bridge.py" event "$sid" "$event" "$by" "$event_extra" --quiet 2>/dev/null || true
 }
 
 G='\033[0;32m'; Y='\033[1;33m'; R='\033[0;31m'; C='\033[0;36m'; N='\033[0m'
@@ -817,7 +831,7 @@ get_latest_sprint_file() {
 
     # 取修改时间最新的 sprint (不管状态)
     local mtime
-    mtime=$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)
+    mtime=$(solar_file_mtime "$f" 2>/dev/null || echo 0)
     if [[ "$mtime" -gt "$best_mtime" ]]; then
       best_mtime="$mtime"
       best="$f"
@@ -975,7 +989,7 @@ sanitize_last_state() {
   if (( removed > 0 )); then
     local value="${updated%|}"
     local encoded
-    encoded=$(printf '%s' "$value" | base64)
+    encoded=$(printf '%s' "$value" | solar_base64_one_line)
     python3 -c "
 import tempfile, os, base64
 value = base64.b64decode('$encoded').decode('utf-8')
@@ -1056,7 +1070,7 @@ save_state() {
   local value="${updated%|}"
 
   local encoded
-  encoded=$(printf '%s' "$value" | base64)
+  encoded=$(printf '%s' "$value" | solar_base64_one_line)
   python3 -c "
 import tempfile, os, base64
 value = base64.b64decode('$encoded').decode('utf-8')
@@ -1119,7 +1133,12 @@ pane_is_thinking_snapshot() {
 
 pane_has_runtime_blocker_snapshot() {
   local snapshot="$1"
-  printf '%s\n' "$snapshot" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit|/upgrade to increase your usage limit|resets .*\\(America/Toronto\\)|How is Claude doing this session|1:[[:space:]]*Bad[[:space:]]+2:[[:space:]]*Fine[[:space:]]+3:[[:space:]]*Good[[:space:]]+0:[[:space:]]*Dismiss"
+  printf '%s\n' "$snapshot" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit reached|usage limit exceeded|monthly usage limit|/upgrade to increase your usage limit|resets .*\\(America/Toronto\\)|How is Claude doing this session|1:[[:space:]]*Bad[[:space:]]+2:[[:space:]]*Fine[[:space:]]+3:[[:space:]]*Good[[:space:]]+0:[[:space:]]*Dismiss"
+}
+
+pane_has_processing_snapshot() {
+  local snapshot="$1"
+  printf '%s\n' "$snapshot" | grep -qE 'esc to interrupt|• Working|Working \(|Crafting|Cogitating|Wandering|Sock-hopping|Crunched|Puzzling|Gusting|Ideating|Musing|Orbiting|Reticulating|Read\(|Bash\(|Edit\(|Write\(|按 dispatch|合约、PRD 读毕|What should Claude do|⎿|✻|✶|✳|✢'
 }
 
 pane_is_idle_snapshot() {
@@ -1130,6 +1149,10 @@ pane_is_idle_snapshot() {
   #         → 永远不匹配 → idle 永远 false → wait_for_dispatch_window 12 次都失败
   # 修复: 允许 ❯ 后任意空白字符到行尾
   printf '%s\n' "$snapshot" | grep -qE '❯[[:space:]]*$' && return 0
+  # Codex TUI uses a `›` composer. The idle composer may show rotating
+  # suggestion text after the glyph, but slash-command residue such as
+  # `› /clear` is not clean and must still block dispatch.
+  printf '%s\n' "$snapshot" | tail -12 | grep -qE '^[[:space:]]*›([[:space:]]*$|[[:space:]]+[^/].*)$' && return 0
   # Claude Code often leaves the last submitted prompt in history while the
   # current input is empty; the mode footer is a better idle signal there.
   printf '%s\n' "$snapshot" | tail -8 | grep -qE '⏵.*((auto|accept edits|edit) mode on|bypass permissions on)'
@@ -1137,7 +1160,7 @@ pane_is_idle_snapshot() {
 
 pane_has_prompt_snapshot() {
   local snapshot="$1"
-  printf '%s\n' "$snapshot" | grep -q '❯'
+  printf '%s\n' "$snapshot" | grep -qE '❯|›'
 }
 
 pane_prompt_input_snapshot() {
@@ -1147,7 +1170,7 @@ import re
 import sys
 
 lines = sys.stdin.read().splitlines()
-prompt_indexes = [i for i, line in enumerate(lines) if "❯" in line]
+prompt_indexes = [i for i, line in enumerate(lines) if "❯" in line or "›" in line]
 if not prompt_indexes:
     sys.exit(0)
 
@@ -1173,8 +1196,16 @@ if not eligible:
     sys.exit(0)
 
 line = lines[eligible[-1]]
-prompt_input = line.split("❯", 1)[1].replace("\u00a0", " ").strip()
-if prompt_input in {"Try \"fix lint errors\"", "Try \"summarize this codebase\""}:
+glyph = "❯" if "❯" in line else "›"
+prompt_input = line.split(glyph, 1)[1].replace("\u00a0", " ").strip()
+if prompt_input in {
+    "Try \"fix lint errors\"",
+    "Try \"summarize this codebase\"",
+    "Find and fix a bug in @filename",
+    "Improve documentation in @filename",
+    "Run /review on my current changes",
+    "Write tests for @filename",
+}:
     prompt_input = ""
 
 print(prompt_input)
@@ -1432,8 +1463,8 @@ check_planner_notice() {
 
   local read_marker="$HARNESS_DIR/.planner-last-notice.read"
   local notice_mtime=0 read_mtime=0
-  notice_mtime=$(stat -f %m "$notice_file" 2>/dev/null || echo 0)
-  [[ -f "$read_marker" ]] && read_mtime=$(stat -f %m "$read_marker" 2>/dev/null || echo 0)
+  notice_mtime=$(solar_file_mtime "$notice_file" 2>/dev/null || echo 0)
+  [[ -f "$read_marker" ]] && read_mtime=$(solar_file_mtime "$read_marker" 2>/dev/null || echo 0)
   (( notice_mtime <= read_mtime )) && return 0
 
   # 取 pane 最后 10 行检测空闲 (Sprint 20260422-222017 D1)
@@ -1608,6 +1639,7 @@ ensure_ack_contract() {
   [[ -z "$dispatch_file" || ! -f "$dispatch_file" ]] && return 0
   [[ -z "$sid" || -z "$dispatch_id" ]] && return 0
   grep -q "SOLAR_ACK_CONTRACT" "$dispatch_file" 2>/dev/null && return 0
+  local ack_file="${SPRINTS_DIR}/${sid}.ack-${dispatch_id}.json"
 
   cat >> "$dispatch_file" <<EOF
 
@@ -1616,7 +1648,7 @@ ensure_ack_contract() {
 
 确认已读取本 dispatch 并开始处理后，必须立即写 ACK 文件：
 
-\`~/.solar/harness/sprints/${sid}.ack-${dispatch_id}.json\`
+\`${ack_file}\`
 
 可直接执行：
 
@@ -1626,7 +1658,7 @@ import datetime
 import json
 from pathlib import Path
 
-ack_path = Path.home() / ".solar" / "harness" / "sprints" / "${sid}.ack-${dispatch_id}.json"
+ack_path = Path("${ack_file}")
 ack_path.parent.mkdir(parents=True, exist_ok=True)
 ack = {
     "dispatch_id": "${dispatch_id}",
@@ -1993,7 +2025,10 @@ dispatch_to_pane() {
   #           (Crafting/Cogitating/Read\(|⎿/✻ 等)
   #       (3) 如只命中 keyword 但无处理特征 → 视为输入框残留,继续重试
   while (( tries < max_tries )); do
-    tmux send-keys -t "$pane" "$short_cmd" 2>/dev/null || true
+    # Send literal text. Without -l, tmux can interpret punctuation in long
+    # file paths or shell-ish snippets as key names, which produces false NACKs
+    # on Codex and can silently drop part of the dispatch command.
+    tmux send-keys -t "$pane" -l "$short_cmd" 2>/dev/null || true
     sleep 0.8
     tmux send-keys -t "$pane" Enter 2>/dev/null || true
     sleep 0.3
@@ -2018,14 +2053,14 @@ dispatch_to_pane() {
     # Quota/rate-limit errors also render with the generic "⎿" marker.  Do not
     # treat those as successful dispatch evidence, otherwise the pane assignment
     # is persisted while the worker never actually accepts the task.
-    printf '%s\n' "$verify_output" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit|/upgrade to increase your usage limit|resets .*\\(America/Toronto\\)" && has_runtime_blocker=1
+    printf '%s\n' "$verify_output" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit reached|usage limit exceeded|monthly usage limit|/upgrade to increase your usage limit|resets .*\\(America/Toronto\\)" && has_runtime_blocker=1
     # Claude Code survey prompts can contain generic activity glyphs/keywords, but
     # they are modal human-feedback screens and cannot accept dispatch input.
     printf '%s\n' "$verify_output" | grep -qiE "How is Claude doing this session|1:[[:space:]]*Bad[[:space:]]+2:[[:space:]]*Fine[[:space:]]+3:[[:space:]]*Good[[:space:]]+0:[[:space:]]*Dismiss" && has_runtime_blocker=1
     # Claude 真在处理的特征。Claude Code 2.x frequently uses
     # Ideating/Musing/Orbiting/Reticulating before a tool call; treating those
     # as idle causes false dispatch failures while the pane is actually working.
-    printf '%s\n' "$verify_output" | grep -qE 'Crafting|Cogitating|Wandering|Sock-hopping|Crunched|Puzzling|Gusting|Ideating|Musing|Orbiting|Reticulating|Read\(|Bash\(|Edit\(|Write\(|按 dispatch|合约、PRD 读毕|What should Claude do|⎿|✻|✶|✳|✢' && has_processing=1
+    pane_has_processing_snapshot "$verify_output" && has_processing=1
     if (( has_runtime_blocker )); then
       log "${Y}[dispatch] runtime limit/blocker detected; not assigning pane=${pane} sid=${sid} try=$((tries + 1))/${max_tries}${N}"
     elif (( has_keyword && has_processing )); then
@@ -2043,7 +2078,16 @@ dispatch_to_pane() {
         dispatch_ledger_append "attempted_verified" "$sid" "$pane" "${_dispatch_id:-}" \
           "{\"tries\":$((tries+1)),\"ack_source\":\"capture_verify\"}" || true
       record_model_call_runtime "succeeded" "$sid" "$pane" "${_dispatch_id:-}" "$instruction_file" "$((tries+1))" "keyword_processing_verified" ""
-      # S3: launch background ack-watcher (real ack comes when builder writes ack file)
+      # Capture verification is already an observable dispatch acceptance signal.
+      # Materialize an in-progress ACK so the control plane does not later log a
+      # false ack_timeout when the worker completes the task but omits the
+      # optional ACK snippet.
+      if [[ -n "${_dispatch_id:-}" ]] && type write_ack_file &>/dev/null; then
+        write_ack_file "$sid" "$_dispatch_id" "$role" "in_progress" "0" "capture verified dispatch accepted by runtime" || true
+      fi
+      # S3: launch background ack-watcher; if capture ACK was written, it will
+      # record acked_by_ack_file immediately. A worker may still overwrite the
+      # same ACK path with a later success/failed status.
       type ack_watcher_bg &>/dev/null && ack_watcher_bg "$sid" "${_dispatch_id:-unknown}" 300 || true
       return 0
     fi
@@ -2139,7 +2183,8 @@ os.rename(tmp, sf)
 }
 
 runtime_status_transition() {
-  local sid="$1" new_status="$2" event="$3" by="$4" extra_json="${5:-{}}" bump="${6:-0}"
+  local sid="$1" new_status="$2" event="$3" by="$4" extra_json="${5:-}" bump="${6:-0}"
+  [[ -n "$extra_json" ]] || extra_json="{}"
   local sf="$SPRINTS_DIR/${sid}.status.json"
   [[ -f "$sf" ]] || return 1
   if [[ "$bump" == "1" || "$bump" == "true" || "$bump" == "--bump-round" ]]; then
@@ -2300,7 +2345,11 @@ detect_stuck_state() {
         event_ts=$(echo "$last_plan_event" | python3 -c "import sys,json; print(json.loads(sys.stdin.read())['ts'])" 2>/dev/null)
         if [[ -n "$event_ts" ]]; then
           local age_s
-          age_s=$(( $(date -u +%s) - $(date -j -f "%Y-%m-%dT%H:%M:%SZ" "${event_ts%%.*}Z" +%s 2>/dev/null || echo 999999) ))
+          event_ts="${event_ts%%.*}"
+          event_ts="${event_ts%Z}Z"
+          event_epoch=$(solar_parse_epoch "%Y-%m-%dT%H:%M:%SZ" "$event_ts" 2>/dev/null || echo 0)
+          [[ "$event_epoch" -gt 0 ]] || event_epoch=$(( $(date -u +%s) - 999999 ))
+          age_s=$(( $(date -u +%s) - event_epoch ))
           if (( age_s > 60 )); then
             log "[heal] detect_stuck: $sid status=planning but plan_reviewed ${age_s}s ago"
             handle_planning "$sid" "$sf"
@@ -2318,7 +2367,11 @@ detect_stuck_state() {
         event_ts=$(echo "$last_eval_event" | python3 -c "import sys,json; print(json.loads(sys.stdin.read())['ts'])" 2>/dev/null)
         if [[ -n "$event_ts" ]]; then
           local age_s
-          age_s=$(( $(date -u +%s) - $(date -j -f "%Y-%m-%dT%H:%M:%SZ" "${event_ts%%.*}Z" +%s 2>/dev/null || echo 999999) ))
+          event_ts="${event_ts%%.*}"
+          event_ts="${event_ts%Z}Z"
+          event_epoch=$(solar_parse_epoch "%Y-%m-%dT%H:%M:%SZ" "$event_ts" 2>/dev/null || echo 0)
+          [[ "$event_epoch" -gt 0 ]] || event_epoch=$(( $(date -u +%s) - 999999 ))
+          age_s=$(( $(date -u +%s) - event_epoch ))
           if (( age_s > 60 )); then
             log "[heal] detect_stuck: $sid status=reviewing but eval_completed ${age_s}s ago"
             handle_reviewing "$sid" "$sf"
@@ -2413,7 +2466,7 @@ generate_dispatch() {
 
 ## 通用步骤说明
 1. 先用 Read 工具读取 \`~/.solar/STATE.md\`
-2. 读取合约: 路径格式 \`~/.solar/harness/sprints/<sid>.contract.md\`
+2. 读取合约: 路径格式 \`${SPRINTS_DIR}/<sid>.contract.md\`
 3. 按指令执行，不超出范围
 4. 完成后写 handoff/eval + 更新 status.json
 
@@ -2705,7 +2758,7 @@ gate_check() {
 	      req_file=$(pm_requirements_file "$sid" 2>/dev/null || true)
 	      if [[ -z "$req_file" ]]; then
 	        log "${R}门禁拦截: active 状态但 PRD 不存在${N}"
-        dispatch_to_pm "$sid" "gate_missing_prd" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：Sprint ${sid} 缺少 PM PRD。请先研究用户需求，写 ~/.solar/harness/sprints/${sid}.prd.md，再交给 Planner/架构师。"
+        dispatch_to_pm "$sid" "gate_missing_prd" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：Sprint ${sid} 缺少 PM PRD。请先研究用户需求，写 ${SPRINTS_DIR}/${sid}.prd.md，再交给 Planner/架构师。"
         runtime_status_transition "$sid" "drafting" "active_blocked_missing_prd" "coordinator" '{"status_fields":{"phase":"spec","handoff_to":"pm","target_role":"pm"}}' || true
         return 1
       fi
@@ -2713,7 +2766,7 @@ gate_check() {
         local prd_err
         if prd_err=$(validate_doc "prd" "$req_file"); then :; else
           log "${R}门禁拦截: PRD 结构不完整${N}"
-          dispatch_to_pm "$sid" "gate_prd_schema" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截 (PRD Schema): ${prd_err}。请补全 ~/.solar/harness/sprints/${sid}.prd.md 后再交给 Planner。"
+          dispatch_to_pm "$sid" "gate_prd_schema" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截 (PRD Schema): ${prd_err}。请补全 ${SPRINTS_DIR}/${sid}.prd.md 后再交给 Planner。"
           runtime_status_transition "$sid" "drafting" "active_blocked_invalid_prd" "coordinator" '{"status_fields":{"phase":"spec","handoff_to":"pm","target_role":"pm"}}' || true
           return 1
         fi
@@ -2731,7 +2784,7 @@ gate_check() {
       # 门禁: plan.md 必须存在 + 结构校验
       if [[ ! -f "$sprint_dir/${sid}.plan.md" ]]; then
         log "${R}门禁拦截: planning 状态但 plan.md 不存在${N}"
-        dispatch_to_builder "$sid" "gate_missing_plan" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：你需要先写实现计划到 ~/.solar/harness/sprints/${sid}.plan.md 再更新状态为 planning。"
+        dispatch_to_builder "$sid" "gate_missing_plan" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：你需要先写实现计划到 ${SPRINTS_DIR}/${sid}.plan.md 再更新状态为 planning。"
         runtime_status_transition "$sid" "active" "planning_blocked_missing_plan" "coordinator" '{}' || true
         return 1
       fi
@@ -2748,7 +2801,7 @@ gate_check() {
       # 门禁: handoff.md 必须存在 + 结构校验
       if [[ ! -f "$sprint_dir/${sid}.handoff.md" ]]; then
         log "${R}门禁拦截: reviewing 状态但 handoff.md 不存在${N}"
-        dispatch_to_builder "$sid" "gate_missing_handoff" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：你需要先写 handoff 文档到 ~/.solar/harness/sprints/${sid}.handoff.md 再更新状态为 reviewing。"
+        dispatch_to_builder "$sid" "gate_missing_handoff" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：你需要先写 handoff 文档到 ${SPRINTS_DIR}/${sid}.handoff.md 再更新状态为 reviewing。"
         runtime_status_transition "$sid" "approved" "reviewing_blocked_missing_handoff" "coordinator" '{}' || true
         return 1
       fi
@@ -2773,7 +2826,7 @@ gate_check() {
       # 门禁: eval.md 必须存在 + 结构校验 + 无未解决 FAIL
       if [[ ! -f "$sprint_dir/${sid}.eval.md" ]]; then
         log "${R}门禁拦截: passed 但 eval.md 不存在${N}"
-        dispatch_to_evaluator "$sid" "gate_missing_eval" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：你需要先写评估报告到 ~/.solar/harness/sprints/${sid}.eval.md 再标记为 passed。"
+        dispatch_to_evaluator "$sid" "gate_missing_eval" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：你需要先写评估报告到 ${SPRINTS_DIR}/${sid}.eval.md 再标记为 passed。"
         runtime_status_transition "$sid" "reviewing" "passed_blocked_missing_eval" "coordinator" '{}' || true
         return 1
       fi
@@ -2800,17 +2853,76 @@ gate_check() {
 # 状态转换处理器
 # ================================================================
 
+# Canonical worker pane for a drafting stage (PM=0.0, Planner=0.1). Used by the
+# liveness check to avoid re-dispatching a pane that is still actively working.
+drafting_stage_worker_busy() {
+  local stage="$1" pane=""
+  case "$stage" in
+    pm) pane="$SESSION_NAME:0.0" ;;
+    planner) pane="$SESSION_NAME:0.1" ;;
+    *) return 1 ;;
+  esac
+  pane_target_exists "$pane" || return 1
+  tmux capture-pane -t "$pane" -p 2>/dev/null | tail -8 | grep -qi "esc to interrupt"
+}
+
+# Remove the dispatched-latch line(s) for sid:stage so the next handle_drafting
+# iteration re-dispatches. sid/stage contain no ':' so an awk field match is exact.
+drafting_flow_clear() {
+  local sid="$1" stage="$2"
+  local marker="$HARNESS_DIR/.drafting-flow-dispatched"
+  [[ -f "$marker" ]] || return 0
+  local tmp
+  tmp=$(mktemp "${marker}.XXXXXX") || return 0
+  if awk -F: -v s="$sid" -v g="$stage" '!($1==s && $2==g)' "$marker" > "$tmp" 2>/dev/null; then
+    mv "$tmp" "$marker"
+  else
+    rm -f "$tmp"
+  fi
+}
+
+# Fix 1 (drafting liveness reconciliation): the dispatched-latch is no longer
+# fire-once-forever. dispatch_to_role returns 0 when the PROMPT IS SENT, not when
+# the artifact is produced; if the pane then latches needs_respawn / the model
+# errors / nothing is produced, the old permanent latch stalled the run forever
+# (coordinator polled but never re-attempted). We now timestamp the latch and, at
+# the (artifact-absent) skip points, drop it once the dispatch is stale AND the
+# canonical worker pane is idle — so a dead dispatch re-attempts but a genuinely
+# working agent is never interrupted. Mirrors the back-half graph-dispatch reconcile.
 drafting_flow_marked() {
   local sid="$1" stage="$2"
   local marker="$HARNESS_DIR/.drafting-flow-dispatched"
-  [[ -f "$marker" ]] && grep -qx "${sid}:${stage}" "$marker" 2>/dev/null
+  [[ -f "$marker" ]] || return 1
+  local line ts now stall
+  line=$(awk -F: -v s="$sid" -v g="$stage" '$1==s && $2==g {print}' "$marker" 2>/dev/null | tail -1)
+  [[ -n "$line" ]] || return 1
+  ts=$(printf '%s' "$line" | awk -F: '{print $3}')
+  stall="${SOLAR_DRAFTING_FLOW_STALL_SEC:-240}"
+  if [[ "$ts" =~ ^[0-9]+$ ]]; then
+    now=$(date +%s)
+    if (( now - ts > stall )); then
+      if drafting_stage_worker_busy "$stage"; then
+        return 0  # still actively working; keep the latch, don't interrupt
+      fi
+      drafting_flow_clear "$sid" "$stage"
+      log "${Y}[drafting-liveness] ${sid}:${stage} dispatched $((now-ts))s ago, artifact still absent + pane idle → re-attempt${N}"
+      return 1
+    fi
+    return 0
+  fi
+  # Legacy line without a timestamp (pre-Fix-1): cannot prove liveness → drop once
+  # so it re-enters the normal (cooldown-paced) dispatch path with a fresh stamp.
+  drafting_flow_clear "$sid" "$stage"
+  return 1
 }
 
 drafting_retry_blocked() {
   local sid="$1" stage="$2"
   local marker="$HARNESS_DIR/.drafting-flow-retry"
   local now last_ts cooldown
-  cooldown="${DRAFTING_RETRY_COOLDOWN_SEC:-900}"
+  # Was 900s (15 min): a transient pane-busy at boot stalled the sprint for 15 min
+  # before retry. 90s lets a settled pane be re-dispatched quickly so runs self-recover.
+  cooldown="${DRAFTING_RETRY_COOLDOWN_SEC:-90}"
   [[ -f "$marker" ]] || return 1
   now=$(date +%s)
   last_ts=$(awk -F: -v key="${sid}:${stage}" '$1 ":" $2 == key {print $3}' "$marker" 2>/dev/null | tail -1)
@@ -2826,7 +2938,7 @@ mark_drafting_retry() {
   ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   touch "$marker"
   echo "${sid}:${stage}:${now}:${reason}" >> "$marker"
-  printf '%s\n' "- [ ] [${ts}] [DRAFTING-DISPATCH-COOLDOWN] ${sid} ${stage} dispatch failed (${reason}); cooldown ${DRAFTING_RETRY_COOLDOWN_SEC:-900}s, no pane spam" \
+  printf '%s\n' "- [ ] [${ts}] [DRAFTING-DISPATCH-COOLDOWN] ${sid} ${stage} dispatch failed (${reason}); cooldown ${DRAFTING_RETRY_COOLDOWN_SEC:-90}s, no pane spam" \
     >> "$HARNESS_DIR/PLANNER-INBOX.md"
 }
 
@@ -2834,7 +2946,10 @@ mark_drafting_flow() {
   local sid="$1" stage="$2"
   local marker="$HARNESS_DIR/.drafting-flow-dispatched"
   touch "$marker"
-  grep -qx "${sid}:${stage}" "$marker" 2>/dev/null || echo "${sid}:${stage}" >> "$marker"
+  # Re-stamp (drop any prior line for this sid:stage, then append with epoch) so the
+  # liveness check has a fresh dispatch time to measure staleness against.
+  drafting_flow_clear "$sid" "$stage"
+  echo "${sid}:${stage}:$(date +%s)" >> "$marker"
 }
 
 builder_flow_marked() {
@@ -2906,24 +3021,24 @@ PY
     append_dispatch "$sid" "### 步骤
 
 1. 读取合约:
-   cat ~/.solar/harness/sprints/${sid}.contract.md
+   cat ${SPRINTS_DIR}/${sid}.contract.md
 
 2. 读取 PRD 模板和 schema:
-   cat ~/.solar/harness/templates/prd.template.md 2>/dev/null || true
-   cat ~/.solar/harness/schemas/prd.schema.json 2>/dev/null || true
+   cat ${HARNESS_DIR}/templates/prd.template.md 2>/dev/null || true
+   cat ${HARNESS_DIR}/schemas/prd.schema.json 2>/dev/null || true
 
 3. 作为 PM，你要研究、分析、拆解用户原话，写正式 PRD 到:
-   ~/.solar/harness/sprints/${sid}.prd.md
+   ${SPRINTS_DIR}/${sid}.prd.md
 
 4. 额外写人读 HTML artifact 到:
-   ~/.solar/harness/sprints/${sid}.prd.html
+   ${SPRINTS_DIR}/${sid}.prd.html
    HTML 是给用户阅读和审阅的可视化 artifact，不能替代 prd.md。必须 self-contained，不依赖外部 CSS/JS/CDN。
    优先使用统一渲染器生成:
-   python3 ~/.solar/harness/lib/render_sprint_html.py render --sid ${sid} --kind prd --register
+   python3 ${HARNESS_DIR}/lib/render_sprint_html.py render --sid ${sid} --kind prd --register
    \`prd.html\` 和后续 \`planning.html\` 必须统一为同一套 richer 视觉系统：深色 hero、锚点目录 TOC、卡片分区、流程/架构图、技术栈/算子绑定区、风险矩阵；不能只是 Markdown 转 HTML，也不能退化成朴素米色文档页。
 
 5. 写完 HTML 后注册并自动打开:
-   python3 ~/.solar/harness/lib/html_artifact.py register --sid ${sid} --kind prd_html --path ~/.solar/harness/sprints/${sid}.prd.html
+   python3 ${HARNESS_DIR}/lib/html_artifact.py register --sid ${sid} --kind prd_html --path ${SPRINTS_DIR}/${sid}.prd.html
    helper 失败只记录 warn，不允许阻断 PM -> Planner 主链路。
 
 6. PRD 至少包含: 背景/问题、用户目标、用户故事、功能需求、非目标、约束、验收标准、风险、开放问题、交给架构师/Planner 的问题。
@@ -2966,7 +3081,7 @@ PY
       local prd_err
       if prd_err=$(validate_doc "prd" "$req_file"); then :; else
         log "${R}PRD ready 但结构不完整 → 打回 PM 补全${N}"
-        dispatch_to_pm "$sid" "pm_prd_fix" "$SPRINTS_DIR/${sid}.dispatch.md" "PRD 门禁未通过：${prd_err}。请补全 ~/.solar/harness/sprints/${sid}.prd.md，保持 status=drafting，然后更新 updated_at 触发 coordinator。"
+        dispatch_to_pm "$sid" "pm_prd_fix" "$SPRINTS_DIR/${sid}.dispatch.md" "PRD 门禁未通过：${prd_err}。请补全 ${SPRINTS_DIR}/${sid}.prd.md，保持 status=drafting，然后更新 updated_at 触发 coordinator。"
         emit_event "$sid" "gate_blocked" "coordinator" "{\"stage\":\"prd\",\"reason\":\"invalid_prd\"}"
         return 0
       fi
@@ -2986,38 +3101,38 @@ PY
     append_dispatch "$sid" "### 步骤
 
 1. 读取合约:
-   cat ~/.solar/harness/sprints/${sid}.contract.md
+   cat ${SPRINTS_DIR}/${sid}.contract.md
 
 2. 读取 PM PRD:
    cat ${req_file}
 
 3. 写架构设计到:
-   ~/.solar/harness/sprints/${sid}.design.md
+   ${SPRINTS_DIR}/${sid}.design.md
 
 4. 写实施计划到:
-   ~/.solar/harness/sprints/${sid}.plan.md
+   ${SPRINTS_DIR}/${sid}.plan.md
 
 5. 写机器可执行 DAG 任务图到:
-   ~/.solar/harness/sprints/${sid}.task_graph.json
+   ${SPRINTS_DIR}/${sid}.task_graph.json
 
 5.1 显式维护需求映射:
-   - task_graph.json 的每个节点都必须写出 `requirement_ids`，表示它覆盖哪些 requirement
-   - 每个节点都必须写出 `acceptance_ids`
+   - task_graph.json 的每个节点都必须写出 \`requirement_ids\`，表示它覆盖哪些 requirement
+   - 每个节点都必须写出 \`acceptance_ids\`
    - 禁止只依赖默认占位映射；Planner 必须把 requirement -> node 的关系写清楚
 
 6. 额外写人读 HTML artifact 到:
-   ~/.solar/harness/sprints/${sid}.design.html
-   ~/.solar/harness/sprints/${sid}.planning.html
+   ${SPRINTS_DIR}/${sid}.design.html
+   ${SPRINTS_DIR}/${sid}.planning.html
    HTML 是给用户阅读和审阅的可视化 artifact，不能替代 design.md、plan.md 或 task_graph.json。必须 self-contained，不依赖外部 CSS/JS/CDN。
-   `design.html` 用来承载架构设计视图，`planning.html` 用来承载执行计划 / DAG 视图；两者必须属于同一套 html-anything 默认视觉系统。
+   \`design.html\` 用来承载架构设计视图，\`planning.html\` 用来承载执行计划 / DAG 视图；两者必须属于同一套 html-anything 默认视觉系统。
    优先使用统一渲染器生成:
-   python3 ~/.solar/harness/lib/render_sprint_html.py render --sid ${sid} --kind design --register
-   python3 ~/.solar/harness/lib/render_sprint_html.py render --sid ${sid} --kind planning --register
-   \`design.html\` / \`planning.html\` 必须和 PM 侧 \`prd.html\` 保持同一套 richer 视觉系统：深色 hero、锚点目录 TOC、卡片分区、流程/架构图、技术栈/算子绑定区、风险矩阵；禁止回退成旧的朴素米色 planning 页。`design.html` 必须突出架构方案与技术栈绑定，`planning.html` 必须突出 DAG/并发边界、文件级写范围、验证命令、风险矩阵和 stop rules。
+   python3 ${HARNESS_DIR}/lib/render_sprint_html.py render --sid ${sid} --kind design --register
+   python3 ${HARNESS_DIR}/lib/render_sprint_html.py render --sid ${sid} --kind planning --register
+   \`design.html\` / \`planning.html\` 必须和 PM 侧 \`prd.html\` 保持同一套 richer 视觉系统：深色 hero、锚点目录 TOC、卡片分区、流程/架构图、技术栈/算子绑定区、风险矩阵；禁止回退成旧的朴素米色 planning 页。\`design.html\` 必须突出架构方案与技术栈绑定，\`planning.html\` 必须突出 DAG/并发边界、文件级写范围、验证命令、风险矩阵和 stop rules。
 
 7. 写完 HTML 后注册并自动打开:
-   python3 ~/.solar/harness/lib/html_artifact.py register --sid ${sid} --kind design_html --path ~/.solar/harness/sprints/${sid}.design.html
-   python3 ~/.solar/harness/lib/html_artifact.py register --sid ${sid} --kind planning_html --path ~/.solar/harness/sprints/${sid}.planning.html
+   python3 ${HARNESS_DIR}/lib/html_artifact.py register --sid ${sid} --kind design_html --path ${SPRINTS_DIR}/${sid}.design.html
+   python3 ${HARNESS_DIR}/lib/html_artifact.py register --sid ${sid} --kind planning_html --path ${SPRINTS_DIR}/${sid}.planning.html
    helper 失败只记录 warn，不允许阻断 Planner -> Builder 主链路。
 
 8. task_graph.json 每个节点必须包含: id、goal、depends_on、write_scope、read_scope、required_skills、preferred_model、gate、acceptance、estimated_cost、priority、required_phase、required_node_id、required_node_status、requirement_ids、acceptance_ids。没有 write_scope 的节点不得并行。
@@ -3275,6 +3390,32 @@ handle_active() {
 
   local phase
   phase=$(get_field "$sf" "phase")
+
+  # Fix 0 (artifact/status backfill): an epic-child can be canonicalized to
+  # status=active while its phase is still prd_ready/planner even though the planner
+  # already produced design+plan+task_graph. In that split state handle_drafting
+  # skips it (status!=drafting) and the DAG branch below skips it (phase!=planning_complete)
+  # — a dead zone that loops back to the planner forever. If workflow_guard says the
+  # planner artifacts + task_graph are ready, promote phase to planning_complete/builder_main
+  # so DAG dispatch can proceed. Gated on task_graph presence + guard=builder_main so it
+  # only fires when artifacts are genuinely complete; idempotent (next loop skips).
+  case "$phase" in
+    planning_complete|graph_dispatch_active|g0_passed|slices_dispatched|s[0-7]_*|building_parallel|reviewing*|architect_*|eval*) : ;;
+    *)
+      if [[ -f "$SPRINTS_DIR/${sid}.task_graph.json" ]]; then
+        local _guard_role _old_phase="$phase"
+        _guard_role="$(workflow_guard_route_role "$sid" 2>/dev/null || true)"
+        if [[ "$_guard_role" == "builder_main" || "$_guard_role" == "builder" ]]; then
+          log "${G}[backfill] ${sid} active/${_old_phase} but planner artifacts+task_graph ready (guard=${_guard_role}) → promote planning_complete/builder_main${N}"
+          drafting_flow_clear "$sid" "planner"
+          runtime_status_transition "$sid" "active" "active_artifacts_ready_backfill" "coordinator" '{"status_fields":{"phase":"planning_complete","handoff_to":"builder_main","target_role":"builder_main"},"note":"Backfilled split active/prd_ready state: planner artifacts and task_graph are complete."}' || true
+          phase="planning_complete"
+          emit_event "$sid" "phase_backfilled" "coordinator" "{\"from\":\"${_old_phase}\",\"to\":\"planning_complete\",\"guard\":\"${_guard_role}\"}"
+        fi
+      fi
+      ;;
+  esac
+
   case "$phase" in
     g0_passed)
       log "${Y}Sprint ${sid} G0 passed; waiting for S1/S2/S6 slice dispatch${N}"
@@ -3357,6 +3498,25 @@ EOF
   if [[ "$phase" == "graph_dispatch_active" || "$phase" == "planning_complete" ]]; then
     if [[ -f "$SPRINTS_DIR/${sid}.task_graph.json" ]]; then
       log "${G}Sprint ${sid} ${phase} + task_graph → DAG graph_node 派发${N}"
+      # Option A self-complete: for an APPROVED sprint (graph_dispatch_active), hand the DAG to the PROVEN
+      # multi-task pool (build->eval->verdict->advance->clean exit) instead of the graph-dispatch panes.
+      # That path is codex-safe (honors the provider policy / role-compat / backend-health / sonnet eval)
+      # and is the one that produced the first fully-green DAG. Gated + default off so existing behavior is
+      # unchanged until the owner opts in (SOLAR_COORD_MULTITASK_SELFCOMPLETE=1). Respects the plan gate
+      # (only graph_dispatch_active, i.e. post-approval). pgrep guard prevents duplicate pools; the pool
+      # self-exits when the DAG is terminal.
+      if [[ "${SOLAR_COORD_MULTITASK_SELFCOMPLETE:-0}" == "1" && "$phase" == "graph_dispatch_active" ]]; then
+        if ! pgrep -f "multi_task_runner.py start .*${sid}.task_graph.json" >/dev/null 2>&1; then
+          SOLAR_GRAPH_EVAL_OPERATOR_POOL="${SOLAR_GRAPH_EVAL_OPERATOR_POOL:-1}" \
+            nohup python3 "$HARNESS_DIR/lib/multi_task_runner.py" start \
+              --graph "$SPRINTS_DIR/${sid}.task_graph.json" \
+              --max-workers "${SOLAR_COORD_MULTITASK_WORKERS:-1}" --interval 20 --renderer plain \
+              >> "$HARNESS_DIR/run/coord-multitask-${sid}.log" 2>&1 &
+          log "${G}[graph-dispatch] launched multi-task self-complete pool for ${sid}${N}"
+          emit_event "$sid" "multi_task_selfcomplete_launched" "coordinator" "{\"workers\":\"${SOLAR_COORD_MULTITASK_WORKERS:-1}\"}"
+        fi
+        return 0
+      fi
       if type queue_consume_intent_prefix &>/dev/null; then
         local pm_fix_consumed
         pm_fix_consumed=$(queue_consume_intent_prefix "$sid" "pm_prd_fix|" "superseded_by_graph_dispatch" 2>/dev/null || echo 0)
@@ -3374,11 +3534,16 @@ EOF
       fi
       local graph_rc=0 graph_out="" graph_eval_out="" graph_eval_rc=0
       local graph_dispatch_timeout="${SOLAR_GRAPH_DISPATCH_TIMEOUT_SEC:-35}"
+      # Self-advance cockpit/multi-task sprints: cockpit evaluator panes are usually idle, so eval needs the
+      # operatord evaluator pool to find an evaluator (otherwise dispatch-evals returns no_available_evaluator
+      # and the DAG never leaves `reviewing`). Honors an explicit SOLAR_GRAPH_EVAL_OPERATOR_POOL; otherwise
+      # defaults on. Set SOLAR_COORD_EVAL_OPERATOR_POOL=0 to disable. The eval pool itself stays builder-safe.
+      local coord_eval_pool="${SOLAR_GRAPH_EVAL_OPERATOR_POOL:-${SOLAR_COORD_EVAL_OPERATOR_POOL:-1}}"
       if [[ -n "${SOLAR_COORD_DRY_RUN:-}" ]]; then
-        graph_eval_out="$(run_with_timeout "$graph_dispatch_timeout" python3 "$graph_dispatcher" dispatch-evals --graph "$SPRINTS_DIR/${sid}.task_graph.json" --dry-run 2>&1)" || graph_eval_rc=$?
+        graph_eval_out="$(SOLAR_GRAPH_EVAL_OPERATOR_POOL="$coord_eval_pool" run_with_timeout "$graph_dispatch_timeout" python3 "$graph_dispatcher" dispatch-evals --graph "$SPRINTS_DIR/${sid}.task_graph.json" --dry-run 2>&1)" || graph_eval_rc=$?
         graph_out="$(run_with_timeout "$graph_dispatch_timeout" python3 "$graph_dispatcher" dispatch-ready --graph "$SPRINTS_DIR/${sid}.task_graph.json" --dry-run 2>&1)" || graph_rc=$?
       else
-        graph_eval_out="$(run_with_timeout "$graph_dispatch_timeout" python3 "$graph_dispatcher" dispatch-evals --graph "$SPRINTS_DIR/${sid}.task_graph.json" 2>&1)" || graph_eval_rc=$?
+        graph_eval_out="$(SOLAR_GRAPH_EVAL_OPERATOR_POOL="$coord_eval_pool" run_with_timeout "$graph_dispatch_timeout" python3 "$graph_dispatcher" dispatch-evals --graph "$SPRINTS_DIR/${sid}.task_graph.json" 2>&1)" || graph_eval_rc=$?
         graph_out="$(run_with_timeout "$graph_dispatch_timeout" python3 "$graph_dispatcher" dispatch-ready --graph "$SPRINTS_DIR/${sid}.task_graph.json" 2>&1)" || graph_rc=$?
       fi
       if (( graph_eval_rc != 0 )); then
@@ -3408,7 +3573,7 @@ EOF
       return 0
     fi
     log "${R}[graph-dispatch] ${sid} phase=${phase} but task_graph missing; refuse parent builder dispatch${N}"
-    dispatch_to_planner "$sid" "gate_missing_task_graph" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：Planner 必须补齐 ~/.solar/harness/sprints/${sid}.task_graph.json，包含 id/goal/depends_on/write_scope/read_scope/required_skills/preferred_model/gate/acceptance/estimated_cost。未生成 DAG 前禁止直接派 Builder。"
+    dispatch_to_planner "$sid" "gate_missing_task_graph" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：Planner 必须补齐 ${SPRINTS_DIR}/${sid}.task_graph.json，包含 id/goal/depends_on/write_scope/read_scope/required_skills/preferred_model/gate/acceptance/estimated_cost。未生成 DAG 前禁止直接派 Builder。"
     runtime_status_transition "$sid" "drafting" "active_blocked_missing_task_graph" "coordinator" '{"status_fields":{"phase":"prd_ready","handoff_to":"planner","target_role":"planner"},"note":"Workflow guard refused single-builder fallback; task_graph is required."}' || true
     rollback_state_cache "$sid"
     emit_event "$sid" "graph_dispatch_failed" "coordinator" "{\"reason\":\"task_graph_missing\",\"phase\":\"${phase}\"}"
@@ -3445,10 +3610,10 @@ ${contract_summary:-（请直接打开 contract.md 查看最新修订）}
 ### 步骤
 
 1. 读取最新合约:
-   cat ~/.solar/harness/sprints/${sid}.contract.md
+   cat ${SPRINTS_DIR}/${sid}.contract.md
 
 2. 读取上一轮反馈:
-   cat ~/.solar/harness/sprints/${sid}.eval.json 2>/dev/null || cat ~/.solar/harness/sprints/${sid}.eval.md
+   cat ${SPRINTS_DIR}/${sid}.eval.json 2>/dev/null || cat ${SPRINTS_DIR}/${sid}.eval.md
 
 3. 对照最新合约修复代码，只做 round ${round} 必要改动
 
@@ -3456,7 +3621,7 @@ ${contract_summary:-（请直接打开 contract.md 查看最新修订）}
 
 5. 完成后提交:
    \`\`\`bash
-   bash ~/.solar/harness/solar-harness.sh handoff-submit ${sid}
+   bash ${HARNESS_DIR}/solar-harness.sh handoff-submit ${sid}
    \`\`\`
 "
     dispatch_to_builder "$sid" "builder_dispatch"
@@ -3482,9 +3647,9 @@ ${contract_summary:-（请直接打开 contract.md 查看最新修订）}
   append_dispatch "$sid" "### 步骤
 
 1. 读取合约:
-   cat ~/.solar/harness/sprints/${sid}.contract.md
+   cat ${SPRINTS_DIR}/${sid}.contract.md
 
-2. 写实现计划到 ~/.solar/harness/sprints/${sid}.plan.md，包含:
+2. 写实现计划到 ${SPRINTS_DIR}/${sid}.plan.md，包含:
    - \`## 变更文件\` — 要改哪些文件、每个文件改什么
    - \`## 技术方案\` — 数据结构、算法、接口设计
    - \`## 风险点\` — 边界条件、可能出问题的地方
@@ -3524,10 +3689,10 @@ handle_planning() {
   append_dispatch "$sid" "### 步骤
 
 1. 读取合约:
-   cat ~/.solar/harness/sprints/${sid}.contract.md
+   cat ${SPRINTS_DIR}/${sid}.contract.md
 
 2. 读取实现计划:
-   cat ~/.solar/harness/sprints/${sid}.plan.md
+   cat ${SPRINTS_DIR}/${sid}.plan.md
 
 3. 审批要点:
    - 计划是否覆盖所有 Done 条件？
@@ -3538,11 +3703,11 @@ handle_planning() {
 4. 判定:
 	   - APPROVE:
 	     \`\`\`bash
-	     bash ~/.solar/harness/solar-harness.sh plan-verdict ${sid} approve
+	     bash ${HARNESS_DIR}/solar-harness.sh plan-verdict ${sid} approve
 	     \`\`\`
 	   - REJECT (在 plan.md 末尾写修改意见):
 	     \`\`\`bash
-	     bash ~/.solar/harness/solar-harness.sh plan-verdict ${sid} reject 原因
+	     bash ${HARNESS_DIR}/solar-harness.sh plan-verdict ${sid} reject 原因
 	     \`\`\`
 "
   dispatch_to_evaluator "$sid" "review_plan"
@@ -3589,19 +3754,19 @@ handle_approved() {
   append_dispatch "$sid" "### 步骤
 
 1. 读取你的计划:
-   cat ~/.solar/harness/sprints/${sid}.plan.md
-   cat ~/.solar/harness/sprints/${sid}.requirement_ir.json 2>/dev/null
-   cat ~/.solar/harness/sprints/${sid}.requirement_trace.json 2>/dev/null
+   cat ${SPRINTS_DIR}/${sid}.plan.md
+   cat ${SPRINTS_DIR}/${sid}.requirement_ir.json 2>/dev/null
+   cat ${SPRINTS_DIR}/${sid}.requirement_trace.json 2>/dev/null
 
 2. 按计划逐步实现代码
 
-3. 实现完成后写 handoff 文档到 ~/.solar/harness/sprints/${sid}.handoff.md
+3. 实现完成后写 handoff 文档到 ${SPRINTS_DIR}/${sid}.handoff.md
    必须包含: \`## 变更文件\`, \`## Done 达成\`, \`## 验证方法\`
    还要逐条说明你完成了哪些 requirement，以及哪些仍待下轮完成；不要只写泛化总结。
 
 4. 更新状态:
    \`\`\`bash
-   bash ~/.solar/harness/solar-harness.sh handoff-submit ${sid}
+   bash ${HARNESS_DIR}/solar-harness.sh handoff-submit ${sid}
    \`\`\`
 
 **按计划实现，不要超出范围。**"
@@ -3675,9 +3840,9 @@ ${chunk}
 
 ### 步骤
 
-1. 读取计划: cat ~/.solar/harness/sprints/${sid}.plan.md
+1. 读取计划: cat ${SPRINTS_DIR}/${sid}.plan.md
 2. 只实现上面列出的 Done 子集
-3. 写 handoff 到: ~/.solar/harness/sprints/${sid}.handoff-builder${i}.md
+3. 写 handoff 到: ${SPRINTS_DIR}/${sid}.handoff-builder${i}.md
 4. 不要更新整个 sprint 为 reviewing；等所有 builder handoff 到齐后 coordinator 自动合并
 
 **只做分配给你的 Done，不要碰其他 builder 的范围。**"
@@ -3920,17 +4085,17 @@ PY
 ### 步骤
 
 1. 读取合约:
-   cat ~/.solar/harness/sprints/${sid}.contract.md
+   cat ${SPRINTS_DIR}/${sid}.contract.md
 
 2. 读取 handoff:
-   cat ~/.solar/harness/sprints/${sid}.handoff.md
-   cat ~/.solar/harness/sprints/${sid}.requirement_trace.json 2>/dev/null
-   cat ~/.solar/harness/sprints/${sid}.coverage_report.json 2>/dev/null
-   cat ~/.solar/harness/sprints/${sid}.acceptance_verdict.json 2>/dev/null
+   cat ${SPRINTS_DIR}/${sid}.handoff.md
+   cat ${SPRINTS_DIR}/${sid}.requirement_trace.json 2>/dev/null
+   cat ${SPRINTS_DIR}/${sid}.coverage_report.json 2>/dev/null
+   cat ${SPRINTS_DIR}/${sid}.acceptance_verdict.json 2>/dev/null
 
 3. 逐条检查 Done 定义，查看实际代码，运行测试验证
 
-4. 写评估报告到 ~/.solar/harness/sprints/${sid}.eval.md
+4. 写评估报告到 ${SPRINTS_DIR}/${sid}.eval.md
    必须包含: \`## 总判定\` (PASS/FAIL), \`## Done 条件逐条\`
    还必须对照 requirement coverage，说明 partial / missing 是否已经清零。
 
@@ -3939,11 +4104,11 @@ PY
 6. 更新状态:
    - PASS:
      \`\`\`bash
-     bash ~/.solar/harness/solar-harness.sh eval-verdict ${sid} pass
+     bash ${HARNESS_DIR}/solar-harness.sh eval-verdict ${sid} pass
      \`\`\`
    - FAIL:
      \`\`\`bash
-     bash ~/.solar/harness/solar-harness.sh eval-verdict ${sid} fail \"失败原因\"
+     bash ${HARNESS_DIR}/solar-harness.sh eval-verdict ${sid} fail \"失败原因\"
      \`\`\`
 
 ## 失败时的增量 refine 要求
@@ -4077,6 +4242,56 @@ PY
   log "${Y}[failed-followup] generated ${followup}${N}"
 }
 
+failed_review_graph_native_guard() {
+  local sid="$1"
+  local graph="$SPRINTS_DIR/${sid}.task_graph.json"
+  local state="$SPRINTS_DIR/${sid}.task_dag.state.json"
+  [[ -f "$graph" ]] || return 1
+  python3 - "$graph" "$state" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+active_statuses = {"assigned", "dispatched", "in_progress", "running", "reviewing", "ready_for_review"}
+failed_statuses = {"failed", "error", "cancelled", "failed_missing_handoff", "failed_stale_handoff"}
+
+try:
+    graph = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+except Exception:
+    sys.exit(1)
+
+statuses = {}
+for node in graph.get("nodes") or []:
+    if isinstance(node, dict) and node.get("id"):
+        statuses[str(node["id"])] = str(node.get("status") or "pending")
+
+result_source = graph.get("node_results")
+if isinstance(result_source, dict):
+    for node_id, result in result_source.items():
+        if isinstance(result, dict) and result.get("status"):
+            statuses[str(node_id)] = str(result.get("status"))
+
+state_path = Path(sys.argv[2])
+if state_path.exists():
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+    except Exception:
+        state = {}
+    result_source = state.get("node_results") if isinstance(state, dict) else {}
+    if isinstance(result_source, dict):
+        for node_id, result in result_source.items():
+            if isinstance(result, dict) and result.get("status"):
+                statuses[str(node_id)] = str(result.get("status"))
+
+active = sorted(node_id for node_id, status in statuses.items() if status in active_statuses)
+failed = sorted(node_id for node_id, status in statuses.items() if status in failed_statuses)
+if not active and not failed:
+    sys.exit(1)
+
+print(json.dumps({"active_nodes": active, "failed_nodes": failed}, ensure_ascii=False))
+PY
+}
+
 handle_failed_review() {
   local sid="$1" sf="$2"
   local round
@@ -4104,12 +4319,12 @@ handle_failed_review() {
 	    append_dispatch "$sid" "Sprint ${sid} 已经 3 轮未通过审判官评审。
 
 请读取评审报告分析原因:
-cat ~/.solar/harness/sprints/${sid}.eval.md
+cat ${SPRINTS_DIR}/${sid}.eval.md
 
 	决定: 修正合约范围 or 拆分为更小的 Sprint。
 
 	优先读取自动拆单材料:
-	cat ~/.solar/harness/sprints/${sid}.followup.md"
+	cat ${SPRINTS_DIR}/${sid}.followup.md"
 
     local planner_rc
     dispatch_to_planner "$sid" "failed_max_rounds" "$SPRINTS_DIR/${sid}.dispatch.md"
@@ -4125,6 +4340,15 @@ cat ~/.solar/harness/sprints/${sid}.eval.md
     # sprint-20260503-195627 D2: telemetry emit (failed, max rounds)
     type telemetry_emit_run &>/dev/null && telemetry_emit_run "$sid" "failed" "[]" 2>> "$COORD_LOG" || true
     return
+  fi
+
+  local graph_guard
+  if graph_guard="$(failed_review_graph_native_guard "$sid")"; then
+    log "${Y}[failed_review] ${sid} has active/failed DAG node state; suppressing legacy whole-sprint builder repair: ${graph_guard}${N}"
+    emit_event "$sid" "failed_review_legacy_builder_blocked" "coordinator" "${graph_guard}"
+    runtime_status_transition "$sid" "active" "failed_review_graph_native_blocked_legacy_builder" "coordinator" '{"status_fields":{"phase":"graph_dispatch_active","handoff_to":"builder_main","target_role":"builder_main"},"note":"DAG-native node state exists; legacy whole-sprint failed_review builder repair was suppressed to avoid interrupting active graph panes."}' || true
+    rollback_state_cache "$sid"
+    return 0
   fi
 
   # ── D4: Codex 根因分析 (Sprint sprint-20260419-223020) ──
@@ -4183,7 +4407,7 @@ ${fail_info}
 ### 步骤
 
 1. 读取 eval.json 定位失败项:
-   cat ~/.solar/harness/sprints/${sid}.eval.json
+   cat ${SPRINTS_DIR}/${sid}.eval.json
 
 2. 按 \`failed_conditions\` 逐条修复代码
 
@@ -4191,14 +4415,14 @@ ${fail_info}
 
 4. 更新状态:
    \`\`\`bash
-   bash ~/.solar/harness/solar-harness.sh handoff-submit ${sid}
+   bash ${HARNESS_DIR}/solar-harness.sh handoff-submit ${sid}
    \`\`\`"
   else
     # 无 eval.json，退回到注入 eval.md
     append_dispatch "$sid" "### 步骤
 
 1. 读取评审报告:
-   cat ~/.solar/harness/sprints/${sid}.eval.md
+   cat ${SPRINTS_DIR}/${sid}.eval.md
 
 2. 按 FAIL 项逐条修复代码
 
@@ -4206,13 +4430,13 @@ ${fail_info}
 
 4. 更新状态:
    \`\`\`bash
-   bash ~/.solar/harness/solar-harness.sh handoff-submit ${sid}
+   bash ${HARNESS_DIR}/solar-harness.sh handoff-submit ${sid}
    \`\`\`
 
 ## 增量修复指引
 
 如果上一轮 eval.md 有 ## next_round_capsule_diff:
-1. 先读 capsule_diff: grep -A 20 'next_round_capsule_diff' ~/.solar/harness/sprints/${sid}.eval.md
+1. 先读 capsule_diff: grep -A 20 'next_round_capsule_diff' ${SPRINTS_DIR}/${sid}.eval.md
 2. 只修 capsule_diff 中指出的差异, 不重写 plan.md
 3. 更新 handoff.md 的增量改动部分"
   fi
@@ -4560,6 +4784,54 @@ PY
   return 0
 }
 
+ensure_graph_parent_ready_for_pass() {
+  local sid="$1" sf="$2"
+  local graph="$SPRINTS_DIR/${sid}.task_graph.json"
+  [[ -f "$graph" ]] || return 0
+
+  local out
+  if out=$(PYTHONPATH="$HARNESS_DIR/lib:${PYTHONPATH:-}" python3 - "$graph" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+import graph_scheduler
+
+graph_path = Path(sys.argv[1])
+graph = json.loads(graph_path.read_text(encoding="utf-8"))
+result = graph_scheduler.sync_status_cache_from_graph(
+    graph,
+    graph_path,
+    actor="coordinator",
+    event="legacy_pass_blocked_by_graph_parent",
+)
+print(json.dumps(result, ensure_ascii=False))
+parent = result.get("parent") if isinstance(result, dict) else {}
+raise SystemExit(0 if isinstance(parent, dict) and parent.get("ready") is True else 2)
+PY
+  ); then
+    return 0
+  fi
+
+  log "${Y}[graph-parent] BLOCK legacy PASS: ${sid} task_graph parent is not ready${N}"
+  emit_event "$sid" "legacy_pass_blocked_by_graph_parent" "coordinator" \
+    "{\"reason\":\"graph_parent_not_ready\"}"
+  python3 - "$sf" "$out" <<'PY' || true
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+detail = sys.argv[2][-2000:]
+data = json.loads(path.read_text(encoding="utf-8"))
+data["legacy_pass_blocked"] = True
+data["legacy_pass_block_reason"] = "graph_parent_not_ready"
+data["legacy_pass_block_detail"] = detail
+path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+PY
+  return 1
+}
+
 # 审判官判定 PASS → 通知完成
 handle_passed() {
   local sid="$1" sf="$2"
@@ -4587,6 +4859,10 @@ handle_passed() {
 
   local title
   title=$(get_field "$sf" "title")
+
+  if ! ensure_graph_parent_ready_for_pass "$sid" "$sf"; then
+    return 1
+  fi
 
   log "${G}Sprint PASSED! ${title}${N}"
 
@@ -4699,7 +4975,7 @@ handle_needs_human() {
 **原因**: ${reason}
 
 ### 选项
-1. 修复合约: 编辑 ~/.solar/harness/sprints/${sid}.contract.md
+1. 修复合约: 编辑 ${SPRINTS_DIR}/${sid}.contract.md
 2. 继续 Sprint: 更新 status 为 active
    \`\`\`bash
    solar-harness runtime status ${sid} active human_continue planner '{}'
@@ -4928,11 +5204,15 @@ with open('$patches_file','w') as f:
     # ── D2: 文件级 mtime 检测 (Sprint sprint-20260417-213037, 2026-04-17) ──
     # 根因: macOS APFS 改文件内容不更新目录 mtime → coordinator 漏检
     # 修复: 扫描 sprint-*.status.json 取 max(mtime), 单文件修改即触发
+    # Also watch *.task_dag.state.json: intra-DAG node transitions (e.g. reviewing->eval,
+    # eval->passed) are written there, NOT to status.json, so without this the scanner stays
+    # dormant on node-level progress and never re-runs dispatch-evals/dispatch-ready
+    # (back-half stall). Extra wakes are safe: downstream dispatch is lease-guarded/idempotent.
     local max_file_mtime=0
-    for f in "$SPRINTS_DIR"/sprint-*.status.json; do
+    for f in "$SPRINTS_DIR"/sprint-*.status.json "$SPRINTS_DIR"/sprint-*.task_dag.state.json; do
       [[ -f "$f" ]] || continue
       local fmtime
-      fmtime=$(stat -f %m "$f" 2>/dev/null || echo 0)
+      fmtime=$(solar_file_mtime "$f" 2>/dev/null || echo 0)
       (( fmtime > max_file_mtime )) && max_file_mtime=$fmtime
     done
     # Sprint sprint-20260502-182804: skip_sprint 标志替代 continue
@@ -5168,7 +5448,8 @@ PY
         log "[hot-reload] md5 changed: ${INIT_MD5} → ${current_md5}, exec restart"
         # D4 兜底: exec 失败时告警 + 更新 INIT_MD5 防死循环
         clean_my_pidfile
-        if ! exec /opt/homebrew/bin/bash "$0" "$@" 2>>"$COORD_LOG"; then
+        restart_bash=$(resolve_bash4 2>/dev/null || command -v bash 2>/dev/null || echo /bin/bash)
+        if ! exec "$restart_bash" "$0" "$@" 2>>"$COORD_LOG"; then
           log "[HOT-RELOAD-FAILED] exec restart failed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           echo "- [ ] [HOT-RELOAD-FAILED] exec restart failed at $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$HARNESS_DIR/PLANNER-INBOX.md" 2>/dev/null || true
           echo "[HOT-RELOAD-FAILED]" > "$HARNESS_DIR/.planner-last-notice" 2>/dev/null || true

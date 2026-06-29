@@ -8,24 +8,10 @@
 # @module solar-farm/harness/lib/worktree
 # ================================================================
 
-# Worktree isolation is opt-in for Codex panes. Keeping panes in the source
-# checkout preserves repo-local Codex skill discovery under .agents/skills.
-solar_builder_worktrees_enabled() {
-  case "${SOLAR_BUILDER_WORKTREES:-0}" in
-    1|true|TRUE|yes|YES|on|ON) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 # 设置 builder worktree, 返回 worktree 目录路径 (写到 stdout)
 # 用法: WORKTREE_DIR=$(setup_builder_worktree "$work_dir")
 setup_builder_worktree() {
   local work_dir="$1"
-
-  if ! solar_builder_worktrees_enabled; then
-    echo ""
-    return 0
-  fi
 
   # 非 git 仓库 → 不用 worktree
   if ! command -v git &>/dev/null || ! git -C "$work_dir" rev-parse --git-dir &>/dev/null 2>&1; then

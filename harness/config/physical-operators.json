@@ -302,16 +302,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-29T20:14:32Z",
+        "last_pruned_at": "2026-06-29T20:29:34Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "contract_closeout_failed",
+        "last_block_source": "graph_node_dispatcher",
+        "last_block_detected_at": "2026-06-29T20:14:32Z",
+        "last_block_expires_at": "2026-06-29T20:29:32Z",
+        "last_block_excerpt": "{\"pane\": \"operator:mini-claude-sonnet-builder\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201413Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/mini-claude-sonnet-builder/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-861128ea/result.json\"}",
+        "last_prune_reason": "expired_operator_block",
+        "last_pruned_at": "2026-06-29T20:29:34Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -470,16 +474,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-29T20:13:16Z",
+        "last_pruned_at": "2026-06-29T20:28:23Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "contract_closeout_failed",
+        "last_block_source": "graph_node_dispatcher",
+        "last_block_detected_at": "2026-06-29T20:13:16Z",
+        "last_block_expires_at": "2026-06-29T20:28:16Z",
+        "last_block_excerpt": "{\"pane\": \"operator:mini-thunderomlx-qwen36-knowledge\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201255Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/mini-thunderomlx-qwen36-knowledge/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-9008c0be/result.json\"}",
+        "last_prune_reason": "expired_operator_block",
+        "last_pruned_at": "2026-06-29T20:28:23Z"
       },
       "compat_alias_for": "local_mlx_process",
       "compat_maps_to": {
@@ -1417,16 +1425,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-29T20:12:36Z",
+        "last_pruned_at": "2026-06-29T20:27:40Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "contract_closeout_failed",
+        "last_block_source": "graph_node_dispatcher",
+        "last_block_detected_at": "2026-06-29T20:12:36Z",
+        "last_block_expires_at": "2026-06-29T20:27:36Z",
+        "last_block_excerpt": "{\"pane\": \"operator:mini-claude-sonnet-builder-print\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201213Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/mini-claude-sonnet-builder-print/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-65cc3dad/result.json\"}",
+        "last_prune_reason": "expired_operator_block",
+        "last_pruned_at": "2026-06-29T20:27:40Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -3961,12 +3973,22 @@
         "auth_cooldown_seconds": 3600,
         "defer_on_cooldown": true,
         "defer_on_auth": true,
-        "last_block_state": "unknown"
+        "last_block_state": "cooldown",
+        "last_block_reason": "contract_closeout_failed",
+        "last_block_source": "graph_node_dispatcher",
+        "last_block_detected_at": "2026-06-29T20:13:55Z",
+        "last_block_expires_at": "2026-06-29T20:28:55Z",
+        "last_block_excerpt": "{\"pane\": \"operator:technology-diagram-painter\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201334Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/technology-diagram-painter/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-3e4097bd/result.json\"}",
+        "last_pruned_at": "2026-06-29T20:28:57Z",
+        "last_prune_reason": "expired_operator_block"
       },
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-29T20:13:55Z",
+        "last_pruned_at": "2026-06-29T20:28:57Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -4229,16 +4251,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-29T20:11:53Z",
+        "last_pruned_at": "2026-06-29T20:26:53Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "contract_closeout_failed",
+        "last_block_source": "graph_node_dispatcher",
+        "last_block_detected_at": "2026-06-29T20:11:53Z",
+        "last_block_expires_at": "2026-06-29T20:26:53Z",
+        "last_block_excerpt": "{\"pane\": \"operator:mini-claude-sonnet-evaluator-print\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201130Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/mini-claude-sonnet-evaluator-print/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-fe73ecdb/result.json\"}",
+        "last_prune_reason": "expired_operator_block",
+        "last_pruned_at": "2026-06-29T20:26:53Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -4264,7 +4290,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-paper-ingest-worker": {
@@ -4278,7 +4306,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-paper-analyze-worker": {
@@ -4292,7 +4322,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-memory-update-worker": {
@@ -4306,7 +4338,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-graph-update-worker": {
@@ -4320,7 +4354,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-claim-extract-worker": {
@@ -4334,7 +4370,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-method-extract-worker": {
@@ -4348,7 +4386,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-code-evidence-map-worker": {
@@ -4362,7 +4402,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-idea-worker": {
@@ -4376,7 +4418,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-idea-evaluate-worker": {
@@ -4390,7 +4434,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-experiment-design-worker": {
@@ -4404,7 +4450,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-experiment-run-worker": {
@@ -4418,7 +4466,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-experiment-monitor-worker": {
@@ -4432,7 +4482,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-claim-verify-worker": {
@@ -4446,7 +4498,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-artifact-review-worker": {
@@ -4460,7 +4514,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-report-plan-worker": {
@@ -4474,7 +4530,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-report-worker": {
@@ -4488,7 +4546,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-publication-compile-worker": {
@@ -4502,7 +4562,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     },
     "autosci-workflow-evolve-worker": {
@@ -4516,7 +4578,9 @@
       "available": true,
       "health_status": "ok",
       "max_concurrency": 1,
-      "compat_maps_to": {"host_type": "local_command_worker"},
+      "compat_maps_to": {
+        "host_type": "local_command_worker"
+      },
       "deprecated": false
     }
   },

@@ -1,0 +1,3117 @@
+{
+  "blocked_nodes": {
+    "publication_produce": {
+      "action": "compile_paper",
+      "gate": "G_PUBLICATION_PRODUCE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificPublicationProducer",
+      "node_id": "publication_produce",
+      "operator_id": "autosci-publication-compile-worker",
+      "reason": "Waiting for LaTeX/PDF compile evidence or approved compile runtime evidence.",
+      "required_evidence": [
+        "publication_bundle.v1 with existing files and compile/PDF evidence"
+      ],
+      "status": "blocked",
+      "unblock_condition": "Provide a compile target with LaTeX/PDF artifacts or approved runtime evidence, then dispatch publication_produce."
+    },
+    "report_plan": {
+      "action": "plan_report",
+      "gate": "G_REPORT_PLAN",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificReportPlanner",
+      "node_id": "report_plan",
+      "operator_id": "autosci-report-plan-worker",
+      "reason": "Waiting for completed Review LLM artifact_review.v1 evidence.",
+      "required_evidence": [
+        "artifact_review.v1 with review_mode=review_llm and review_llm.status=completed"
+      ],
+      "status": "blocked",
+      "unblock_condition": "Provide completed Review LLM-backed artifact_review.v1 evidence, then dispatch report_plan."
+    }
+  },
+  "checks": [
+    {
+      "check": "literature_discover_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "paper_ingest_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "paper_analyze_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "memory_update_initial_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "graph_update_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "claim_extract_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "method_extract_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "code_evidence_map_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "idea_generate_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "idea_evaluate_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "experiment_design_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "experiment_run_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "experiment_monitor_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "claim_verify_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "report_draft_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "artifact_review_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "memory_update_final_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "workflow_evolve_dispatched",
+      "detail": "passed",
+      "status": "ok"
+    },
+    {
+      "check": "external_blocked_nodes_recorded",
+      "detail": "publication_produce,report_plan",
+      "status": "ok"
+    },
+    {
+      "check": "lifecycle_runtime_gate_passed",
+      "detail": "inconclusive",
+      "status": "ok"
+    }
+  ],
+  "execution_owner": "solar.operator_runtime.scheduler_lifecycle_smoke",
+  "gate_results": {
+    "artifact_review": {
+      "gate": "G_ARTIFACT_REVIEW",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "artifact_review",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "claim_extract": {
+      "gate": "G_CLAIM_EXTRACT",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "claim_extract",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "claim_verify": {
+      "gate": "G_CLAIM_VERIFY",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "claim_verify",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "code_evidence_map": {
+      "gate": "G_CODE_EVIDENCE_MAP",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "code_evidence_map",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "experiment_design": {
+      "gate": "G_EXPERIMENT_DESIGN",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "experiment_design",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "experiment_monitor": {
+      "gate": "G_EXPERIMENT_MONITOR",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "experiment_monitor",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "experiment_run": {
+      "gate": "G_EXPERIMENT_RUN",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "experiment_run",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "graph_update": {
+      "gate": "G_GRAPH_UPDATE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "graph_update",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "idea_evaluate": {
+      "gate": "G_IDEA_EVALUATE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "idea_evaluate",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "idea_generate": {
+      "gate": "G_IDEA_GENERATE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "idea_generate",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "literature_discover": {
+      "gate": "G_LITERATURE_DISCOVER",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "literature_discover",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": [
+        "fixture discovery passed only as smoke evidence; it is not live literature discovery"
+      ]
+    },
+    "memory_update_final": {
+      "gate": "G_MEMORY_UPDATE_FINAL",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "memory_update_final",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "memory_update_initial": {
+      "gate": "G_MEMORY_UPDATE_INITIAL",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "memory_update_initial",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "method_extract": {
+      "gate": "G_METHOD_EXTRACT",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "method_extract",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "paper_analyze": {
+      "gate": "G_PAPER_ANALYZE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "paper_analyze",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "paper_ingest": {
+      "gate": "G_PAPER_INGEST",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "paper_ingest",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "report_draft": {
+      "gate": "G_REPORT_DRAFT",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "report_draft",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    },
+    "workflow_evolve": {
+      "gate": "G_WORKFLOW_EVOLVE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "node_id": "workflow_evolve",
+      "ok": true,
+      "reasons": [],
+      "status": "passed",
+      "warnings": []
+    }
+  },
+  "job_id": "autosci-scheduler-smoke-step38-final",
+  "lifecycle_gate_result": {
+    "evidence_status": "blocked",
+    "exit_code": 3,
+    "ok": false,
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/scientific_lifecycle_runtime.json",
+    "reasons": [],
+    "schema": "scientific_lifecycle.v1",
+    "status": "inconclusive",
+    "warnings": [
+      "lifecycle is blocked waiting for external evidence"
+    ]
+  },
+  "lifecycle_status": "blocked",
+  "node_results": {
+    "artifact_review": {
+      "action": "review_artifact",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/artifact_review.json",
+      "artifact_sha256": "a03c5e915bba25f318f00448464f97916a8b2a8cad97cb61ff4fa583ec752174",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/review_artifact.result.json",
+      "expected_schema": "artifact_review.v1",
+      "gate": "G_ARTIFACT_REVIEW",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificArtifactReviewer",
+      "node_id": "artifact_review",
+      "operator_id": "autosci-artifact-review-worker",
+      "operator_result_path": "run/operator-results/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review/result.json",
+      "status": "passed"
+    },
+    "claim_extract": {
+      "action": "extract_claims",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/research_claims.json",
+      "artifact_sha256": "2d406ada78174bff8054699e2b93f292266fff0978ec2459e34583c07195e567",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/extract_claims.result.json",
+      "expected_schema": "research_claims.v1",
+      "gate": "G_CLAIM_EXTRACT",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificClaimExtractor",
+      "node_id": "claim_extract",
+      "operator_id": "autosci-claim-extract-worker",
+      "operator_result_path": "run/operator-results/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract/result.json",
+      "status": "passed"
+    },
+    "claim_verify": {
+      "action": "verify_claim",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/claim_verdict.json",
+      "artifact_sha256": "f7315e39a6b85f609591279e7f14551b46c6e517037692195dc2ea66782984f6",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/verify_claim.result.json",
+      "expected_schema": "claim_verdict.v1",
+      "gate": "G_CLAIM_VERIFY",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificClaimVerifier",
+      "node_id": "claim_verify",
+      "operator_id": "autosci-claim-verify-worker",
+      "operator_result_path": "run/operator-results/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify/result.json",
+      "status": "passed"
+    },
+    "code_evidence_map": {
+      "action": "map_code_evidence",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/code_evidence_map.json",
+      "artifact_sha256": "4983fe3a34efab6abfbf1f91a36d1a73b46f6f7b0193b6128b9b6111aa748370",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/map_code_evidence.result.json",
+      "expected_schema": "code_evidence_map.v1",
+      "gate": "G_CODE_EVIDENCE_MAP",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificCodeEvidenceMapper",
+      "node_id": "code_evidence_map",
+      "operator_id": "autosci-code-evidence-map-worker",
+      "operator_result_path": "run/operator-results/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map/result.json",
+      "status": "passed"
+    },
+    "experiment_design": {
+      "action": "design_experiment",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/experiment_plan.json",
+      "artifact_sha256": "fb130bdebac0d199aa4e0e2563f39f2b394acb1038b5cc260ef8ad29b62e71af",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/design_experiment.result.json",
+      "expected_schema": "experiment_plan.v1",
+      "gate": "G_EXPERIMENT_DESIGN",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificExperimentDesigner",
+      "node_id": "experiment_design",
+      "operator_id": "autosci-experiment-design-worker",
+      "operator_result_path": "run/operator-results/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design/result.json",
+      "status": "passed"
+    },
+    "experiment_monitor": {
+      "action": "monitor_experiment",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/experiment_status.json",
+      "artifact_sha256": "20c63a7762497d39e2708a16e7fa89b17a5dcd3ef0a1a744ed14813616c454ee",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/monitor_experiment.result.json",
+      "expected_schema": "experiment_status.v1",
+      "gate": "G_EXPERIMENT_MONITOR",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificExperimentMonitor",
+      "node_id": "experiment_monitor",
+      "operator_id": "autosci-experiment-monitor-worker",
+      "operator_result_path": "run/operator-results/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor/result.json",
+      "status": "passed"
+    },
+    "experiment_run": {
+      "action": "run_experiment",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/experiment_result.json",
+      "artifact_sha256": "4e32a807e2a5e2dbe71d160320215a84f18342842349a32efe277c0226fbdbca",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/run_experiment.result.json",
+      "expected_schema": "experiment_result.v1",
+      "gate": "G_EXPERIMENT_RUN",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificExperimentRunner",
+      "node_id": "experiment_run",
+      "operator_id": "autosci-experiment-run-worker",
+      "operator_result_path": "run/operator-results/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run/result.json",
+      "status": "passed"
+    },
+    "graph_update": {
+      "action": "update_graph",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/research_graph_update.json",
+      "artifact_sha256": "6d4b45c5f02f754266758896c23734741f47a71f5058202663fff855da6a12c6",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/update_graph.result.json",
+      "expected_schema": "research_graph_update.v1",
+      "gate": "G_GRAPH_UPDATE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificGraphUpdater",
+      "node_id": "graph_update",
+      "operator_id": "autosci-graph-update-worker",
+      "operator_result_path": "run/operator-results/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update/result.json",
+      "status": "passed"
+    },
+    "idea_evaluate": {
+      "action": "evaluate_ideas",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/idea_evaluation.json",
+      "artifact_sha256": "9a504e7f24e3ab6febf8d505e0c1213574b61b7eac0c2584e4a3199fd40d0c1f",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/evaluate_ideas.result.json",
+      "expected_schema": "idea_evaluation.v1",
+      "gate": "G_IDEA_EVALUATE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificIdeaEvaluator",
+      "node_id": "idea_evaluate",
+      "operator_id": "autosci-idea-evaluate-worker",
+      "operator_result_path": "run/operator-results/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate/result.json",
+      "status": "passed"
+    },
+    "idea_generate": {
+      "action": "generate_ideas",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/idea_candidate.json",
+      "artifact_sha256": "4688ab54d37199b35c733d3f4d91e72d625b76eebd17e7aa6750c40eee61c683",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/generate_ideas.result.json",
+      "expected_schema": "idea_candidate.v1",
+      "gate": "G_IDEA_GENERATE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificIdeaGenerator",
+      "node_id": "idea_generate",
+      "operator_id": "autosci-idea-worker",
+      "operator_result_path": "run/operator-results/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate/result.json",
+      "status": "passed"
+    },
+    "literature_discover": {
+      "action": "discover_literature",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/literature_discovery.json",
+      "artifact_sha256": "e8c41cc7c19963f890a47939b21e791e6b2b387a4beb0967dcc2b8871a0d045b",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/discover_literature.result.json",
+      "expected_schema": "literature_discovery.v1",
+      "gate": "G_LITERATURE_DISCOVER",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificLiteratureDiscoverer",
+      "node_id": "literature_discover",
+      "operator_id": "autosci-literature-discover-worker",
+      "operator_result_path": "run/operator-results/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover/result.json",
+      "status": "passed"
+    },
+    "memory_update_final": {
+      "action": "update_memory",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/final_research_memory_update.json",
+      "artifact_sha256": "01859d80f2d6dc33f6d6cae90fe7fed50870f9f0361b87acd741ce69787d8bac",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/update_memory.result.json",
+      "expected_schema": "research_memory_update.v1",
+      "gate": "G_MEMORY_UPDATE_FINAL",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificMemoryUpdater",
+      "node_id": "memory_update_final",
+      "operator_id": "autosci-memory-update-worker",
+      "operator_result_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final/result.json",
+      "status": "passed"
+    },
+    "memory_update_initial": {
+      "action": "update_memory",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/research_memory_update.json",
+      "artifact_sha256": "21fea682ecf3ea1483ca49bbeeb02e7147526924362eaec0f0f691dea21334d8",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/update_memory.result.json",
+      "expected_schema": "research_memory_update.v1",
+      "gate": "G_MEMORY_UPDATE_INITIAL",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificMemoryUpdater",
+      "node_id": "memory_update_initial",
+      "operator_id": "autosci-memory-update-worker",
+      "operator_result_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial/result.json",
+      "status": "passed"
+    },
+    "method_extract": {
+      "action": "extract_methods",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/research_method.json",
+      "artifact_sha256": "9a79b2e42ad5fd056bae12b3927932ac67084a82c6efd44da61eadc1106085ed",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/extract_methods.result.json",
+      "expected_schema": "research_method.v1",
+      "gate": "G_METHOD_EXTRACT",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificMethodExtractor",
+      "node_id": "method_extract",
+      "operator_id": "autosci-method-extract-worker",
+      "operator_result_path": "run/operator-results/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract/result.json",
+      "status": "passed"
+    },
+    "paper_analyze": {
+      "action": "analyze_paper",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/research_paper_analysis.json",
+      "artifact_sha256": "922a3cdc124212cd37bfd82013dc782572a87f2067865c351898ee9c2aad1e3e",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/analyze_paper.result.json",
+      "expected_schema": "research_paper.v1",
+      "gate": "G_PAPER_ANALYZE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificPaperAnalyzer",
+      "node_id": "paper_analyze",
+      "operator_id": "autosci-paper-analyze-worker",
+      "operator_result_path": "run/operator-results/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze/result.json",
+      "status": "passed"
+    },
+    "paper_ingest": {
+      "action": "ingest_paper",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/research_paper.json",
+      "artifact_sha256": "02884044e557f50d1363624c6cd8c176e06f59bae3a71fc6cfef0ef36f7d0524",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/ingest_paper.result.json",
+      "expected_schema": "research_paper.v1",
+      "gate": "G_PAPER_INGEST",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificPaperIngestor",
+      "node_id": "paper_ingest",
+      "operator_id": "autosci-paper-ingest-worker",
+      "operator_result_path": "run/operator-results/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest/result.json",
+      "status": "passed"
+    },
+    "report_draft": {
+      "action": "write_report",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/scientific_report.json",
+      "artifact_sha256": "0a8f6951085e8c69952695205c13c0709ce1b379006b512a12552341149698a0",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/write_report.result.json",
+      "expected_schema": "scientific_report.v1",
+      "gate": "G_REPORT_DRAFT",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificReportDrafter",
+      "node_id": "report_draft",
+      "operator_id": "autosci-report-worker",
+      "operator_result_path": "run/operator-results/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft/result.json",
+      "status": "passed"
+    },
+    "workflow_evolve": {
+      "action": "evolve_workflow",
+      "artifact_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/workflow_evolution.json",
+      "artifact_sha256": "5c7a99b1dc665499e802b58d3813c0798b8f8b1dd7e165a400ac5b8c0a92c562",
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/evolve_workflow.result.json",
+      "expected_schema": "workflow_evolution.v1",
+      "gate": "G_WORKFLOW_EVOLVE",
+      "job_id": "autosci-scheduler-smoke-step38-final",
+      "logical_operator": "ScientificWorkflowEvolver",
+      "node_id": "workflow_evolve",
+      "operator_id": "autosci-workflow-evolve-worker",
+      "operator_result_path": "run/operator-results/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve/result.json",
+      "status": "passed"
+    }
+  },
+  "node_summaries": {
+    "artifact_review": {
+      "action": "review_artifact",
+      "bridge_result": {
+        "action": "review_artifact",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/artifact_review.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/review_artifact.result.json",
+        "schema": "artifact_review.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/review_artifact.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-artifact_review', 'operator_id': 'autosci-artifact-review-worker', 'lease_id': 'autosci-artifact-review-worker:task-autosci-scheduler-smoke-step38-final-artifact_review:2026-06-26T16:03:45Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:45Z', 'daemon_pid': 75749}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.615, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_review_artifact",
+          "detail": "review_artifact",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_artifact_review.v1",
+          "detail": "artifact_review.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-artifact_review",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "artifact_review",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/artifact_review.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/artifact_review/task-autosci-scheduler-smoke-step38-final-artifact_review/artifact_review.json",
+        "reasons": [],
+        "schema": "artifact_review.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificArtifactReviewer",
+      "materialized_envelope_path": "run/operator-results/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review/envelope.json",
+      "node_id": "artifact_review",
+      "operator_id": "autosci-artifact-review-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:46Z",
+        "log_tail": "{\n  \"action\": \"review_artifact\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "artifact_review",
+        "operator_id": "autosci-artifact-review-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:45Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-artifact_review"
+      },
+      "operator_result_path": "run/operator-results/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review/result.json",
+      "output_log_path": "run/operator-results/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 75749,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-artifact-review-worker/task-autosci-scheduler-smoke-step38-final-artifact_review.json",
+        "lease_id": "autosci-artifact-review-worker:task-autosci-scheduler-smoke-step38-final-artifact_review:2026-06-26T16:03:45Z",
+        "operator_id": "autosci-artifact-review-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:45Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-artifact_review"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-artifact_review",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.615
+      }
+    },
+    "claim_extract": {
+      "action": "extract_claims",
+      "bridge_result": {
+        "action": "extract_claims",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/research_claims.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/extract_claims.result.json",
+        "schema": "research_claims.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/extract_claims.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-claim_extract', 'operator_id': 'autosci-claim-extract-worker', 'lease_id': 'autosci-claim-extract-worker:task-autosci-scheduler-smoke-step38-final-claim_extract:2026-06-26T16:03:39Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:39Z', 'daemon_pid': 73370}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.612, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_extract_claims",
+          "detail": "extract_claims",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_research_claims.v1",
+          "detail": "research_claims.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-claim_extract",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "claim_extract",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/research_claims.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/research_claims.json",
+        "reasons": [],
+        "schema": "research_claims.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificClaimExtractor",
+      "materialized_envelope_path": "run/operator-results/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract/envelope.json",
+      "node_id": "claim_extract",
+      "operator_id": "autosci-claim-extract-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:39Z",
+        "log_tail": "{\n  \"action\": \"extract_claims\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "claim_extract",
+        "operator_id": "autosci-claim-extract-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:39Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-claim_extract"
+      },
+      "operator_result_path": "run/operator-results/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract/result.json",
+      "output_log_path": "run/operator-results/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 73370,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-claim-extract-worker/task-autosci-scheduler-smoke-step38-final-claim_extract.json",
+        "lease_id": "autosci-claim-extract-worker:task-autosci-scheduler-smoke-step38-final-claim_extract:2026-06-26T16:03:39Z",
+        "operator_id": "autosci-claim-extract-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:39Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-claim_extract"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-claim_extract",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.612
+      }
+    },
+    "claim_verify": {
+      "action": "verify_claim",
+      "bridge_result": {
+        "action": "verify_claim",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/claim_verdict.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/verify_claim.result.json",
+        "schema": "claim_verdict.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/verify_claim.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-claim_verify', 'operator_id': 'autosci-claim-verify-worker', 'lease_id': 'autosci-claim-verify-worker:task-autosci-scheduler-smoke-step38-final-claim_verify:2026-06-26T16:03:44Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:44Z', 'daemon_pid': 75427}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.614, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_verify_claim",
+          "detail": "verify_claim",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_claim_verdict.v1",
+          "detail": "claim_verdict.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-claim_verify",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "claim_verify",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/claim_verdict.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/claim_verdict.json",
+        "reasons": [],
+        "schema": "claim_verdict.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificClaimVerifier",
+      "materialized_envelope_path": "run/operator-results/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify/envelope.json",
+      "node_id": "claim_verify",
+      "operator_id": "autosci-claim-verify-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:45Z",
+        "log_tail": "{\n  \"action\": \"verify_claim\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "claim_verify",
+        "operator_id": "autosci-claim-verify-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:44Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-claim_verify"
+      },
+      "operator_result_path": "run/operator-results/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify/result.json",
+      "output_log_path": "run/operator-results/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 75427,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-claim-verify-worker/task-autosci-scheduler-smoke-step38-final-claim_verify.json",
+        "lease_id": "autosci-claim-verify-worker:task-autosci-scheduler-smoke-step38-final-claim_verify:2026-06-26T16:03:44Z",
+        "operator_id": "autosci-claim-verify-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:44Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-claim_verify"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-claim_verify",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.614
+      }
+    },
+    "code_evidence_map": {
+      "action": "map_code_evidence",
+      "bridge_result": {
+        "action": "map_code_evidence",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/code_evidence_map.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/map_code_evidence.result.json",
+        "schema": "code_evidence_map.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/map_code_evidence.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-code_evidence_map', 'operator_id': 'autosci-code-evidence-map-worker', 'lease_id': 'autosci-code-evidence-map-worker:task-autosci-scheduler-smoke-step38-final-code_evidence_map:2026-06-26T16:03:40Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:40Z', 'daemon_pid': 73861}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.615, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_map_code_evidence",
+          "detail": "map_code_evidence",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_code_evidence_map.v1",
+          "detail": "code_evidence_map.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-code_evidence_map",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "code_evidence_map",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/code_evidence_map.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/code_evidence_map.json",
+        "reasons": [],
+        "schema": "code_evidence_map.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificCodeEvidenceMapper",
+      "materialized_envelope_path": "run/operator-results/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map/envelope.json",
+      "node_id": "code_evidence_map",
+      "operator_id": "autosci-code-evidence-map-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:41Z",
+        "log_tail": "{\n  \"action\": \"map_code_evidence\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "code_evidence_map",
+        "operator_id": "autosci-code-evidence-map-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:40Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-code_evidence_map"
+      },
+      "operator_result_path": "run/operator-results/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map/result.json",
+      "output_log_path": "run/operator-results/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 73861,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-code-evidence-map-worker/task-autosci-scheduler-smoke-step38-final-code_evidence_map.json",
+        "lease_id": "autosci-code-evidence-map-worker:task-autosci-scheduler-smoke-step38-final-code_evidence_map:2026-06-26T16:03:40Z",
+        "operator_id": "autosci-code-evidence-map-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:40Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-code_evidence_map"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-code_evidence_map",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.615
+      }
+    },
+    "experiment_design": {
+      "action": "design_experiment",
+      "bridge_result": {
+        "action": "design_experiment",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/experiment_plan.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/design_experiment.result.json",
+        "schema": "experiment_plan.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/design_experiment.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-experiment_design', 'operator_id': 'autosci-experiment-design-worker', 'lease_id': 'autosci-experiment-design-worker:task-autosci-scheduler-smoke-step38-final-experiment_design:2026-06-26T16:03:42Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:42Z', 'daemon_pid': 74343}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.611, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_design_experiment",
+          "detail": "design_experiment",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_experiment_plan.v1",
+          "detail": "experiment_plan.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-experiment_design",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "experiment_design",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/experiment_plan.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_design/task-autosci-scheduler-smoke-step38-final-experiment_design/experiment_plan.json",
+        "reasons": [],
+        "schema": "experiment_plan.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificExperimentDesigner",
+      "materialized_envelope_path": "run/operator-results/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design/envelope.json",
+      "node_id": "experiment_design",
+      "operator_id": "autosci-experiment-design-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:43Z",
+        "log_tail": "{\n  \"action\": \"design_experiment\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "experiment_design",
+        "operator_id": "autosci-experiment-design-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:42Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_design"
+      },
+      "operator_result_path": "run/operator-results/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design/result.json",
+      "output_log_path": "run/operator-results/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 74343,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-experiment-design-worker/task-autosci-scheduler-smoke-step38-final-experiment_design.json",
+        "lease_id": "autosci-experiment-design-worker:task-autosci-scheduler-smoke-step38-final-experiment_design:2026-06-26T16:03:42Z",
+        "operator_id": "autosci-experiment-design-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:42Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_design"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_design",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.611
+      }
+    },
+    "experiment_monitor": {
+      "action": "monitor_experiment",
+      "bridge_result": {
+        "action": "monitor_experiment",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/experiment_status.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/monitor_experiment.result.json",
+        "schema": "experiment_status.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/monitor_experiment.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-experiment_monitor', 'operator_id': 'autosci-experiment-monitor-worker', 'lease_id': 'autosci-experiment-monitor-worker:task-autosci-scheduler-smoke-step38-final-experiment_monitor:2026-06-26T16:03:43Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:43Z', 'daemon_pid': 75016}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.61, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_monitor_experiment",
+          "detail": "monitor_experiment",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_experiment_status.v1",
+          "detail": "experiment_status.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-experiment_monitor",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "experiment_monitor",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/experiment_status.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_monitor/task-autosci-scheduler-smoke-step38-final-experiment_monitor/experiment_status.json",
+        "reasons": [],
+        "schema": "experiment_status.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificExperimentMonitor",
+      "materialized_envelope_path": "run/operator-results/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor/envelope.json",
+      "node_id": "experiment_monitor",
+      "operator_id": "autosci-experiment-monitor-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:44Z",
+        "log_tail": "{\n  \"action\": \"monitor_experiment\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "experiment_monitor",
+        "operator_id": "autosci-experiment-monitor-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:43Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_monitor"
+      },
+      "operator_result_path": "run/operator-results/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor/result.json",
+      "output_log_path": "run/operator-results/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 75016,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-experiment-monitor-worker/task-autosci-scheduler-smoke-step38-final-experiment_monitor.json",
+        "lease_id": "autosci-experiment-monitor-worker:task-autosci-scheduler-smoke-step38-final-experiment_monitor:2026-06-26T16:03:43Z",
+        "operator_id": "autosci-experiment-monitor-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:43Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_monitor"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_monitor",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.61
+      }
+    },
+    "experiment_run": {
+      "action": "run_experiment",
+      "bridge_result": {
+        "action": "run_experiment",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/experiment_result.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/run_experiment.result.json",
+        "schema": "experiment_result.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/run_experiment.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-experiment_run', 'operator_id': 'autosci-experiment-run-worker', 'lease_id': 'autosci-experiment-run-worker:task-autosci-scheduler-smoke-step38-final-experiment_run:2026-06-26T16:03:43Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:43Z', 'daemon_pid': 74760}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.607, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_run_experiment",
+          "detail": "run_experiment",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_experiment_result.v1",
+          "detail": "experiment_result.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-experiment_run",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "experiment_run",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/experiment_result.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/experiment_result.json",
+        "reasons": [],
+        "schema": "experiment_result.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificExperimentRunner",
+      "materialized_envelope_path": "run/operator-results/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run/envelope.json",
+      "node_id": "experiment_run",
+      "operator_id": "autosci-experiment-run-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:43Z",
+        "log_tail": "{\n  \"action\": \"run_experiment\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "experiment_run",
+        "operator_id": "autosci-experiment-run-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:43Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_run"
+      },
+      "operator_result_path": "run/operator-results/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run/result.json",
+      "output_log_path": "run/operator-results/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 74760,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-experiment-run-worker/task-autosci-scheduler-smoke-step38-final-experiment_run.json",
+        "lease_id": "autosci-experiment-run-worker:task-autosci-scheduler-smoke-step38-final-experiment_run:2026-06-26T16:03:43Z",
+        "operator_id": "autosci-experiment-run-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:43Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_run"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-experiment_run",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.607
+      }
+    },
+    "graph_update": {
+      "action": "update_graph",
+      "bridge_result": {
+        "action": "update_graph",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/research_graph_update.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/update_graph.result.json",
+        "schema": "research_graph_update.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/update_graph.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-graph_update', 'operator_id': 'autosci-graph-update-worker', 'lease_id': 'autosci-graph-update-worker:task-autosci-scheduler-smoke-step38-final-graph_update:2026-06-26T16:03:38Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:38Z', 'daemon_pid': 73317}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.615, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_update_graph",
+          "detail": "update_graph",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_research_graph_update.v1",
+          "detail": "research_graph_update.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-graph_update",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "graph_update",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/research_graph_update.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/graph_update/task-autosci-scheduler-smoke-step38-final-graph_update/research_graph_update.json",
+        "reasons": [],
+        "schema": "research_graph_update.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificGraphUpdater",
+      "materialized_envelope_path": "run/operator-results/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update/envelope.json",
+      "node_id": "graph_update",
+      "operator_id": "autosci-graph-update-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:39Z",
+        "log_tail": "{\n  \"action\": \"update_graph\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "graph_update",
+        "operator_id": "autosci-graph-update-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:38Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-graph_update"
+      },
+      "operator_result_path": "run/operator-results/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update/result.json",
+      "output_log_path": "run/operator-results/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 73317,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-graph-update-worker/task-autosci-scheduler-smoke-step38-final-graph_update.json",
+        "lease_id": "autosci-graph-update-worker:task-autosci-scheduler-smoke-step38-final-graph_update:2026-06-26T16:03:38Z",
+        "operator_id": "autosci-graph-update-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:38Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-graph_update"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-graph_update",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.615
+      }
+    },
+    "idea_evaluate": {
+      "action": "evaluate_ideas",
+      "bridge_result": {
+        "action": "evaluate_ideas",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/idea_evaluation.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/evaluate_ideas.result.json",
+        "schema": "idea_evaluation.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/evaluate_ideas.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-idea_evaluate', 'operator_id': 'autosci-idea-evaluate-worker', 'lease_id': 'autosci-idea-evaluate-worker:task-autosci-scheduler-smoke-step38-final-idea_evaluate:2026-06-26T16:03:41Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:41Z', 'daemon_pid': 74321}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.611, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_evaluate_ideas",
+          "detail": "evaluate_ideas",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_idea_evaluation.v1",
+          "detail": "idea_evaluation.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-idea_evaluate",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "idea_evaluate",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/idea_evaluation.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/idea_evaluation.json",
+        "reasons": [],
+        "schema": "idea_evaluation.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificIdeaEvaluator",
+      "materialized_envelope_path": "run/operator-results/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate/envelope.json",
+      "node_id": "idea_evaluate",
+      "operator_id": "autosci-idea-evaluate-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:42Z",
+        "log_tail": "{\n  \"action\": \"evaluate_ideas\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "idea_evaluate",
+        "operator_id": "autosci-idea-evaluate-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:41Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-idea_evaluate"
+      },
+      "operator_result_path": "run/operator-results/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate/result.json",
+      "output_log_path": "run/operator-results/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 74321,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-idea-evaluate-worker/task-autosci-scheduler-smoke-step38-final-idea_evaluate.json",
+        "lease_id": "autosci-idea-evaluate-worker:task-autosci-scheduler-smoke-step38-final-idea_evaluate:2026-06-26T16:03:41Z",
+        "operator_id": "autosci-idea-evaluate-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:41Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-idea_evaluate"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-idea_evaluate",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.611
+      }
+    },
+    "idea_generate": {
+      "action": "generate_ideas",
+      "bridge_result": {
+        "action": "generate_ideas",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/idea_candidate.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/generate_ideas.result.json",
+        "schema": "idea_candidate.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/generate_ideas.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-idea_generate', 'operator_id': 'autosci-idea-worker', 'lease_id': 'autosci-idea-worker:task-autosci-scheduler-smoke-step38-final-idea_generate:2026-06-26T16:03:41Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:41Z', 'daemon_pid': 74010}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.61, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_generate_ideas",
+          "detail": "generate_ideas",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_idea_candidate.v1",
+          "detail": "idea_candidate.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-idea_generate",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "idea_generate",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/idea_candidate.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/idea_candidate.json",
+        "reasons": [],
+        "schema": "idea_candidate.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificIdeaGenerator",
+      "materialized_envelope_path": "run/operator-results/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate/envelope.json",
+      "node_id": "idea_generate",
+      "operator_id": "autosci-idea-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:41Z",
+        "log_tail": "{\n  \"action\": \"generate_ideas\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "idea_generate",
+        "operator_id": "autosci-idea-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:41Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-idea_generate"
+      },
+      "operator_result_path": "run/operator-results/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate/result.json",
+      "output_log_path": "run/operator-results/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 74010,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-idea-worker/task-autosci-scheduler-smoke-step38-final-idea_generate.json",
+        "lease_id": "autosci-idea-worker:task-autosci-scheduler-smoke-step38-final-idea_generate:2026-06-26T16:03:41Z",
+        "operator_id": "autosci-idea-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:41Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-idea_generate"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-idea_generate",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.61
+      }
+    },
+    "literature_discover": {
+      "action": "discover_literature",
+      "bridge_result": {
+        "action": "discover_literature",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/literature_discovery.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/discover_literature.result.json",
+        "schema": "literature_discovery.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/discover_literature.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-literature_discover', 'operator_id': 'autosci-literature-discover-worker', 'lease_id': 'autosci-literature-discover-worker:task-autosci-scheduler-smoke-step38-final-literature_discover:2026-06-26T16:03:35Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:35Z', 'daemon_pid': 72231}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.615, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_discover_literature",
+          "detail": "discover_literature",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_literature_discovery.v1",
+          "detail": "literature_discovery.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-literature_discover",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "literature_discover",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/literature_discovery.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/literature_discover/task-autosci-scheduler-smoke-step38-final-literature_discover/literature_discovery.json",
+        "reasons": [],
+        "schema": "literature_discovery.v1",
+        "status": "passed",
+        "warnings": [
+          "fixture discovery passed only as smoke evidence; it is not live literature discovery"
+        ]
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificLiteratureDiscoverer",
+      "materialized_envelope_path": "run/operator-results/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover/envelope.json",
+      "node_id": "literature_discover",
+      "operator_id": "autosci-literature-discover-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:36Z",
+        "log_tail": "{\n  \"action\": \"discover_literature\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "literature_discover",
+        "operator_id": "autosci-literature-discover-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:35Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-literature_discover"
+      },
+      "operator_result_path": "run/operator-results/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover/result.json",
+      "output_log_path": "run/operator-results/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 72231,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-literature-discover-worker/task-autosci-scheduler-smoke-step38-final-literature_discover.json",
+        "lease_id": "autosci-literature-discover-worker:task-autosci-scheduler-smoke-step38-final-literature_discover:2026-06-26T16:03:35Z",
+        "operator_id": "autosci-literature-discover-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:35Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-literature_discover"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-literature_discover",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.615
+      }
+    },
+    "memory_update_final": {
+      "action": "update_memory",
+      "bridge_result": {
+        "action": "update_memory",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/final_research_memory_update.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/update_memory.result.json",
+        "schema": "research_memory_update.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/update_memory.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-memory_update_final', 'operator_id': 'autosci-memory-update-worker', 'lease_id': 'autosci-memory-update-worker:task-autosci-scheduler-smoke-step38-final-memory_update_final:2026-06-26T16:03:46Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:46Z', 'daemon_pid': 75772}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.609, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_update_memory",
+          "detail": "update_memory",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_research_memory_update.v1",
+          "detail": "research_memory_update.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-memory_update_final",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "memory_update_final",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/final_research_memory_update.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_final/task-autosci-scheduler-smoke-step38-final-memory_update_final/final_research_memory_update.json",
+        "reasons": [],
+        "schema": "research_memory_update.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificMemoryUpdater",
+      "materialized_envelope_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final/envelope.json",
+      "node_id": "memory_update_final",
+      "operator_id": "autosci-memory-update-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:47Z",
+        "log_tail": "{\n  \"action\": \"update_memory\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "memory_update_final",
+        "operator_id": "autosci-memory-update-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:46Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-memory_update_final"
+      },
+      "operator_result_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final/result.json",
+      "output_log_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 75772,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_final.json",
+        "lease_id": "autosci-memory-update-worker:task-autosci-scheduler-smoke-step38-final-memory_update_final:2026-06-26T16:03:46Z",
+        "operator_id": "autosci-memory-update-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:46Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-memory_update_final"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-memory_update_final",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.609
+      }
+    },
+    "memory_update_initial": {
+      "action": "update_memory",
+      "bridge_result": {
+        "action": "update_memory",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/research_memory_update.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/update_memory.result.json",
+        "schema": "research_memory_update.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/update_memory.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-memory_update_initial', 'operator_id': 'autosci-memory-update-worker', 'lease_id': 'autosci-memory-update-worker:task-autosci-scheduler-smoke-step38-final-memory_update_initial:2026-06-26T16:03:37Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:37Z', 'daemon_pid': 72848}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.613, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_update_memory",
+          "detail": "update_memory",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_research_memory_update.v1",
+          "detail": "research_memory_update.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-memory_update_initial",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "memory_update_initial",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/research_memory_update.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/memory_update_initial/task-autosci-scheduler-smoke-step38-final-memory_update_initial/research_memory_update.json",
+        "reasons": [],
+        "schema": "research_memory_update.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificMemoryUpdater",
+      "materialized_envelope_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial/envelope.json",
+      "node_id": "memory_update_initial",
+      "operator_id": "autosci-memory-update-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:38Z",
+        "log_tail": "{\n  \"action\": \"update_memory\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "memory_update_initial",
+        "operator_id": "autosci-memory-update-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:37Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-memory_update_initial"
+      },
+      "operator_result_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial/result.json",
+      "output_log_path": "run/operator-results/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 72848,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-memory-update-worker/task-autosci-scheduler-smoke-step38-final-memory_update_initial.json",
+        "lease_id": "autosci-memory-update-worker:task-autosci-scheduler-smoke-step38-final-memory_update_initial:2026-06-26T16:03:37Z",
+        "operator_id": "autosci-memory-update-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:37Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-memory_update_initial"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-memory_update_initial",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.613
+      }
+    },
+    "method_extract": {
+      "action": "extract_methods",
+      "bridge_result": {
+        "action": "extract_methods",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/research_method.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/extract_methods.result.json",
+        "schema": "research_method.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/extract_methods.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-method_extract', 'operator_id': 'autosci-method-extract-worker', 'lease_id': 'autosci-method-extract-worker:task-autosci-scheduler-smoke-step38-final-method_extract:2026-06-26T16:03:39Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:39Z', 'daemon_pid': 73679}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.612, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_extract_methods",
+          "detail": "extract_methods",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_research_method.v1",
+          "detail": "research_method.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-method_extract",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "method_extract",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/research_method.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/research_method.json",
+        "reasons": [],
+        "schema": "research_method.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificMethodExtractor",
+      "materialized_envelope_path": "run/operator-results/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract/envelope.json",
+      "node_id": "method_extract",
+      "operator_id": "autosci-method-extract-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:40Z",
+        "log_tail": "{\n  \"action\": \"extract_methods\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "method_extract",
+        "operator_id": "autosci-method-extract-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:39Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-method_extract"
+      },
+      "operator_result_path": "run/operator-results/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract/result.json",
+      "output_log_path": "run/operator-results/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 73679,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-method-extract-worker/task-autosci-scheduler-smoke-step38-final-method_extract.json",
+        "lease_id": "autosci-method-extract-worker:task-autosci-scheduler-smoke-step38-final-method_extract:2026-06-26T16:03:39Z",
+        "operator_id": "autosci-method-extract-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:39Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-method_extract"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-method_extract",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.612
+      }
+    },
+    "paper_analyze": {
+      "action": "analyze_paper",
+      "bridge_result": {
+        "action": "analyze_paper",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/research_paper_analysis.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/analyze_paper.result.json",
+        "schema": "research_paper.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/analyze_paper.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-paper_analyze', 'operator_id': 'autosci-paper-analyze-worker', 'lease_id': 'autosci-paper-analyze-worker:task-autosci-scheduler-smoke-step38-final-paper_analyze:2026-06-26T16:03:37Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:37Z', 'daemon_pid': 72780}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.614, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_analyze_paper",
+          "detail": "analyze_paper",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_research_paper.v1",
+          "detail": "research_paper.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-paper_analyze",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "paper_analyze",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/research_paper_analysis.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_analyze/task-autosci-scheduler-smoke-step38-final-paper_analyze/research_paper_analysis.json",
+        "reasons": [],
+        "schema": "research_paper.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificPaperAnalyzer",
+      "materialized_envelope_path": "run/operator-results/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze/envelope.json",
+      "node_id": "paper_analyze",
+      "operator_id": "autosci-paper-analyze-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:37Z",
+        "log_tail": "{\n  \"action\": \"analyze_paper\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "paper_analyze",
+        "operator_id": "autosci-paper-analyze-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:37Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-paper_analyze"
+      },
+      "operator_result_path": "run/operator-results/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze/result.json",
+      "output_log_path": "run/operator-results/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 72780,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-paper-analyze-worker/task-autosci-scheduler-smoke-step38-final-paper_analyze.json",
+        "lease_id": "autosci-paper-analyze-worker:task-autosci-scheduler-smoke-step38-final-paper_analyze:2026-06-26T16:03:37Z",
+        "operator_id": "autosci-paper-analyze-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:37Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-paper_analyze"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-paper_analyze",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.614
+      }
+    },
+    "paper_ingest": {
+      "action": "ingest_paper",
+      "bridge_result": {
+        "action": "ingest_paper",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/research_paper.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/ingest_paper.result.json",
+        "schema": "research_paper.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/ingest_paper.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-paper_ingest', 'operator_id': 'autosci-paper-ingest-worker', 'lease_id': 'autosci-paper-ingest-worker:task-autosci-scheduler-smoke-step38-final-paper_ingest:2026-06-26T16:03:36Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:36Z', 'daemon_pid': 72351}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.615, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_ingest_paper",
+          "detail": "ingest_paper",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_research_paper.v1",
+          "detail": "research_paper.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-paper_ingest",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "paper_ingest",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/research_paper.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/research_paper.json",
+        "reasons": [],
+        "schema": "research_paper.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificPaperIngestor",
+      "materialized_envelope_path": "run/operator-results/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest/envelope.json",
+      "node_id": "paper_ingest",
+      "operator_id": "autosci-paper-ingest-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:37Z",
+        "log_tail": "{\n  \"action\": \"ingest_paper\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "paper_ingest",
+        "operator_id": "autosci-paper-ingest-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:36Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-paper_ingest"
+      },
+      "operator_result_path": "run/operator-results/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest/result.json",
+      "output_log_path": "run/operator-results/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 72351,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-paper-ingest-worker/task-autosci-scheduler-smoke-step38-final-paper_ingest.json",
+        "lease_id": "autosci-paper-ingest-worker:task-autosci-scheduler-smoke-step38-final-paper_ingest:2026-06-26T16:03:36Z",
+        "operator_id": "autosci-paper-ingest-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:36Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-paper_ingest"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-paper_ingest",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.615
+      }
+    },
+    "report_draft": {
+      "action": "write_report",
+      "bridge_result": {
+        "action": "write_report",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/scientific_report.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/write_report.result.json",
+        "schema": "scientific_report.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/write_report.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-report_draft', 'operator_id': 'autosci-report-worker', 'lease_id': 'autosci-report-worker:task-autosci-scheduler-smoke-step38-final-report_draft:2026-06-26T16:03:45Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:45Z', 'daemon_pid': 75438}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.606, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_write_report",
+          "detail": "write_report",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_scientific_report.v1",
+          "detail": "scientific_report.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-report_draft",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "report_draft",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/scientific_report.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/scientific_report.json",
+        "reasons": [],
+        "schema": "scientific_report.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificReportDrafter",
+      "materialized_envelope_path": "run/operator-results/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft/envelope.json",
+      "node_id": "report_draft",
+      "operator_id": "autosci-report-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:45Z",
+        "log_tail": "              \"task-autosci-scheduler-smoke-step38-final-code_evidence_map\",\n              \"map-001\",\n              \"plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py\",\n              \"task-autosci-scheduler-smoke-step38-final-claim_extract\",\n              \"claim-002\",\n              \"sample_paper.md#abstract\",\n              \"task-autosci-scheduler-smoke-step38-final-idea_evaluate\",\n              \"idea-001\",\n              \"method-001\",\n              \"task-autosci-scheduler-smoke-step38-final-paper_ingest\",\n              \"task-autosci-scheduler-smoke-step38-final-method_extract\",\n              \"idea-duplicate-001\",\n              \"exp-supported-001\"\n            ],\n            \"section_id\": \"limitations\",\n            \"title\": \"Limitations\"\n          }\n        ],\n        \"tables\": [\n          {\n            \"artifact_path\": \"artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/report_draft/task-autosci-scheduler-smoke-step38-final-report_draft/report_evidence_index.json\",\n            \"evidence_ids\": [\n              \"task-autosci-scheduler-smoke-step38-final-claim_verify\",\n              \"claim-001\",\n              \"paper-autosci-scheduler-smoke-step38-final\",\n              \"sample_paper.md#results\",\n              \"task-autosci-scheduler-smoke-step38-final-experiment_run\",\n              \"exp-001\",\n              \"evidence:autosci-fixture-result\",\n              \"evidence:autosci-fixture-ledger\",\n              \"task-autosci-scheduler-smoke-step38-final-code_evidence_map\",\n              \"map-001\",\n              \"plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py\",\n              \"task-autosci-scheduler-smoke-step38-final-claim_extract\",\n              \"claim-002\",\n              \"sample_paper.md#abstract\",\n              \"task-autosci-scheduler-smoke-step38-final-idea_evaluate\",\n              \"idea-001\",\n              \"method-001\",\n              \"task-autosci-scheduler-smoke-step38-final-paper_ingest\",\n              \"task-autosci-scheduler-smoke-step38-final-method_extract\",\n              \"idea-duplicate-001\",\n              \"exp-supported-001\"\n            ],\n            \"table_id\": \"table.evidence-map\",\n            \"title\": \"Evidence ids\"\n          }\n        ],\n        \"title\": \"Scheduler Lifecycle Smoke Report\",\n        \"unsupported_claims\": []",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "report_draft",
+        "operator_id": "autosci-report-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:45Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-report_draft"
+      },
+      "operator_result_path": "run/operator-results/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft/result.json",
+      "output_log_path": "run/operator-results/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 75438,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-report-worker/task-autosci-scheduler-smoke-step38-final-report_draft.json",
+        "lease_id": "autosci-report-worker:task-autosci-scheduler-smoke-step38-final-report_draft:2026-06-26T16:03:45Z",
+        "operator_id": "autosci-report-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:45Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-report_draft"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-report_draft",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.606
+      }
+    },
+    "workflow_evolve": {
+      "action": "evolve_workflow",
+      "bridge_result": {
+        "action": "evolve_workflow",
+        "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/evidence.jsonl",
+        "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/workflow_evolution.json",
+        "ok": true,
+        "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/evolve_workflow.result.json",
+        "schema": "workflow_evolution.v1",
+        "status": "completed"
+      },
+      "bridge_result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/evolve_workflow.result.json",
+      "checks": [
+        {
+          "check": "operator_runtime_submit",
+          "detail": "{'task_id': 'task-autosci-scheduler-smoke-step38-final-workflow_evolve', 'operator_id': 'autosci-workflow-evolve-worker', 'lease_id': 'autosci-workflow-evolve-worker:task-autosci-scheduler-smoke-step38-final-workflow_evolve:2026-06-26T16:03:47Z', 'inbox_path': '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve.json', 'status': 'submitted', 'submitted_at': '2026-06-26T16:03:47Z', 'daemon_pid': 76072}",
+          "status": "ok"
+        },
+        {
+          "check": "operatord_result_written",
+          "detail": "{'found': True, 'wait_seconds': 0.609, 'daemon_exit': None}",
+          "status": "ok"
+        },
+        {
+          "check": "materialized_envelope_written",
+          "detail": "run/operator-results/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve/envelope.json",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_result_exit_zero",
+          "detail": "0",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_result_completed",
+          "detail": "completed",
+          "status": "ok"
+        },
+        {
+          "check": "bridge_action_evolve_workflow",
+          "detail": "evolve_workflow",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_schema_workflow_evolution.v1",
+          "detail": "workflow_evolution.v1",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_task_matches_submission",
+          "detail": "task-autosci-scheduler-smoke-step38-final-workflow_evolve",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_node_matches_submission",
+          "detail": "workflow_evolve",
+          "status": "ok"
+        },
+        {
+          "check": "evidence_gate_passed",
+          "detail": "passed",
+          "status": "ok"
+        },
+        {
+          "check": "operator_log_contains_bridge_action",
+          "detail": "run/operator-results/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve/output.log",
+          "status": "ok"
+        }
+      ],
+      "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/workflow_evolution.json",
+      "gate_result": {
+        "evidence_status": "completed",
+        "exit_code": 0,
+        "ok": true,
+        "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/workflow_evolution.json",
+        "reasons": [],
+        "schema": "workflow_evolution.v1",
+        "status": "passed",
+        "warnings": []
+      },
+      "harness_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness",
+      "logical_operator": "ScientificWorkflowEvolver",
+      "materialized_envelope_path": "run/operator-results/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve/envelope.json",
+      "node_id": "workflow_evolve",
+      "operator_id": "autosci-workflow-evolve-worker",
+      "operator_result": {
+        "effective_model": "autosci-bounded-local",
+        "effective_provider": "local",
+        "exit_code": 0,
+        "finished_at": "2026-06-26T16:03:47Z",
+        "log_tail": "              \"scheduler-lifecycle-smoke-synthetic-failed-run\"\n            ],\n            \"review_required\": true,\n            \"target\": \"scientific_research_lifecycle_full_v1\"\n          },\n          {\n            \"application_state\": \"proposed_only\",\n            \"category\": \"gate\",\n            \"change_id\": \"change.gate.rejection-diagnostics\",\n            \"description\": \"Expose gate rejection reasons in the dispatch/evidence handoff before retry.\",\n            \"evidence_ids\": [\n              \"publication_produce\",\n              \"G_PUBLICATION_PRODUCE\",\n              \"scientific_research_lifecycle_full_v1\",\n              \"scheduler-lifecycle-smoke-synthetic-failed-run\"\n            ],\n            \"review_required\": true,\n            \"target\": \"scientific evaluator gates\"\n          },\n          {\n            \"application_state\": \"proposed_only\",\n            \"category\": \"manual\",\n            \"change_id\": \"change.manual.ambiguity-clarification\",\n            \"description\": \"Clarify ambiguous manual or prompt language cited by the failed run.\",\n            \"evidence_ids\": [\n              \"publication_produce\",\n              \"G_PUBLICATION_PRODUCE\",\n              \"scientific_research_lifecycle_full_v1\",\n              \"scheduler-lifecycle-smoke-synthetic-failed-run\"\n            ],\n            \"review_required\": true,\n            \"target\": \"scientific dispatch manuals\"\n          },\n          {\n            \"application_state\": \"proposed_only\",\n            \"category\": \"routing\",\n            \"change_id\": \"change.routing.operator-binding\",\n            \"description\": \"Review operator binding constraints for the cited poor bindings.\",\n            \"evidence_ids\": [\n              \"publication_produce\",\n              \"G_PUBLICATION_PRODUCE\",\n              \"scientific_research_lifecycle_full_v1\",\n              \"scheduler-lifecycle-smoke-synthetic-failed-run\"\n            ],\n            \"review_required\": true,\n            \"target\": \"logical-to-physical operator bindings\"\n          }\n        ],\n        \"rationale\": \"A failed scientific workflow run exposed recoverable workflow, gate, manual, schema, or routing gaps.\",\n        \"recommended_changes_path\": \"artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/workflow_evolve/task-autosci-scheduler-smoke-step38-final-workflow_evolve/recommended_changes.md\",",
+        "model_route": {
+          "effective_model": "autosci-bounded-local",
+          "effective_provider": "local",
+          "requested_model": "autosci-bounded-local",
+          "routing_model": "autosci-bounded-local"
+        },
+        "node_id": "workflow_evolve",
+        "operator_id": "autosci-workflow-evolve-worker",
+        "requested_model": "autosci-bounded-local",
+        "routing_model": "autosci-bounded-local",
+        "sprint_id": "autosci-scheduler-smoke-step38-final",
+        "started_at": "2026-06-26T16:03:47Z",
+        "status": "completed",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-workflow_evolve"
+      },
+      "operator_result_path": "run/operator-results/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve/result.json",
+      "output_log_path": "run/operator-results/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve/output.log",
+      "schema": "scientific_node_runtime_smoke.v1",
+      "sprint_id": "autosci-scheduler-smoke-step38-final",
+      "status": "passed",
+      "submission": {
+        "daemon_pid": 76072,
+        "inbox_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/run/operator-inbox/autosci-workflow-evolve-worker/task-autosci-scheduler-smoke-step38-final-workflow_evolve.json",
+        "lease_id": "autosci-workflow-evolve-worker:task-autosci-scheduler-smoke-step38-final-workflow_evolve:2026-06-26T16:03:47Z",
+        "operator_id": "autosci-workflow-evolve-worker",
+        "status": "submitted",
+        "submitted_at": "2026-06-26T16:03:47Z",
+        "task_id": "task-autosci-scheduler-smoke-step38-final-workflow_evolve"
+      },
+      "task_id": "task-autosci-scheduler-smoke-step38-final-workflow_evolve",
+      "wait": {
+        "daemon_exit": null,
+        "found": true,
+        "wait_seconds": 0.609
+      }
+    }
+  },
+  "nodes": [
+    {
+      "action": "discover_literature",
+      "gate": "G_LITERATURE_DISCOVER",
+      "id": "literature_discover",
+      "logical_operator": "ScientificLiteratureDiscoverer",
+      "operator_id": "autosci-literature-discover-worker"
+    },
+    {
+      "action": "ingest_paper",
+      "gate": "G_PAPER_INGEST",
+      "id": "paper_ingest",
+      "logical_operator": "ScientificPaperIngestor",
+      "operator_id": "autosci-paper-ingest-worker"
+    },
+    {
+      "action": "analyze_paper",
+      "gate": "G_PAPER_ANALYZE",
+      "id": "paper_analyze",
+      "logical_operator": "ScientificPaperAnalyzer",
+      "operator_id": "autosci-paper-analyze-worker"
+    },
+    {
+      "action": "update_memory",
+      "gate": "G_MEMORY_UPDATE_INITIAL",
+      "id": "memory_update_initial",
+      "logical_operator": "ScientificMemoryUpdater",
+      "operator_id": "autosci-memory-update-worker"
+    },
+    {
+      "action": "update_graph",
+      "gate": "G_GRAPH_UPDATE",
+      "id": "graph_update",
+      "logical_operator": "ScientificGraphUpdater",
+      "operator_id": "autosci-graph-update-worker"
+    },
+    {
+      "action": "extract_claims",
+      "gate": "G_CLAIM_EXTRACT",
+      "id": "claim_extract",
+      "logical_operator": "ScientificClaimExtractor",
+      "operator_id": "autosci-claim-extract-worker"
+    },
+    {
+      "action": "extract_methods",
+      "gate": "G_METHOD_EXTRACT",
+      "id": "method_extract",
+      "logical_operator": "ScientificMethodExtractor",
+      "operator_id": "autosci-method-extract-worker"
+    },
+    {
+      "action": "map_code_evidence",
+      "gate": "G_CODE_EVIDENCE_MAP",
+      "id": "code_evidence_map",
+      "logical_operator": "ScientificCodeEvidenceMapper",
+      "operator_id": "autosci-code-evidence-map-worker"
+    },
+    {
+      "action": "generate_ideas",
+      "gate": "G_IDEA_GENERATE",
+      "id": "idea_generate",
+      "logical_operator": "ScientificIdeaGenerator",
+      "operator_id": "autosci-idea-worker"
+    },
+    {
+      "action": "evaluate_ideas",
+      "gate": "G_IDEA_EVALUATE",
+      "id": "idea_evaluate",
+      "logical_operator": "ScientificIdeaEvaluator",
+      "operator_id": "autosci-idea-evaluate-worker"
+    },
+    {
+      "action": "design_experiment",
+      "gate": "G_EXPERIMENT_DESIGN",
+      "id": "experiment_design",
+      "logical_operator": "ScientificExperimentDesigner",
+      "operator_id": "autosci-experiment-design-worker"
+    },
+    {
+      "action": "run_experiment",
+      "gate": "G_EXPERIMENT_RUN",
+      "id": "experiment_run",
+      "logical_operator": "ScientificExperimentRunner",
+      "operator_id": "autosci-experiment-run-worker"
+    },
+    {
+      "action": "monitor_experiment",
+      "gate": "G_EXPERIMENT_MONITOR",
+      "id": "experiment_monitor",
+      "logical_operator": "ScientificExperimentMonitor",
+      "operator_id": "autosci-experiment-monitor-worker"
+    },
+    {
+      "action": "verify_claim",
+      "gate": "G_CLAIM_VERIFY",
+      "id": "claim_verify",
+      "logical_operator": "ScientificClaimVerifier",
+      "operator_id": "autosci-claim-verify-worker"
+    },
+    {
+      "action": "write_report",
+      "gate": "G_REPORT_DRAFT",
+      "id": "report_draft",
+      "logical_operator": "ScientificReportDrafter",
+      "operator_id": "autosci-report-worker"
+    },
+    {
+      "action": "review_artifact",
+      "gate": "G_ARTIFACT_REVIEW",
+      "id": "artifact_review",
+      "logical_operator": "ScientificArtifactReviewer",
+      "operator_id": "autosci-artifact-review-worker"
+    },
+    {
+      "action": "update_memory",
+      "gate": "G_MEMORY_UPDATE_FINAL",
+      "id": "memory_update_final",
+      "logical_operator": "ScientificMemoryUpdater",
+      "operator_id": "autosci-memory-update-worker"
+    },
+    {
+      "action": "evolve_workflow",
+      "gate": "G_WORKFLOW_EVOLVE",
+      "id": "workflow_evolve",
+      "logical_operator": "ScientificWorkflowEvolver",
+      "operator_id": "autosci-workflow-evolve-worker"
+    },
+    {
+      "action": "plan_report",
+      "gate": "G_REPORT_PLAN",
+      "id": "report_plan",
+      "logical_operator": "ScientificReportPlanner",
+      "operator_id": "autosci-report-plan-worker"
+    },
+    {
+      "action": "compile_paper",
+      "gate": "G_PUBLICATION_PRODUCE",
+      "id": "publication_produce",
+      "logical_operator": "ScientificPublicationProducer",
+      "operator_id": "autosci-publication-compile-worker"
+    }
+  ],
+  "required_nodes": [
+    "literature_discover",
+    "paper_ingest",
+    "paper_analyze",
+    "memory_update_initial",
+    "graph_update",
+    "claim_extract",
+    "method_extract",
+    "code_evidence_map",
+    "idea_generate",
+    "idea_evaluate",
+    "experiment_design",
+    "experiment_run",
+    "experiment_monitor",
+    "claim_verify",
+    "report_draft",
+    "artifact_review",
+    "memory_update_final",
+    "workflow_evolve",
+    "report_plan",
+    "publication_produce"
+  ],
+  "schema": "scientific_lifecycle.v1",
+  "sprint_id": "autosci-scheduler-smoke-step38-final",
+  "summary_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/scientific_lifecycle_runtime.json",
+  "workflow_id": "scientific_research_lifecycle_full_v1"
+}

@@ -18,7 +18,8 @@ Endpoints:
 Startup: solar-harness status-server start  (writes pidfile, nohup)
          solar-harness status-server stop|restart|status
 
-Binds to 127.0.0.1:8765 only. No auth, no TLS (internal use).
+Binds 127.0.0.1:8765 (loopback) on mac/Linux; 0.0.0.0 under WSL so the Windows host can reach it
+(localhostForwarding edge case). SOLAR_BIND_HOST overrides. No auth, no TLS (internal use).
 Port fallback: 8765-8775 if primary is occupied.
 """
 
@@ -31,12 +32,14 @@ import sys
 import re
 import html
 import hashlib
+import hmac
+import secrets
 import math
 import importlib.util
 import shutil
 import time
+import threading
 import datetime
-import traceback
 import urllib.parse
 import urllib.error
 import urllib.request
@@ -51,7 +54,11 @@ except Exception:  # pragma: no cover
     yaml = None
 
 # ── Paths ──
-HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", str(Path.home() / ".solar" / "harness")))
+HARNESS_DIR = Path(
+    os.environ.get("HARNESS_DIR")
+    or os.environ.get("SOLAR_HARNESS_DIR")
+    or str(Path.home() / ".solar" / "harness")
+)
 SOURCE_HARNESS_DIR = Path(os.environ.get("SOLAR_SOURCE_HARNESS_DIR", str(Path.home() / "Solar" / "harness")))
 if str(HARNESS_DIR / "lib") not in sys.path:
     sys.path.insert(0, str(HARNESS_DIR / "lib"))
@@ -65,6 +72,12 @@ PANE_ASSIGNMENTS = HARNESS_DIR / ".pane-assignments"
 PANE_ASSIGNMENTS_JSON = HARNESS_DIR / ".pane-assignments.json"
 PANE_HYGIENE_JSON = HARNESS_DIR / "run" / "pane-hygiene.json"
 MERMAID_DIST = HARNESS_DIR / "vendor" / "mermaid-viewer" / "node_modules" / "mermaid" / "dist"
+STATUS_SERVER_DIR = HARNESS_DIR / "status-server"
+STATUS_SERVER_STATIC_DIR = STATUS_SERVER_DIR / "static"
+STATUS_SERVER_TEMPLATES_DIR = STATUS_SERVER_DIR / "templates"
+SOURCE_STATUS_SERVER_DIR = Path(__file__).resolve().parents[2] / "status-server"
+SOURCE_STATUS_SERVER_STATIC_DIR = SOURCE_STATUS_SERVER_DIR / "static"
+SOURCE_STATUS_SERVER_TEMPLATES_DIR = SOURCE_STATUS_SERVER_DIR / "templates"
 INTEGRATIONS_HEALTH = HARNESS_DIR / "lib" / "external-integrations-health.py"
 KNOWLEDGE_PROBE_HEALTH = HARNESS_DIR / "state" / "knowledge-probe-health.json"
 KNOWLEDGE_DIR = Path(os.environ.get("OBSIDIAN_VAULT_PATH", str(Path.home() / "Knowledge")))
@@ -114,10 +127,59 @@ OPEN_ALLOWED_ROOTS = [
     Path.home() / "Knowledge",
 ]
 
-BIND_HOST = "127.0.0.1"
+def _detect_wsl() -> bool:
+    """True on WSL."""
+    try:
+        with open("/proc/version", "r", errors="ignore") as fh:
+            return "microsoft" in fh.read().lower()
+    except OSError:
+        return False
+
+
+def _wsl_networking_mode() -> str:
+    """WSL networking mode via `wslinfo --networking-mode` ('mirrored' | 'nat' | ''). Empty when
+    wslinfo is absent (older WSL) — treated as NAT for bind purposes."""
+    try:
+        out = subprocess.run(
+            ["wslinfo", "--networking-mode"], capture_output=True, text=True, timeout=3
+        )
+        return (out.stdout or "").strip().lower()
+    except Exception:
+        return ""
+
+
+def _default_bind_host() -> str:
+    """Listen interface, chosen for the Windows-path keystone WITHOUT needlessly widening the
+    surface:
+      - non-WSL            -> 127.0.0.1 (loopback only).
+      - WSL mirrored mode  -> 127.0.0.1. Mirrored networking makes host<->WSL localhost
+        bidirectional, so the Windows host reaches the server on 127.0.0.1 with NO LAN exposure.
+      - WSL NAT mode       -> 0.0.0.0. NAT's localhostForwarding intermittently drops 127.0.0.1
+        (microsoft/WSL #9516); binding all interfaces lets the host reach the WSL VM IP. This is
+        the only case that widens the surface (behind the Windows firewall); the intended guard is
+        the loopback auth token (security M1, deferred).
+    SOLAR_BIND_HOST overrides explicitly. Prefer setting WSL to mirrored mode (the secure path)."""
+    if not _detect_wsl():
+        return "127.0.0.1"
+    return "127.0.0.1" if _wsl_networking_mode() == "mirrored" else "0.0.0.0"
+
+
+BIND_HOST = os.environ.get("SOLAR_BIND_HOST") or _default_bind_host()
 PORT_RANGE = range(8765, 8776)
-DESKTOP_LOG_DIR = Path.home() / ".solar" / "logs"
-DESKTOP_STDERR_LOG = DESKTOP_LOG_DIR / "status-server-stderr.log"
+
+# Loopback auth token (security M1). The only case we bind beyond loopback is WSL NAT mode
+# (0.0.0.0, behind the Windows firewall) — there we REQUIRE this token on API requests so a
+# NAT-exposed server isn't unauthenticated. On 127.0.0.1 the token is still issued and injected
+# into the served dashboard, but NOT enforced, so same-origin browser/desktop flows are unchanged.
+# SOLAR_REQUIRE_TOKEN=1/0 forces enforcement on/off (testing/opt-out); SOLAR_AUTH_TOKEN pins it.
+AUTH_TOKEN = os.environ.get("SOLAR_AUTH_TOKEN") or secrets.token_urlsafe(32)
+_require_token_env = (os.environ.get("SOLAR_REQUIRE_TOKEN") or "").strip().lower()
+if _require_token_env in ("1", "true", "yes"):
+    TOKEN_ENFORCED = True
+elif _require_token_env in ("0", "false", "no"):
+    TOKEN_ENFORCED = False
+else:
+    TOKEN_ENFORCED = BIND_HOST not in ("127.0.0.1", "::1", "localhost")
 
 
 _SYNTHETIC_SID_PREFIXES = ("test-hooks-", "test-sid-", "sprint-race-test-", "sprint-test-smoke-", "sprint-test-workspace-", "test-verify-")
@@ -212,11 +274,45 @@ def _read_jsonl(path: Path, limit: int = 50, sprint_id: str = "", filter_synthet
 
 
 def _runtime_events_path(sprint_id: str) -> Path:
-    """Prefer session-log v2 events, fall back to legacy sprint events."""
+    """Prefer session-log v2 events, fall back to legacy sprint/global events. SECURITY: never
+    join an unsafe id into a path (traversal via /status, /events, SSE) — an id that isn't a strict
+    slug falls back to the global log instead of escaping SESSIONS_DIR/SPRINTS_DIR."""
+    if not _valid_sprint_id(sprint_id):
+        return ALL_EVENTS
     session_path = SESSIONS_DIR / sprint_id / "events.jsonl"
     if session_path.exists():
         return session_path
-    return SPRINTS_DIR / f"{sprint_id}.events.jsonl"
+    sprint_path = SPRINTS_DIR / f"{sprint_id}.events.jsonl"
+    if sprint_path.exists():
+        return sprint_path
+    return ALL_EVENTS
+
+
+def _events_for_request(sprint_id: str, limit: int = 50) -> list:
+    """Read recent events using the same session-first source order as /status."""
+    sid = str(sprint_id or "").strip()
+    src = _runtime_events_path(sid) if sid else ALL_EVENTS
+    filter_sid = sid if src == ALL_EVENTS else ""
+    events = _read_jsonl(src, limit=limit, sprint_id=filter_sid)
+    if not sid:
+        return events
+    # Session-local and legacy sprint event files are scoped by their path. Older event writers
+    # sometimes omitted sprint_id; normalize those so the React view can enforce a strict
+    # one-session-only event policy. If a scoped file somehow contains another sprint_id, drop it.
+    normalized = []
+    source_kind = "session_file" if src == SESSIONS_DIR / sid / "events.jsonl" else "sprint_file" if src == SPRINTS_DIR / f"{sid}.events.jsonl" else "global_file"
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        event_sid = str(event.get("sprint_id") or "").strip()
+        if event_sid and event_sid != sid:
+            continue
+        next_event = dict(event)
+        next_event["sprint_id"] = sid
+        next_event["_event_scope"] = "requested"
+        next_event["_event_source"] = source_kind
+        normalized.append(next_event)
+    return normalized
 
 
 def _safe_rel(path: Path, root: Path) -> str:
@@ -328,92 +424,1274 @@ def _asset_path(raw: str):
     return None
 
 
+def _status_server_path(kind: str, rel: str) -> Path | None:
+    rel = urllib.parse.unquote(rel or "").lstrip("/")
+    if not rel:
+        return None
+    if kind == "static":
+        roots = [STATUS_SERVER_STATIC_DIR, SOURCE_STATUS_SERVER_STATIC_DIR]
+    elif kind == "templates":
+        roots = [STATUS_SERVER_TEMPLATES_DIR, SOURCE_STATUS_SERVER_TEMPLATES_DIR]
+    elif kind == "routes":
+        roots = [STATUS_SERVER_DIR / "routes", SOURCE_STATUS_SERVER_DIR / "routes"]
+    else:
+        return None
+    for root in roots:
+        try:
+            path = (root / rel).resolve()
+        except OSError:
+            continue
+        if _is_within(path, root) and path.exists() and path.is_file():
+            return path
+    return None
+
+
+def _static_content_type(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix == ".css":
+        return "text/css; charset=utf-8"
+    if suffix == ".js":
+        return "application/javascript; charset=utf-8"
+    if suffix == ".html":
+        return "text/html; charset=utf-8"
+    if suffix == ".json":
+        return "application/json; charset=utf-8"
+    if suffix == ".svg":
+        return "image/svg+xml"
+    if suffix == ".png":
+        return "image/png"
+    if suffix in (".jpg", ".jpeg"):
+        return "image/jpeg"
+    return "application/octet-stream"
+
+
+def _inject_auth_token(html_text: str) -> str:
+    # Expose the loopback token to the dashboard JS (window.__SOLAR_TOKEN__) so any client the
+    # server itself serves (browser, desktop over http, WSL) authenticates automatically.
+    tag = "<script>window.__SOLAR_TOKEN__=%s;</script>" % json.dumps(AUTH_TOKEN)
+    if "</head>" in html_text:
+        return html_text.replace("</head>", tag + "</head>", 1)
+    return tag + html_text
+
+
+def _p0_dashboard_html() -> str:
+    app_index = _status_server_path("static", "p0-app/index.html")
+    if app_index:
+        return _inject_auth_token(app_index.read_text(encoding="utf-8"))
+    template = _status_server_path("templates", "p0_dashboard.html")
+    if template:
+        return _inject_auth_token(template.read_text(encoding="utf-8"))
+    return _inject_auth_token("""<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar Harness Status</title></head>
+<body><h1>Solar Harness Status</h1><p>P0 dashboard template missing.</p></body></html>""")
+
+
+def _load_orchestration_routes_module():
+    routes_path = _status_server_path("routes", "orchestration_routes.py")
+    if not routes_path:
+        raise FileNotFoundError("orchestration_routes.py missing")
+    spec = importlib.util.spec_from_file_location("solar_orchestration_routes_status", str(routes_path))
+    if spec is None or spec.loader is None:
+        raise RuntimeError("unable to load orchestration_routes.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    # Keep dynamically imported route builders aligned with this server's root.
+    mod.HARNESS_DIR = HARNESS_DIR
+    mod.SPRINTS_DIR = SPRINTS_DIR
+    mod.SESSIONS_DIR = HARNESS_DIR / "sessions"
+    mod.STATE_DIR = HARNESS_DIR / "state"
+    return mod
+
+
+def _orchestration_dashboard_payload(sprint_id: str = "") -> dict:
+    if sprint_id and not _valid_sprint_id(sprint_id):
+        sprint_id = ""  # unsafe id -> unscoped; never reaches a path join downstream
+    mod = _load_orchestration_routes_module()
+    data, degraded = mod.build_dashboard_payload(sprint_id or None)
+    return {
+        "ok": True,
+        "schema_version": getattr(mod, "SCHEMA_VERSION", "solar.orchestration.v1"),
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "degraded_sources": degraded or [],
+        "data": data,
+    }
+
+
+def _orchestration_projection_payload(sprint_id: str = "", mode: str = "full") -> dict:
+    if sprint_id and not _valid_sprint_id(sprint_id):
+        sprint_id = ""  # unsafe id -> unscoped; never reaches a path join downstream
+    mod = _load_orchestration_routes_module()
+    builder = getattr(mod, "build_projection_payload", None)
+    if not callable(builder):
+        return {
+            "ok": False,
+            "status": "error",
+            "error": "build_projection_payload unavailable",
+            "schema_version": getattr(mod, "SCHEMA_VERSION", "solar.orchestration.v1"),
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "degraded_sources": ["projection_builder:missing"],
+            "data": {},
+        }
+    data, degraded = builder(sprint_id or None, mode=mode)
+    return {
+        "ok": True,
+        "schema_version": getattr(mod, "SCHEMA_VERSION", "solar.orchestration.v1"),
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "degraded_sources": degraded or [],
+        "data": data,
+    }
+
+
+def _projection_signature(data: dict) -> dict:
+    """Compact, comparable signature of the projection bits that drive live UI — phase, per-node
+    status, gate/verdict state, active node, stall. The projection stream emits an SSE update only
+    when this signature changes, so a quiet sprint produces no traffic beyond heartbeats."""
+    if not isinstance(data, dict):
+        return {}
+    nodes: dict = {}
+    for bucket in ((data.get("nodes") or []), ((data.get("task_graph") or {}).get("nodes") or [])):
+        for n in bucket:
+            if isinstance(n, dict):
+                nid = n.get("id") or n.get("node_id")
+                if nid:
+                    nodes.setdefault(str(nid), str(n.get("status") or ""))
+    gates: dict = {}
+    for g in (data.get("human_gates") or []):
+        if isinstance(g, dict):
+            gid = g.get("id") or g.get("node_id") or g.get("type")
+            if gid:
+                gates[str(gid)] = str(g.get("status") or g.get("state") or "")
+    ev = data.get("evaluation") or {}
+    req = data.get("requirements") or {}
+    plan = data.get("plan") or {}
+    summ = data.get("summary") or {}
+    har = data.get("human_action_required") or {}
+    stall = (summ.get("stall") or {}) or ((data.get("dispatch") or {}).get("stall") or {})
+    return {
+        "phase": str(data.get("phase") or ""),
+        "status": str(data.get("status") or ""),
+        "nodes": nodes,
+        "gates": gates,
+        "eval_verdict": str(ev.get("verdict") or ev.get("requested_verdict") or ""),
+        "req_verdict": str(req.get("verdict") or ""),
+        "plan_status": str(plan.get("status") or ""),
+        "active_node": str(summ.get("active_node") or ""),
+        "stalled": bool(stall.get("is_stalled")),
+        "action": str(har.get("type") or ""),
+        # New narrative steps should push an SSE update even when no node status changed.
+        "narrative": len(data.get("narrative") or []),
+        "actions": sorted(
+            str(a.get("id") or a.get("action") or "")
+            for a in (data.get("available_actions") or [])
+            if isinstance(a, dict)
+        ),
+    }
+
+
+def _projection_delta(prev: dict, cur: dict) -> dict:
+    """Human-meaningful diff between two signatures — node status transitions plus phase/verdict/
+    gate/stall changes. Drives the 'changed' field the dashboard uses to know what moved."""
+    prev = prev if isinstance(prev, dict) else {}
+    cur = cur if isinstance(cur, dict) else {}
+    changed: dict = {}
+    pn = prev.get("nodes") or {}
+    cn = cur.get("nodes") or {}
+    node_changes = [
+        {"id": nid, "from": pn.get(nid), "to": st}
+        for nid, st in cn.items()
+        if pn.get(nid) != st
+    ]
+    if node_changes:
+        changed["nodes"] = node_changes
+    pg = prev.get("gates") or {}
+    cg = cur.get("gates") or {}
+    gate_changes = [
+        {"id": gid, "from": pg.get(gid), "to": st}
+        for gid, st in cg.items()
+        if pg.get(gid) != st
+    ]
+    if gate_changes:
+        changed["gates"] = gate_changes
+    for key in ("phase", "status", "eval_verdict", "req_verdict",
+                "plan_status", "active_node", "stalled", "action"):
+        if prev.get(key) != cur.get(key):
+            changed[key] = {"from": prev.get(key), "to": cur.get(key)}
+    return changed
+
+
+def _orchestration_verdict_payload(kind: str, sprint_id: str, data: dict) -> tuple[dict, int]:
+    mod = _load_orchestration_routes_module()
+    fn_by_kind = {
+        "plan": "submit_plan_verdict_payload",
+        "eval": "submit_eval_verdict_payload",
+        "handoff": "submit_handoff_payload",
+    }
+    fn_name = fn_by_kind.get(kind)
+    if not fn_name:
+        return {
+            "ok": False,
+            "status": "error",
+            "error": "unsupported_orchestration_action",
+            "sprint_id": sprint_id,
+        }, 400
+    submitter = getattr(mod, fn_name, None)
+    if not callable(submitter):
+        return {
+            "ok": False,
+            "status": "error",
+            "error": f"{fn_name} unavailable",
+            "sprint_id": sprint_id,
+        }, 500
+    payload, status_code = submitter(sprint_id, data)
+    return payload, status_code
+
+
+def _sprint_index_payload(limit: int = 80) -> dict:
+    mod = _load_orchestration_routes_module()
+    builder = getattr(mod, "build_sprint_index_payload", None)
+    if not callable(builder):
+        return {
+            "ok": False,
+            "status": "error",
+            "error": "build_sprint_index_payload unavailable",
+            "schema_version": getattr(mod, "SCHEMA_VERSION", "solar.orchestration.v1"),
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "degraded_sources": ["sprint_index_builder:missing"],
+            "data": {"sprints": [], "count": 0, "active_sprints": []},
+        }
+    data, degraded = builder(limit=limit)
+    return {
+        "ok": True,
+        "schema_version": getattr(mod, "SCHEMA_VERSION", "solar.orchestration.v1"),
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "degraded_sources": degraded or [],
+        "data": data,
+    }
+
+
+def _extract_intake_id(text: str) -> str:
+    clean = re.sub(r"\x1b\[[0-9;]*m", "", text or "")
+    patterns = (
+        r"Sprint created:\s*(\S+)",
+        r"Epic:\s*(\S+)",
+        r'"sprint_id"\s*:\s*"([^"]+)"',
+        r'"epic_id"\s*:\s*"([^"]+)"',
+    )
+    for pattern in patterns:
+        match = re.search(pattern, clean)
+        if match:
+            return match.group(1).strip()
+    return ""
+
+
+def _latest_sprint_candidate_after(after_ts: float, request_id: str = "") -> dict:
+    rows: list[tuple[float, str]] = []
+    try:
+        paths = list(SPRINTS_DIR.glob("*.status.json"))
+    except OSError:
+        paths = []
+    for path in paths:
+        try:
+            mtime = path.stat().st_mtime
+            if mtime + 2.0 < after_ts:
+                continue
+            data = json.loads(path.read_text(encoding="utf-8"))
+            sid = str(data.get("sprint_id") or data.get("id") or path.name.removesuffix(".status.json"))
+            if request_id and str(data.get("request_id") or data.get("intake_request_id") or "") == request_id:
+                return {"sprint_id": sid, "attribution": "request_id", "ambiguous": False, "candidates": [sid]}
+            rows.append((mtime, sid))
+        except Exception:
+            continue
+    rows.sort(reverse=True)
+    candidates = [sid for _, sid in rows]
+    if not candidates:
+        return {"sprint_id": "", "attribution": "none", "ambiguous": False, "candidates": []}
+    if len(candidates) == 1:
+        return {"sprint_id": candidates[0], "attribution": "latest_status_file", "ambiguous": False, "candidates": candidates}
+    # Multiple status files appeared in the intake window. Returning the newest one would attach
+    # the desktop UI to a possibly wrong chat. Surface ambiguity instead; the UI should show an
+    # error rather than navigate to another session's logs.
+    return {"sprint_id": "", "attribution": "ambiguous_latest_status_file", "ambiguous": True, "candidates": candidates[:8]}
+
+
+def _latest_sprint_id_after(after_ts: float) -> str:
+    return str(_latest_sprint_candidate_after(after_ts).get("sprint_id") or "")
+
+
+def _intake_command(task: str) -> list[str]:
+    solar = shutil.which("solar")
+    if solar:
+        return [solar, "harness", "intake", "--request", task]
+    local_solar = Path.home() / ".solar" / "bin" / "solar"
+    if local_solar.exists():
+        return [str(local_solar), "harness", "intake", "--request", task]
+    harness = shutil.which("solar-harness")
+    if harness:
+        return [harness, "intake", "--request", task]
+    harness_sh = HARNESS_DIR / "solar-harness.sh"
+    return [str(harness_sh), "intake", "--request", task]
+
+
+def _intake_payload(data: dict) -> dict:
+    task = str(data.get("task") or data.get("request") or "").strip()
+    request_id = re.sub(r"[^A-Za-z0-9_.:-]", "-", str(data.get("request_id") or "").strip())[:96]
+    if not request_id:
+        request_id = f"intake-{int(time.time() * 1000)}-{secrets.token_hex(4)}"
+    if not task:
+        return {"ok": False, "status": "error", "error": "missing_task", "request_id": request_id}
+    if len(task) > 12000:
+        return {"ok": False, "status": "error", "error": "task_too_long", "max_chars": 12000, "request_id": request_id}
+    cmd = _intake_command(task)
+    if not Path(cmd[0]).exists() and shutil.which(cmd[0]) is None:
+        return {"ok": False, "status": "error", "error": "intake_cli_not_found", "command": cmd[0], "request_id": request_id}
+    before = time.time()
+    try:
+        req_dir = HARNESS_DIR / "run" / "intake-requests"
+        req_dir.mkdir(parents=True, exist_ok=True)
+        (req_dir / f"{request_id}.json").write_text(json.dumps({
+            "request_id": request_id,
+            "task_preview": task[:500],
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+    env = dict(os.environ)
+    env["HARNESS_DIR"] = str(HARNESS_DIR)
+    env["SOLAR_INTAKE_REQUEST_ID"] = request_id
+    try:
+        proc = subprocess.run(
+            cmd,
+            text=True,
+            capture_output=True,
+            timeout=180,
+            cwd=os.getcwd(),
+            env=env,
+        )
+    except subprocess.TimeoutExpired as exc:
+        output = ((exc.stdout or "") if isinstance(exc.stdout, str) else "") + "\n" + ((exc.stderr or "") if isinstance(exc.stderr, str) else "")
+        parsed = _extract_intake_id(output)
+        candidate = {"sprint_id": parsed, "attribution": "stdout", "ambiguous": False, "candidates": [parsed]} if parsed else _latest_sprint_candidate_after(before, request_id)
+        return {
+            "ok": False,
+            "status": "error",
+            "error": "intake_timeout",
+            "request_id": request_id,
+            "sprint_id": candidate.get("sprint_id", ""),
+            "attribution": candidate.get("attribution", "none"),
+            "ambiguous": bool(candidate.get("ambiguous")),
+            "candidate_sprint_ids": candidate.get("candidates", []),
+            "stdout_tail": output[-4000:],
+        }
+    output = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
+    parsed = _extract_intake_id(output)
+    candidate = {"sprint_id": parsed, "attribution": "stdout", "ambiguous": False, "candidates": [parsed]} if parsed else _latest_sprint_candidate_after(before, request_id)
+    sprint_id = str(candidate.get("sprint_id") or "")
+    return {
+        "ok": proc.returncode == 0 and bool(sprint_id),
+        "status": "ok" if proc.returncode == 0 and sprint_id else "error",
+        "sprint_id": sprint_id,
+        "request_id": request_id,
+        "attribution": candidate.get("attribution", "none"),
+        "ambiguous": bool(candidate.get("ambiguous")),
+        "candidate_sprint_ids": candidate.get("candidates", []),
+        "error": "ambiguous_sprint_attribution" if candidate.get("ambiguous") else ("" if sprint_id else "sprint_id_not_found"),
+        "returncode": proc.returncode,
+        "command": " ".join(cmd[:3]),
+        "stdout_tail": output[-4000:],
+    }
+
+
+def _compact_number(value: int) -> str:
+    try:
+        number = int(value)
+    except Exception:
+        return "N/A"
+    if number >= 1_000_000:
+        return f"{number / 1_000_000:.1f}M"
+    if number >= 1_000:
+        return f"{number / 1_000:.1f}K"
+    return str(number)
+
+
+def _quota_footer_cache_rows() -> list[dict]:
+    cache_dir = HARNESS_DIR / "state" / "quota-footer"
+    today = datetime.datetime.now().astimezone().date().isoformat()
+    rows = []
+    try:
+        paths = sorted(cache_dir.glob("*.json"))
+    except OSError:
+        paths = []
+    for path in paths:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if str(data.get("date") or "") != today:
+            continue
+        tokens = int(data.get("used_tokens") or 0)
+        rows.append({
+            "model_key": str(data.get("model_key") or path.stem),
+            "date": data.get("date") or today,
+            "used_tokens": tokens,
+            "used_tokens_label": _compact_number(tokens),
+            "cache_path": _safe_rel(path, HARNESS_DIR),
+            "mtime": path.stat().st_mtime if path.exists() else 0,
+        })
+    rows.sort(key=lambda item: (-int(item.get("used_tokens") or 0), str(item.get("model_key") or "")))
+    return rows
+
+
+def _refresh_quota_footer_cache() -> list[dict]:
+    script = HARNESS_DIR / "quota-footer.sh"
+    if not script.exists():
+        return [{"ok": False, "error": "quota-footer.sh missing", "path": str(script)}]
+    attempts = []
+    for persona in ("pm", "planner", "builder", "evaluator"):
+        try:
+            proc = subprocess.run(
+                ["bash", str(script), persona, persona],
+                text=True,
+                capture_output=True,
+                timeout=12,
+                env={**os.environ, "HARNESS_DIR": str(HARNESS_DIR)},
+            )
+            attempts.append({"persona": persona, "ok": proc.returncode == 0, "returncode": proc.returncode})
+        except Exception as exc:
+            attempts.append({"persona": persona, "ok": False, "error": f"{type(exc).__name__}: {exc}"})
+    return attempts
+
+
+def _usage_payload(refresh: bool = False) -> dict:
+    rows = _quota_footer_cache_rows()
+    refresh_attempts = []
+    if refresh or not rows:
+        refresh_attempts = _refresh_quota_footer_cache()
+        rows = _quota_footer_cache_rows()
+    total = sum(int(row.get("used_tokens") or 0) for row in rows)
+    return {
+        "ok": True,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "source": "Claude log scan / quota-footer",
+        "source_path": _safe_rel(HARNESS_DIR / "quota-footer.sh", HARNESS_DIR),
+        "scope": "model-day estimate",
+        "not_per_sprint": True,
+        "not_per_agent": True,
+        "label": "source: Claude log scan / quota-footer; scope: model-day estimate; not per-sprint or per-agent",
+        "total_used_tokens": total,
+        "total_used_tokens_label": _compact_number(total),
+        "models": rows,
+        "refresh_attempts": refresh_attempts,
+    }
+
+
+def _read_config_env(path: Path) -> dict:
+    if not path.exists() or not path.is_file():
+        return {}
+    rows = {}
+    try:
+        for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if not key:
+                continue
+            rows[key] = value.strip().strip('"').strip("'")
+    except OSError:
+        return {}
+    return rows
+
+
+def _settings_payload() -> dict:
+    """Read-only model/lab settings surface for the P0 app shell."""
+    config_env = _read_config_env(HARNESS_DIR / "config.env")
+    role_model_keys = {
+        "pm": ("SOLAR_PM_MODEL", "PM_MODEL", "CLAUDE_PM_MODEL"),
+        "planner": ("SOLAR_PLANNER_MODEL", "PLANNER_MODEL", "CLAUDE_PLANNER_MODEL"),
+        "builder": ("SOLAR_BUILDER_MODEL", "BUILDER_MODEL", "CLAUDE_BUILDER_MODEL"),
+        "evaluator": ("SOLAR_EVALUATOR_MODEL", "EVALUATOR_MODEL", "CLAUDE_EVALUATOR_MODEL"),
+    }
+    role_models = {}
+    for role, keys in role_model_keys.items():
+        for key in keys:
+            value = os.environ.get(key) or config_env.get(key)
+            if value:
+                role_models[role] = {"model": value, "source": key}
+                break
+
+    # Authoritative overlay: solar-user-config.json .models.* is what panes
+    # actually use (and what POST /settings writes), so it wins over config.env.
+    for role, alias in _read_user_config_models().items():
+        if role in ("pm", "planner", "builder", "evaluator") and alias:
+            role_models[role] = {
+                "model": _alias_to_model_id(str(alias)),
+                "source": "solar-user-config.json",
+            }
+
+    lab_keys = ("SOLAR_LAB_MODEL_MATRIX", "LAB_MODEL_MATRIX", "SOLAR_MODEL_LAB_MATRIX")
+    lab_matrix = ""
+    lab_source = ""
+    for key in lab_keys:
+        value = os.environ.get(key) or config_env.get(key)
+        if value:
+            lab_matrix = value
+            lab_source = key
+            break
+
+    physical = _physical_operator_summary()
+    pane_runtime, pane_runtime_source = _read_user_config_runtime()
+    launch_supported = _runtime_launch_supported()
+    _codex_cfg = _read_user_config().get("codex")
+    _codex_cfg = _codex_cfg if isinstance(_codex_cfg, dict) else {}
+    return {
+        "ok": True,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "source": "status-server settings scan",
+        "sources": {
+            "config_env": _safe_rel(HARNESS_DIR / "config.env", HARNESS_DIR),
+            "physical_operators": _safe_rel(HARNESS_DIR / "config" / "physical-operators.json", HARNESS_DIR),
+            "user_config": _safe_rel(_USER_CONFIG_PATH, HARNESS_DIR),
+        },
+        "write_supported": True,
+        "write_note": "Settings writes persist to solar-user-config.json and local secrets; running panes apply changes after a cockpit restart.",
+        "runtime": {
+            "value": pane_runtime,
+            "source": pane_runtime_source,
+            "launch_supported": launch_supported,
+            "note": (
+                "This checkout has the SOLAR_PANE_RUNTIME launch seam."
+                if launch_supported
+                else "Runtime default can be stored, but this checkout lacks the pane-launcher/dispatcher SOLAR_PANE_RUNTIME seam; the UI keeps the selector disabled."
+            ),
+        },
+        "codex": {
+            "search": bool(_codex_cfg.get("search", True)),
+            "effort": str(_codex_cfg.get("effort") or "medium"),
+            "note": "Codex web search + reasoning effort; applied as SOLAR_CODEX_EXTRA_FLAGS when the codex runtime launches.",
+        },
+        "model_lab_matrix": {
+            "value": lab_matrix,
+            "source": lab_source,
+        },
+        "role_models": role_models,
+        "physical_operators": physical,
+    }
+
+
+# --- Settings WRITE path (model/crew selection + provider keys) ---------------
+# The authoritative pane-model knob is solar-user-config.json .models.{role}
+# (read by solar_persona_model at pane launch). Provider keys persist to
+# ~/.solar/secrets/solar-user-secrets.env, which model-config.sh sources.
+_USER_CONFIG_PATH = HARNESS_DIR / "config" / "solar-user-config.json"
+# Default is the real path model-config.sh sources; env-overridable for isolated tests.
+_USER_SECRETS_PATH = Path(
+    os.environ.get(
+        "SOLAR_USER_SECRETS_FILE",
+        str(Path.home() / ".solar" / "secrets" / "solar-user-secrets.env"),
+    )
+)
+_VALID_MODEL_ALIASES = {
+    "claude-opus", "claude-sonnet", "claude-haiku", "anthropic-opus",
+    "anthropic-sonnet", "opus", "sonnet", "zhipu-glm-5.1", "zhipu-glm-4.7",
+    "deepseek-v4-pro",
+}
+_VALID_PANE_RUNTIMES = {"claude", "codex"}
+# provider id (frontend) -> env var the runtime reads
+_PROVIDER_KEY_ENV = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "zhipu": "ZHIPU_AUTH_TOKEN",
+    "glm": "ZHIPU_AUTH_TOKEN",
+    "deepseek": "DEEPSEEK_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "serper": "SERPER_API_KEY",
+}
+
+# Serialize all settings read-modify-write so concurrent POST /settings (two tabs / a double
+# submit) can't lose each other's keys. RLock is re-entrant, so _settings_write_payload can hold
+# it across the whole POST while the per-key writers re-acquire it harmlessly. Cross-PROCESS
+# readers (panes) are protected by the atomic os.replace in _write_user_config, not this lock.
+_USER_CONFIG_LOCK = threading.RLock()
+
+
+def _read_user_config() -> dict:
+    try:
+        cfg = json.loads(_USER_CONFIG_PATH.read_text(encoding="utf-8")) if _USER_CONFIG_PATH.exists() else {}
+    except Exception:
+        cfg = {}
+    return cfg if isinstance(cfg, dict) else {}
+
+
+def _write_user_config(cfg: dict) -> None:
+    # Atomic write: a pane reading solar-user-config.json mid-write must never see a truncated
+    # file (which _read_user_config would silently swallow as {} and revert pane models/runtime to
+    # default). Write a temp file in the same dir, then os.replace (atomic on POSIX). Callers hold
+    # _USER_CONFIG_LOCK so the surrounding read-modify-write is serialized across request threads.
+    _USER_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _USER_CONFIG_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, _USER_CONFIG_PATH)
+
+
+def _runtime_launch_supported() -> bool:
+    """The persisted runtime selector is only safe to enable when the FULL launch chain is
+    wired: solar-harness.sh reads the config 'runtime' as the SOLAR_PANE_RUNTIME default,
+    pane-launcher.sh consumes it, and the dispatcher honors it. The config-read is what makes
+    the stored toggle value actually drive the panes (else the toggle is a no-op), so it is
+    required here too — not just the launch seam."""
+    try:
+        harness = (HARNESS_DIR / "solar-harness.sh").read_text(encoding="utf-8", errors="replace")
+        launcher = (HARNESS_DIR / "pane-launcher.sh").read_text(encoding="utf-8", errors="replace")
+        dispatcher = (HARNESS_DIR / "lib" / "graph_node_dispatcher.py").read_text(
+            encoding="utf-8",
+            errors="replace",
+        )
+    except Exception:
+        return False
+    return (
+        'solar_config_json_get "runtime"' in harness
+        and "SOLAR_PANE_RUNTIME" in launcher
+        and "def _pane_runtime(" in dispatcher
+    )
+
+
+def _auth_status_payload() -> dict:
+    """Subscription-first auth state per provider via auth-helpers.sh (file-presence based;
+    NEVER returns token values). The dashboard's AuthGate consumes this to decide first-run
+    sign-in vs. proceed. Degrades to 'unknown' (never blocks) if the helper is absent/errors."""
+    helper = HARNESS_DIR / "auth-helpers.sh"
+    fallback = {"ok": True, "codex": "unknown", "claude": "unknown", "glm": "unknown", "source": "unavailable"}
+    if not helper.exists():
+        return fallback
+    try:
+        out = subprocess.run(
+            ["bash", str(helper), "status"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+        data = json.loads((out.stdout or "").strip() or "{}")
+        if isinstance(data, dict) and data.get("ok"):
+            return data
+    except Exception:
+        pass
+    return fallback
+
+
+# In-flight device-code logins, keyed by provider. ThreadingHTTPServer serves each request on
+# its own thread, so the registry is lock-guarded. We NEVER store token values — only the process
+# handle and a logfile the CLI writes its (non-secret) device-code prompt to.
+_AUTH_LOGIN_LOCK = threading.Lock()
+_AUTH_LOGINS: dict = {}
+_AUTH_LOGIN_URL_RE = re.compile(r"https?://[^\s'\"]+")
+_AUTH_LOGIN_CODE_RE = re.compile(r"\b([A-Z0-9]{4,8}-[A-Z0-9]{4,8})\b")
+
+
+def _auth_run_dir() -> Path:
+    d = HARNESS_DIR / "run"
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+    return d
+
+
+def _auth_reuse_host_creds(provider: str) -> dict:
+    """Zero-step path: on WSL, copy creds the user already has on the Windows side. Delegates to
+    auth-helpers.sh (which only copies when the runtime-home target is absent — never overwrites)."""
+    if provider not in ("codex", "claude"):
+        return {"ok": False, "error": "unknown provider"}
+    helper = HARNESS_DIR / "auth-helpers.sh"
+    if not helper.exists():
+        return {"ok": False, "error": "auth helper unavailable"}
+    try:
+        out = subprocess.run(
+            ["bash", str(helper), "reuse-host-creds", provider],
+            capture_output=True, text=True, timeout=20,
+        )
+        data = json.loads((out.stdout or "").strip() or "{}")
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+    return {"ok": False, "error": "reuse failed", "provider": provider}
+
+
+def _auth_login_start(provider: str) -> dict:
+    """Start a headless device-code login (codex login --device-auth / claude setup-token) as a
+    detached background process whose stdout goes to a logfile. The dashboard polls
+    /auth/login/status to read the device URL+code and completion."""
+    if provider not in ("codex", "claude"):
+        return {"ok": False, "error": "unknown provider"}
+    helper = HARNESS_DIR / "auth-helpers.sh"
+    if not helper.exists():
+        return {"ok": False, "error": "auth helper unavailable"}
+    with _AUTH_LOGIN_LOCK:
+        existing = _AUTH_LOGINS.get(provider)
+        if existing and existing["proc"].poll() is None:
+            return {"ok": True, "provider": provider, "state": "pending", "note": "already running"}
+        log_path = _auth_run_dir() / f"auth-login-{provider}.log"
+        try:
+            log_fh = open(log_path, "wb")
+        except OSError as exc:
+            return {"ok": False, "error": f"log open failed: {exc}"}
+        try:
+            proc = subprocess.Popen(
+                ["bash", str(helper), "login", provider],
+                stdout=log_fh, stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL, start_new_session=True,
+            )
+        except Exception as exc:
+            log_fh.close()
+            return {"ok": False, "error": f"spawn failed: {exc}"}
+        _AUTH_LOGINS[provider] = {"proc": proc, "log": log_path, "fh": log_fh, "started": time.time()}
+    return {"ok": True, "provider": provider, "state": "started"}
+
+
+def _auth_login_status(provider: str) -> dict:
+    """Poll an in-flight login: surface the parsed device URL+code plus a raw tail (so the UI
+    shows the CLI's real prompt even if parsing misses the format), and detect completion by
+    re-checking actual auth state."""
+    if provider not in ("codex", "claude"):
+        return {"ok": False, "error": "unknown provider"}
+    with _AUTH_LOGIN_LOCK:
+        entry = _AUTH_LOGINS.get(provider)
+    if not entry:
+        return {"ok": True, "provider": provider, "state": "idle"}
+    rc = entry["proc"].poll()
+    raw = ""
+    try:
+        raw = entry["log"].read_text(errors="replace")
+    except OSError:
+        pass
+    url_m = _AUTH_LOGIN_URL_RE.search(raw)
+    code_m = _AUTH_LOGIN_CODE_RE.search(raw)
+    url = url_m.group(0) if url_m else None
+    code = code_m.group(1) if code_m else None
+    tail = "\n".join(raw.splitlines()[-12:]).strip()
+    if rc is None:
+        return {"ok": True, "provider": provider, "state": "pending", "url": url, "code": code, "tail": tail}
+    final = _auth_status_payload()
+    state = "done" if final.get(provider) == "ok" else "failed"
+    return {"ok": True, "provider": provider, "state": state, "exit_code": rc,
+            "url": url, "code": code, "tail": tail, "auth": final}
+
+
+def _model_id_to_alias(model_id: str) -> str:
+    """Map a dashboard model id to a canonical config alias. CRITICAL: bare
+    'sonnet' canonicalizes to GLM in the registry, so always emit explicit
+    claude-* / zhipu-* aliases."""
+    m = str(model_id or "").strip().lower()
+    if "opus" in m:
+        return "claude-opus"
+    if "sonnet" in m:
+        return "claude-sonnet"
+    if "haiku" in m:
+        return "claude-haiku"
+    if "glm-5" in m or "glm5" in m:
+        return "zhipu-glm-5.1"
+    if "glm" in m:
+        return "zhipu-glm-4.7"
+    if "deepseek" in m:
+        return "deepseek-v4-pro"
+    return m
+
+
+def _alias_to_model_id(alias: str) -> str:
+    """Reverse of _model_id_to_alias: canonical alias -> dashboard display id."""
+    a = str(alias or "").strip().lower()
+    if "opus" in a:
+        return "claude-opus-4.x"
+    if "sonnet" in a:
+        return "claude-sonnet-4.x"
+    if "haiku" in a:
+        return "claude-haiku-4.x"
+    if "glm" in a:
+        return "glm-4.6"
+    return str(alias or "")
+
+
+def _read_user_config_models() -> dict:
+    cfg = _read_user_config()
+    models = cfg.get("models")
+    return models if isinstance(models, dict) else {}
+
+
+def _read_user_config_runtime() -> tuple[str, str]:
+    cfg = _read_user_config()
+    runtime = str(cfg.get("runtime") or "").strip().lower()
+    if runtime in _VALID_PANE_RUNTIMES:
+        return runtime, "solar-user-config.json"
+    env_runtime = str(os.environ.get("SOLAR_PANE_RUNTIME") or "").strip().lower()
+    if env_runtime in _VALID_PANE_RUNTIMES:
+        return env_runtime, "SOLAR_PANE_RUNTIME"
+    return "claude", "default"
+
+
+def _write_user_config_models(role_models: dict) -> dict:
+    """Write models.{pm,planner,builder,evaluator} into solar-user-config.json."""
+    cfg = _read_user_config()
+    models = cfg.get("models") if isinstance(cfg.get("models"), dict) else {}
+    applied = {}
+    for role in ("pm", "planner", "builder", "evaluator"):
+        rid = role_models.get(role)
+        if not rid:
+            continue
+        alias = _model_id_to_alias(rid)
+        if alias not in _VALID_MODEL_ALIASES:
+            continue
+        models[role] = alias
+        applied[role] = alias
+    cfg["models"] = models
+    _write_user_config(cfg)
+    return applied
+
+
+def _write_user_config_runtime(runtime: str) -> str:
+    value = str(runtime or "").strip().lower()
+    if value not in _VALID_PANE_RUNTIMES:
+        return ""
+    cfg = _read_user_config()
+    cfg["runtime"] = value
+    _write_user_config(cfg)
+    return value
+
+
+_VALID_CODEX_EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
+
+
+def _write_user_config_codex(codex_in: dict) -> dict:
+    """Write codex launch options {search: bool, effort: str} into solar-user-config.json.
+    solar-harness.sh turns these into SOLAR_CODEX_EXTRA_FLAGS (--search + reasoning effort) when
+    the codex runtime launches, so the dashboard's codex choice actually uses web search."""
+    if not isinstance(codex_in, dict):
+        return {}
+    cfg = _read_user_config()
+    codex = cfg.get("codex") if isinstance(cfg.get("codex"), dict) else {}
+    applied: dict = {}
+    if "search" in codex_in:
+        codex["search"] = bool(codex_in["search"])
+        applied["search"] = codex["search"]
+    eff = str(codex_in.get("effort") or "").strip().lower()
+    if eff in _VALID_CODEX_EFFORTS:
+        codex["effort"] = eff
+        applied["effort"] = eff
+    if applied:
+        cfg["codex"] = codex
+        _write_user_config(cfg)
+    return applied
+
+
+def _write_provider_keys(api_keys: dict) -> list:
+    """Persist provider keys to the local secrets file (local only, 0600)."""
+    _USER_SECRETS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    existing: dict[str, str] = {}
+    if _USER_SECRETS_PATH.exists():
+        for line in _USER_SECRETS_PATH.read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            if not s or s.startswith("#") or "=" not in s:
+                continue
+            k, v = s.split("=", 1)
+            existing[k.replace("export ", "").strip()] = v
+    written = []
+    for pid, key in (api_keys or {}).items():
+        if not key:
+            continue
+        env = _PROVIDER_KEY_ENV.get(str(pid).strip().lower())
+        if not env:
+            continue
+        existing[env] = json.dumps(str(key))  # shell-safe quoting
+        written.append(env)
+    lines = ["# Solar user secrets — written by the dashboard settings. Local only.\n"]
+    for k, v in existing.items():
+        lines.append(f"export {k}={v}\n")
+    # Atomic + 0600-before-publish so a reader never sees a half-written secrets file and the
+    # file is never momentarily world-readable. Caller holds _USER_CONFIG_LOCK.
+    tmp = _USER_SECRETS_PATH.with_suffix(".env.tmp")
+    tmp.write_text("".join(lines), encoding="utf-8")
+    try:
+        tmp.chmod(0o600)
+    except Exception:
+        pass
+    os.replace(tmp, _USER_SECRETS_PATH)
+    return written
+
+
+def _settings_write_payload(data: dict) -> tuple[dict, int]:
+    role_models_in = data.get("role_models") or data.get("models") or {}
+    api_keys = data.get("api_keys") or {}
+    runtime_in = data.get("runtime") or data.get("pane_runtime") or ""
+    codex_in = data.get("codex") if isinstance(data.get("codex"), dict) else {}
+    role_models = {}
+    for role, val in role_models_in.items():
+        role_models[role] = val.get("model") if isinstance(val, dict) else val
+    try:
+        # Hold the lock across the WHOLE POST so a concurrent settings write can't interleave
+        # between the models/keys/runtime/codex sub-writes and lose one of them (lost update).
+        with _USER_CONFIG_LOCK:
+            applied_models = _write_user_config_models(role_models) if role_models else {}
+            written_keys = _write_provider_keys(api_keys) if api_keys else []
+            applied_runtime = _write_user_config_runtime(runtime_in) if runtime_in else ""
+            applied_codex = _write_user_config_codex(codex_in) if codex_in else {}
+    except Exception as exc:
+        return {"ok": False, "error": "settings_write_failed", "detail": str(exc)}, 500
+    return {
+        "ok": True,
+        "applied_models": applied_models,
+        "applied_runtime": applied_runtime,
+        "applied_codex": applied_codex,
+        "written_keys": written_keys,
+        "note": "Models/runtime/codex -> solar-user-config.json; keys -> ~/.solar/secrets/solar-user-secrets.env. Restart the cockpit to apply to running panes.",
+    }, 200
+
+
+def _valid_sprint_id(sid: str) -> bool:
+    sid = sid or ""
+    # Reject the path-special segments '.' and '..' (the regex already excludes '/' and '\'). A
+    # sprint id is used as a filesystem path SEGMENT (sessions/<id>/, sprints/<id>.events.jsonl),
+    # so anything that isn't a strict slug must not reach a path join (traversal).
+    if sid in (".", ".."):
+        return False
+    return bool(re.match(r"^[A-Za-z0-9._-]+$", sid))
+
+
+def _deliverable_content_type(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix in (".html", ".htm"):
+        return "text/html; charset=utf-8"
+    if suffix in (".md", ".markdown"):
+        return "text/markdown; charset=utf-8"
+    if suffix == ".json":
+        return "application/json; charset=utf-8"
+    if suffix in (".txt", ".log"):
+        return "text/plain; charset=utf-8"
+    if suffix == ".pdf":
+        return "application/pdf"
+    if suffix == ".png":
+        return "image/png"
+    if suffix in (".jpg", ".jpeg"):
+        return "image/jpeg"
+    # Code / config / data outputs: serve as readable text so the dashboard can preview them.
+    if suffix in (
+        ".py", ".sh", ".ts", ".tsx", ".js", ".jsx", ".css", ".yaml", ".yml",
+        ".toml", ".csv", ".diff", ".patch", ".ini", ".cfg", ".sql", ".rs",
+        ".go", ".java", ".rb", ".ipynb", ".xml", ".env",
+    ):
+        return "text/plain; charset=utf-8"
+    return "application/octet-stream"
+
+
+def _find_cwd_value(obj) -> str:
+    """Recursively find a 'cwd' string in a nested JSON structure."""
+    if isinstance(obj, dict):
+        v = obj.get("cwd")
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+        for vv in obj.values():
+            r = _find_cwd_value(vv)
+            if r:
+                return r
+    elif isinstance(obj, list):
+        for vv in obj:
+            r = _find_cwd_value(vv)
+            if r:
+                return r
+    return ""
+
+
+def _sprint_workdir(sid: str) -> Path | None:
+    """Discover the sprint's working directory (where the builder produced the REAL
+    output — code, reports). That output lives in the workdir, not under SPRINTS_DIR,
+    so without surfacing it the deliverables rail shows only process plumbing. The
+    `cwd` field is recorded in the sprint's raw_intent / eval artifacts."""
+    if not _valid_sprint_id(sid):
+        return None
+    cwd = ""
+    for name in (f"{sid}.raw_intent.json", f"{sid}.S1-eval.json", f"{sid}.S2-eval.json", f"{sid}.S3-eval.json"):
+        p = SPRINTS_DIR / name
+        if not p.exists():
+            continue
+        try:
+            cwd = _find_cwd_value(json.loads(p.read_text(encoding="utf-8", errors="replace")))
+        except (OSError, ValueError):
+            continue
+        if cwd:
+            break
+    if not cwd:
+        return None
+    try:
+        wd = Path(cwd).expanduser().resolve()
+    except OSError:
+        return None
+    # Sanity: a real task dir — not /, $HOME, or the harness/sprints tree itself.
+    if not wd.is_dir():
+        return None
+    if wd in (Path("/"), Path.home().resolve()) or _is_within(wd, HARNESS_DIR) or _is_within(SPRINTS_DIR, wd):
+        return None
+    return wd
+
+
+# Pipeline order of a deliverable's producing stage. Drives the rail hierarchy
+# (result first, then process artifacts in the order they were produced, then raw
+# source) instead of an mtime jumble. "report" is the produced output; the single
+# canonical result is chosen separately and floated above everything.
+_PIPELINE_STAGE_ORDER = {
+    "report": 0,
+    "prd": 1,
+    "design": 2,
+    "plan": 3,
+    "task_graph": 4,
+    "handoff": 5,
+    "eval": 6,
+    "source": 7,
+    "other": 8,
+}
+
+
+def _deliverable_stage(name: str, rel_path: str, source: str) -> str:
+    """Classify a deliverable by its producing pipeline stage from the file name/dir
+    token — never the sprint id, which can itself contain words like 'plan'."""
+    base = (name or rel_path or "").rsplit("/", 1)[-1].lower()
+    dot = base.split(".")
+    # "<sid>.<token>.<ext>" -> the token segment; else the leading name.
+    token = dot[-2] if len(dot) >= 3 else (dot[0] if dot else base)
+    text = f"{token} {(rel_path or '').lower()}"
+
+    def has(*words: str) -> bool:
+        return any(word in text for word in words)
+
+    # Order matters: check the most specific tokens first so e.g. task_graph does
+    # not fall through to "plan", and acceptance_verdict lands in "eval".
+    if has("task_graph", "task-graph", "dag"):
+        return "task_graph"
+    if has("acceptance", "verdict", "eval", "coverage", "review"):
+        return "eval"
+    if has("handoff"):
+        return "handoff"
+    if has("prd", "spec", "intake", "scope", "contract", "requirement"):
+        return "prd"
+    if has("design"):
+        return "design"
+    if has("plan", "closure"):
+        return "plan"
+    if has("report", "result", "summary") or base in ("index.html", "report.html"):
+        return "report"
+    if source == "output":
+        # A produced workdir file with no named stage: a rendered doc is the output,
+        # everything else (code/config) is raw source.
+        if base.endswith((".html", ".htm", ".md", ".markdown", ".pdf")):
+            return "report"
+        return "source"
+    return "other"
+
+
+def _select_result_index(rows: list[dict]) -> int:
+    """Pick the single canonical result among discovered rows. Preference: the
+    evaluator-accepted artifact, then a rendered report (HTML, then md/pdf), then the
+    largest produced output, then any produced output, then the newest primary."""
+    if not rows:
+        return -1
+
+    def kind(row: dict) -> str:
+        return str(row.get("kind") or "").lower()
+
+    def name_l(row: dict) -> str:
+        return str(row.get("name") or "").lower()
+
+    def renderable(row: dict) -> bool:
+        return kind(row) in {"html", "htm", "md", "markdown", "pdf"}
+
+    tiers = (
+        lambda r: "accepted" in name_l(r) and renderable(r),
+        lambda r: r.get("stage") == "report" and kind(r) in {"html", "htm"},
+        lambda r: r.get("stage") == "report" and renderable(r),
+        lambda r: r.get("source") == "output" and renderable(r),
+        lambda r: r.get("source") == "output",
+        lambda r: bool(r.get("primary")),
+        lambda r: True,
+    )
+    for predicate in tiers:
+        matched = [i for i, row in enumerate(rows) if predicate(row)]
+        if matched:
+            # A real result is the most substantial / most recent of its tier.
+            return max(
+                matched,
+                key=lambda i: (float(rows[i].get("size") or 0), float(rows[i].get("mtime") or 0)),
+            )
+    return -1
+
+
+def _discover_sprint_deliverables(sid: str) -> list[dict]:
+    if not _valid_sprint_id(sid):
+        return []
+    allowed_suffixes = {".html", ".htm", ".md", ".markdown", ".json", ".txt", ".log", ".pdf", ".png", ".jpg", ".jpeg"}
+    candidates: list[Path] = []
+    try:
+        for pattern in (f"{sid}*.html", f"{sid}*.htm", f"{sid}*.md", f"{sid}*.json"):
+            candidates.extend(SPRINTS_DIR.glob(pattern))
+    except OSError:
+        pass
+    roots = [
+        SPRINTS_DIR / sid / ".research",
+        SPRINTS_DIR / f"{sid}.research",
+        SPRINTS_DIR / sid,
+        REPORTS_DIR / sid,
+    ]
+    for root in roots:
+        if not root.exists() or not root.is_dir():
+            continue
+        try:
+            for path in root.rglob("*"):
+                if path.is_file() and path.suffix.lower() in allowed_suffixes:
+                    candidates.append(path)
+        except OSError:
+            continue
+    rows = []
+    seen: set[str] = set()
+    for path in candidates:
+        try:
+            resolved = path.resolve()
+            if not any(_is_within(resolved, root) for root in (SPRINTS_DIR, REPORTS_DIR)):
+                continue
+            if resolved.suffix.lower() not in allowed_suffixes:
+                continue
+            key = _safe_rel(resolved, HARNESS_DIR)
+            if key in seen:
+                continue
+            seen.add(key)
+            stat = resolved.stat()
+            rows.append({
+                "name": resolved.name,
+                "rel_path": key,
+                "kind": resolved.suffix.lower().lstrip(".") or "file",
+                "size": stat.st_size,
+                "mtime": stat.st_mtime,
+                "source": "process",
+                "primary": False,
+                "stage": _deliverable_stage(resolved.name, key, "process"),
+                "view_url": f"/sprints/{urllib.parse.quote(sid)}/deliverables?path={urllib.parse.quote(key)}",
+            })
+        except OSError:
+            continue
+
+    # Surface the REAL produced output from the sprint's working directory. The
+    # builder writes code/reports to the workdir (cwd), not under SPRINTS_DIR, so
+    # without this the rail shows only process plumbing and never the deliverable.
+    workdir = _sprint_workdir(sid)
+    if workdir is not None:
+        # Only surface files PRODUCED during the sprint (mtime at/after start), so a
+        # workdir that is a populated repo doesn't dump pre-existing files as deliverables.
+        cutoff = 0.0
+        try:
+            import datetime as _dt
+            _sf = SPRINTS_DIR / f"{sid}.status.json"
+            _ca = str((json.loads(_sf.read_text(encoding="utf-8", errors="replace")) if _sf.exists() else {}).get("created_at") or "")
+            if _ca:
+                cutoff = _dt.datetime.fromisoformat(_ca.replace("Z", "+00:00")).timestamp() - 300
+        except Exception:
+            cutoff = 0.0
+        output_suffixes = allowed_suffixes | {
+            ".py", ".sh", ".ts", ".tsx", ".js", ".jsx", ".css", ".yaml", ".yml",
+            ".toml", ".csv", ".diff", ".patch", ".sql", ".rs", ".go", ".java", ".rb", ".ipynb",
+        }
+        skip_dirs = {
+            ".git", "__pycache__", ".pytest_cache", "node_modules", ".venv", "venv",
+            "dist", "build", ".vite", ".mypy_cache", ".ruff_cache", ".idea", ".cache", "site-packages",
+        }
+        wd_count = 0
+        try:
+            for path in sorted(workdir.rglob("*"), key=lambda p: str(p)):
+                if wd_count >= 80:
+                    break
+                try:
+                    parts = path.relative_to(workdir).parts
+                except ValueError:
+                    continue
+                if len(parts) > 3:
+                    continue
+                if any(part in skip_dirs or part.startswith(".") for part in parts):
+                    continue
+                if not path.is_file() or path.suffix.lower() not in output_suffixes:
+                    continue
+                try:
+                    resolved = path.resolve()
+                    key = _safe_rel(resolved, HARNESS_DIR)  # absolute string for workdir files
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    stat = resolved.stat()
+                except OSError:
+                    continue
+                if cutoff and stat.st_mtime < cutoff:
+                    continue
+                rows.append({
+                    "name": resolved.name,
+                    "rel_path": key,
+                    "kind": resolved.suffix.lower().lstrip(".") or "file",
+                    "size": stat.st_size,
+                    "mtime": stat.st_mtime,
+                    "source": "output",
+                    "primary": True,
+                    "stage": _deliverable_stage(resolved.name, key, "output"),
+                    "view_url": f"/sprints/{urllib.parse.quote(sid)}/deliverables?path={urllib.parse.quote(key)}",
+                })
+                wd_count += 1
+        except OSError:
+            pass
+
+    # Flag exactly one canonical result so the UI can answer "where is the output".
+    result_index = _select_result_index(rows)
+    for index, row in enumerate(rows):
+        row["result"] = index == result_index
+
+    # Result first, then process artifacts in pipeline order (prd -> design -> plan ->
+    # task_graph -> handoff -> eval), then raw source files. mtime/name break ties so
+    # the order is meaningful instead of an arbitrary mtime jumble.
+    rows.sort(key=lambda item: (
+        0 if item.get("result") else 1,
+        _PIPELINE_STAGE_ORDER.get(str(item.get("stage") or "other"), 8),
+        -float(item.get("mtime") or 0),
+        str(item.get("name") or ""),
+    ))
+    return rows
+
+
+def _resolve_sprint_deliverable(sid: str, raw_path: str) -> Path | None:
+    if not _valid_sprint_id(sid):
+        return None
+    raw = urllib.parse.unquote(raw_path or "").strip()
+    if not raw:
+        return None
+    candidate = Path(raw)
+    if not candidate.is_absolute():
+        candidate = HARNESS_DIR / candidate
+    try:
+        candidate = candidate.resolve()
+    except OSError:
+        return None
+    allowed = {item["rel_path"] for item in _discover_sprint_deliverables(sid)}
+    if _safe_rel(candidate, HARNESS_DIR) not in allowed:
+        return None
+    return candidate if candidate.exists() and candidate.is_file() else None
+
+
+def _sprint_deliverables_payload(sid: str) -> dict:
+    return {
+        "ok": _valid_sprint_id(sid),
+        "sprint_id": sid,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "items": _discover_sprint_deliverables(sid),
+    }
+
+
 def _read_text_prefix(path: Path, limit_bytes: int = 8192) -> str:
     try:
         with path.open("rb") as fh:
             return fh.read(limit_bytes).decode("utf-8", errors="replace")
     except OSError:
         return ""
-
-
-def _read_json_file_default(path: Path, default):
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return data if isinstance(data, type(default)) else default
-    except Exception:
-        return default
-
-
-def _write_json_file(path: Path, payload: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    os.replace(tmp, path)
-
-
-def _desktop_log(message: str) -> None:
-    try:
-        DESKTOP_LOG_DIR.mkdir(parents=True, exist_ok=True)
-        with DESKTOP_STDERR_LOG.open("a", encoding="utf-8") as fh:
-            fh.write(f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {message}\n")
-    except OSError:
-        pass
-
-
-def _project_venv_bin() -> Path | None:
-    candidates = []
-    try:
-        candidates.append(HARNESS_DIR.resolve().parent / ".venv" / "bin")
-    except OSError:
-        pass
-    candidates.append(HARNESS_DIR.parent / ".venv" / "bin")
-    for path in candidates:
-        python = path / "python"
-        if python.exists() and os.access(python, os.X_OK):
-            return path
-    return None
-
-
-def _project_python() -> Path | None:
-    venv_bin = _project_venv_bin()
-    if venv_bin:
-        return venv_bin / "python"
-    wrapper = HARNESS_DIR / "bin" / "python3"
-    if wrapper.exists() and os.access(wrapper, os.X_OK):
-        return wrapper
-    return None
-
-
-def _with_project_python_path(env: dict[str, str]) -> dict[str, str]:
-    out = dict(env)
-    path_parts = []
-    venv_bin = _project_venv_bin()
-    if venv_bin:
-        path_parts.append(str(venv_bin))
-        out.setdefault("VIRTUAL_ENV", str(venv_bin.parent))
-    harness_bin = HARNESS_DIR / "bin"
-    if harness_bin.exists():
-        path_parts.append(str(harness_bin))
-    if path_parts:
-        out["PATH"] = os.pathsep.join(path_parts + [out.get("PATH", "")])
-    return out
-
-
-def _reexec_with_project_python() -> None:
-    if os.environ.get("SOLAR_STATUS_SERVER_REEXECED") == "1":
-        return
-    python = _project_python()
-    if not python:
-        return
-    try:
-        if Path(sys.executable).resolve() == python.resolve():
-            return
-    except OSError:
-        pass
-    env = _with_project_python_path(os.environ)
-    env["SOLAR_STATUS_SERVER_REEXECED"] = "1"
-    _desktop_log(f"re-exec status-server with project python: {python}")
-    os.execve(str(python), [str(python), *sys.argv], env)
 
 
 def _frontmatter_value(text: str, key: str) -> str:
@@ -549,7 +1827,7 @@ def _asset_packages_payload(limit: int = 80) -> dict:
 
 def _assets_view_html() -> str:
     return """<!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -3204,7 +4482,7 @@ def _ai_influence_html(
         "<a class='quick-btn preset-link' href='/ai-influence?period=30d'>近 30 天</a>",
     ])
     return f"""<!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8641,12 +9919,50 @@ def _collector_scheduler_update(data: dict) -> dict:
     return {"ok": True, "status": "ok", "task": _collector_task_payload(defn), "operations": operations}
 
 
+def _file_signature(path: Path) -> tuple[int, int]:
+    try:
+        stat = path.stat()
+        return (stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return (0, 0)
+
+
+def _status_payload_signature(sprint_id: str) -> tuple[int, ...]:
+    sid = str(sprint_id or "").strip()
+    if sid:
+        status_mtime, status_size = _file_signature(SPRINTS_DIR / f"{sid}.status.json")
+        event_mtime, event_size = _file_signature(_runtime_events_path(sid))
+        return (1 if status_mtime else 0, status_mtime, status_size, event_mtime, event_size)
+    count = 0
+    newest = 0
+    event_mtime, event_size = _file_signature(ALL_EVENTS)
+    try:
+        paths = list(SPRINTS_DIR.glob("*.status.json"))
+    except OSError:
+        paths = []
+    for path in paths:
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        count += 1
+        newest = max(newest, stat.st_mtime_ns)
+    return (count, newest, event_mtime, event_size)
+
+
 def _status_payload(limit: int = 50, sprint_id: str = "") -> dict:
     requested_sid = str(sprint_id or "").strip()
+    if requested_sid and not _valid_sprint_id(requested_sid):
+        requested_sid = ""  # unsafe id -> unscoped (global); never build a traversed path
     cache_key = f"{requested_sid}|{limit}"
     now = time.monotonic()
+    status_signature = _status_payload_signature(requested_sid)
     cached = _STATUS_PAYLOAD_CACHE.get(cache_key)
-    if cached and now - cached.get("ts", 0.0) <= _STATUS_PAYLOAD_CACHE_TTL_SECONDS:
+    if (
+        cached
+        and now - cached.get("ts", 0.0) <= _STATUS_PAYLOAD_CACHE_TTL_SECONDS
+        and cached.get("status_signature") == status_signature
+    ):
         payload = dict(cached.get("value") or {})
         payload["status_cache"] = "hit"
         return payload
@@ -8675,7 +9991,9 @@ def _status_payload(limit: int = 50, sprint_id: str = "") -> dict:
         "multi_task_panes": multi_task_panes,
         "multi_task_pane_pool": multi_task_pool,
         "thunderomlx": _thunderomlx_status(),
-        "recent_events": _read_jsonl(ALL_EVENTS, limit=limit, filter_synthetic=True),
+        "recent_events": _events_for_request(requested_sid, limit=limit) if requested_sid else _read_jsonl(ALL_EVENTS, limit=limit, filter_synthetic=True),
+        "recent_events_scope": "requested" if requested_sid else "global",
+        "recent_events_source": "session_or_sprint" if requested_sid else "global",
         "kpi": _kpi(),
         "obsidian_wiki": _obsidian_wiki_readiness(),
         "mirage": _mirage_status(),
@@ -8699,269 +10017,8 @@ def _status_payload(limit: int = 50, sprint_id: str = "") -> dict:
         "requirement_coverage": _requirement_coverage_summary(requested_sid or current.get("sprint_id", "")),
         "status_cache": "miss",
     }
-    _STATUS_PAYLOAD_CACHE[cache_key] = {"ts": time.monotonic(), "value": dict(payload)}
+    _STATUS_PAYLOAD_CACHE[cache_key] = {"ts": time.monotonic(), "status_signature": status_signature, "value": dict(payload)}
     return payload
-
-
-def _desktop_generated_at() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
-
-def _sprint_status_files(limit: int = 120) -> list[Path]:
-    if not SPRINTS_DIR.exists():
-        return []
-    paths = []
-    try:
-        paths.extend(SPRINTS_DIR.glob("sprint-*.status.json"))
-        paths.extend(path for path in SPRINTS_DIR.glob("*.status.json") if path not in paths)
-    except OSError:
-        return []
-    paths.sort(key=lambda path: path.stat().st_mtime if path.exists() else 0, reverse=True)
-    return paths[: max(1, min(limit, 500))]
-
-
-def _desktop_sprint_item(path: Path) -> dict:
-    data = _read_json_file_default(path, {})
-    sid = str(data.get("sprint_id") or data.get("id") or path.name.removesuffix(".status.json"))
-    events = _read_jsonl(_runtime_events_path(sid), limit=1, sprint_id=sid)
-    latest_event = events[-1] if events else {}
-    try:
-        mtime = path.stat().st_mtime
-    except OSError:
-        mtime = 0
-    updated_at = str(data.get("updated_at") or latest_event.get("ts") or "")
-    return {
-        "sprint_id": sid,
-        "id": sid,
-        "title": data.get("title") or _sprint_description(sid) or sid,
-        "status": data.get("status") or "unknown",
-        "phase": data.get("phase") or "",
-        "lane": data.get("lane") or "",
-        "priority": data.get("priority") or "",
-        "handoff_to": data.get("handoff_to") or "",
-        "updated_at": updated_at,
-        "mtime": mtime,
-        "latest_event": latest_event,
-        "stall": {"is_stalled": False, "reason": ""},
-    }
-
-
-def _desktop_sprints_payload(limit: int = 120) -> dict:
-    items = [_desktop_sprint_item(path) for path in _sprint_status_files(limit)]
-    return {
-        "ok": True,
-        "status": "ok",
-        "generated_at": _desktop_generated_at(),
-        "data": {"sprints": items},
-        "items": items,
-    }
-
-
-def _desktop_usage_payload() -> dict:
-    return {
-        "ok": True,
-        "status": "ok",
-        "source": "status-server",
-        "scope": "local-harness",
-        "total_used_tokens_label": "N/A",
-        "models": [],
-        "generated_at": _desktop_generated_at(),
-    }
-
-
-def _desktop_settings_payload() -> dict:
-    user_config = _read_json_file_default(HARNESS_DIR / "config" / "solar-user-config.json", {})
-    registry = _read_json_file_default(HARNESS_DIR / "config" / "model-registry.json", {})
-    physical = _read_json_file_default(HARNESS_DIR / "config" / "physical-operators.json", {})
-    models = user_config.get("models") if isinstance(user_config.get("models"), dict) else {}
-    role_models = {}
-    for role in ("pm", "planner", "builder", "evaluator"):
-        role_models[role] = {
-            "model": str(models.get(role) or registry.get("defaults", {}).get("main_model") or ""),
-            "source": "solar-user-config",
-        }
-    matrix_value = str(models.get("lab_builder_matrix") or registry.get("defaults", {}).get("lab_builder_matrix") or "")
-    physical_count = 0
-    if isinstance(physical.get("physical_operators"), dict):
-        physical_count = len(physical.get("physical_operators") or {})
-    elif isinstance(physical.get("operators"), list):
-        physical_count = len(physical.get("operators") or [])
-    return {
-        "ok": True,
-        "status": "ok",
-        "source": "status-server",
-        "generated_at": _desktop_generated_at(),
-        "write_supported": True,
-        "role_models": role_models,
-        "model_lab_matrix": {"value": matrix_value, "source": "solar-user-config"},
-        "runtime": {
-            "value": os.environ.get("SOLAR_PANE_RUNTIME", "codex"),
-            "source": "environment",
-            "launch_supported": False,
-            "note": "Desktop settings persist defaults; process launch remains controlled by the harness runtime.",
-        },
-        "physical_operators": {"count": physical_count},
-        "available_models": sorted((registry.get("models") or {}).keys()) if isinstance(registry.get("models"), dict) else [],
-    }
-
-
-def _desktop_settings_update(data: dict) -> dict:
-    api_keys = data.get("api_keys") if isinstance(data.get("api_keys"), dict) else {}
-    provided_keys = sorted(key for key, value in api_keys.items() if str(value or "").strip())
-    if provided_keys:
-        return {
-            "ok": False,
-            "status": "unsupported",
-            "error": "API key storage is not configured in status-server; configure provider secrets through the harness secret path instead.",
-            "unsupported_keys": provided_keys,
-        }
-    config_path = HARNESS_DIR / "config" / "solar-user-config.json"
-    config = _read_json_file_default(config_path, {})
-    if not isinstance(config, dict):
-        config = {}
-    models = config.setdefault("models", {})
-    role_models = data.get("role_models") if isinstance(data.get("role_models"), dict) else {}
-    changed = []
-    for role in ("pm", "planner", "builder", "evaluator"):
-        value = str(role_models.get(role) or "").strip()
-        if value:
-            models[role] = value
-            changed.append(f"models.{role}")
-    runtime = str(data.get("runtime") or "").strip()
-    if runtime:
-        config.setdefault("runtime", {})["default"] = runtime
-        changed.append("runtime.default")
-    config["updated_at"] = _desktop_generated_at()
-    _write_json_file(config_path, config)
-    return {
-        "ok": True,
-        "status": "ok",
-        "written_keys": [],
-        "changed": changed,
-        "applied_runtime": runtime,
-        "settings": _desktop_settings_payload(),
-        "note": "API key storage is intentionally not handled by status-server.",
-    }
-
-
-def _desktop_deliverable_items(sid: str) -> list[dict]:
-    items = []
-    candidates = []
-    if SPRINTS_DIR.exists():
-        candidates.extend(SPRINTS_DIR.glob(f"{sid}.*"))
-    session_dir = SESSIONS_DIR / sid
-    if session_dir.exists():
-        candidates.extend(path for path in session_dir.rglob("*") if path.is_file())
-    seen = set()
-    for path in sorted(candidates, key=lambda p: p.stat().st_mtime if p.exists() else 0, reverse=True):
-        if not path.is_file() or path in seen:
-            continue
-        seen.add(path)
-        if path.name.endswith(".lock") or path.name.endswith(".tmp"):
-            continue
-        try:
-            rel = str(path.resolve().relative_to(HARNESS_DIR.resolve()))
-        except (OSError, ValueError):
-            rel = str(path)
-        items.append(
-            {
-                "label": path.name,
-                "name": path.name,
-                "path": str(path),
-                "rel_path": rel,
-                "view_url": "/file/view?path=" + urllib.parse.quote(str(path)),
-                "size": path.stat().st_size,
-                "mtime": path.stat().st_mtime,
-            }
-        )
-    return items[:120]
-
-
-def _desktop_deliverables_payload(sid: str) -> dict:
-    return {
-        "ok": True,
-        "status": "ok",
-        "sprint_id": sid,
-        "items": _desktop_deliverable_items(sid),
-        "generated_at": _desktop_generated_at(),
-    }
-
-
-def _desktop_projection_payload(sid: str) -> dict:
-    status = _sprint_meta(sid)
-    events = _read_jsonl(_runtime_events_path(sid), limit=80, sprint_id=sid)
-    deliverables = _desktop_deliverable_items(sid)
-    data = {
-        "projection_schema": "solar.desktop_projection.v1",
-        "sprint_id": sid,
-        "title": status.get("title") or _sprint_description(sid) or sid,
-        "status": status.get("status") or "unknown",
-        "phase": status.get("phase") or "",
-        "nodes": [],
-        "gates": [],
-        "events_count": len(events),
-        "deliverables_count": len(deliverables),
-        "latest_event": events[-1] if events else {},
-        "summary": _sprint_description(sid) or status.get("title") or sid,
-    }
-    return {"ok": True, "status": "ok", "data": data, "generated_at": _desktop_generated_at()}
-
-
-def _extract_sprint_id_from_text(text: str) -> str:
-    clean = re.sub(r"\x1b\[[0-9;]*m", "", text or "")
-    patterns = (
-        r'"sprint_id"\s*:\s*"([^"]+)"',
-        r"Sprint created:\s*(\S+)",
-        r"Epic:\s*(\S+)",
-    )
-    for pattern in patterns:
-        match = re.search(pattern, clean)
-        if match:
-            return match.group(1)
-    return ""
-
-
-def _desktop_intake(data: dict) -> tuple[dict, int]:
-    task = str(data.get("task") or data.get("request") or "").strip()
-    if not task:
-        return {"ok": False, "status": "error", "error": "task is required"}, 400
-    cmd = ["bash", str(HARNESS_DIR / "solar-harness.sh"), "intake", "--request", task, "--json"]
-    if data.get("dispatch") is False:
-        cmd.append("--no-dispatch")
-    env = _with_project_python_path({
-        **os.environ,
-        "HARNESS_DIR": str(HARNESS_DIR),
-        "SOLAR_HARNESS_DIR": str(HARNESS_DIR),
-        "SOLAR_INTENT_SOURCE_CHANNEL": "codex_app_desktop",
-        "SOLAR_INTENT_ACTOR": "user",
-        "SOLAR_INTENT_DEVICE": "desktop",
-    })
-    try:
-        proc = subprocess.run(cmd, cwd=str(HARNESS_DIR), text=True, capture_output=True, env=env, timeout=180)
-    except subprocess.TimeoutExpired:
-        return {"ok": False, "status": "error", "error": "intake timed out"}, 504
-    payload = {}
-    stdout = proc.stdout or ""
-    try:
-        parsed = json.loads(stdout)
-        if isinstance(parsed, dict):
-            payload = parsed
-    except json.JSONDecodeError:
-        payload = {}
-    sprint_id = str(payload.get("sprint_id") or _extract_sprint_id_from_text(stdout + "\n" + (proc.stderr or "")))
-    ok = proc.returncode == 0 and bool(sprint_id)
-    response = {
-        "ok": ok,
-        "status": "ok" if ok else "error",
-        "sprint_id": sprint_id,
-        "data": payload,
-        "stdout_tail": stdout[-4000:],
-        "stderr_tail": (proc.stderr or "")[-4000:],
-        "returncode": proc.returncode,
-    }
-    if not ok:
-        response["error"] = response["stderr_tail"] or response["stdout_tail"] or f"intake failed rc={proc.returncode}"
-    return response, 200 if ok else 500
 
 
 def _runtime_interfaces_status(sprint_id: str) -> dict:
@@ -9015,7 +10072,7 @@ def _runtime_interfaces_status(sprint_id: str) -> dict:
 # ── HTML Dashboard ──
 _HTML_TEMPLATE = """\
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9897,28 +10954,28 @@ tr:hover td {
 </header>
 
 <nav class="tabbar" role="tablist">
-  <button class="tab active" data-tab="overview">Overview</button>
+  <button class="tab active" data-tab="overview">总览</button>
   <button class="tab" data-tab="sprint">Sprint</button>
-  <button class="tab" data-tab="main">Operator Execution</button>
-  <button class="tab" data-tab="lab">Pane Monitor / Headless Pool</button>
-  <button class="tab" data-tab="events">Events</button>
-  <button class="tab" data-tab="knowledge">Knowledge Base</button>
-  <button class="tab" data-tab="assets">Asset Packages</button>
-  <button class="tab" data-tab="collectors">Collector Scheduling</button>
+  <button class="tab" data-tab="main">算子执行</button>
+  <button class="tab" data-tab="lab">Pane监控/无头池</button>
+  <button class="tab" data-tab="events">事件</button>
+  <button class="tab" data-tab="knowledge">知识库</button>
+  <button class="tab" data-tab="assets">资产包</button>
+  <button class="tab" data-tab="collectors">采集调度</button>
   <a class="tab-link" href="/ai-influence" target="_blank" rel="noreferrer">AI Influence</a>
-  <button class="tab" data-tab="upload">Upload Documents</button>
-  <button class="tab" data-tab="config">Config</button>
-  <button class="tab" data-tab="integrations">Integrations</button>
-  <button class="tab" data-tab="diagrams">Diagrams</button>
+  <button class="tab" data-tab="upload">上传文档</button>
+  <button class="tab" data-tab="config">配置</button>
+  <button class="tab" data-tab="integrations">集成</button>
+  <button class="tab" data-tab="diagrams">架构图</button>
   <button class="tab" data-tab="raw">Raw JSON</button>
 </nav>
 
 <main>
   <section class="panel active" id="tab-overview">
-    <div class="card" style="margin-bottom: 1rem;"><h2>ThunderOMLX Local Model</h2><div id="overview-thunderomlx">Loading...</div></div>
+    <div class="card" style="margin-bottom: 1rem;"><h2>ThunderOMLX 本地模型</h2><div id="overview-thunderomlx">Loading...</div></div>
     <div class="card" style="margin-bottom: 1rem;"><h2>Planner / Evaluator Pool</h2><div id="overview-role-pools">Loading...</div></div>
     <div class="overview-shell">
-      <div class="card"><h2>Current Mainline</h2><div id="overview-sprint">Loading...</div></div>
+      <div class="card"><h2>当前主线</h2><div id="overview-sprint">Loading...</div></div>
       <div class="overview-stack">
         <div class="card overview-side-card"><h3>Gate Audit</h3><div id="overview-gate-audit">Loading...</div></div>
         <div class="card overview-side-card"><h3>Pane Health</h3><div id="overview-panes">Loading...</div></div>
@@ -9926,20 +10983,20 @@ tr:hover td {
       </div>
     </div>
     <div class="overview-bottom">
-      <div class="card"><h3>Knowledge Base Status</h3><div id="overview-knowledge">Loading...</div></div>
+      <div class="card"><h3>知识库状态</h3><div id="overview-knowledge">Loading...</div></div>
       <div class="card"><h3>Runtime Interfaces</h3><div id="overview-runtime">Loading...</div></div>
       <div class="card"><h3>Capability Evidence</h3><div id="overview-capabilities">Loading...</div></div>
       <div class="card"><h3>Autoresearch Impact</h3><div id="overview-autoresearch-impact">Loading...</div></div>
       <div class="card"><h3>Knowledge Routing</h3><div id="overview-knowledge-routing">Loading...</div></div>
       <div class="card"><h3>Meta-Harness</h3><div id="overview-meta-harness">Loading...</div></div>
       <div class="card"><h3>PM Dispatch</h3><div id="overview-pm-dispatch">Loading...</div></div>
-      <div class="card"><h3>Collector Scheduling</h3><div id="overview-collectors">Loading...</div></div>
+      <div class="card"><h3>采集调度</h3><div id="overview-collectors">Loading...</div></div>
       <div class="card"><h3>Operator Execution</h3><div id="overview-physical-operators">Loading...</div></div>
       <div class="card"><h3>DeepResearch Human Search</h3><div id="overview-human-search">Loading...</div></div>
       <div class="card"><h3>DeepResearch Quality</h3><div id="overview-research">Loading...</div></div>
       <div class="card"><h3>Contract Summary</h3><div id="overview-contract-summary">Loading...</div></div>
       <div class="card"><h3>Requirement Coverage</h3><div id="overview-requirement-coverage">Loading...</div></div>
-      <div class="card"><h3>Recent Risk</h3><div id="overview-risk">Loading...</div></div>
+      <div class="card"><h3>最近风险</h3><div id="overview-risk">Loading...</div></div>
     </div>
   </section>
 
@@ -9965,13 +11022,13 @@ tr:hover td {
   </section>
 
   <section class="panel" id="tab-main">
-    <h2>Operator Execution Status</h2>
+    <h2>算子执行状态 (Operator Execution Status)</h2>
     <div class="card" id="operator-metrics-container">Loading...</div>
     <div class="card" style="margin-top: 1rem; padding: 0.85rem; background: rgba(255, 252, 244, 0.48); display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; border-radius: 18px; border: 1px solid var(--line);">
       <div>
-        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">Execution Surface:</label>
+        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">执行载体:</label>
         <select id="op-filter-class" onchange="window.opFilterClass=this.value; renderOperatorsPage();" style="padding:0.4rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);">
-          <option value="all">All Surfaces</option>
+          <option value="all">全部载体</option>
           <option value="tui_pane">TUI Pane</option>
           <option value="browser_agent">Browser Agent</option>
           <option value="local_system">Local/System</option>
@@ -9979,57 +11036,57 @@ tr:hover td {
         </select>
       </div>
       <div>
-        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">Role Filter:</label>
+        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">角色过滤:</label>
         <select id="op-filter-role" onchange="window.opFilterRole=this.value; renderOperatorsPage();" style="padding:0.4rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);">
-          <option value="all">All Roles</option>
+          <option value="all">全部角色</option>
           <option value="planner">Planner</option>
           <option value="builder">Builder</option>
           <option value="evaluator">Evaluator</option>
         </select>
       </div>
       <div>
-        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">Status Filter:</label>
+        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">状态过滤:</label>
         <select id="op-filter-state" onchange="window.opFilterState=this.value; renderOperatorsPage();" style="padding:0.4rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);">
-          <option value="all">All Statuses</option>
-          <option value="idle">Idle</option>
-          <option value="leased">Leased</option>
-          <option value="busy">Busy/Running</option>
-          <option value="disabled">Disabled</option>
+          <option value="all">全部状态</option>
+          <option value="idle">Idle (空闲)</option>
+          <option value="leased">Leased (已租用)</option>
+          <option value="busy">Busy/Running (忙碌)</option>
+          <option value="disabled">Disabled (已禁用)</option>
         </select>
       </div>
       <div style="flex-grow: 1;">
-        <input type="text" id="op-search" placeholder="Search operator ID, model, vendor, logical operator, sprint..." oninput="window.opSearch=this.value; renderOperatorsPage();" style="width: 100%; max-width: 380px; padding:0.45rem 0.8rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);" />
+        <input type="text" id="op-search" placeholder="搜索算子 ID、模型、厂家、逻辑算子、Sprint..." oninput="window.opSearch=this.value; renderOperatorsPage();" style="width: 100%; max-width: 380px; padding:0.45rem 0.8rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);" />
       </div>
     </div>
     <div id="operator-cards-container" style="margin-top: 1rem;">Loading...</div>
-    <h2 style="margin-top: 2rem;">Logical Operator Mapping</h2>
+    <h2 style="margin-top: 2rem;">逻辑算子映射 (Logical Operators)</h2>
     <div class="card" id="logical-operators-container">Loading...</div>
-    <h2 style="margin-top: 2rem;">Recent Operator Results</h2>
+    <h2 style="margin-top: 2rem;">最近执行结果 (Operator Results)</h2>
     <div class="card" id="operator-results-detailed">Loading...</div>
   </section>
 
   <section class="panel" id="tab-lab">
-    <h2>Headless Pool and Builder Runtime Monitoring</h2>
+    <h2>Headless Pool 与 Builder Runtime 监控</h2>
     <div class="card" id="thunderomlx-card">Loading...</div>
     <div class="card" id="pane-metrics-container">Loading...</div>
     <div class="card" id="pane-pool-contract-card" style="margin-top: 1rem;">Loading...</div>
     <div class="card" style="margin-top: 1rem; padding: 0.85rem; background: rgba(255, 252, 244, 0.48); display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; border-radius: 18px; border: 1px solid var(--line);">
       <div>
-        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">Status Filter:</label>
+        <label style="font-weight:900; font-size:0.85rem; margin-right:0.4rem;">状态过滤:</label>
         <select id="pane-filter-state" onchange="window.paneFilterState=this.value; renderPanesPage();" style="padding:0.4rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);">
-          <option value="all">All Statuses</option>
-          <option value="idle">Idle</option>
-          <option value="reusable_idle">Reusable Idle</option>
-          <option value="historical_active">Historical Active</option>
-          <option value="leased">Leased</option>
-          <option value="running">Running command</option>
-          <option value="blocked">Blocked</option>
-          <option value="auth_expired">Auth Expired</option>
-          <option value="cooldown">Cooldown</option>
+          <option value="all">全部状态</option>
+          <option value="idle">Idle (空闲)</option>
+          <option value="reusable_idle">Reusable Idle (可复用历史壳)</option>
+          <option value="historical_active">Historical Active (当前选中的历史壳)</option>
+          <option value="leased">Leased (已租用)</option>
+          <option value="running">Running command (执行中)</option>
+          <option value="blocked">Blocked (卡住/待人处理)</option>
+          <option value="auth_expired">Auth Expired (鉴权过期)</option>
+          <option value="cooldown">Cooldown (冷却中)</option>
         </select>
       </div>
       <div style="flex-grow: 1;">
-        <input type="text" id="pane-search" placeholder="Search pane ID, current command, title, lease task..." oninput="window.paneSearch=this.value; renderPanesPage();" style="width: 100%; max-width: 320px; padding:0.45rem 0.8rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);" />
+        <input type="text" id="pane-search" placeholder="搜索 Pane ID、当前命令、标题、Lease 任务..." oninput="window.paneSearch=this.value; renderPanesPage();" style="width: 100%; max-width: 320px; padding:0.45rem 0.8rem; border-radius:8px; border:1px solid var(--line); font-weight:800; background: rgba(255, 255, 255, 0.76); color: var(--ink);" />
       </div>
     </div>
     <div id="pane-grid-container" style="margin-top: 1rem;">Loading...</div>
@@ -10045,12 +11102,12 @@ tr:hover td {
       <div class="knowledge-hero">
         <div class="card">
           <div class="eyebrow">Knowledge Desk</div>
-          <h2 class="knowledge-title">Knowledge Workbench</h2>
-          <p class="muted">Shows whether the Obsidian vault, upload entrypoint, and Mirage/QMD retrieval layer are usable. This view prioritizes availability and next actions; detailed health is below.</p>
+          <h2 class="knowledge-title">知识库工作台</h2>
+          <p class="muted">这里看 Obsidian vault、上传入口、Mirage/QMD 检索底座是否可用。优先展示能不能用和下一步去哪操作，详细健康信息放下面。</p>
           <div class="status-strip" id="knowledge-summary">Loading...</div>
         </div>
         <div class="card">
-          <h3>Current Paths</h3>
+          <h3>当前路径</h3>
           <div class="codebox">Vault  ~/Knowledge
 Raw    ~/Knowledge/_raw
 Upload http://127.0.0.1:8788
@@ -10059,48 +11116,48 @@ Config http://127.0.0.1:8789/setup</div>
       </div>
 
       <div class="card">
-        <h2>Common Actions</h2>
+        <h2>常用动作</h2>
         <div class="action-grid">
           <div class="action-card">
-            <div><h3>Upload Sources</h3><div class="muted">Paste web pages or upload PDFs/images/Markdown into _raw.</div></div>
-            <a class="btn primary" href="http://127.0.0.1:8788" target="_blank" rel="noreferrer">Open Upload Page</a>
+            <div><h3>上传资料</h3><div class="muted">粘贴网页、批量上传 PDF/图片/Markdown 到 _raw。</div></div>
+            <a class="btn primary" href="http://127.0.0.1:8788" target="_blank" rel="noreferrer">打开上传页</a>
           </div>
           <div class="action-card">
-            <div><h3>Configure Knowledge Base</h3><div class="muted">Edit vault, QMD, Mirage, Drive, models, and keys.</div></div>
-            <a class="btn" href="http://127.0.0.1:8789/setup" target="_blank" rel="noreferrer">Open Config Page</a>
+            <div><h3>配置知识库</h3><div class="muted">修改 vault、QMD、Mirage、Drive、模型和 Key。</div></div>
+            <a class="btn" href="http://127.0.0.1:8789/setup" target="_blank" rel="noreferrer">打开配置页</a>
           </div>
           <div class="action-card">
-            <div><h3>Manual Ingest</h3><div class="muted">Ask wiki ingest to process the raw directory now.</div></div>
-            <button class="btn" onclick="copyText('solar-harness wiki ingest --vault ~/Knowledge')">Copy Command</button>
+            <div><h3>手动提取</h3><div class="muted">立即让 wiki ingest 处理 raw 目录。</div></div>
+            <button class="btn" onclick="copyText('solar-harness wiki ingest --vault ~/Knowledge')">复制命令</button>
           </div>
           <div class="action-card">
-            <div><h3>Semantic Index</h3><div class="muted">Update the QMD semantic index for better retrieval.</div></div>
-            <button class="btn" onclick="copyText('qmd embed -c solar-wiki')">Copy Command</button>
+            <div><h3>语义索引</h3><div class="muted">更新 QMD semantic index，用于更好的检索。</div></div>
+            <button class="btn" onclick="copyText('qmd embed -c solar-wiki')">复制命令</button>
           </div>
           <div class="action-card">
-            <div><h3>Subscription Center</h3><div class="muted">Maintain YouTube, social hotspot, and GitHub trend categories.</div></div>
-            <a class="btn primary" href="/knowledge/subscriptions-view" target="_blank" rel="noreferrer">Open Subscription Center</a>
+            <div><h3>订阅中心</h3><div class="muted">维护 YouTube、热点社交媒体和 GitHub 趋势分类。</div></div>
+            <a class="btn primary" href="/knowledge/subscriptions-view" target="_blank" rel="noreferrer">打开订阅中心</a>
           </div>
         </div>
       </div>
 
       <div class="health-grid">
-        <div class="card"><h2>Collection / Extraction Progress</h2><div id="knowledge-progress-card">Loading...</div></div>
-        <div class="card"><h2>Reasoning Packet Routing</h2><div id="knowledge-routing-card">Loading...</div></div>
-        <div class="card"><h2>Obsidian Wiki Health</h2><div id="wiki-card">Loading...</div></div>
-        <div class="card"><h2>Mirage / QMD Health</h2><div id="mirage-card">Loading...</div></div>
+        <div class="card"><h2>采集 / 提取进展</h2><div id="knowledge-progress-card">Loading...</div></div>
+        <div class="card"><h2>Reasoning Packet 路由</h2><div id="knowledge-routing-card">Loading...</div></div>
+        <div class="card"><h2>Obsidian Wiki 健康</h2><div id="wiki-card">Loading...</div></div>
+        <div class="card"><h2>Mirage / QMD 健康</h2><div id="mirage-card">Loading...</div></div>
       </div>
     </div>
   </section>
 
   <section class="panel" id="tab-assets">
-    <h2>Knowledge Asset Packages</h2>
+    <h2>知识资产包</h2>
     <div class="card">
-      <p class="muted">Shows accepted sprint packages exported to the knowledge base, including accepted.md, dispatch, planning.html, prd.html, plan/handoff/eval, and other clickable source artifacts.</p>
+      <p class="muted">展示已经导出到知识库的 accepted sprint package，并把 accepted.md、dispatch、planning.html、prd.html、plan/handoff/eval 等源产物作为可点击资产暴露出来。</p>
       <div class="actions">
-        <button class="btn primary" onclick="refreshAssets(true)">Refresh Asset Packages</button>
-        <a class="btn" href="/assets" target="_blank" rel="noreferrer">Open JSON</a>
-        <button class="btn" onclick="copyText('~/Knowledge/_raw/solar-harness/accepted')">Copy accepted directory</button>
+        <button class="btn primary" onclick="refreshAssets(true)">刷新资产包</button>
+        <a class="btn" href="/assets" target="_blank" rel="noreferrer">打开 JSON</a>
+        <button class="btn" onclick="copyText('~/Knowledge/_raw/solar-harness/accepted')">复制 accepted 目录</button>
       </div>
     </div>
     <div class="card"><div id="assets-summary">Loading...</div></div>
@@ -10108,61 +11165,61 @@ Config http://127.0.0.1:8789/setup</div>
   </section>
 
   <section class="panel" id="tab-collectors">
-    <h2>Data Collector Scheduling</h2>
+    <h2>数据采集调度</h2>
     <div class="card">
-      <p class="muted">Manage local LaunchAgent collectors: change cadence, start/stop tasks, or run now. Covers HF/GitHub/Social/Trendshift, previous-day YouTube transcript capture, and AI Influence digest.</p>
+      <p class="muted">这里直接管理本机 LaunchAgent：可改采集周期、启停任务、立即运行。适用于 HF/GitHub/Social/Trendshift、YouTube 前一天字幕采集和 AI Influence digest。</p>
       <div id="collector-scheduler-card">Loading...</div>
     </div>
   </section>
 
   <section class="panel" id="tab-upload">
-    <h2>Upload Documents / Web Content</h2>
+    <h2>上传文档 / 网页内容</h2>
     <div class="card">
-      <p class="muted">Connects to the existing `wiki capture-server`. Paste web content as Markdown or upload PDFs/images/text files into Knowledge/_raw for later extraction.</p>
+      <p class="muted">这个标签对接现有 `wiki capture-server`。可粘贴网页内容保存为 Markdown，也可多选 PDF/图片/文本文件复制到 Knowledge/_raw，后续由知识库自动提取。</p>
       <div class="actions">
-        <a class="btn primary" href="http://127.0.0.1:8788" target="_blank" rel="noreferrer">Open Upload Page in New Window</a>
-        <button class="btn" onclick="copyText('solar-harness wiki capture-server start --open')">Copy Start Command</button>
-        <button class="btn" onclick="copyText('~/Knowledge/_raw')">Copy Raw Directory</button>
+        <a class="btn primary" href="http://127.0.0.1:8788" target="_blank" rel="noreferrer">新窗口打开上传页</a>
+        <button class="btn" onclick="copyText('solar-harness wiki capture-server start --open')">复制启动命令</button>
+        <button class="btn" onclick="copyText('~/Knowledge/_raw')">复制 Raw 目录</button>
       </div>
       <iframe class="embed" src="http://127.0.0.1:8788" title="Solar Wiki Upload"></iframe>
     </div>
   </section>
 
   <section class="panel" id="tab-config">
-    <h2>Solar Config Center</h2>
+    <h2>Solar 配置中心</h2>
     <div class="card">
-      <p class="muted">Configure models, concurrency, Wiki, QMD, Mirage, Google Drive, and API keys. Sensitive values are written only to local secrets and are not displayed here.</p>
+      <p class="muted">统一修改模型、并发、Wiki、QMD、Mirage、Google Drive 和 API Key。敏感值只写入本机 secrets 文件，状态页不展示明文。</p>
       <div class="actions">
-        <a class="btn primary" href="http://127.0.0.1:8789/setup" target="_blank" rel="noreferrer">Open Config Center</a>
-        <button class="btn" onclick="copyText('solar-config-ui start --open')">Copy Start Command</button>
+        <a class="btn primary" href="http://127.0.0.1:8789/setup" target="_blank" rel="noreferrer">打开配置中心</a>
+        <button class="btn" onclick="copyText('solar-config-ui start --open')">复制启动命令</button>
       </div>
       <iframe class="embed" src="http://127.0.0.1:8789/setup" title="Solar Config UI"></iframe>
     </div>
   </section>
 
   <section class="panel" id="tab-integrations">
-    <h2>External Integration Health</h2>
+    <h2>外部集成健康</h2>
     <div class="card">
-      <p class="muted">Checks whether historically integrated open-source/external projects are installed, configured, running, indexed, and used by Solar by default. Secrets are not shown; only availability and failure points.</p>
+      <p class="muted">检查历史接入的开源/外部项目是否真的安装、配置、运行、索引并被 Solar 默认使用。这里不展示密钥，只展示可用性和断点原因。</p>
       <div class="actions">
-        <button class="btn primary" onclick="refreshIntegrations(true)">Refresh Integration Health</button>
-        <button class="btn" onclick="copyText('solar-harness integrations status --json --refresh')">Copy Diagnostic Command</button>
-        <a class="btn" href="/integrations" target="_blank" rel="noreferrer">Open JSON</a>
+        <button class="btn primary" onclick="refreshIntegrations(true)">刷新集成健康</button>
+        <button class="btn" onclick="copyText('solar-harness integrations status --json --refresh')">复制诊断命令</button>
+        <a class="btn" href="/integrations" target="_blank" rel="noreferrer">打开 JSON</a>
       </div>
     </div>
     <div class="card"><div id="integrations-summary">Loading...</div></div>
-    <div class="card"><h3>Self-Evolution Capability Ranking</h3><div id="evolution-card">Loading...</div></div>
+    <div class="card"><h3>自演化能力排序</h3><div id="evolution-card">Loading...</div></div>
     <div id="integrations-card">Loading...</div>
   </section>
 
   <section class="panel" id="tab-diagrams">
-    <h2>Mermaid Architecture Diagrams</h2>
+    <h2>Mermaid 架构图</h2>
     <div class="card">
-      <p class="muted">Browse Solar .mmd files and render them with the local vendored Mermaid. Default entry opens the generated Solar full architecture diagram.</p>
+      <p class="muted">直接浏览 Solar 里的 .mmd 文件，并用本地 vendored Mermaid 渲染。默认入口会打开刚才生成的 Solar 完整架构图。</p>
       <div class="actions">
-        <a class="btn primary" href="/mermaid" target="_blank" rel="noreferrer">Open Mermaid Viewer</a>
-        <a class="btn" href="/mermaid/view?file={urllib.parse.quote(str(REPORTS_DIR / "solar-system-architecture-20260508.mmd"))}" target="_blank" rel="noreferrer">Open Solar Full Architecture Diagram</a>
-        <button class="btn" onclick="copyText('http://127.0.0.1:8765/mermaid')">Copy URL</button>
+        <a class="btn primary" href="/mermaid" target="_blank" rel="noreferrer">打开 Mermaid Viewer</a>
+        <a class="btn" href="/mermaid/view?file={urllib.parse.quote(str(REPORTS_DIR / "solar-system-architecture-20260508.mmd"))}" target="_blank" rel="noreferrer">打开 Solar 完整架构图</a>
+        <button class="btn" onclick="copyText('http://127.0.0.1:8765/mermaid')">复制访问地址</button>
       </div>
       <iframe class="embed" src="/mermaid" title="Solar Mermaid Viewer"></iframe>
     </div>
@@ -10270,7 +11327,7 @@ function renderPmDispatches(data, compact) {
   const items = data.items || [];
   const latest = data.latest || {};
   if (!items.length) {
-    return '<div class="muted">No formal PM dispatch records yet.</div>';
+    return '<div class="muted">暂无 PM 正式派单记录。</div>';
   }
   if (compact) {
     const submittedAt = latest.submitted_at ? new Date(latest.submitted_at).toLocaleTimeString() : 'N/A';
@@ -10280,7 +11337,7 @@ function renderPmDispatches(data, compact) {
       '<div class="mini-metric"><div class="kv-label">Mode</div><span class="num">' + esc(latest.mode || 'N/A') + '</span></div>' +
       '<div class="mini-metric"><div class="kv-label">Target</div><span class="num">' + esc(latest.target || 'N/A') + '</span></div>' +
       '</div>' +
-      '<div class="muted">Latest: ' + esc(latest.sprint_id || latest.task_id || 'N/A') +
+      '<div class="muted">最新：' + esc(latest.sprint_id || latest.task_id || 'N/A') +
       ' · ' + esc(latest.status || 'unknown') + ' · ' + esc(submittedAt) + '</div>';
   }
   return '<div class="health-metrics">' +
@@ -10306,10 +11363,10 @@ function renderPhysicalOperators(data, compact) {
   const alerts = data.alerts || [];
   const recentResults = data.recent_results || [];
   if (data.status === 'missing') {
-    return '<div class="muted">physical-operators.json is missing.</div>';
+    return '<div class="muted">physical-operators.json 缺失。</div>';
   }
   if (!items.length && !data.count) {
-    return '<div class="muted">No physical operator records yet.</div>';
+    return '<div class="muted">暂无物理算子记录。</div>';
   }
   const roles = Object.entries(data.roles || {}).map(([role, count]) => role + ':' + count).join(' · ') || 'N/A';
   if (compact) {
@@ -10379,15 +11436,15 @@ function renderRolePools(data, compact, root) {
   const pools = data.role_pools || {};
   const roles = ['planner', 'evaluator'];
   if (!roles.some(role => pools[role])) {
-    return '<div class="muted">No planner/evaluator pool data yet.</div>';
+    return '<div class="muted">暂无 planner/evaluator pool 数据。</div>';
   }
   const wb = root.warning_breakdown || {};
   const wbc = wb.operator_cooldown_breakdown || {};
-  const breakdownHtml = '<div class="muted" style="margin:0 0 .65rem 0;">warning breakdown: operator cooldown ' + esc(wb.operator_cooldown || 0) +
-    ' (true quota ' + esc(wbc.true_quota_cooldown || 0) +
-    ' / stale local ' + esc(wbc.stale_local_cooldown || 0) +
-    ' / output limit ' + esc(wbc.output_token_limit || 0) +
-    ') · pane overlay blocked ' + esc(wb.pane_overlay_blocked || 0) +
+  const breakdownHtml = '<div class="muted" style="margin:0 0 .65rem 0;">warn拆分：operator cooldown ' + esc(wb.operator_cooldown || 0) +
+    '（真实quota ' + esc(wbc.true_quota_cooldown || 0) +
+    ' / stale本地 ' + esc(wbc.stale_local_cooldown || 0) +
+    ' / 输出上限 ' + esc(wbc.output_token_limit || 0) +
+    '） · pane overlay blocked ' + esc(wb.pane_overlay_blocked || 0) +
     ' · stale scrollback ignored ' + esc(wb.stale_scrollback_ignored || 0) + '</div>';
   const poolCard = (role) => {
     const p = pools[role] || {};
@@ -10408,15 +11465,15 @@ function renderRolePools(data, compact, root) {
       return '<div class="research-path"><span class="tech-id">' + esc(item.operator_id || '-') + '</span><span>' +
         statusBadge(state === 'idle' ? 'ok' : state === 'disabled' ? 'error' : 'warn') +
         '<span class="muted" style="margin-left:.35rem;">' + esc(capacityLabel + ' · ' + state + eta) + '</span></span></div>';
-    }).join('') || '<div class="muted">No operators for this role.</div>';
+    }).join('') || '<div class="muted">无该角色算子。</div>';
     return '<div class="task-block">' +
       '<div class="task-head"><div class="task-title">' + esc(role) + '</div><div>' + statusBadge(status === 'ok' ? 'ok' : 'warn') + '</div></div>' +
       '<div class="health-metrics">' +
-        '<div class="mini-metric"><div class="kv-label">Dispatchable</div><span class="num" style="color:' + color + ';">' + esc(dispatchable) + '/' + esc(p.total || 0) + '</span></div>' +
-        '<div class="mini-metric"><div class="kv-label">Blocked</div><span class="num">' + esc(blocked) + '</span></div>' +
-        '<div class="mini-metric"><div class="kv-label">Next Available</div><span class="num">' + esc(p.next_available_eta || 'N/A') + '</span></div>' +
+        '<div class="mini-metric"><div class="kv-label">可调度</div><span class="num" style="color:' + color + ';">' + esc(dispatchable) + '/' + esc(p.total || 0) + '</span></div>' +
+        '<div class="mini-metric"><div class="kv-label">阻塞</div><span class="num">' + esc(blocked) + '</span></div>' +
+        '<div class="mini-metric"><div class="kv-label">下次可用</div><span class="num">' + esc(p.next_available_eta || 'N/A') + '</span></div>' +
       '</div>' +
-      '<div class="muted" style="margin-top:.45rem;">Execution-surface truth comes from operator registry + runtime leases, not the four-pane screen count.</div>' +
+      '<div class="muted" style="margin-top:.45rem;">执行面真值来自 operator registry + runtime lease，不是四分屏 pane 数量。</div>' +
       '<div class="muted" style="margin-top:.25rem;">dedicated ' + esc(dedicated) +
         ' · elastic ' + esc(elastic) +
         ' · headless ' + esc(headless) + '</div>' +
@@ -10424,12 +11481,12 @@ function renderRolePools(data, compact, root) {
         ' · running ' + esc((p.counts || {}).running || 0) +
         ' · cooldown ' + esc((p.counts || {}).cooldown || 0) +
         ' · auth ' + esc((p.counts || {}).auth_expired || 0) + '</div>' +
-      '<div class="muted" style="margin-top:.25rem;">true quota ' + esc((p.block_counts || {}).true_quota_cooldown || 0) +
-        ' · stale local ' + esc((p.block_counts || {}).stale_local_cooldown || 0) +
-        ' · output limit ' + esc((p.block_counts || {}).output_token_limit || 0) +
+      '<div class="muted" style="margin-top:.25rem;">真实quota ' + esc((p.block_counts || {}).true_quota_cooldown || 0) +
+        ' · stale本地 ' + esc((p.block_counts || {}).stale_local_cooldown || 0) +
+        ' · 输出上限 ' + esc((p.block_counts || {}).output_token_limit || 0) +
         ' · disabled ' + esc((p.block_counts || {}).disabled || 0) + '</div>' +
       (compact ? '' : '<div style="margin-top:.6rem;">' + line + '</div>') +
-      (compact && dispatchable === 0 ? '<div class="warn" style="margin-top:.45rem;">No dispatchable operators in the pool; planner/evaluator handoffs will queue instead of falling back to fixed panes.</div>' : '') +
+      (compact && dispatchable === 0 ? '<div class="warn" style="margin-top:.45rem;">池子无可调度算子；planner/evaluator handoff 会排队，不会退回固定 pane。</div>' : '') +
       '</div>';
   };
   return '<div class="research-shell">' + breakdownHtml + '<div class="research-overview" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">' +
@@ -10460,20 +11517,20 @@ function renderThunderOMLX(t, compact) {
     kv('Reason', t.reason || 'N/A') +
     '</div>';
   const actions = '<div class="actions">' +
-    '<button class="btn primary" onclick="startThunderOMLX()">Start ThunderOMLX</button>' +
-    '<button class="btn" onclick="refresh()">Refresh Status</button>' +
-    '<button class="btn" data-copy="' + esc(t.start_script || 'solar-harness scripts/thunderomlx_start_8002.sh') + '" onclick="copyText(this.dataset.copy)">Copy Start Script</button>' +
+    '<button class="btn primary" onclick="startThunderOMLX()">启动 ThunderOMLX</button>' +
+    '<button class="btn" onclick="refresh()">刷新状态</button>' +
+    '<button class="btn" data-copy="' + esc(t.start_script || 'solar-harness scripts/thunderomlx_start_8002.sh') + '" onclick="copyText(this.dataset.copy)">复制启动脚本</button>' +
     '</div><div id="thunderomlx-action-result" class="muted"></div>';
-  const logTail = t.log_tail ? '<details style="margin-top:.8rem"><summary class="tech-id">Recent Logs</summary><pre class="codebox" style="margin-top:.5rem; max-height:220px;">' + esc(t.log_tail) + '</pre></details>' : '';
+  const logTail = t.log_tail ? '<details style="margin-top:.8rem"><summary class="tech-id">最近日志</summary><pre class="codebox" style="margin-top:.5rem; max-height:220px;">' + esc(t.log_tail) + '</pre></details>' : '';
   if (compact) {
     return badge + '<div class="muted" style="margin-top:.45rem">' + esc(t.reason || 'N/A') + '</div>' +
       '<div class="tech-id" style="margin-top:.35rem">' + esc(t.base_url || 'N/A') + ' · pid=' + esc(pidText) + '</div>' +
-      '<div style="margin-top:.65rem"><button class="btn primary" onclick="startThunderOMLX()">Start</button></div>';
+      '<div style="margin-top:.65rem"><button class="btn primary" onclick="startThunderOMLX()">启动</button></div>';
   }
   return '<div class="task-block">' +
-    '<div class="task-head"><div><div class="task-title">ThunderOMLX / Qwen3.6 Local Service</div><div class="muted">' + esc(t.base_url || 'N/A') + '</div></div><div>' + badge + '</div></div>' +
+    '<div class="task-head"><div><div class="task-title">ThunderOMLX / Qwen3.6 本地服务</div><div class="muted">' + esc(t.base_url || 'N/A') + '</div></div><div>' + badge + '</div></div>' +
     metrics + details + actions + logTail +
-    '<div class="muted">Note: this page starts the service only when you click the button; normal refresh only probes port, tmux, and API health.</div>' +
+    '<div class="muted">说明：页面只在你点击按钮时启动服务；普通刷新只做端口、tmux 和 API 健康探测。</div>' +
     '</div>';
 }
 window.startThunderOMLX = function() {
@@ -10579,7 +11636,7 @@ function renderTaskGraphGateAudit(audit, compact) {
     return '<div class="health-metrics">' +
       '<div class="mini-metric"><div class="kv-label">Status</div><span class="num">missing</span></div>' +
       '<div class="mini-metric"><div class="kv-label">Unresolved</div><span class="num">0</span></div>' +
-      '</div><div class="muted">No task graph gate audit report yet.</div>';
+      '</div><div class="muted">暂无 task graph gate audit 报告。</div>';
   }
   const metrics = '<div class="health-metrics">' +
     '<div class="mini-metric"><div class="kv-label">Status</div><span class="num">' + esc(audit.status || 'ok') + '</span></div>' +
@@ -10621,9 +11678,9 @@ function researchPathLink(label, path, exists) {
   if (!path) {
     return '<div class="research-path"><span>' + esc(label) + '</span><span class="muted">missing</span></div>';
   }
-  const state = exists ? 'Open' : 'missing';
+  const state = exists ? '打开' : 'missing';
   const link = exists
-    ? '<a href="' + fileOpenUrl(path) + '" target="_blank" rel="noopener">Open</a><a href="' + fileViewUrl(path) + '" target="_blank" rel="noopener">View</a>'
+    ? '<a href="' + fileOpenUrl(path) + '" target="_blank" rel="noopener">打开</a><a href="' + fileViewUrl(path) + '" target="_blank" rel="noopener">查看</a>'
     : '<span class="muted">missing</span>';
   return '<div class="research-path"><span>' + esc(label) + ': ' + esc(path) + '</span><span class="research-path-actions">' + link + '</span></div>';
 }
@@ -10634,14 +11691,14 @@ function renderPaneMatrix(cardId, screen) {
     return;
   }
   let t = '<div class="refresh">' + esc((screen && screen.note) || '') + '</div>';
-  t += '<table><tr><th>Pane</th><th>Host Role</th><th>Hygiene</th><th>Runtime</th><th>Capability Evidence</th><th>Model Calls</th><th>Current Task</th><th>Artifact</th><th>Title</th></tr>';
+  t += '<table><tr><th>Pane</th><th>Host Role</th><th>Hygiene</th><th>Runtime</th><th>能力证据</th><th>模型调用</th><th>当前任务</th><th>Artifact</th><th>Title</th></tr>';
   panes.forEach(p => {
     t += '<tr><td>' + esc(p.target || '-') + '</td>' +
          '<td>' + esc(p.host_role || p.role || '-') + (p.role && p.host_role && p.role !== p.host_role ? '<div class="muted" style="font-size:0.72rem;margin-top:0.2rem;">legacy: ' + esc(p.role) + '</div>' : '') + '</td>' +
          '<td>' + statusBadge((p.hygiene_state === 'clean' || p.hygiene_state === 'running') ? 'ok' : ((p.hygiene_state === 'missing' || p.hygiene_state === 'unknown') ? 'warn' : 'error')) + '<div class="muted" style="font-size:0.72rem;margin-top:0.2rem;">' + esc(p.hygiene_state || '-') + '</div></td>' +
          '<td class="' + runtimeClass(p.runtime_state) + '">' + esc(p.runtime_state || '-') + '</td>' +
          '<td>' + capabilityHealthCell(p.capability_health || {}) + '</td>' +
-         '<td>' + modelCallCell(p.model_call) + '<div style="margin-top:0.25rem;"><button class="btn" style="padding:3px 7px;font-size:0.7rem;" onclick="loadPaneModelCall(\\'' + esc(p.target || '') + '\\')">Check Call</button></div><div class="muted" id="pane-call-' + esc((p.target || '').replace(/[^A-Za-z0-9_.-]/g, '_')) + '" style="font-size:0.72rem;margin-top:0.2rem;"></div></td>' +
+         '<td>' + modelCallCell(p.model_call) + '<div style="margin-top:0.25rem;"><button class="btn" style="padding:3px 7px;font-size:0.7rem;" onclick="loadPaneModelCall(\\'' + esc(p.target || '') + '\\')">查调用</button></div><div class="muted" id="pane-call-' + esc((p.target || '').replace(/[^A-Za-z0-9_.-]/g, '_')) + '" style="font-size:0.72rem;margin-top:0.2rem;"></div></td>' +
          '<td>' + taskCell(p.assignment_meta, p.assignment) + '</td>' +
          '<td>' + artifactLabel(p.artifact) + '</td>' +
          '<td>' + esc(p.title || '-') + '</td></tr>';
@@ -10714,7 +11771,7 @@ function renderMirageHealth(mirage) {
     '<div class="mini-metric"><div class="kv-label">Drive</div><span class="num">' + esc(drive.status || 'unknown') + '</span></div>' +
     '</div>' +
     '<h3>Mounts</h3><div class="mount-list">' + mountRows + '</div>' +
-    '<details style="margin-top:0.85rem"><summary class="muted">View raw Mirage JSON</summary><pre class="codebox">' + esc(JSON.stringify(mirage, null, 2)) + '</pre></details>';
+    '<details style="margin-top:0.85rem"><summary class="muted">查看原始 Mirage JSON</summary><pre class="codebox">' + esc(JSON.stringify(mirage, null, 2)) + '</pre></details>';
 }
 function renderRuntimeInterfaces(rt) {
   rt = rt || {};
@@ -10739,7 +11796,7 @@ function renderHumanSearch(hs, compact) {
     return '<div class="health-metrics">' +
       '<div class="mini-metric"><div class="kv-label">Status</div><span class="num">idle</span></div>' +
       '<div class="mini-metric"><div class="kv-label">Waiting</div><span class="num">0</span></div>' +
-      '</div><div class="muted">No DeepResearch DAG nodes waiting for human search.</div>';
+      '</div><div class="muted">没有等待人工搜索的 DeepResearch DAG 节点。</div>';
   }
   const visible = compact ? items.slice(0, 2) : items;
   const cards = visible.map(item => {
@@ -10760,9 +11817,9 @@ function renderHumanSearch(hs, compact) {
         'Results: ' + esc(item.results_md || '-') + '\\n\\n' +
         esc(cmd || 'N/A') + '</pre>') +
       '<div class="copy-row">' +
-        '<button class="btn" data-copy="' + esc(item.handoff_md || '') + '" onclick="copyText(this.dataset.copy)">Copy handoff</button>' +
-        '<button class="btn" data-copy="' + esc(item.results_md || '') + '" onclick="copyText(this.dataset.copy)">Copy results path</button>' +
-        '<button class="btn primary" data-copy="' + esc(cmd) + '" onclick="copyText(this.dataset.copy)">Copy import command</button>' +
+        '<button class="btn" data-copy="' + esc(item.handoff_md || '') + '" onclick="copyText(this.dataset.copy)">复制 handoff</button>' +
+        '<button class="btn" data-copy="' + esc(item.results_md || '') + '" onclick="copyText(this.dataset.copy)">复制 results 路径</button>' +
+        '<button class="btn primary" data-copy="' + esc(cmd) + '" onclick="copyText(this.dataset.copy)">复制导入命令</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -10770,7 +11827,7 @@ function renderHumanSearch(hs, compact) {
     '<div class="mini-metric"><div class="kv-label">Status</div><span class="num">' + esc(hs.status || 'waiting') + '</span></div>' +
     '<div class="mini-metric"><div class="kv-label">Waiting</div><span class="num">' + esc(hs.count || items.length) + '</span></div>' +
     '</div><div class="human-search-grid">' + cards +
-    (compact && items.length > visible.length ? '<div class="muted">There are ' + (items.length - visible.length) + ' more pending items; open the Sprint tab to view them.</div>' : '') +
+    (compact && items.length > visible.length ? '<div class="muted">还有 ' + (items.length - visible.length) + ' 个等待项，打开 Sprint 标签查看。</div>' : '') +
     '</div>';
 }
 function renderResearchStatus(research, compact) {
@@ -10782,7 +11839,7 @@ function renderResearchStatus(research, compact) {
       '<div class="research-overview">' +
         '<div class="research-stat"><div class="kv-label">Status</div><strong>idle</strong></div>' +
         '<div class="research-stat"><div class="kv-label">Runs</div><strong>0</strong></div>' +
-      '</div><div class="muted">No DeepResearch research_eval artifacts to display yet.</div></div>';
+      '</div><div class="muted">还没有可展示的 DeepResearch research_eval 产物。</div></div>';
   }
   const latest = runs[runs.length - 1] || {};
   const latestCitation = latest.citation_accuracy == null ? 'N/A' : Math.round((latest.citation_accuracy || 0) * 100) + '%';
@@ -10823,9 +11880,9 @@ function renderResearchStatus(research, compact) {
         researchPathLink('report_ast', artifacts.report_ast, exists.report_ast) +
         researchPathLink('eval', artifacts.eval_json, exists.eval_json) +
       '</div><div class="copy-row">' +
-        '<button class="btn" data-copy="' + esc(artifacts.final_md || '') + '" onclick="copyText(this.dataset.copy)">Copy final.md</button>' +
-        '<button class="btn" data-copy="' + esc(artifacts.report_ast || '') + '" onclick="copyText(this.dataset.copy)">Copy ReportAST</button>' +
-        '<button class="btn primary" data-copy="' + esc(artifacts.eval_json || '') + '" onclick="copyText(this.dataset.copy)">Copy Eval JSON</button>' +
+        '<button class="btn" data-copy="' + esc(artifacts.final_md || '') + '" onclick="copyText(this.dataset.copy)">复制 final.md</button>' +
+        '<button class="btn" data-copy="' + esc(artifacts.report_ast || '') + '" onclick="copyText(this.dataset.copy)">复制 ReportAST</button>' +
+        '<button class="btn primary" data-copy="' + esc(artifacts.eval_json || '') + '" onclick="copyText(this.dataset.copy)">复制 Eval JSON</button>' +
       '</div>') +
     '</div>';
   }).join('');
@@ -10864,7 +11921,7 @@ function renderKnowledgeRouting(routing, compact) {
   routing = routing || {};
   const items = routing.items || [];
   if (routing.status === 'missing') {
-    return '<div>' + statusBadge('warn') + ' <span class="muted">Tech Hotspot Radar DB is not initialized.</span></div>' +
+    return '<div>' + statusBadge('warn') + ' <span class="muted">Tech Hotspot Radar DB 未初始化。</span></div>' +
       '<div class="tech-id">' + esc(routing.db_path || 'N/A') + '</div>';
   }
   const routeCounts = routing.route_counts || {};
@@ -10885,7 +11942,7 @@ function renderKnowledgeRouting(routing, compact) {
     ? '<div class="warn">missing columns: ' + esc((routing.missing_columns || []).join(', ')) + '</div>'
     : '';
   if (!items.length) {
-    return head + missing + '<div class="muted">No reasoning packet yet. Run the Tech Hotspot Radar reasoning pipeline first.</div>' +
+    return head + missing + '<div class="muted">暂无 reasoning packet。先运行 Tech Hotspot Radar reasoning pipeline。</div>' +
       '<div class="tech-id">' + esc(routing.db_path || 'N/A') + '</div>';
   }
   return head + missing +
@@ -10910,7 +11967,7 @@ function renderAutoresearchImpact(impact, compact) {
       '<div class="research-overview">' +
         '<div class="research-stat"><div class="kv-label">Status</div><strong>idle</strong></div>' +
         '<div class="research-stat"><div class="kv-label">Triggers</div><strong>0</strong></div>' +
-      '</div><div class="muted">No autoresearch optimizer triggers yet; waiting for dispatch to write status.json artifacts.</div></div>';
+      '</div><div class="muted">还没有 autoresearch optimizer 触发记录；等待 dispatch 写入 status.json artifacts。</div></div>';
   }
   const latest = impact.latest || items[0] || {};
   const visible = compact ? items.slice(0, 1) : items;
@@ -10962,19 +12019,19 @@ function renderAutoresearchImpact(impact, compact) {
 
 function collectorScheduleLabel(schedule) {
   schedule = schedule || {};
-  return esc(schedule.label || 'Manual');
+  return esc(schedule.label || '手动');
 }
 
 function renderCollectorSchedules(data, compact) {
   const tasks = (data && data.tasks) || [];
   const summary = (data && data.summary) || {};
-  if (!tasks.length) return '<div class="muted">No configurable collector tasks found.</div>';
+  if (!tasks.length) return '<div class="muted">没有发现可配置采集任务。</div>';
   if (compact) {
     return '<div class="metric">' + esc(summary.enabled || 0) + '/' + esc(summary.total || tasks.length) + '</div>' +
       '<div class="muted">enabled collectors · running ' + esc(summary.running || 0) + '</div>' +
-      '<div style="margin-top:0.65rem;"><a class="btn" href="#collectors" onclick="activateTab(\\'collectors\\')">Open Collector Scheduling</a></div>';
+      '<div style="margin-top:0.65rem;"><a class="btn" href="#collectors" onclick="activateTab(\\'collectors\\')">打开采集调度</a></div>';
   }
-  let html = '<table><tr><th>Task</th><th>Status</th><th>Current Cadence</th><th>Config</th><th>Actions</th></tr>';
+  let html = '<table><tr><th>任务</th><th>状态</th><th>当前周期</th><th>配置</th><th>操作</th></tr>';
   tasks.forEach(task => {
     const id = esc(task.id || '');
     const schedule = task.schedule || {};
@@ -10992,17 +12049,17 @@ function renderCollectorSchedules(data, compact) {
       '<td>' + collectorScheduleLabel(schedule) + '<br><span class="muted">' + esc(task.plist_exists ? 'plist ok' : 'plist missing') + '</span></td>' +
       '<td>' +
         '<select id="collector-mode-' + id + '" style="padding:0.35rem;border-radius:8px;border:1px solid var(--line);font-weight:800;" onchange="toggleCollectorScheduleInputs(\\'' + id + '\\')">' +
-          '<option value="interval"' + (mode === 'interval' ? ' selected' : '') + '>Interval</option>' +
-          '<option value="daily"' + (mode === 'daily' ? ' selected' : '') + '>Daily</option>' +
-          '<option value="manual"' + (mode === 'manual' ? ' selected' : '') + '>Manual</option>' +
+          '<option value="interval"' + (mode === 'interval' ? ' selected' : '') + '>间隔</option>' +
+          '<option value="daily"' + (mode === 'daily' ? ' selected' : '') + '>每天</option>' +
+          '<option value="manual"' + (mode === 'manual' ? ' selected' : '') + '>手动</option>' +
         '</select>' +
-        '<span id="collector-interval-box-' + id + '" style="margin-left:0.5rem;' + (mode === 'interval' ? '' : 'display:none;') + '">Every <input id="collector-interval-' + id + '" type="number" min="5" max="1440" value="' + esc(interval) + '" style="width:5rem;padding:0.3rem;border-radius:8px;border:1px solid var(--line);"> minutes</span>' +
+        '<span id="collector-interval-box-' + id + '" style="margin-left:0.5rem;' + (mode === 'interval' ? '' : 'display:none;') + '">每 <input id="collector-interval-' + id + '" type="number" min="5" max="1440" value="' + esc(interval) + '" style="width:5rem;padding:0.3rem;border-radius:8px;border:1px solid var(--line);"> 分钟</span>' +
         '<span id="collector-daily-box-' + id + '" style="margin-left:0.5rem;' + (mode === 'daily' ? '' : 'display:none;') + '"><input id="collector-hour-' + id + '" type="number" min="0" max="23" value="' + esc(hour) + '" style="width:4rem;padding:0.3rem;border-radius:8px;border:1px solid var(--line);"> : <input id="collector-minute-' + id + '" type="number" min="0" max="59" value="' + esc(minute) + '" style="width:4rem;padding:0.3rem;border-radius:8px;border:1px solid var(--line);"></span>' +
       '</td>' +
       '<td><div class="actions">' +
-        '<button class="btn primary" id="collector-save-' + id + '" onclick="updateCollectorTask(\\'' + id + '\\', \\'update\\')">Save</button>' +
-        (disabled ? '<button class="btn" onclick="updateCollectorTask(\\'' + id + '\\', \\'start\\')">Start</button>' : '<button class="btn" onclick="updateCollectorTask(\\'' + id + '\\', \\'stop\\')">Stop</button>') +
-        '<button class="btn" onclick="updateCollectorTask(\\'' + id + '\\', \\'run_now\\')">Run Now</button>' +
+        '<button class="btn primary" id="collector-save-' + id + '" onclick="updateCollectorTask(\\'' + id + '\\', \\'update\\')">保存</button>' +
+        (disabled ? '<button class="btn" onclick="updateCollectorTask(\\'' + id + '\\', \\'start\\')">启动</button>' : '<button class="btn" onclick="updateCollectorTask(\\'' + id + '\\', \\'stop\\')">停止</button>') +
+        '<button class="btn" onclick="updateCollectorTask(\\'' + id + '\\', \\'run_now\\')">立即运行</button>' +
       '</div><div class="muted" id="collector-msg-' + id + '"></div></td>' +
     '</tr>';
   });
@@ -11035,7 +12092,7 @@ function collectorTaskPayload(taskId, action) {
 async function updateCollectorTask(taskId, action) {
   const msg = document.getElementById('collector-msg-' + taskId);
   const saveBtn = document.getElementById('collector-save-' + taskId);
-  if (msg) msg.textContent = 'Processing...';
+  if (msg) msg.textContent = '处理中...';
   if (saveBtn) saveBtn.disabled = true;
   try {
     const res = await fetch('/api/collector-schedules', {
@@ -11045,10 +12102,10 @@ async function updateCollectorTask(taskId, action) {
     });
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'collector update failed');
-    if (msg) msg.textContent = 'Updated: ' + (data.task && data.task.schedule ? data.task.schedule.label : action);
+    if (msg) msg.textContent = '已更新：' + (data.task && data.task.schedule ? data.task.schedule.label : action);
     await refresh();
   } catch (e) {
-    if (msg) msg.textContent = 'Failed: ' + (e && e.message ? e.message : String(e));
+    if (msg) msg.textContent = '失败：' + (e && e.message ? e.message : String(e));
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }
@@ -11068,9 +12125,9 @@ function renderMetaHarness(meta, compact) {
     : 'Check coordinator autorun policy before using.';
   const actions = compact ? '' :
     '<div class="copy-row">' +
-      '<button class="btn" data-copy="' + esc(commandRows.status || 'solar-harness meta-harness status --json') + '" onclick="copyText(this.dataset.copy)">Copy status</button>' +
-      '<button class="btn" data-copy="' + esc(commandRows.run_dry || 'solar-harness meta-harness run 3 hooks --json') + '" onclick="copyText(this.dataset.copy)">Copy dry-run</button>' +
-      '<button class="btn" data-copy="' + esc(commandRows.apply_dry || 'solar-harness meta-harness apply <run_id> --json') + '" onclick="copyText(this.dataset.copy)">Copy apply dry-run</button>' +
+      '<button class="btn" data-copy="' + esc(commandRows.status || 'solar-harness meta-harness status --json') + '" onclick="copyText(this.dataset.copy)">复制 status</button>' +
+      '<button class="btn" data-copy="' + esc(commandRows.run_dry || 'solar-harness meta-harness run 3 hooks --json') + '" onclick="copyText(this.dataset.copy)">复制 dry-run</button>' +
+      '<button class="btn" data-copy="' + esc(commandRows.apply_dry || 'solar-harness meta-harness apply <run_id> --json') + '" onclick="copyText(this.dataset.copy)">复制 apply dry-run</button>' +
     '</div>';
   const latestLine = latest && latest.subcommand
     ? '<div class="impact-note"><b>Latest command:</b> ' + esc(latest.subcommand) + ' · ' + esc(latest.mode || 'N/A') + ' · executed=' + esc(latest.executed === true ? 'true' : 'false') + '</div>'
@@ -11130,32 +12187,32 @@ function renderKnowledgeProgress(progress) {
     return '<tr><td>' + esc(s.name) + '</td><td>' + esc(s.files || 0) + '</td><td class="path-text">' + esc(latest) + '</td></tr>';
   }).join('');
   return '' +
-    '<div class="impact-note"><b>One-line:</b> ' + esc(progress.headline || 'N/A') + '</div>' +
+    '<div class="impact-note"><b>一句话：</b>' + esc(progress.headline || 'N/A') + '</div>' +
     '<div class="status-strip">' +
-      '<div class="status-tile"><div class="kv-label">Status</div><strong>' + statusBadge(progress.status || 'unknown') + '</strong></div>' +
-      '<div class="status-tile"><div class="kv-label">Pending</div><strong>' + esc(funnel.pending || 0) + '</strong></div>' +
-      '<div class="status-tile"><div class="kv-label">Failed</div><strong>' + esc(funnel.failed || 0) + '</strong></div>' +
-      '<div class="status-tile"><div class="kv-label">Blocked</div><strong>' + esc(funnel.blocked || 0) + '</strong></div>' +
+      '<div class="status-tile"><div class="kv-label">状态</div><strong>' + statusBadge(progress.status || 'unknown') + '</strong></div>' +
+      '<div class="status-tile"><div class="kv-label">待处理</div><strong>' + esc(funnel.pending || 0) + '</strong></div>' +
+      '<div class="status-tile"><div class="kv-label">失败</div><strong>' + esc(funnel.failed || 0) + '</strong></div>' +
+      '<div class="status-tile"><div class="kv-label">阻塞</div><strong>' + esc(funnel.blocked || 0) + '</strong></div>' +
       '<div class="status-tile"><div class="kv-label">ASR fallback</div><strong>' + esc(funnel.asr_waiting || 0) + '</strong></div>' +
-      '<div class="status-tile"><div class="kv-label">ASR Cache</div><strong>' + esc(formatBytes(asr.audio_cache_bytes || 0)) + '</strong></div>' +
-      '<div class="status-tile"><div class="kv-label">Knowledge Pages (24h)</div><strong>' + esc(funnel.recent_knowledge_24h || 0) + '</strong></div>' +
+      '<div class="status-tile"><div class="kv-label">ASR缓存</div><strong>' + esc(formatBytes(asr.audio_cache_bytes || 0)) + '</strong></div>' +
+      '<div class="status-tile"><div class="kv-label">近24h知识页</div><strong>' + esc(funnel.recent_knowledge_24h || 0) + '</strong></div>' +
       '<div class="status-tile"><div class="kv-label">QMD</div><strong>' + esc(qmd.status || 'unknown') + '</strong></div>' +
     '</div>' +
     '<div class="kv-grid">' +
-      kv('Processing Funnel', 'total tasks ' + (funnel.total_dispatch || 0) + ' · completed ' + (funnel.completed || 0) + ' · unknown legacy states ' + (funnel.unknown || 0)) +
-      kv('Latest Raw Input', (latestRaw.name ? latestRaw.name + ' · ' + latestRawStamp : 'N/A')) +
-      kv('Latest Dispatch', ((latestDispatch || {}).path || 'N/A')) +
-      kv('Latest Knowledge Page', ((latestKnowledge || {}).path || 'N/A')) +
-      kv('QMD Semantic Index', 'indexed ' + (qmd.indexed || 0) + ' · pending ' + (qmd.pending === undefined ? 'N/A' : qmd.pending)) +
-      kv('ASR fallback', 'waiting ' + (funnel.asr_waiting || 0) + ' · blocked ' + (funnel.asr_blocking || 0) + ' · policy ' + (funnel.asr_policy || 'fallback_non_blocking')) +
-      kv('ASR Cache Directory', formatBytes(asr.audio_cache_bytes || 0) + ' · ' + (asr.audio_dir || 'N/A')) +
+      kv('处理漏斗', '总任务 ' + (funnel.total_dispatch || 0) + ' · 已完成 ' + (funnel.completed || 0) + ' · 未知历史状态 ' + (funnel.unknown || 0)) +
+      kv('最近原始输入', (latestRaw.name ? latestRaw.name + ' · ' + latestRawStamp : 'N/A')) +
+      kv('最新派单', ((latestDispatch || {}).path || 'N/A')) +
+      kv('最新知识页', ((latestKnowledge || {}).path || 'N/A')) +
+      kv('QMD 语义索引', 'indexed ' + (qmd.indexed || 0) + ' · pending ' + (qmd.pending === undefined ? 'N/A' : qmd.pending)) +
+      kv('ASR fallback', '等待 ' + (funnel.asr_waiting || 0) + ' · 阻塞 ' + (funnel.asr_blocking || 0) + ' · 策略 ' + (funnel.asr_policy || 'fallback_non_blocking')) +
+      kv('ASR 缓存目录', formatBytes(asr.audio_cache_bytes || 0) + ' · ' + (asr.audio_dir || 'N/A')) +
     '</div>' +
-    '<h3>Current Blockers</h3>' +
-    '<ul class="impact-list">' + (blockerRows || '<li>' + statusBadge('ok') + ' <b>No obvious blockers</b><br><span class="muted">Collection, dispatch, extraction, and indexing show no hard blockers.</span></li>') + '</ul>' +
-    '<h3>Suggested Actions</h3>' +
-    '<ul>' + (actionRows || '<li>Keep monitoring.</li>') + '</ul>' +
-    '<h3>Recent Update Sources</h3>' +
-    '<table><thead><tr><th>Source</th><th>Files</th><th>Last Updated</th></tr></thead><tbody>' + (sourceRows || '<tr><td colspan="3">N/A</td></tr>') + '</tbody></table>' +
+    '<h3>当前卡点</h3>' +
+    '<ul class="impact-list">' + (blockerRows || '<li>' + statusBadge('ok') + ' <b>没有明显卡点</b><br><span class="muted">采集、派单、抽取和索引没有发现硬阻塞。</span></li>') + '</ul>' +
+    '<h3>建议动作</h3>' +
+    '<ul>' + (actionRows || '<li>继续观察即可。</li>') + '</ul>' +
+    '<h3>最近更新来源</h3>' +
+    '<table><thead><tr><th>来源</th><th>文件数</th><th>最近更新时间</th></tr></thead><tbody>' + (sourceRows || '<tr><td colspan="3">N/A</td></tr>') + '</tbody></table>' +
     '<div class="muted">Generated: ' + esc(progress.generated_at || 'N/A') + '</div>';
 }
 function statePill(label, ok) {
@@ -11218,14 +12275,14 @@ function renderIntegrations(data) {
       '<div class="status-tile"><div class="kv-label">Warn</div><strong>' + esc(summary.warn || 0) + '</strong></div>' +
       '<div class="status-tile"><div class="kv-label">Error</div><strong>' + esc(summary.error || 0) + '</strong></div>' +
       '<div class="status-tile"><div class="kv-label">Missing</div><strong>' + esc(summary.missing || 0) + '</strong></div>' +
-      '<div class="status-tile"><div class="kv-label">Dead Ends</div><strong>' + esc(summary.dead_ends || 0) + '</strong></div>' +
+      '<div class="status-tile"><div class="kv-label">断头</div><strong>' + esc(summary.dead_ends || 0) + '</strong></div>' +
       '<div class="status-tile"><div class="kv-label">Closed Loop</div><strong>' + esc((summary.integration_levels || {}).closed_loop || 0) + '</strong></div>' +
       '<div class="status-tile"><div class="kv-label">Default</div><strong>' + esc((summary.integration_levels || {}).default_usable || 0) + '</strong></div>' +
     '</div>' +
-    '<div class="muted">Cache: ' + (data._cache && data._cache.hit ? 'hit' : 'refresh') +
-    ' · Probe time: ' + esc(data.generated_at || 'N/A') + '</div>';
+    '<div class="muted">缓存：' + (data._cache && data._cache.hit ? '命中' : '刷新') +
+    ' · 探测时间：' + esc(data.generated_at || 'N/A') + '</div>';
   if (!items.length) {
-    cardEl.innerHTML = '<div class="card muted">No integration probe results.</div>';
+    cardEl.innerHTML = '<div class="card muted">没有集成探测结果。</div>';
     return;
   }
   cardEl.innerHTML = '<div class="integration-grid">' + items.map(item => {
@@ -11237,23 +12294,23 @@ function renderIntegrations(data) {
       '</div><div class="muted">' + esc(item.purpose || item.source || '') + '</div></div>' +
       '<div class="badge-stack">' + statusBadge(item.status || 'unknown') + levelBadge(item.status_label || 'unknown') + '</div></div>' +
       '<div class="state-row">' +
-        statePill('Installed', !!item.installed) +
-        statePill('Configured', !!item.configured) +
-        statePill('Running', !!item.running) +
-        statePill('Indexed', !!item.indexed) +
-        statePill('Default', !!item.used_by_default) +
+        statePill('安装', !!item.installed) +
+        statePill('配置', !!item.configured) +
+        statePill('运行', !!item.running) +
+        statePill('索引', !!item.indexed) +
+        statePill('默认', !!item.used_by_default) +
       '</div>' +
       '<div class="state-row">' +
-        statePill('Basic Ready', item.health && item.health.basic_available !== 'error') +
-        statePill('Default Ready', item.health && item.health.default_available === 'ok') +
-        statePill('Closed Loop', item.health && item.health.complete_closed_loop === 'ok') +
-        statePill('No Dead Ends', item.health && item.health.dead_ends === 'ok') +
+        statePill('基础可用', item.health && item.health.basic_available !== 'error') +
+        statePill('默认可用', item.health && item.health.default_available === 'ok') +
+        statePill('完整闭环', item.health && item.health.complete_closed_loop === 'ok') +
+        statePill('无断头', item.health && item.health.dead_ends === 'ok') +
       '</div>' +
-      '<div class="integration-reason">' + esc(item.degraded_reason || 'Available') + '</div>' +
-      (item.dead_ends && item.dead_ends.length ? '<div class="integration-reason warn">Dead ends: ' + esc(item.dead_ends.join(', ')) + '</div>' : '') +
+      '<div class="integration-reason">' + esc(item.degraded_reason || '可用') + '</div>' +
+      (item.dead_ends && item.dead_ends.length ? '<div class="integration-reason warn">断头：' + esc(item.dead_ends.join(', ')) + '</div>' : '') +
       (runtimeLine ? '<div class="runtime-line">' + esc(runtimeLine) + '</div>' : '') +
       '<div class="muted" style="margin-top:.7rem">' + esc(evidenceSummary(item)) + '</div>' +
-      '<details style="margin-top:.8rem"><summary class="muted">Evidence</summary><pre class="codebox">' +
+      '<details style="margin-top:.8rem"><summary class="muted">证据</summary><pre class="codebox">' +
       esc(JSON.stringify(item.evidence || {}, null, 2)) + '</pre></details>' +
     '</article>';
   }).join('') + '</div>';
@@ -11265,7 +12322,7 @@ function renderContractSummary(data, compact) {
   }
   const title = data.title || 'Contract Summary';
   const summary = data.summary || '';
-  const link = data.route ? `<a href="${data.route}" target="_blank" rel="noopener" style="color: var(--accent-2); font-weight:800;">View Details</a>` : '';
+  const link = data.route ? `<a href="${data.route}" target="_blank" rel="noopener" style="color: var(--accent-2); font-weight:800;">查看详情</a>` : '';
   
   if (compact) {
     return `
@@ -11294,7 +12351,7 @@ function renderRequirementCoverage(data, compact) {
   if (data.status === 'missing') {
     const target = data.requested_sprint_id || data.sprint_id || 'N/A';
     return '<div><b class="tech-id">' + esc(target) + '</b> ' + statusBadge('missing') + '</div>'
-      + '<div class="muted" style="margin-top:.35rem;">Current active sprint has no coverage artifact yet.</div>';
+      + '<div class="muted" style="margin-top:.35rem;">当前 active sprint 还没有 coverage 工件。</div>';
   }
   const total = Number(data.total || 0);
   const done = Number(data.done || 0);
@@ -11332,7 +12389,7 @@ function renderRequirementCoverage(data, compact) {
     +   '<div class="research-stat"><div class="kv-label">Graph</div><strong>' + esc(graphComplete ? 'complete' : 'incomplete') + '</strong></div>'
     + '</div>'
     + '<div class="muted" style="margin-top:.6rem;">'
-    + 'Coverage report prevents partial delivery: when partial/missing is nonzero, PASS/finalized cannot be released. source: ' + fallbackNote
+    + 'coverage report 会阻止半截交付：partial/missing 不为 0 时，PASS/finalized 不会放行。 source: ' + fallbackNote
     + '</div>'
     + '</div>';
 }
@@ -11405,9 +12462,9 @@ function renderAssetPackages(data) {
       '<div class="status-tile"><div class="kv-label">HTML</div><strong>' + esc(data.html_asset_packages || 0) + '</strong></div>' +
       '<div class="status-tile"><div class="kv-label">Accepted Dir</div><strong class="path-text">' + esc(data.accepted_dir || 'N/A') + '</strong></div>' +
     '</div>' +
-    '<div class="muted">Asset packages are generated from the Knowledge accepted directory; click planning_html / design_html / prd_html to view human-readable pages.</div>';
+    '<div class="muted">资产包生成自 Knowledge accepted 目录；点击 planning_html / design_html / prd_html 可直接查看人类可读页面。</div>';
   if (!items.length) {
-    cardEl.innerHTML = '<div class="card muted">No accepted knowledge packages yet. Run accepted artifact export first.</div>';
+    cardEl.innerHTML = '<div class="card muted">没有 accepted knowledge package。先运行 accepted artifact export。</div>';
     return;
   }
   cardEl.innerHTML = '<div class="integration-grid">' + items.map(pkg => {
@@ -11424,7 +12481,7 @@ function renderAssetPackages(data) {
       '</div>' +
       '<div class="impact-note"><b>Included:</b> ' + esc(labels) + '</div>' +
       '<div class="copy-row">' + assetButtons(pkg) + '</div>' +
-      '<details style="margin-top:.8rem"><summary class="muted">Paths</summary><pre class="codebox">' + esc(JSON.stringify({
+      '<details style="margin-top:.8rem"><summary class="muted">路径</summary><pre class="codebox">' + esc(JSON.stringify({
         knowledge_path: pkg.knowledge_path,
         accepted_at: pkg.accepted_at,
         exported_at: pkg.exported_at,
@@ -11480,20 +12537,20 @@ function opExecutionClassLabel(value) {
 
 function opScenarioLabel(value) {
   return ({
-    planning_architecture: 'Planning / Architecture',
-    implementation_build: 'Implementation / Build',
-    review_verification: 'Review / Verification',
-    knowledge_extraction: 'Knowledge Extraction',
-    browser_automation: 'Browser Automation',
+    planning_architecture: '规划 / 架构',
+    implementation_build: '实现 / 构建',
+    review_verification: '评审 / 验证',
+    knowledge_extraction: '知识抽取',
+    browser_automation: '浏览器自动化',
     youtube_transcript: 'YouTube Transcript',
-    chatgpt_browser_reasoning: 'ChatGPT Pro Advanced Reasoning',
+    chatgpt_browser_reasoning: 'ChatGPT Pro 进阶思考',
     deep_research: 'Deep Research',
     browser_research: 'Browser Research',
-    research_synthesis: 'Research Synthesis',
-    debug_rca: 'Root Cause Analysis',
-    resource_broker: 'Resource Scheduling',
-    context_compression: 'Context Compression',
-    general_execution: 'General Execution'
+    research_synthesis: '研究综合',
+    debug_rca: '根因分析',
+    resource_broker: '资源调度',
+    context_compression: '上下文压缩',
+    general_execution: '通用执行'
   })[value] || value || 'N/A';
 }
 
@@ -11520,7 +12577,7 @@ function opClassRank(item) {
 
 function opLogicalChips(item, limit) {
   const logical = item.logical_operators || [];
-  if (!logical.length) return '<span class="muted">No logical operators bound</span>';
+  if (!logical.length) return '<span class="muted">未绑定逻辑算子</span>';
   const shown = logical.slice(0, limit || 3).map(lo =>
     '<span class="badge default" style="background: rgba(255,255,255,0.05); margin:0 0.25rem 0.25rem 0;">' +
     esc(lo.logical_operator || '-') + '</span>'
@@ -11551,15 +12608,15 @@ function renderOperatorExecutionPage(po) {
 
   document.getElementById('operator-metrics-container').innerHTML = `
     <div class="health-metrics">
-      <div class="mini-metric"><div class="kv-label">Total Physical Operators</div><span class="num">${counts.total}</span></div>
+      <div class="mini-metric"><div class="kv-label">总物理算子</div><span class="num">${counts.total}</span></div>
       <div class="mini-metric"><div class="kv-label">TUI Pane</div><span class="num">${counts.tui}</span></div>
       <div class="mini-metric"><div class="kv-label">Browser Agent</div><span class="num">${counts.browser}</span></div>
       <div class="mini-metric"><div class="kv-label">Running / Leased</div><span class="num" style="color:#06b6d4;">${counts.running}</span></div>
       <div class="mini-metric"><div class="kv-label">Blocked</div><span class="num" style="color:#f59e0b;">${counts.blocked}</span></div>
       <div class="mini-metric"><div class="kv-label">Idle</div><span class="num" style="color:#10b981;">${counts.idle}</span></div>
-      <div class="mini-metric"><div class="kv-label">Logical Operators</div><span class="num">${counts.logical}</span></div>
+      <div class="mini-metric"><div class="kv-label">逻辑算子</div><span class="num">${counts.logical}</span></div>
     </div>
-    <div class="muted" style="margin-top:0.55rem;">Sort order: execution surface -> scenario -> vendor -> model family -> variant -> runtime state. Physical operators decide "who runs"; logical operators describe "what capability this step needs".</div>
+    <div class="muted" style="margin-top:0.55rem;">排序规则：执行载体 → 场景 → 厂家 → 模型族 → 型号 → 运行状态。物理算子负责“谁来跑”，逻辑算子负责“这一步是什么能力”。</div>
   `;
 
   const filtered = items.filter(item => {
@@ -11616,7 +12673,7 @@ function renderOperatorExecutionPage(po) {
         const healthClass = healthOk ? 'ok' : (health.health_status === 'error' ? 'missing' : 'warn');
         const dims = health.width && health.height ? `${health.width}×${health.height}` : 'N/A';
         const bytes = health.bytes ? `${Math.round(Number(health.bytes) / 1024)} KB` : 'N/A';
-        painterHealth = '<div style="margin-top:0.35rem;"><span class="level-badge ' + healthClass + '" style="font-size:0.7rem;">Original image ' + (healthOk ? 'ok' : 'warn') + '</span><span class="muted" style="font-size:0.72rem;margin-left:0.35rem;">' + esc((health.source || 'N/A') + ' · ' + dims + ' · ' + bytes) + '</span></div>';
+        painterHealth = '<div style="margin-top:0.35rem;"><span class="level-badge ' + healthClass + '" style="font-size:0.7rem;">原图 ' + (healthOk ? 'ok' : 'warn') + '</span><span class="muted" style="font-size:0.72rem;margin-left:0.35rem;">' + esc((health.source || 'N/A') + ' · ' + dims + ' · ' + bytes) + '</span></div>';
       }
       return `
         <div class="op-row" style="grid-template-columns: 1.35fr 1.05fr 1.1fr 1.25fr 0.85fr 1.2fr 0.55fr; gap:0.65rem; ${opStateRank(item) === 0 ? 'background: rgba(6,182,212,0.05);' : ''}">
@@ -11629,46 +12686,46 @@ function renderOperatorExecutionPage(po) {
           <div><button class="btn" onclick="toggleOpDetails('${detailId}')" style="padding:4px 8px;font-size:0.72rem;border-radius:8px;">JSON</button></div>
         </div>
         <div id="${detailId}" class="op-row-details">
-          <div style="font-weight:900;font-size:0.8rem;color:var(--accent-2);margin-bottom:0.4rem;">Execution State Details</div>
+          <div style="font-weight:900;font-size:0.8rem;color:var(--accent-2);margin-bottom:0.4rem;">执行状态详情</div>
           <pre class="codebox" style="margin:0;padding:0.8rem;font-size:0.74rem;line-height:1.4;border-radius:10px;">${esc(JSON.stringify(item, null, 2))}</pre>
         </div>
       `;
     }).join('');
     return `
       <div class="task-block" style="margin-bottom:1rem;">
-        <div class="task-head"><div><div class="task-title">${esc(opExecutionClassLabel(cls))}</div><div class="muted">${esc(grouped[cls].length)} physical execution surfaces</div></div><div>${statusBadge(grouped[cls].some(i => opStateRank(i) === 0) ? 'ok' : 'warn')}</div></div>
+        <div class="task-head"><div><div class="task-title">${esc(opExecutionClassLabel(cls))}</div><div class="muted">${esc(grouped[cls].length)} 个物理执行载体</div></div><div>${statusBadge(grouped[cls].some(i => opStateRank(i) === 0) ? 'ok' : 'warn')}</div></div>
         <div class="op-list" style="margin-top:0.7rem;">
           <div class="op-row" style="grid-template-columns: 1.35fr 1.05fr 1.1fr 1.25fr 0.85fr 1.2fr 0.55fr; background:transparent;border:none;padding:0.2rem 1.2rem;box-shadow:none;pointer-events:none;">
-            <div class="muted" style="font-weight:900;">Physical Operator</div><div class="muted" style="font-weight:900;">Type / Scenario</div><div class="muted" style="font-weight:900;">Vendor / Model / Variant</div><div class="muted" style="font-weight:900;">Bound Logical Operators</div><div class="muted" style="font-weight:900;">State</div><div class="muted" style="font-weight:900;">Lease / Current Task</div><div></div>
+            <div class="muted" style="font-weight:900;">物理算子</div><div class="muted" style="font-weight:900;">类型 / 场景</div><div class="muted" style="font-weight:900;">厂家 / 模型 / 型号</div><div class="muted" style="font-weight:900;">承载逻辑算子</div><div class="muted" style="font-weight:900;">状态</div><div class="muted" style="font-weight:900;">Lease / 当前任务</div><div></div>
           </div>
           ${rows}
         </div>
       </div>
     `;
   }).join('');
-  document.getElementById('operator-cards-container').innerHTML = groupHtml || '<div class="muted" style="padding:2rem;text-align:center;">No operators match the filters.</div>';
+  document.getElementById('operator-cards-container').innerHTML = groupHtml || '<div class="muted" style="padding:2rem;text-align:center;">没有找到符合过滤条件的算子。</div>';
 
   const logicalHtml = logicalItems.length ? `
     <div class="health-metrics">
-      <div class="mini-metric"><div class="kv-label">Logical Operators</div><span class="num">${esc(logical.count || logicalItems.length)}</span></div>
-      <div class="mini-metric"><div class="kv-label">Bound</div><span class="num">${esc(logical.supported || 0)}</span></div>
-      <div class="mini-metric"><div class="kv-label">Missing Candidates</div><span class="num" style="color:#f59e0b;">${esc(logical.missing_candidates || 0)}</span></div>
+      <div class="mini-metric"><div class="kv-label">逻辑算子</div><span class="num">${esc(logical.count || logicalItems.length)}</span></div>
+      <div class="mini-metric"><div class="kv-label">已绑定</div><span class="num">${esc(logical.supported || 0)}</span></div>
+      <div class="mini-metric"><div class="kv-label">缺失候选</div><span class="num" style="color:#f59e0b;">${esc(logical.missing_candidates || 0)}</span></div>
     </div>
-    <table style="margin-top:0.8rem;"><tr><th>Logical Operator</th><th>Scenario</th><th>Candidate Physical Operators</th><th>Strategy</th></tr>
+    <table style="margin-top:0.8rem;"><tr><th>逻辑算子</th><th>场景</th><th>候选物理算子</th><th>策略</th></tr>
       ${logicalItems.map(lo => {
         const candidates = (lo.candidates || []).map(c => '<span class="badge ' + (c.registered ? 'default' : 'missing') + '" style="margin:0 0.25rem 0.25rem 0;">' + esc(c.actor_id || '-') + ' #' + esc(c.priority || '-') + '</span>').join('');
         return '<tr><td><b class="tech-id">' + esc(lo.logical_operator || '-') + '</b><div class="muted" style="font-size:0.72rem;">' + esc((lo.description || '').slice(0, 120)) + '</div></td><td>' + esc(opScenarioLabel(lo.scenario)) + '</td><td>' + (candidates || 'N/A') + '</td><td>' + esc(lo.selection_policy || '-') + ' / ' + esc(lo.fallback_policy || '-') + '</td></tr>';
       }).join('')}
     </table>
-  ` : '<div class="muted">No logical-operators.json mapping yet.</div>';
+  ` : '<div class="muted">暂无 logical-operators.json 映射。</div>';
   const logicalContainer = document.getElementById('logical-operators-container');
   if (logicalContainer) logicalContainer.innerHTML = logicalHtml;
 
   const recentResults = po.recent_results || [];
   if (!recentResults.length) {
-    document.getElementById('operator-results-detailed').innerHTML = '<div class="muted">No recent operator result records.</div>';
+    document.getElementById('operator-results-detailed').innerHTML = '<div class="muted">暂无最近执行结果记录。</div>';
   } else {
-    let t = '<table><tr><th>Operator</th><th>Model / Backend</th><th>Task</th><th>Sprint</th><th>Verdict / Status</th><th>Artifact</th><th>Started</th><th>Finished</th></tr>';
+    let t = '<table><tr><th>Operator</th><th>模型 / 后端</th><th>Task</th><th>Sprint</th><th>Verdict / Status</th><th>Artifact</th><th>Started</th><th>Finished</th></tr>';
     recentResults.forEach(item => {
       const finished = item.finished_at ? new Date(item.finished_at).toLocaleString() : (item.started_at ? 'running' : 'N/A');
       const started = item.started_at ? new Date(item.started_at).toLocaleString() : 'N/A';
@@ -11722,8 +12779,8 @@ function renderOperatorsPage() {
   document.getElementById('operator-metrics-container').innerHTML = `
     <div class="health-metrics">
       <div class="mini-metric"><div class="kv-label">Total Fleet</div><span class="num">${total}</span></div>
-      <div class="mini-metric"><div class="kv-label">Idle</div><span class="num" style="color:#10b981;">${idle}</span></div>
-      <div class="mini-metric"><div class="kv-label">Busy / Leased</div><span class="num" style="color:#06b6d4;">${busy}</span></div>
+      <div class="mini-metric"><div class="kv-label">Idle (空闲)</div><span class="num" style="color:#10b981;">${idle}</span></div>
+      <div class="mini-metric"><div class="kv-label">Busy (忙碌/已租)</div><span class="num" style="color:#06b6d4;">${busy}</span></div>
       <div class="mini-metric"><div class="kv-label">Enabled</div><span class="num">${enabled}</span></div>
       <div class="mini-metric"><div class="kv-label">Available</div><span class="num">${available}</span></div>
       <div class="mini-metric"><div class="kv-label">Disabled</div><span class="num" style="color:#fbbf24;">${disabled}</span></div>
@@ -11769,18 +12826,18 @@ function renderOperatorsPage() {
   
   // Render list/table
   if (!filtered.length) {
-    document.getElementById('operator-cards-container').innerHTML = '<div class="muted" style="padding:2rem; text-align:center;">No physical operators match the filters.</div>';
+    document.getElementById('operator-cards-container').innerHTML = '<div class="muted" style="padding:2rem; text-align:center;">没有找到符合过滤条件的物理算子。</div>';
   } else {
     let listHtml = '<div class="op-list">';
     listHtml += `
       <div class="op-row" style="background: transparent; border: none; padding: 0.2rem 1.4rem; box-shadow: none; transform: none; pointer-events: none; margin-bottom: -0.4rem;">
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Operator ID (Name)</div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Role / Type</div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Model / Backend</div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Concurrency</div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Current State</div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Active Lease / Task</div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">Actions</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">算子 ID (名称)</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">角色 / 类型</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">模型 / 后端</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">并发度</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">当前状态</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">活跃租约 / 任务</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">操作</div>
       </div>
     `;
     
@@ -11826,7 +12883,7 @@ function renderOperatorsPage() {
         const bytes = health.bytes ? `${Math.round(Number(health.bytes) / 1024)} KB` : 'N/A';
         painterHealth = `
           <div style="margin-top:0.35rem;">
-            <span class="level-badge ${healthClass}" style="font-size:0.7rem;">Original image ${healthOk ? 'ok' : 'warn'}</span>
+            <span class="level-badge ${healthClass}" style="font-size:0.7rem;">原图 ${healthOk ? 'ok' : 'warn'}</span>
             <span class="muted" style="font-size:0.72rem; margin-left:0.35rem;">${esc(health.source || 'N/A')} · ${esc(dims)} · ${esc(bytes)}</span>
           </div>
         `;
@@ -11854,11 +12911,11 @@ function renderOperatorsPage() {
           <div><span class="level-badge ${statusClass}">${statusLabel}</span></div>
           <div>${leaseText}</div>
           <div>
-            <button class="btn" onclick="toggleOpDetails(${idx})" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 8px; width: 100%;">Expand JSON</button>
+            <button class="btn" onclick="toggleOpDetails(${idx})" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 8px; width: 100%;">展开 JSON</button>
           </div>
         </div>
         <div id="op-details-row-${idx}" class="op-row-details">
-          <div style="font-weight: 900; font-size: 0.8rem; color: var(--accent-2); margin-bottom: 0.4rem;">Config Details (JSON)</div>
+          <div style="font-weight: 900; font-size: 0.8rem; color: var(--accent-2); margin-bottom: 0.4rem;">配置详情 (JSON)</div>
           <pre class="codebox" style="margin: 0; padding: 0.8rem; font-size: 0.74rem; line-height: 1.4; border-radius: 10px;">${esc(JSON.stringify(item, null, 2))}</pre>
         </div>
       `;
@@ -11871,9 +12928,9 @@ function renderOperatorsPage() {
   // Render recent results table
   const recentResults = po.recent_results || [];
   if (!recentResults.length) {
-    document.getElementById('operator-results-detailed').innerHTML = '<div class="muted">No recent operator result records.</div>';
+    document.getElementById('operator-results-detailed').innerHTML = '<div class="muted">暂无最近执行结果记录。</div>';
   } else {
-    let t = '<table><tr><th>Operator</th><th>Model / Backend</th><th>Task</th><th>Sprint</th><th>Verdict / Status</th><th>Artifact</th><th>Started</th><th>Finished</th></tr>';
+    let t = '<table><tr><th>Operator</th><th>模型 / 后端</th><th>Task</th><th>Sprint</th><th>Verdict / Status</th><th>Artifact</th><th>Started</th><th>Finished</th></tr>';
     recentResults.forEach(item => {
       const finished = item.finished_at ? new Date(item.finished_at).toLocaleString() : (item.started_at ? 'running' : 'N/A');
       const started = item.started_at ? new Date(item.started_at).toLocaleString() : 'N/A';
@@ -11971,17 +13028,17 @@ function renderPanesPage() {
     </div>
     <div class="health-metrics" style="margin-top:0.7rem;">
       <div class="mini-metric"><div class="kv-label">Headless Panes</div><span class="num">${total}</span></div>
-      <div class="mini-metric"><div class="kv-label">Pane Idle (shell idle)</div><span class="num" style="color:#1f6f5b;">${idle}</span></div>
+      <div class="mini-metric"><div class="kv-label">Pane Idle (壳空闲)</div><span class="num" style="color:#1f6f5b;">${idle}</span></div>
       <div class="mini-metric"><div class="kv-label">Reusable Idle</div><span class="num" style="color:#254f91;">${reusableIdle}</span></div>
       <div class="mini-metric"><div class="kv-label">Historical Active</div><span class="num" style="color:#8b4a1d;">${historicalActive}</span></div>
       <div class="mini-metric"><div class="kv-label">Pane Leased</div><span class="num" style="color:#254f91;">${leased}</span></div>
       <div class="mini-metric"><div class="kv-label">Pane Running</div><span class="num" style="color:#8b4a1d;">${running}</span></div>
     </div>
-    <div class="muted" style="margin-top:0.5rem;">Model mix: ${modelSummary}</div>
-    <div class="muted" style="margin-top:0.35rem;">Operator types: ${operatorTypeSummary}</div>
-    ${mismatch ? '<div class="warn" style="margin-top:0.45rem;">Runtime truth still shows a builder running; if pane running is low, this is a typical case where the page previously misclassified shell work windows as idle.</div>' : ''}
-    <div class="muted" style="margin-top:0.5rem;">Note: top row is builder operator runtime truth; bottom row is headless pane hygiene. reusable_idle is a safely reusable historical shell window; historical_active is the currently selected historical tmux shell and is not auto-killed by default.</div>
-    <div class="muted" style="margin-top:0.35rem;">Additional note: the pane pool is not the full operator fleet; use runtime truth first to see whether work is active.</div>
+    <div class="muted" style="margin-top:0.5rem;">模型分布：${modelSummary}</div>
+    <div class="muted" style="margin-top:0.35rem;">算子类型：${operatorTypeSummary}</div>
+    ${mismatch ? '<div class="warn" style="margin-top:0.45rem;">runtime truth 显示仍有 builder 正在执行；如果 pane running 很低，这是页面过去把 shell 型工作窗误判为 idle 的典型症状。</div>' : ''}
+    <div class="muted" style="margin-top:0.5rem;">说明：上排是 builder operator runtime truth；下排是 headless pane hygiene。'reusable_idle' 是可安全复用的历史 shell 窗口；'historical_active' 是当前 tmux 选中的历史壳，出于安全默认不自动杀。</div>
+    <div class="muted" style="margin-top:0.35rem;">补充：pane 池不等于完整 operator fleet；真正有没有人在干活，优先看 runtime truth。</div>
   `;
   document.getElementById('pane-pool-contract-card').innerHTML = `
     <div class="health-metrics">
@@ -11990,8 +13047,8 @@ function renderPanesPage() {
       <div class="mini-metric"><div class="kv-label">Auto Close</div><span class="num">${pool.auto_close_enabled ? 'on' : 'off'}</span></div>
       <div class="mini-metric"><div class="kv-label">Compact</div><span class="num" style="color:${pool.compact_recommended ? '#8b4a1d' : '#1f6f5b'};">${pool.compact_recommended ? 'recommended' : 'not-needed'}</span></div>
     </div>
-    <div class="muted" style="margin-top:0.5rem;">contract: shrink to target pool size; keep reusable historical shells; do not auto-kill the currently selected historical shell.</div>
-    <div class="muted" style="margin-top:0.35rem;">ops: compact-session safely switches away and closes historical current windows; detach-and-anchor only switches the session current window to anchor.</div>
+    <div class="muted" style="margin-top:0.5rem;">contract: shrink 到目标池大小；保留可复用历史壳，不自动杀当前选中的历史壳。</div>
+    <div class="muted" style="margin-top:0.35rem;">ops: 'compact-session' 会安全切走并收掉历史 current window；'detach-and-anchor' 只把 session current window 切到 anchor。</div>
   `;
   
   // Filter panes
@@ -12021,9 +13078,9 @@ function renderPanesPage() {
   
   // Render panes list (as a beautiful detailed table)
   if (!filtered.length) {
-    document.getElementById('pane-grid-container').innerHTML = '<div class="muted" style="padding:2rem; text-align:center;">No Headless Pane matches the filters.</div>';
+    document.getElementById('pane-grid-container').innerHTML = '<div class="muted" style="padding:2rem; text-align:center;">没有找到符合过滤条件的 Headless Pane。</div>';
   } else {
-    let t = '<table><tr><th>Pane</th><th>Model / Backend / Type</th><th>Window Name</th><th>Cmd (Process)</th><th>Pane Title (TUI Title)</th><th>Status</th><th>Lease Task</th></tr>';
+    let t = '<table><tr><th>Pane</th><th>模型 / 后端 / 类型</th><th>Window Name</th><th>Cmd (进程)</th><th>Pane Title (TUI 标题)</th><th>Status</th><th>Lease Task (租约任务)</th></tr>';
     filtered.forEach(p => {
       let statusClass = "missing";
       if (p.status === 'idle') statusClass = "ok";
@@ -12089,9 +13146,9 @@ function render(data) {
     document.getElementById('overview-sprint').innerHTML = sprintHtml;
   } else {
     const recent = sp.recent_completed || {};
-    const idleHtml = '<div class="state-card idle"><h3>No active sprint</h3>' +
-      '<p>Queue is empty; coordinator has no dispatchable work.</p>' +
-      (recent.sprint_id ? '<p class="muted">Recently completed: ' + esc(recent.title || recent.sprint_id) +
+    const idleHtml = '<div class="state-card idle"><h3>当前无活跃 Sprint</h3>' +
+      '<p>队列为空；coordinator 没有可派发工作。</p>' +
+      (recent.sprint_id ? '<p class="muted">最近完成：' + esc(recent.title || recent.sprint_id) +
         ' · ' + esc(recent.status || '-') + '/' + esc(recent.phase || '-') + '</p>' : '') +
       '</div>';
     document.getElementById('sprint-card').innerHTML = idleHtml;
@@ -12102,7 +13159,7 @@ function render(data) {
   const panes = data.panes || [];
   const assignedMainPanes = ((data.main_screen || {}).panes || []).filter(p => p.assignment);
   if (assignedMainPanes.length) {
-    let t = '<table><tr><th>Pane</th><th>Role</th><th>Running</th><th>Current Task</th><th>Artifact</th></tr>';
+    let t = '<table><tr><th>Pane</th><th>角色</th><th>运行</th><th>当前任务</th><th>产物</th></tr>';
     assignedMainPanes.forEach(p => {
       t += '<tr><td>' + esc(p.target || '-') + '</td><td>' + esc(p.role || '-') + '</td>' +
            '<td class="' + runtimeClass(p.runtime_state) + '">' + esc(p.runtime_state || '-') + '</td>' +
@@ -12113,7 +13170,7 @@ function render(data) {
     document.getElementById('panes-card').innerHTML = t;
     document.getElementById('overview-panes').innerHTML = '<div class="metric">' + assignedMainPanes.length + '</div><div class="muted">assigned panes</div>';
   } else if (panes.length) {
-    let t = '<table><tr><th>Pane</th><th>Current Task</th><th>Status</th><th>Phase</th></tr>';
+    let t = '<table><tr><th>Pane</th><th>当前任务</th><th>状态</th><th>阶段</th></tr>';
     panes.forEach(p => {
       const meta = p.sprint || {};
       t += '<tr><td>' + esc(p.pane) + '</td><td>' + taskCell(meta, p.sprint_id || '-') + '</td>' +
@@ -12152,7 +13209,7 @@ function render(data) {
       esc((e.ts || '').substring(11, 19)) + ' · ' + esc(e.severity || '?') + ' · ' +
       esc(e.actor || '?') + ' · ' + esc(e.event || '?') + '</li>').join('') + '</ul>';
   } else {
-    document.getElementById('overview-risk').innerHTML = '<div class="muted">No warn/error events in the last 50 events.</div>';
+    document.getElementById('overview-risk').innerHTML = '<div class="muted">最近 50 条事件没有 warn/error。</div>';
   }
 
   const kpi = data.kpi || {};
@@ -12237,18 +13294,35 @@ class StatusHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass  # suppress access log noise
 
-    def _send_cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Solar-Token")
-        self.send_header("Access-Control-Max-Age", "600")
+    def _client_token(self):
+        tok = self.headers.get("X-Solar-Token")
+        if tok:
+            return tok
+        try:
+            q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            return q.get("token", [""])[0]
+        except Exception:
+            return ""
+
+    def _authorized(self, path: str) -> bool:
+        if not TOKEN_ENFORCED:
+            return True
+        # Exempt the bootstrap surface the page needs BEFORE it can read/send the token: the
+        # dashboard HTML, its static assets, and the health/identity probes.
+        if (
+            path == "/"
+            or path in ("/healthz", "/runtime-info", "/favicon.ico")
+            or path.startswith("/static/")
+        ):
+            return True
+        return hmac.compare_digest(self._client_token() or "", AUTH_TOKEN)
 
     def _send_json(self, data, status=200):
         body = json.dumps(data, default=str).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self._send_cors_headers()
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
@@ -12258,7 +13332,6 @@ class StatusHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
-        self._send_cors_headers()
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
@@ -12272,20 +13345,101 @@ class StatusHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
-        self._send_cors_headers()
         self.send_header("Cache-Control", "public, max-age=3600")
         self.end_headers()
         self.wfile.write(body)
 
-    def _send_sse(self, event_name: str, events: list[dict]):
+    def _send_sse_events(self, sprint_id: str, limit: int):
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
-        self._send_cors_headers()
         self.send_header("Cache-Control", "no-store")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("X-Accel-Buffering", "no")
         self.end_headers()
-        for event in events:
-            self.wfile.write(f"event: {event_name}\n".encode("utf-8"))
-            self.wfile.write(("data: " + json.dumps(event, default=str) + "\n\n").encode("utf-8"))
+
+        seen_queue: deque[str] = deque(maxlen=max(100, limit * 4))
+        seen_set: set[str] = set()
+        last_heartbeat = 0.0
+
+        def _remember(key: str) -> bool:
+            if key in seen_set:
+                return False
+            if len(seen_queue) == seen_queue.maxlen:
+                old = seen_queue.popleft()
+                seen_set.discard(old)
+            seen_queue.append(key)
+            seen_set.add(key)
+            return True
+
+        def _event_key(event: dict) -> str:
+            return hashlib.sha256(json.dumps(event, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+
+        try:
+            while True:
+                for event in _events_for_request(sprint_id, limit=limit):
+                    if not isinstance(event, dict):
+                        continue
+                    if not _remember(_event_key(event)):
+                        continue
+                    body = json.dumps(event, ensure_ascii=False, default=str)
+                    self.wfile.write(f"event: solar-event\ndata: {body}\n\n".encode("utf-8"))
+                now = time.monotonic()
+                if now - last_heartbeat > 15:
+                    self.wfile.write(b": heartbeat\n\n")
+                    last_heartbeat = now
+                self.wfile.flush()
+                time.sleep(1.0)
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            return
+
+    def _send_projection_stream(self, sprint_id: str):
+        """Live projection over SSE: recompute the fast projection on a short cadence and push an
+        `event: projection` message only when its signature changes. The first message is a full
+        snapshot so the client syncs; subsequent messages carry the full fast `data` plus a
+        `changed` delta (node-status transitions, phase/verdict/gate/stall changes). A quiet sprint
+        emits nothing but heartbeats, so this replaces the old refetch-on-every-raw-event storm."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("X-Accel-Buffering", "no")
+        self.end_headers()
+
+        prev_sig: dict | None = None
+        last_heartbeat = 0.0
+        try:
+            while True:
+                data: dict = {}
+                generated_at = ""
+                try:
+                    payload = _orchestration_projection_payload(sprint_id, mode="fast")
+                    data = payload.get("data") or {}
+                    generated_at = payload.get("generated_at") or ""
+                except Exception:
+                    data = {}
+                sig = _projection_signature(data)
+                if sig != prev_sig:
+                    first = prev_sig is None
+                    message = {
+                        "type": "snapshot" if first else "delta",
+                        "sprint_id": sprint_id,
+                        "generated_at": generated_at,
+                        "data": data,
+                        "changed": {} if first else _projection_delta(prev_sig or {}, sig),
+                    }
+                    body = json.dumps(message, ensure_ascii=False, default=str)
+                    self.wfile.write(f"event: projection\ndata: {body}\n\n".encode("utf-8"))
+                    prev_sig = sig
+                now = time.monotonic()
+                if now - last_heartbeat > 15:
+                    self.wfile.write(b": heartbeat\n\n")
+                    last_heartbeat = now
+                self.wfile.flush()
+                time.sleep(1.2)
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            return
 
     def _read_json_body(self) -> dict:
         try:
@@ -12297,35 +13451,52 @@ class StatusHandler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length).decode("utf-8", errors="replace")
         return json.loads(raw or "{}")
 
-    def do_OPTIONS(self):
+    def _cors_preflight(self):
+        # CORS preflight: the dashboard / Electron shell may issue a cross-origin
+        # OPTIONS before a POST. BaseHTTPRequestHandler has no do_OPTIONS, so the
+        # old default was a 501 that broke preflight. Answer 204 + CORS headers.
         self.send_response(204)
-        self._send_cors_headers()
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, HEAD, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Solar-Token")
+        self.send_header("Access-Control-Max-Age", "86400")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def do_OPTIONS(self):
+        self._cors_preflight()
+
+    def do_HEAD(self):
+        # Liveness probes (incl. the desktop shell) may use HEAD. Without a
+        # do_HEAD, BaseHTTPRequestHandler returned 501. Mirror a GET's headers
+        # with no body so probes see 200.
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", "0")
         self.end_headers()
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path.rstrip("/") or "/"
+        if not self._authorized(path):
+            self._send_json({"ok": False, "error": "unauthorized"}, status=403)
+            return
+        # Fail closed: the /api/sprints/<id>/ verdict/eval/handoff routes advance state by sprint_id;
+        # an invalid id must be rejected, not coerced into a path.
+        _m = re.match(r"^/api/sprints/([^/]+)/", path + "/")
+        if _m and not _valid_sprint_id(urllib.parse.unquote(_m.group(1))):
+            self._send_json({"ok": False, "error": "invalid_sprint_id"}, status=400)
+            return
         try:
             data = self._read_json_body()
             if path == "/intake":
-                payload, status = _desktop_intake(data)
-                self._send_json(payload, status=status)
+                payload = _intake_payload(data)
+                self._send_json(payload, status=200 if payload.get("ok") else 400)
             elif path == "/settings":
-                self._send_json(_desktop_settings_update(data))
-            elif path == "/auth/reuse-host-creds":
-                self._send_json({"ok": False, "status": "unavailable", "error": "host credential reuse is not configured"})
-            elif path == "/auth/login":
-                self._send_json({"ok": False, "status": "unavailable", "error": "interactive provider login is not configured"})
-            elif path.startswith("/api/sprints/") and path.endswith("/plan-verdict"):
-                sid = path.split("/api/sprints/", 1)[1].rsplit("/plan-verdict", 1)[0]
-                self._send_json({"ok": True, "status": "accepted", "sprint_id": urllib.parse.unquote(sid), "recorded": False})
-            elif path.startswith("/api/sprints/") and path.endswith("/eval-verdict"):
-                sid = path.split("/api/sprints/", 1)[1].rsplit("/eval-verdict", 1)[0]
-                self._send_json({"ok": True, "status": "accepted", "sprint_id": urllib.parse.unquote(sid), "recorded": False})
-            elif path.startswith("/api/sprints/") and path.endswith("/handoff-submit"):
-                sid = path.split("/api/sprints/", 1)[1].rsplit("/handoff-submit", 1)[0]
-                self._send_json({"ok": True, "status": "queued", "sprint_id": urllib.parse.unquote(sid), "submitted": False})
+                payload, code = _settings_write_payload(data)
+                self._send_json(payload, status=code)
             elif path == "/knowledge/subscriptions/youtube":
                 self._send_json(_append_youtube_subscription(data))
             elif path == "/knowledge/subscriptions/social":
@@ -12350,10 +13521,26 @@ class StatusHandler(BaseHTTPRequestHandler):
                 self._send_json(_ai_influence_youtube_videos_deep_analysis(data))
             elif path == "/ai-influence/youtube-videos/regenerate-daily":
                 self._send_json(_ai_influence_youtube_videos_regenerate_daily(data))
+            elif path == "/auth/login":
+                self._send_json(_auth_login_start(str(data.get("provider", "")).strip()))
+            elif path == "/auth/reuse-host-creds":
+                self._send_json(_auth_reuse_host_creds(str(data.get("provider", "")).strip()))
             elif path == "/api/thunderomlx/start":
                 self._send_json(_start_thunderomlx_from_status())
             elif path == "/api/collector-schedules":
                 self._send_json(_collector_scheduler_update(data))
+            elif re.match(r"^/api/sprints/[^/]+/plan-verdict$", path):
+                sid = urllib.parse.unquote(path.split("/api/sprints/", 1)[1].split("/plan-verdict", 1)[0])
+                payload, status_code = _orchestration_verdict_payload("plan", sid, data)
+                self._send_json(payload, status=status_code)
+            elif re.match(r"^/api/sprints/[^/]+/eval-verdict$", path):
+                sid = urllib.parse.unquote(path.split("/api/sprints/", 1)[1].split("/eval-verdict", 1)[0])
+                payload, status_code = _orchestration_verdict_payload("eval", sid, data)
+                self._send_json(payload, status=status_code)
+            elif re.match(r"^/api/sprints/[^/]+/handoff-submit$", path):
+                sid = urllib.parse.unquote(path.split("/api/sprints/", 1)[1].split("/handoff-submit", 1)[0])
+                payload, status_code = _orchestration_verdict_payload("handoff", sid, data)
+                self._send_json(payload, status=status_code)
             else:
                 self._send_json({"ok": False, "error": "not found"}, status=404)
         except Exception as exc:
@@ -12364,65 +13551,45 @@ class StatusHandler(BaseHTTPRequestHandler):
         params = urllib.parse.parse_qs(parsed.query)
         path = parsed.path.rstrip("/") or "/"
 
-        if path == "/healthz":
+        if not self._authorized(path):
+            self._send_json({"error": "unauthorized"}, status=403)
+            return
+
+        # Fail closed: a PRESENT-but-invalid sprint_id (query param or /api/sprints/<id>/ path) must
+        # not silently fall back to global / another-session data — reject it. (An ABSENT sprint_id
+        # is the legitimate global/home view and passes through.)
+        _scoped = params.get("sprint_id", [""])[0]
+        if not _scoped:
+            _m = re.match(r"^/api/sprints/([^/]+)/", path + "/")
+            if _m:
+                _scoped = urllib.parse.unquote(_m.group(1))
+        if _scoped and not _valid_sprint_id(_scoped):
+            self._send_json({"ok": False, "error": "invalid_sprint_id"}, status=400)
+            return
+
+        if path.startswith("/static/"):
+            asset = _status_server_path("static", path.removeprefix("/static/"))
+            if not asset:
+                self._send_json({"error": "asset not found"}, status=404)
+            else:
+                self._send_file(asset, _static_content_type(asset))
+
+        elif path == "/healthz":
             self._send_text("ok")
 
         elif path == "/runtime-info":
+            # Lightweight runtime identity for the desktop shell / health checks.
+            try:
+                bound_port = self.server.server_address[1]
+            except Exception:
+                bound_port = None
             self._send_json({
                 "ok": True,
                 "pid": os.getpid(),
-                "harness_dir": str(HARNESS_DIR),
-                "python_executable": sys.executable,
-                "python_prefix": sys.prefix,
-                "python_version": sys.version.split()[0],
-                "generated_at": _desktop_generated_at(),
+                "port": bound_port,
+                "bind_host": BIND_HOST,
+                "python": sys.executable,
             })
-
-        elif path == "/sprints":
-            try:
-                limit = int(params.get("limit", ["120"])[0])
-            except ValueError:
-                limit = 120
-            self._send_json(_desktop_sprints_payload(limit=limit))
-
-        elif path.startswith("/sprints/") and path.endswith("/deliverables"):
-            sid = urllib.parse.unquote(path.split("/sprints/", 1)[1].rsplit("/deliverables", 1)[0])
-            requested_path = params.get("path", [""])[0]
-            if requested_path:
-                target = _resolve_open_file(requested_path)
-                if not target:
-                    self._send_json({"ok": False, "status": "error", "error": "deliverable not found or not allowed"}, status=404)
-                else:
-                    content_type = "text/plain; charset=utf-8"
-                    if target.suffix.lower() == ".json":
-                        content_type = "application/json; charset=utf-8"
-                    elif target.suffix.lower() in (".md", ".markdown"):
-                        content_type = "text/markdown; charset=utf-8"
-                    elif target.suffix.lower() in (".html", ".htm"):
-                        content_type = "text/html; charset=utf-8"
-                    self._send_text(target.read_text(encoding="utf-8", errors="replace"), content_type=content_type)
-            else:
-                self._send_json(_desktop_deliverables_payload(sid))
-
-        elif path == "/usage":
-            self._send_json(_desktop_usage_payload())
-
-        elif path == "/settings":
-            self._send_json(_desktop_settings_payload())
-
-        elif path == "/auth/status":
-            self._send_json({"ok": True, "authenticated": False, "providers": {}, "status": "local_only"})
-
-        elif path == "/auth/login/status":
-            self._send_json({"ok": True, "status": "unavailable", "authenticated": False})
-
-        elif path.startswith("/api/sprints/") and path.endswith("/projection"):
-            sid = urllib.parse.unquote(path.split("/api/sprints/", 1)[1].rsplit("/projection", 1)[0])
-            payload = _desktop_projection_payload(sid)
-            if params.get("stream", ["0"])[0].lower() in ("1", "true", "yes"):
-                self._send_sse("projection", [{"type": "snapshot", **payload}])
-            else:
-                self._send_json(payload)
 
         elif path == "/status":
             sprint_id = params.get("sprint_id", [""])[0]
@@ -12443,6 +13610,32 @@ class StatusHandler(BaseHTTPRequestHandler):
         elif path == "/contract-summary":
             self._send_text(_final_contract_summary_html(), content_type="text/html; charset=utf-8")
 
+        elif path == "/orchestration/dashboard":
+            sprint_id = params.get("sprint_id", [""])[0]
+            try:
+                self._send_json(_orchestration_dashboard_payload(sprint_id))
+            except Exception as exc:
+                self._send_json({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"}, status=500)
+
+        elif path == "/orchestration/projection":
+            sprint_id = params.get("sprint_id", [""])[0]
+            mode = params.get("mode", [""])[0] or ("fast" if params.get("fast", ["0"])[0].lower() in ("1", "true", "yes") else "full")
+            try:
+                self._send_json(_orchestration_projection_payload(sprint_id, mode=mode))
+            except Exception as exc:
+                self._send_json({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"}, status=500)
+
+        elif path in {"/sprints", "/api/sprints"}:
+            try:
+                limit = int(params.get("limit", ["80"])[0])
+                limit = max(1, min(limit, 300))
+            except ValueError:
+                limit = 80
+            try:
+                self._send_json(_sprint_index_payload(limit=limit))
+            except Exception as exc:
+                self._send_json({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"}, status=500)
+
         elif path.startswith("/research/"):
             sid = path.split("/research/", 1)[1].strip("/")
             routes_path = HARNESS_DIR / "status-server" / "research_routes.py"
@@ -12459,6 +13652,19 @@ class StatusHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_json({"error": f"{type(exc).__name__}: {exc}", "sid": sid}, status=500)
 
+        elif path == "/usage":
+            refresh = params.get("refresh", ["0"])[0].lower() in ("1", "true", "yes")
+            self._send_json(_usage_payload(refresh=refresh))
+
+        elif path == "/settings":
+            self._send_json(_settings_payload())
+
+        elif path == "/auth/status":
+            self._send_json(_auth_status_payload())
+
+        elif path == "/auth/login/status":
+            self._send_json(_auth_login_status(params.get("provider", [""])[0].strip()))
+
         elif path == "/events":
             sprint_id = params.get("sprint_id", [""])[0]
             try:
@@ -12466,15 +13672,14 @@ class StatusHandler(BaseHTTPRequestHandler):
                 limit = max(1, min(limit, 500))
             except ValueError:
                 limit = 50
-            if sprint_id:
-                src = _runtime_events_path(sprint_id)
+            wants_sse = (
+                params.get("stream", ["0"])[0].lower() in ("1", "true", "yes")
+                or "text/event-stream" in str(self.headers.get("Accept", ""))
+            )
+            if wants_sse:
+                self._send_sse_events(sprint_id, limit)
             else:
-                src = ALL_EVENTS
-            events = _read_jsonl(src, limit=limit, sprint_id="")
-            if params.get("stream", ["0"])[0].lower() in ("1", "true", "yes"):
-                self._send_sse("solar-event", events)
-            else:
-                self._send_json(events)
+                self._send_json(_events_for_request(sprint_id, limit=limit))
 
         elif path == "/integrations":
             refresh = params.get("refresh", ["0"])[0].lower() in ("1", "true", "yes")
@@ -12636,6 +13841,37 @@ class StatusHandler(BaseHTTPRequestHandler):
                     content_type = "text/html; charset=utf-8"
                 self._send_text(target.read_text(encoding="utf-8", errors="ignore"), content_type=content_type)
 
+        elif re.match(r"^/sprints/[^/]+/deliverables$", path):
+            sid = urllib.parse.unquote(path.split("/sprints/", 1)[1].split("/deliverables", 1)[0])
+            raw_artifact = params.get("path", [""])[0]
+            if raw_artifact:
+                target = _resolve_sprint_deliverable(sid, raw_artifact)
+                if not target:
+                    self._send_json({"ok": False, "status": "error", "error": "deliverable not found or not allowed"}, status=404)
+                else:
+                    content_type = _deliverable_content_type(target)
+                    if content_type.startswith("text/") or content_type.startswith("application/json"):
+                        self._send_text(target.read_text(encoding="utf-8", errors="ignore"), content_type=content_type)
+                    else:
+                        self._send_file(target, content_type)
+            else:
+                self._send_json(_sprint_deliverables_payload(sid))
+
+        elif re.match(r"^/api/sprints/[^/]+/projection$", path):
+            sid = urllib.parse.unquote(path.split("/api/sprints/", 1)[1].split("/projection", 1)[0])
+            wants_sse = (
+                params.get("stream", ["0"])[0].lower() in ("1", "true", "yes")
+                or "text/event-stream" in str(self.headers.get("Accept", ""))
+            )
+            if wants_sse:
+                self._send_projection_stream(sid)
+            else:
+                mode = params.get("mode", [""])[0] or ("fast" if params.get("fast", ["0"])[0].lower() in ("1", "true", "yes") else "full")
+                try:
+                    self._send_json(_orchestration_projection_payload(sid, mode=mode))
+                except Exception as exc:
+                    self._send_json({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"}, status=500)
+
         elif path.startswith("/mermaid/assets/"):
             asset = _asset_path(path.removeprefix("/mermaid/assets/"))
             if not asset:
@@ -12671,9 +13907,7 @@ class StatusHandler(BaseHTTPRequestHandler):
                 self._send_json({"status": "no_runs", "benchmark": "terminal-bench@2.0"})
 
         elif path == "/":
-            # _HTML_TEMPLATE is not formatted with str.format(), so collapse the
-            # doubled braces used by earlier template-style escaping.
-            self._send_text(_HTML_TEMPLATE.replace("{{", "{").replace("}}", "}"), content_type="text/html; charset=utf-8")
+            self._send_text(_p0_dashboard_html(), content_type="text/html; charset=utf-8")
 
         else:
             self._send_json({"error": "not found"}, status=404)
@@ -12692,138 +13926,37 @@ def _find_port() -> int:
     raise RuntimeError("No available port in range 8765-8775")
 
 
-def _probe_status_port(port: int, timeout: float = 0.35) -> bool:
-    try:
-        with urllib.request.urlopen(f"http://{BIND_HOST}:{port}/healthz", timeout=timeout) as resp:
-            return resp.status == 200 and resp.read().decode("utf-8", errors="replace").strip() == "ok"
-    except Exception:
-        return False
-
-
-def _first_healthy_status_port() -> int | None:
-    port_file = HARNESS_DIR / "run" / "status-server.port"
-    try:
-        preferred = int(port_file.read_text(encoding="utf-8").strip())
-    except Exception:
-        preferred = 0
-    ports = []
-    if preferred in PORT_RANGE:
-        ports.append(preferred)
-    ports.extend(port for port in PORT_RANGE if port != preferred)
-    for port in ports:
-        if _probe_status_port(port):
-            return port
-    return None
-
-
-def _read_live_status_pid(pid_dir: Path) -> int | None:
-    try:
-        pid = int((pid_dir / "status-server.pid").read_text(encoding="utf-8").strip())
-    except Exception:
-        return None
-    if pid <= 0:
-        return None
-    try:
-        os.kill(pid, 0)
-        return pid
-    except OSError:
-        return None
-
-
-def _write_status_runtime_files(port: int, pid: int | None = None, attached_existing: bool = False) -> None:
-    pid_dir = HARNESS_DIR / "run"
-    pid_dir.mkdir(parents=True, exist_ok=True)
-    if pid is None:
-        pid = _read_live_status_pid(pid_dir)
-    (pid_dir / "status-server.port").write_text(str(port), encoding="utf-8")
-    if pid is not None:
-        (pid_dir / "status-server.pid").write_text(str(pid), encoding="utf-8")
-    _write_json_file(
-        pid_dir / "status-server.state.json",
-        {
-            "pid": pid,
-            "port": port,
-            "harness_dir": str(HARNESS_DIR),
-            "health_url": f"http://{BIND_HOST}:{port}/healthz",
-            "attached_existing": attached_existing,
-            "updated_at": _desktop_generated_at(),
-        },
-    )
-
-
-def _acquire_status_server_lock(pid_dir: Path):
-    import fcntl
-
-    lock_path = pid_dir / "status-server.lock"
-    lock_fh = lock_path.open("a+")
-    try:
-        fcntl.flock(lock_fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        lock_fh.seek(0)
-        lock_fh.truncate()
-        lock_fh.write(f"{os.getpid()}\n")
-        lock_fh.flush()
-        return lock_fh
-    except BlockingIOError:
-        lock_fh.close()
-        return None
-
-
 def main():
-    _reexec_with_project_python()
-    pid_dir = HARNESS_DIR / "run"
-    pid_dir.mkdir(parents=True, exist_ok=True)
-
-    existing_port = _first_healthy_status_port()
-    if existing_port is not None:
-        _write_status_runtime_files(existing_port, attached_existing=True)
-        msg = f"Solar Harness status server already healthy on http://{BIND_HOST}:{existing_port}/"
-        print(msg, flush=True)
-        _desktop_log(msg)
-        return
-
-    lock_fh = _acquire_status_server_lock(pid_dir)
-    if lock_fh is None:
-        for _ in range(80):
-            existing_port = _first_healthy_status_port()
-            if existing_port is not None:
-                _write_status_runtime_files(existing_port, attached_existing=True)
-                msg = f"Solar Harness status server lock holder healthy on http://{BIND_HOST}:{existing_port}/"
-                print(msg, flush=True)
-                _desktop_log(msg)
-                return
-            time.sleep(0.25)
-        raise RuntimeError("status-server lock is held but no healthy runtime appeared")
-
-    existing_port = _first_healthy_status_port()
-    if existing_port is not None:
-        _write_status_runtime_files(existing_port, attached_existing=True)
-        msg = f"Solar Harness status server already healthy on http://{BIND_HOST}:{existing_port}/"
-        print(msg, flush=True)
-        _desktop_log(msg)
-        return
-
     port = _find_port()
     server = ThreadingHTTPServer((BIND_HOST, port), StatusHandler)
     server.daemon_threads = True
-    _write_status_runtime_files(port, pid=os.getpid())
-    print(f"Solar Harness status server listening on http://{BIND_HOST}:{port}/", flush=True)
-    _desktop_log(f"listening on http://{BIND_HOST}:{port}/ pid={os.getpid()} harness={HARNESS_DIR}")
+    # Write port to pidfile directory so clients can discover it
+    pid_dir = HARNESS_DIR / "run"
+    pid_dir.mkdir(parents=True, exist_ok=True)
+    (pid_dir / "status-server.port").write_text(str(port))
+    # Loopback auth token next to the port file so a same-host client (e.g. the desktop's app://
+    # fallback) can read it. 0600 — this user only. Enforced only when bound beyond loopback.
+    token_file = pid_dir / "status-server.token"
+    token_file.write_text(AUTH_TOKEN)
+    try:
+        os.chmod(token_file, 0o600)
+    except OSError:
+        pass
+    # Clients connect over loopback; 0.0.0.0 binds include it, so advertise 127.0.0.1 and note bind.
+    connect_host = "127.0.0.1" if BIND_HOST in ("0.0.0.0", "::") else BIND_HOST
+    bind_note = f" (bind {BIND_HOST})" if BIND_HOST != connect_host else ""
+    print(
+        f"Solar Harness status server listening on http://{connect_host}:{port}/{bind_note}",
+        flush=True,
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
         (pid_dir / "status-server.port").unlink(missing_ok=True)
-        (pid_dir / "status-server.pid").unlink(missing_ok=True)
-        try:
-            lock_fh.close()
-        except Exception:
-            pass
+        (pid_dir / "status-server.token").unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception:
-        _desktop_log(traceback.format_exc())
-        raise
+    main()

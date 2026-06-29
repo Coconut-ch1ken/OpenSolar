@@ -1,42 +1,10 @@
 {
   "version": 1,
   "defaults": {
-    "main_model": "codex-gpt-5.5",
-    "lab_builder_matrix": "codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5"
+    "main_model": "opus",
+    "lab_builder_matrix": "glm,glm,glm,deepseek"
   },
   "models": {
-    "codex-gpt-5.3-spark": {
-      "label": "Codex GPT-5.3 Spark",
-      "short_label": "Codex Spark",
-      "provider": "codex",
-      "model_flag": "--model gpt-5.3-codex-spark",
-      "model_key": "gpt-5.3-codex-spark",
-      "main_allowed": true,
-      "lab_allowed": true,
-      "aliases": [
-        "codex-spark",
-        "gpt-5.3-codex-spark",
-        "gpt53-codex-spark",
-        "gpt53-spark"
-      ]
-    },
-    "codex-gpt-5.5": {
-      "label": "Codex GPT-5.5",
-      "short_label": "Codex 5.5",
-      "provider": "codex",
-      "model_flag": "--model gpt-5.5",
-      "model_key": "gpt-5.5",
-      "main_allowed": true,
-      "lab_allowed": true,
-      "aliases": [
-        "codex",
-        "codex-gpt-5.5",
-        "gpt-5.5",
-        "gpt55",
-        "gpt55-medium",
-        "codex-medium"
-      ]
-    },
     "claude-opus": {
       "label": "Claude Opus 4.8",
       "short_label": "Opus",
@@ -167,14 +135,6 @@
     }
   },
   "matrix_options": [
-    {
-      "value": "codex-spark,codex-spark,codex-spark,codex-spark",
-      "label": "4× Codex GPT-5.3 Spark"
-    },
-    {
-      "value": "codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5",
-      "label": "4× Codex GPT-5.5"
-    },
     {
       "value": "glm,glm,glm,deepseek",
       "label": "3× GLM 5.1 + DeepSeek V4 Pro（当前推荐）"

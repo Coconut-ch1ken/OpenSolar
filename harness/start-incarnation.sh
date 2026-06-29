@@ -17,7 +17,30 @@ done
 
 PERSONA="${1:?Usage: $0 <planner|builder|evaluator> [workdir]}"
 WORK_DIR="${2:-.}"
-HARNESS_DIR="$HOME/.solar/harness"
+HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$HOME/.solar/harness}}"
+export HARNESS_DIR
+
+prepare_harness_cli_path() {
+  local runtime_bin="$HARNESS_DIR/run/bin"
+  local runtime_cli="$runtime_bin/solar-harness"
+  mkdir -p "$runtime_bin" 2>/dev/null || return 0
+  if [[ -f "$HARNESS_DIR/solar-harness.sh" ]]; then
+    [[ -L "$runtime_cli" ]] && rm -f "$runtime_cli"
+    if {
+      printf '%s\n' '#!/usr/bin/env bash'
+      printf 'export HARNESS_DIR=%q\n' "$HARNESS_DIR"
+      printf '%s\n' 'export SOLAR_HARNESS_DIR="${SOLAR_HARNESS_DIR:-$HARNESS_DIR}"'
+      printf 'exec %q "$@"\n' "$HARNESS_DIR/solar-harness.sh"
+    } > "$runtime_cli" 2>/dev/null; then
+      chmod +x "$runtime_cli" 2>/dev/null || true
+    fi
+  fi
+  case ":$PATH:" in
+    *":$runtime_bin:"*) ;;
+    *) export PATH="$runtime_bin:$PATH" ;;
+  esac
+}
+prepare_harness_cli_path
 
 # sprint-20260502-191700 follow-up: --print-config 必须**前置**
 # 旧 bug: 先 [[ -f PERSONA_FILE ]] || exit 1 → "--print-config" 当 PERSONA 找文件失败 → 永远进不到 --print-config 分支
@@ -27,7 +50,7 @@ if [[ "$PERSONA" == "--print-config" ]]; then
   exit $?
 fi
 
-PERSONA_FILE="$HOME/.solar/harness/personas/${PERSONA}.md"
+PERSONA_FILE="$HARNESS_DIR/personas/${PERSONA}.md"
 [[ -f "$PERSONA_FILE" ]] || { echo "ERROR: Persona not found: $PERSONA_FILE"; exit 1; }
 [[ -d "$WORK_DIR" ]] || { echo "ERROR: Dir not found: $WORK_DIR"; exit 1; }
 
@@ -46,11 +69,9 @@ WORKTREE_DIR=""
 ORIGINAL_WORK_DIR="$WORK_DIR"
 if [[ "$PERSONA" == "builder" || "$PERSONA" == "lab-builder" || "$PERSONA" == "second-builder" ]]; then
   source "$HARNESS_DIR/lib/worktree.sh"
-  if solar_builder_worktrees_enabled; then
-    WORKTREE_DIR=$(setup_builder_worktree "$WORK_DIR")
-    if [[ -n "$WORKTREE_DIR" ]]; then
-      WORK_DIR="$WORKTREE_DIR"
-    fi
+  WORKTREE_DIR=$(setup_builder_worktree "$WORK_DIR")
+  if [[ -n "$WORKTREE_DIR" ]]; then
+    WORK_DIR="$WORKTREE_DIR"
   fi
 fi
 

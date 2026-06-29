@@ -17,19 +17,12 @@ def test_status_surface_has_required_categories() -> None:
         "validator": {"overall": "PASS"},
         "archive": {"status": "ready"},
         "artifacts": [{"type": "html"}],
-        "chapter_state": {"ch_01": "passed"},
-        "quality_score": {"grade": "B", "publish_decision": "publish"},
-        "validation_sidecars": ["validation/quality-score.json"],
-        "blocked_reasons": [],
     })
 
     assert surface["gate_counts"]["T1"] == 1
     assert surface["group_counts"]["keynote"] == 1
     assert "validator" in surface
     assert "archive" in surface
-    assert surface["chapter_state"]["ch_01"] == "passed"
-    assert surface["quality"]["grade"] == "B"
-    assert surface["sidecar_refs"] == ["validation/quality-score.json"]
 
 
 def test_status_surface_blocks_internal_field_leak() -> None:

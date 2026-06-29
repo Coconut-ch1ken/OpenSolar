@@ -22,13 +22,16 @@ if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
   exit 1
 fi
 
-HARNESS_DIR="$HOME/.solar/harness"
+HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$HOME/.solar/harness}}"
 SPRINTS_DIR="$HARNESS_DIR/sprints"
+export HARNESS_DIR SPRINTS_DIR
 SESSION_NAME="solar-harness"
 LAB_SESSION_NAME="solar-harness-lab"
 WATCHDOG_PID_FILE="$HARNESS_DIR/.watchdog.pid"
 WATCHDOG_STATE="$HARNESS_DIR/.watchdog-state"
 COORD_PID_FILE="$HARNESS_DIR/.coordinator.pid"
+[[ -f "$HARNESS_DIR/lib/portable.sh" ]] && . "$HARNESS_DIR/lib/portable.sh"
+WATCHDOG_MANAGE_LAB="${SOLAR_WATCHDOG_MANAGE_LAB:-0}"
 
 # 熔断阈值
 MAX_CONSECUTIVE_FAILURES=3
@@ -306,18 +309,23 @@ declare -A PERSONA_PANES=(
   ["$SESSION_NAME:0.1"]="planner"
   ["$SESSION_NAME:0.2"]="builder"
   ["$SESSION_NAME:0.3"]="evaluator"
-  ["$LAB_SESSION_NAME:0.0"]="architect"
-  ["$LAB_SESSION_NAME:0.1"]="lab-builder"
-  ["$LAB_SESSION_NAME:0.2"]="lab-evaluator"
-  ["$LAB_SESSION_NAME:0.3"]="observer"
 )
+if [[ "$WATCHDOG_MANAGE_LAB" == "1" || "$WATCHDOG_MANAGE_LAB" == "true" ]]; then
+  PERSONA_PANES["$LAB_SESSION_NAME:0.0"]="architect"
+  PERSONA_PANES["$LAB_SESSION_NAME:0.1"]="lab-builder"
+  PERSONA_PANES["$LAB_SESSION_NAME:0.2"]="lab-evaluator"
+  PERSONA_PANES["$LAB_SESSION_NAME:0.3"]="observer"
+fi
 
 _load_layout_panes() {
-  local layout="$HOME/.solar/harness/farm-layout.json"
+  local layout="$HARNESS_DIR/farm-layout.json"
   [[ -f "$layout" ]] || return 0
   local target role
   while IFS=$'\t' read -r target role; do
     [[ -z "$target" || -z "$role" ]] && continue
+    if [[ "$target" == "$LAB_SESSION_NAME:"* && "$WATCHDOG_MANAGE_LAB" != "1" && "$WATCHDOG_MANAGE_LAB" != "true" ]]; then
+      continue
+    fi
     PERSONA_PANES["$target"]="$role"
   done < <(python3 -c "
 import json
@@ -341,10 +349,12 @@ ensure_tmux_sessions() {
     missing=1
   fi
 
-  if ! tmux has-session -t "$LAB_SESSION_NAME" &>/dev/null; then
-    warn "tmux session missing: ${LAB_SESSION_NAME}; rebuilding Strategy Lab"
-    TERM=dumb "$HARNESS_DIR/solar-harness.sh" 扩展 "$HOME" >> "$HARNESS_DIR/.watchdog-launchd.log" 2>&1 || true
-    missing=1
+  if [[ "$WATCHDOG_MANAGE_LAB" == "1" || "$WATCHDOG_MANAGE_LAB" == "true" ]]; then
+    if ! tmux has-session -t "$LAB_SESSION_NAME" &>/dev/null; then
+      warn "tmux session missing: ${LAB_SESSION_NAME}; rebuilding Strategy Lab"
+      TERM=dumb "$HARNESS_DIR/solar-harness.sh" 扩展 "$HOME" >> "$HARNESS_DIR/.watchdog-launchd.log" 2>&1 || true
+      missing=1
+    fi
   fi
 
   if (( missing )); then
@@ -471,8 +481,8 @@ check_panes() {
     _esc_w=$(printf '%q' "$_respawn_workdir")
     # sprint-20260502-200424 D2: 用绝对路径 bash + 注入完整 PATH
     # 根因: tmux respawn-pane 不继承用户 shell profile, ~/n/bin/claude 找不到 → exit 127
-    local _restart_bash="/opt/homebrew/bin/bash"
-    [[ -x "$_restart_bash" ]] || _restart_bash="/bin/bash"
+    local _restart_bash
+    _restart_bash=$(resolve_bash4 2>/dev/null || command -v bash 2>/dev/null || echo /bin/bash)
     local _user_path="${PATH}"
     for _p in /opt/homebrew/bin /usr/local/bin "$HOME/n/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/.bun/bin"; do
       [[ -d "$_p" ]] && case ":${_user_path}:" in *":$_p:"*) ;; *) _user_path="$_p:${_user_path}" ;; esac
@@ -552,8 +562,8 @@ launchd_domain() {
 write_launchd_plist() {
   local plist_path="$1"
   local script_path="$HARNESS_DIR/coordinator-watchdog.sh"
-  local bash_path="/opt/homebrew/bin/bash"
-  [[ -x "$bash_path" ]] || bash_path="/bin/bash"
+  local bash_path
+  bash_path=$(resolve_bash4 2>/dev/null || command -v bash 2>/dev/null || echo /bin/bash)
   mkdir -p "$(dirname "$plist_path")"
   cat > "$plist_path" << PLIST_EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -662,7 +672,12 @@ case "${1:-help}" in
       fi
       warn "launchd 启动失败，回退到后台进程模式"
     fi
-    nohup /opt/homebrew/bin/bash "$HARNESS_DIR/coordinator-watchdog.sh" run-daemon >> "$HARNESS_DIR/.watchdog.log" 2>&1 </dev/null &
+    bash_path=$(resolve_bash4 2>/dev/null || command -v bash 2>/dev/null || echo /bin/bash)
+    if command -v setsid >/dev/null 2>&1; then
+      setsid "$bash_path" "$HARNESS_DIR/coordinator-watchdog.sh" run-daemon >> "$HARNESS_DIR/.watchdog.log" 2>&1 </dev/null &
+    else
+      nohup "$bash_path" "$HARNESS_DIR/coordinator-watchdog.sh" run-daemon >> "$HARNESS_DIR/.watchdog.log" 2>&1 </dev/null &
+    fi
     echo $! > "$WATCHDOG_PID_FILE"
     ok "Watchdog 启动完成 (PID: $!)"
     ;;
@@ -826,7 +841,8 @@ case "${1:-help}" in
         if [[ "$current_md5" != "$INIT_MD5" ]]; then
           log "[hot-reload] watchdog md5 changed: ${INIT_MD5} → ${current_md5}, exec restart"
           cleanup_watchdog_pid
-          exec /opt/homebrew/bin/bash "$HARNESS_DIR/coordinator-watchdog.sh" run-daemon
+          bash_path=$(resolve_bash4 2>/dev/null || command -v bash 2>/dev/null || echo /bin/bash)
+          exec "$bash_path" "$HARNESS_DIR/coordinator-watchdog.sh" run-daemon
         fi
       fi
     done

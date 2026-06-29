@@ -5040,3 +5040,44 @@
 - [ ] [2026-06-26T14:17:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
 - [ ] [2026-06-26T14:18:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
 - [ ] [2026-06-26T14:20:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T03:35:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T13:30:11Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness-lab:0.1 (host_role=builder, persona=lab-builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T13:51:02Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness-lab:0.1 (host_role=builder, persona=lab-builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T13:57:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T14:07:47Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness-lab:0.1 (host_role=builder, persona=lab-builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T14:14:52Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness-lab:0.1 (host_role=builder, persona=lab-builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T14:21:57Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness-lab:0.1 (host_role=builder, persona=lab-builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T14:29:05Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness-lab:0.1 (host_role=builder, persona=lab-builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T14:36:21Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness-lab:0.1 (host_role=builder, persona=lab-builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T14:39:36Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T14:44:46Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T16:18:28Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T16:24:43Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T16:30:46Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T16:37:00Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T16:43:14Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T16:49:29Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T16:55:47Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:02:01Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:08:05Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:14:08Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:20:10Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:26:28Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:32:30Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:38:37Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:44:48Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:50:51Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T17:57:01Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T18:03:12Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T18:09:22Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T18:15:35Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T18:21:40Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T18:27:45Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.2 (host_role=builder, persona=builder) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-06-29T18:34:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T18:34:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T18:34:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T20:17:35Z] Sprint PASSED: sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f: startup smoke: can you say hi?
+- [ ] [2026-06-29T20:31:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T20:31:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T20:31:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-06-29T20:32:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild

@@ -28,12 +28,16 @@ from typing import Any
 from prerequisite_resolver import evaluate_prerequisite, iter_blocked
 
 HOME = Path.home()
-HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", HOME / ".solar" / "harness"))
+HARNESS_DIR = Path(
+    os.environ.get("HARNESS_DIR")
+    or os.environ.get("SOLAR_HARNESS_DIR")
+    or HOME / ".solar" / "harness"
+)
 STATE_DB = Path(os.environ.get("HARNESS_STATE_DB", HARNESS_DIR / "run" / "state.db"))
 
 TERMINAL_STATUSES = {"passed", "failed", "skipped", "cancelled", "skipped_parent_passed"}
 ACTIVE_STATUSES = {"assigned", "dispatched", "in_progress", "running", "reviewing"}
-READY_STATUSES = {"pending", "queued", "blocked", "worker_blocked", ""}
+READY_STATUSES = {"pending", "queued", "blocked", "worker_blocked", "failed_review", ""}
 PASS_STATUSES = {"passed"}
 CLOSED_NON_PASS_STATUSES = {"skipped", "cancelled", "skipped_parent_passed"}
 SPRINTS_DIR = Path(os.environ.get("HARNESS_SPRINTS_DIR", HARNESS_DIR / "sprints"))
@@ -159,8 +163,10 @@ LABEL_ALIAS_GROUPS = [
         "schema",
     },
     {
+        "gstack",
         "browser.browse",
         "browser.qa",
+        "code.review",
         "browser",
         "browser-automation",
         "browser.automation",
@@ -170,6 +176,16 @@ LABEL_ALIAS_GROUPS = [
         "scraping",
         "crawler",
         "collector",
+    },
+    {
+        "ATLAS",
+        "atlas",
+        "repair.pr-cot",
+        "failure.structured_repair",
+        "routing.complexity_budget",
+        "debug.systematic",
+        "regression",
+        "regression-tests",
     },
     {
         "social",
@@ -399,11 +415,17 @@ def _status_path_for_graph(graph: dict[str, Any], graph_path: str | Path | None 
 
 
 def _status_has_terminal_evidence(sid: str, status: dict[str, Any] | None = None, graph_path: str | Path | None = None) -> bool:
-    payload = status or {}
-    state = str(payload.get("status", "")).lower()
-    if state in {"passed", "completed", "eval_passed"}:
-        return True
     base_dir = Path(graph_path).expanduser().parent if graph_path else SPRINTS_DIR
+    if (base_dir / f"{sid}.finalized").exists():
+        return True
+    try:
+        closure = json.loads((base_dir / f"{sid}.closure.json").read_text(encoding="utf-8"))
+        if closure.get("all_nodes_passed") and closure.get("all_required_gates_passed"):
+            return True
+    except Exception:
+        pass
+    if graph_path:
+        return False
     handoff = (base_dir / f"{sid}.handoff.md").exists() or any(base_dir.glob(f"{sid}.*-handoff.md"))
     eval_exists = (
         (base_dir / f"{sid}.eval.md").exists()
@@ -1001,9 +1023,51 @@ def _node_has_handoff(graph: dict[str, Any], node_id: str) -> bool:
     return any(path.exists() for path in _node_handoff_candidates(graph, node_id))
 
 
+def _node_has_independent_eval_report(graph: dict[str, Any], node_id: str) -> bool:
+    """True if an INDEPENDENT evaluator reviewed this node -- a non-empty ``{node}-eval.md`` or an
+    ``{node}-eval-dispatch`` sidecar exists (an evaluator other than the executing agent was run)."""
+    for json_path in _node_eval_json_candidates(graph, node_id):
+        name = json_path.name
+        if not name.endswith("-eval.json"):
+            continue
+        stem = name[: -len("-eval.json")]
+        try:
+            md_path = json_path.with_name(f"{stem}-eval.md")
+            if md_path.exists() and md_path.stat().st_size > 0:
+                return True
+            if any(json_path.parent.glob(f"{stem}-eval-dispatch*.md")):
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def _node_eval_is_self_graded(graph: dict[str, Any], node_id: str) -> bool:
+    """The node's verdict was written by the EXECUTING agent itself (generation_mode=manual_node_eval)
+    with no independent evaluator report. A self-graded verdict is not a genuine evaluation and must
+    not certify PASS -- the back-half of a DAG was passing on self-reported JSON with no eval.md (the
+    eval-backfill false-positive vector)."""
+    if _node_has_independent_eval_report(graph, node_id):
+        return False
+    # Gate/verifier nodes verify via a write_scope verdict artifact (e.g. review_decision.yaml) consumed
+    # by _node_gate_verdict_ok, not a per-node eval.md, and produce NO handoff. Only EXECUTOR nodes (which
+    # produce a handoff) are at risk of self-grading their own work; gate nodes are governed by the
+    # verdict-artifact gate, so do not flag them here.
+    if not _node_has_handoff(graph, node_id):
+        return False
+    # The executor produced a handoff AND a verdict (eval.json) but NO independent evaluator report
+    # (no non-empty {node}-eval.md, no {node}-eval-dispatch). The verdict is self-graded/backfilled
+    # regardless of how it was written (generation_mode varies / may be absent) -- not a genuine eval.
+    return _node_has_eval_json(graph, node_id)
+
+
 def _passed_without_required_eval(graph: dict[str, Any], node_id: str) -> bool:
-    """Treat handoff-backed passed nodes without eval sidecar as not yet passed."""
-    return _node_has_handoff(graph, node_id) and not _node_has_eval_json(graph, node_id)
+    """Treat handoff-backed passed nodes without a GENUINE eval as not yet passed (fail-closed)."""
+    if _node_has_handoff(graph, node_id) and not _node_has_eval_json(graph, node_id):
+        return True
+    # Fail-closed on the eval-backfill vector: a self-graded verdict (executing agent wrote its own
+    # manual_node_eval with no independent evaluator report) is NOT a genuine evaluation -> unverified.
+    return _node_eval_is_self_graded(graph, node_id)
 
 
 def _assert_pass_mark_allowed(graph: dict[str, Any], node_id: str, status: str) -> None:
@@ -1334,8 +1398,13 @@ def blocked_external_prerequisites(graph: dict[str, Any]) -> list[dict[str, Any]
 
 def ready_nodes(graph: dict[str, Any]) -> list[dict[str, Any]]:
     validation = validate_graph(graph)
-    if not validation["ok"]:
-        raise ValueError("; ".join(validation["errors"]))
+    runtime_errors = [
+        str(error)
+        for error in validation.get("errors", [])
+        if not str(error).startswith("parallelism_quality:")
+    ]
+    if runtime_errors:
+        raise ValueError("; ".join(runtime_errors))
     if blocked_external_prerequisites(graph):
         return []
 
@@ -1547,6 +1616,54 @@ def _skill_aliases(value: Any) -> set[str]:
     return _label_aliases(value)
 
 
+_REGISTERED_SKILLS_CACHE: set[str] | None = None
+
+
+def _registered_skill_ids() -> set[str]:
+    """Skill IDs defined in the operator-skill registry (skill-operator-bindings.yaml).
+
+    Used to normalize node.required_skills: free-form/unregistered strings the planner
+    invents are unenforceable (no worker advertises them) and would falsely strand nodes.
+    Fail-open: if the registry is unreadable, return empty so normalization is a no-op.
+    """
+    global _REGISTERED_SKILLS_CACHE
+    if _REGISTERED_SKILLS_CACHE is not None:
+        return _REGISTERED_SKILLS_CACHE
+    ids: set[str] = set()
+    try:
+        import yaml  # noqa: WPS433
+        path = HARNESS_DIR / "config" / "skill-operator-bindings.yaml"
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+
+        def _collect(obj: Any) -> None:
+            if isinstance(obj, dict):
+                sid = obj.get("skill_id")
+                if sid:
+                    ids.add(str(sid))
+                for value in obj.values():
+                    _collect(value)
+            elif isinstance(obj, list):
+                for value in obj:
+                    _collect(value)
+
+        _collect(data)
+    except Exception:
+        return set()
+    _REGISTERED_SKILLS_CACHE = ids
+    return ids
+
+
+def _is_registered_skill(skill: str) -> bool:
+    registered = _registered_skill_ids()
+    if not registered:
+        return True  # fail-open: registry unreadable -> do not strip (preserve behavior)
+    aliases = _skill_aliases(skill)
+    for known in registered:
+        if _skill_aliases(known) & aliases:
+            return True
+    return False
+
+
 def _skill_match_count(worker: dict[str, Any], required_skills: list[str]) -> int:
     if not required_skills:
         return 0
@@ -1716,6 +1833,21 @@ def _role_penalty(node_role: str, worker_role: str) -> int | None:
     return compatibility.get(normalized_node, {"builder": 0}).get(normalized_worker)
 
 
+# Capabilities that are PROVISIONED AT DISPATCH rather than advertised by a worker: resource/guard
+# capsule capabilities (graph_node_dispatcher binds resource_binding + guard_decision per node) and
+# eval-asserted compliance (the eval gate enforces scope_compliance). Requiring a worker to advertise
+# these strands capsule-backed implementation/test/verify nodes as no_matching_worker before the
+# binding/eval ever runs. The "resource."/"guard." prefixes are registry-safe (the capability-capsule
+# registry only declares resource/guard caps under those prefixes).
+_DISPATCH_PROVISIONED_CAP_PREFIXES = ("resource.", "guard.")
+_DISPATCH_PROVISIONED_CAPS = frozenset({"scope_compliance"})
+
+
+def _is_dispatch_provisioned_capability(cap: Any) -> bool:
+    c = str(cap or "")
+    return c in _DISPATCH_PROVISIONED_CAPS or c.startswith(_DISPATCH_PROVISIONED_CAP_PREFIXES)
+
+
 def assign_workers(batch_nodes: list[dict[str, Any]], workers: list[dict[str, Any]]) -> dict[str, Any]:
     """Assign one batch to available workers.
 
@@ -1734,8 +1866,22 @@ def assign_workers(batch_nodes: list[dict[str, Any]], workers: list[dict[str, An
         strict_model = bool(node.get("strict_model") or node.get("model_strict"))
         required_skills = [str(s) for s in node.get("required_skills", [])]
         required_capabilities = _capability_list(node)
+        # Layer 0 (dispatch-provisioned): strip resource/guard capsule + eval-asserted caps that are
+        # bound/asserted at dispatch, not advertised by a worker (see _is_dispatch_provisioned_capability).
+        required_capabilities = [c for c in required_capabilities if not _is_dispatch_provisioned_capability(c)]
         node_role = _node_dispatch_role(node)
+        # Layer 1 (normalize): drop required_skills that are not in the operator-skill registry.
+        # The planner emits unbounded free-form skill strings; unregistered ones are
+        # unenforceable (no worker advertises them) and would falsely strand the node forever.
+        required_skills = [s for s in required_skills if _is_registered_skill(s)]
+        # Layer 2 (honest capability floor): an ImplementationWorker node genuinely needs
+        # code_impl. Make the honest hard gate bite (it is otherwise empty for these nodes),
+        # so a real capability gap strands honestly and the Layer-3 relaxed pass stays
+        # capability-gated rather than role-only.
+        if not required_capabilities and str(node.get("logical_operator") or "") == "ImplementationWorker":
+            required_capabilities = ["code_impl"]
         candidates: list[tuple[int, float, int, int, int, str, dict[str, Any]]] = []
+        relaxed_candidates: list[tuple[int, float, int, int, int, str, dict[str, Any]]] = []
         blocked_by_capacity = False
         blocked_by_runtime = False
         runtime_unavailable_reasons: set[str] = set()
@@ -1757,8 +1903,9 @@ def assign_workers(batch_nodes: list[dict[str, Any]], workers: list[dict[str, An
                 missing_skill_union.add(item)
             for item in _missing_capabilities(worker, required_capabilities):
                 missing_cap_union.add(item)
-            if not _skills_match(worker, required_skills, required_capabilities):
-                continue
+            # Capability match is the HONEST hard gate (never relaxed): a worker missing a
+            # required capability is genuinely unqualified and is skipped for BOTH the strict
+            # and the relaxed pass.
             if not _capabilities_match(worker, required_capabilities):
                 continue
             if _worker_quota_exhausted(worker, preferred_model):
@@ -1780,8 +1927,41 @@ def assign_workers(batch_nodes: list[dict[str, Any]], workers: list[dict[str, An
             skill_score = _skill_match_count(worker, required_skills)
             model_penalty = 0 if _model_match(worker, preferred_model) else 10
             load = int(worker.get("load", 0) or 0)
-            candidates.append((role_penalty, -cap_score, -skill_score, model_penalty, load, pane, worker))
+            entry = (role_penalty, -cap_score, -skill_score, model_penalty, load, pane, worker)
+            # Skills are a PREFERENCE, not a hard gate. A worker that clears role + capability +
+            # quota + model + runtime + capacity goes to the strict list if skills match, else to
+            # the relaxed list (Layer 3 safety net) so the node can never permanently strand on
+            # a skill string while a capability-qualified worker is free.
+            if _skills_match(worker, required_skills, required_capabilities):
+                candidates.append(entry)
+            else:
+                relaxed_candidates.append(entry)
 
+        if not candidates and relaxed_candidates:
+            # Layer 3 (liveness net): no worker matched the (possibly drifted/free-form) skill
+            # strings, but capability-qualified role-appropriate workers ARE free. Dispatch to
+            # the best one rather than permanently strand the DAG. Capabilities/role/quota/busy
+            # were already enforced hard above, so this can NOT dispatch to an unqualified worker
+            # (a genuine capability gap has empty relaxed_candidates and still strands honestly).
+            relaxed_candidates.sort(key=lambda item: (item[0], item[1], item[2], item[3], item[4], item[5]))
+            role_rank, cap_rank, skill_rank, _model_penalty, _load, _pane, worker = relaxed_candidates[0]
+            used_panes.add(str(worker.get("pane")))
+            assigned.append({
+                "node": node["id"],
+                "pane": worker.get("pane"),
+                "dispatch_role": node_role,
+                "worker_role": _worker_role(worker),
+                "preferred_model": preferred_model,
+                "selected_models": worker.get("models", []),
+                "fallback_model": not _model_match(worker, preferred_model),
+                "required_capabilities": required_capabilities,
+                "role_penalty": int(role_rank),
+                "capability_score": round(-cap_rank, 3),
+                "skill_match_count": int(-skill_rank),
+                "skills_relaxed": True,
+                "relaxed_unmatched_skills": sorted(missing_skill_union),
+            })
+            continue
         if not candidates:
             if blocked_by_runtime:
                 if len(runtime_unavailable_reasons) == 1:
@@ -1922,6 +2102,73 @@ def assign_ready(graph: dict[str, Any], workers: list[dict[str, Any]],
     return result
 
 
+def _node_gate_verdict_ok(node: dict[str, Any]) -> tuple[bool, str]:
+    """Consume a gate node's domain verdict artifact (verifier / critic).
+
+    A gate must NOT be satisfied merely because its member nodes finished
+    executing: a verifier/critic node is marked ``passed`` when it RAN
+    correctly, regardless of whether its machine verdict approved or blocked.
+    This reads the verdict artifact declared in the node's ``write_scope`` and
+    returns ``(False, detail)`` when that verdict is FAIL/block.
+
+    Fail-CLOSED: if a node declares a verdict artifact but it is missing or
+    unparseable, the verdict is treated as NOT ok. Nodes that declare no verdict
+    artifact return ``(True, ...)`` — nothing to consume, they pass on completion.
+    """
+    write_scope = node.get("write_scope") or []
+    if isinstance(write_scope, str):
+        write_scope = [write_scope]
+    for entry in write_scope:
+        name = Path(str(entry)).name
+        if not name:
+            continue
+        path = SPRINTS_DIR / name
+        # Verifier decision: strict allowlist, matching verification_gate.py policy.
+        if name.endswith("verifier_decision.json"):
+            try:
+                decision = str(json.loads(path.read_text(encoding="utf-8")).get("decision", "")).strip().lower()
+            except Exception as exc:  # missing / unparseable -> fail-closed
+                return False, f"verifier_decision_unreadable:{name}:{type(exc).__name__}"
+            if decision not in {"pass", "passed", "approved", "ok"}:
+                return False, f"verifier_decision={decision or 'missing'}"
+        # Critic gate: block on explicit negative tokens (avoid false-negatives on unknown pass tokens).
+        elif name.endswith("contradictions.jsonl"):
+            decision = None
+            try:
+                for line in path.read_text(encoding="utf-8").splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    obj = json.loads(line)
+                    if str(obj.get("type") or "") == "gate_verdict":
+                        decision = str(obj.get("gate_decision") or "").strip().lower()
+                        break
+            except Exception as exc:  # missing / unparseable -> fail-closed
+                return False, f"contradictions_unreadable:{name}:{type(exc).__name__}"
+            if decision is None:
+                return False, f"critic_gate_verdict_missing:{name}"
+            if decision in {"block", "blocked", "fail", "failed", "reject", "rejected"}:
+                return False, f"critic_gate_decision={decision}"
+    return True, "verdict_ok"
+
+
+def _gate_verdicts_ok(graph: dict[str, Any], gate_node_ids: list[str]) -> tuple[bool, str, str]:
+    """Aggregate verdict-consumption across a gate's member nodes.
+
+    Returns ``(ok, blocking_node_id, detail)``. A gate is verdict-ok only when
+    every member node that emits a verifier/critic verdict approved.
+    """
+    ids = _node_map(graph)
+    for node_id in gate_node_ids:
+        node = ids.get(node_id)
+        if not isinstance(node, dict):
+            continue
+        ok, detail = _node_gate_verdict_ok(node)
+        if not ok:
+            return False, node_id, detail
+    return True, "", "verdict_ok"
+
+
 def mark_node_result(graph: dict[str, Any], node_id: str, status: str,
                      gate_status: str | None = None, note: str | None = None) -> dict[str, Any]:
     _ensure_required_gate_node_mapping(graph)
@@ -1967,7 +2214,19 @@ def mark_node_result(graph: dict[str, Any], node_id: str, status: str,
                 "updated_at": updated_at,
             }
         else:
-            graph["gate_results"][gate] = {"status": "passed", "node": node_id, "updated_at": updated_at}
+            verdicts_ok, blocking_node, verdict_detail = _gate_verdicts_ok(
+                graph, [str(n.get("id") or "") for n in gate_nodes]
+            )
+            if verdicts_ok:
+                graph["gate_results"][gate] = {"status": "passed", "node": node_id, "updated_at": updated_at}
+            else:
+                # member nodes all executed, but a verifier/critic verdict is FAIL/block.
+                graph["gate_results"][gate] = {
+                    "status": "blocked",
+                    "node": blocking_node,
+                    "reason": f"gate_verdict_block:{verdict_detail}",
+                    "updated_at": updated_at,
+                }
 
     if str(status or "").lower() in {"passed", "failed", "reviewing"}:
         _sync_node_evidence_refs(
@@ -2262,8 +2521,19 @@ def parent_ready_check(graph: dict[str, Any]) -> dict[str, Any]:
     for gate in required_gates:
         gate_nodes = [node_id for node_id, node in ids.items() if str(node.get("gate") or "") == gate]
         if gate_nodes and all(node_status(graph, node_id) in PASS_STATUSES for node_id in gate_nodes):
+            verdicts_ok, blocking_node, verdict_detail = _gate_verdicts_ok(graph, gate_nodes)
             current_gate = gate_results.get(gate)
-            if not isinstance(current_gate, dict) or current_gate.get("status") != "passed":
+            if not verdicts_ok:
+                # All member nodes executed, but a verifier/critic verdict is FAIL/block:
+                # consume verdict CONTENT, not just node completion -> do NOT self-heal to passed.
+                if not isinstance(current_gate, dict) or current_gate.get("status") != "blocked":
+                    graph["gate_results"][gate] = {
+                        "status": "blocked",
+                        "node": blocking_node,
+                        "updated_at": _now(),
+                        "reason": f"gate_verdict_block:{verdict_detail}",
+                    }
+            elif not isinstance(current_gate, dict) or current_gate.get("status") != "passed":
                 graph["gate_results"][gate] = {
                     "status": "passed",
                     "node": gate_nodes[-1],
@@ -2553,6 +2823,23 @@ def _normalize_worker_entry(worker: dict[str, Any]) -> dict[str, Any]:
     if pane and not normalized.get("pane"):
         normalized["pane"] = pane
     role = str(normalized.get("role") or "").lower()
+    if role == "planner" and not normalized.get("skills"):
+        normalized["skills"] = [
+            "workflow.planning",
+            "browser.qa",
+            "debug.systematic",
+            "skill.methodology",
+        ]
+    if role == "planner" and not normalized.get("capabilities"):
+        normalized["capabilities"] = [
+            "harness.context_preflight",
+            "harness.dispatch_visibility",
+            "harness.dag",
+            "artifact.requirement_trace",
+            "browser.browse",
+            "code.review",
+            "test.tdd",
+        ]
     if (role in {"builder", "lab", "lab-builder", "evaluator"} or "harness-lab" in pane) and not normalized.get("skills"):
         normalized["skills"] = [
             "bash",

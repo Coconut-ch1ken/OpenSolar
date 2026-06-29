@@ -36,7 +36,11 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 HOME = Path.home()
-HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", HOME / ".solar" / "harness"))
+HARNESS_DIR = Path(
+    os.environ.get("HARNESS_DIR")
+    or os.environ.get("SOLAR_HARNESS_DIR")
+    or HOME / ".solar" / "harness"
+)
 PHYSICAL_OPERATORS_PATH = Path(
     os.environ.get("SOLAR_MULTI_TASK_OPERATORS", HARNESS_DIR / "config" / "physical-operators.json")
 )
@@ -87,7 +91,6 @@ CODE_EXEC_TASK_TYPES = {
 }
 CODE_EXEC_ROLES = {"builder", "implementation", "implementer", "coder", "dev"}
 CODE_EXEC_AVOID_MARKERS = {"implementation", "code-edit", "repo-modification"}
-CODEX_FIRST_ROUTING_BOOST = int(os.environ.get("SOLAR_CODEX_FIRST_ROUTING_BOOST", "80") or "80")
 BUILDER_READY_LOGICAL_OPERATORS = {
     "ImplementationWorker",
     "PatchWorker",
@@ -108,32 +111,6 @@ NON_BUILDER_READY_LOGICAL_OPERATORS = {
     "SecurityGate",
     "QuotaBroker",
 }
-
-
-def codex_first_routing_enabled() -> bool:
-    return os.environ.get("SOLAR_CODEX_FIRST_ROUTING", "1").strip().lower() not in {"0", "false", "off", "no"}
-
-
-def _operator_is_codex(op: dict[str, Any], op_id: str = "") -> bool:
-    values: list[str] = [
-        op_id,
-        str(op.get("operator_id") or ""),
-        str(op.get("actor_id") or ""),
-        str(op.get("profile") or ""),
-        str(op.get("provider") or ""),
-        str(op.get("vendor") or ""),
-        str(op.get("model") or ""),
-        str(op.get("model_config") or ""),
-        str(op.get("base_url") or ""),
-        str(op.get("backend") or ""),
-    ]
-    for key in ("preferred_for", "task_classes", "roles", "strengths"):
-        raw = op.get(key) or []
-        if isinstance(raw, str):
-            values.append(raw)
-        else:
-            values.extend(str(item) for item in raw)
-    return "codex" in " ".join(values).lower()
 
 
 def _load_concurrency_policy_module() -> Any | None:
@@ -482,6 +459,32 @@ def _write_health_cache(operator_id: str, ok: bool, reason: str) -> None:
     os.replace(tmp, str(path))
 
 
+def _operator_uses_codex(op: dict[str, Any]) -> bool:
+    haystack = " ".join(
+        str(op.get(key) or "")
+        for key in ("operator_id", "provider", "vendor", "backend", "base_url", "model", "model_config", "command", "command_path")
+    ).lower()
+    return "codex" in haystack or ("openai" in haystack and "gpt" in haystack)
+
+
+def _command_path_available(command_path: str, op: dict[str, Any]) -> tuple[bool, str]:
+    command_path = str(command_path or "").strip()
+    if not command_path:
+        return False, "command_path_missing:N/A"
+    if command_path.startswith("/"):
+        if Path(command_path).exists():
+            return True, ""
+    elif shutil.which(command_path) is not None:
+        return True, ""
+
+    name = Path(command_path).name
+    if name == "codex" and _operator_uses_codex(op):
+        resolved = shutil.which("codex")
+        if resolved:
+            return True, f"command_path_resolved_via_path:{resolved}"
+    return False, f"command_path_missing:{command_path}"
+
+
 def _operator_external_health(op: dict[str, Any]) -> tuple[bool, str]:
     """Check declared command/http health for pool members without hard failing legacy operators."""
     operator_id = str(op.get("operator_id") or "")
@@ -489,8 +492,7 @@ def _operator_external_health(op: dict[str, Any]) -> tuple[bool, str]:
     if not health:
         command_path = str(op.get("command_path") or "").strip()
         if command_path:
-            exists = Path(command_path).exists() if command_path.startswith("/") else shutil.which(command_path) is not None
-            return (True, "") if exists else (False, f"command_path_missing:{command_path}")
+            return _command_path_available(command_path, op)
         return True, ""
 
     policy_mod = _load_concurrency_policy_module()
@@ -501,7 +503,15 @@ def _operator_external_health(op: dict[str, Any]) -> tuple[bool, str]:
         cache_seconds = 60
     cached_ok, cached_reason = _read_health_cache(operator_id, cache_seconds)
     if cached_ok is not None:
-        return cached_ok, cached_reason
+        command_path = str(health.get("command_path") or op.get("command_path") or "").strip()
+        if (
+            not cached_ok
+            and cached_reason.startswith("command_path_missing:")
+            and _command_path_available(command_path, op)[0]
+        ):
+            cached_ok = None
+        else:
+            return cached_ok, cached_reason
 
     kind = str(health.get("type") or "").strip().lower()
     timeout = float(health.get("timeout_seconds", 0.5))
@@ -521,8 +531,7 @@ def _operator_external_health(op: dict[str, Any]) -> tuple[bool, str]:
                 result = (False, f"http_unreachable:{type(exc).__name__}")
     elif kind == "command":
         command_path = str(health.get("command_path") or op.get("command_path") or "").strip()
-        exists = Path(command_path).exists() if command_path.startswith("/") else shutil.which(command_path) is not None
-        result = ((True, "") if exists else (False, f"command_path_missing:{command_path or 'N/A'}"))
+        result = _command_path_available(command_path, op)
     else:
         result = (True, "")
 
@@ -796,8 +805,6 @@ def _operator_priority(
         priority += 20
     if default_profile and (op_id == default_profile or str(op.get("profile", "")) == default_profile):
         priority += 8
-    if codex_first_routing_enabled() and _operator_is_codex(op, op_id):
-        priority += CODEX_FIRST_ROUTING_BOOST
 
     if spillover_spec and policy_mod:
         group = policy_mod.infer_builder_group(op)
@@ -808,12 +815,6 @@ def _operator_priority(
             else:
                 priority -= 10
     return priority
-
-
-def _operator_candidate_sort_key(item: tuple[int, str, dict[str, Any]]) -> tuple[int, int, str]:
-    priority, op_id, op = item
-    codex_rank = 1 if codex_first_routing_enabled() and _operator_is_codex(op, op_id) else 0
-    return codex_rank, priority, op_id
 
 
 def _role_spillover_candidates(
@@ -984,7 +985,7 @@ def select_operator_by_role(
                 spillover_spec=spillover_spec,
             )
             if spillover_candidates:
-                spillover_candidates.sort(key=_operator_candidate_sort_key, reverse=True)
+                spillover_candidates.sort(key=lambda x: -x[0])
                 _, best_id, best_op = spillover_candidates[0]
                 return best_id, best_op, ""
             if spillover_reason:
@@ -993,7 +994,7 @@ def select_operator_by_role(
             return "", {}, f"no_dispatchable_operator_for_role: {norm_role}; builder_pool_depleted"
         return "", {}, f"no_dispatchable_operator_for_role: {norm_role}"
 
-    candidates.sort(key=_operator_candidate_sort_key, reverse=True)
+    candidates.sort(key=lambda x: -x[0])
     _, best_id, best_op = candidates[0]
     return best_id, best_op, ""
 

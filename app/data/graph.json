@@ -10,7 +10,7 @@
       "target": "ideas/idea-001.md"
     }
   ],
-  "generated_at": "2026-06-25T21:16:54.468229Z",
+  "generated_at": "2026-06-29T17:57:31.270666Z",
   "nodes": [
     {
       "group": "ideas",
@@ -26,5 +26,5 @@
     }
   ],
   "schema": "autosci_web_graph.v1",
-  "wiki_root": "/private/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/pytest-of-jamesyuan/pytest-150/test_autosci_web_visualization0/wiki"
+  "wiki_root": "/private/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/pytest-of-jamesyuan/pytest-43/test_autosci_web_visualization0/wiki"
 }
