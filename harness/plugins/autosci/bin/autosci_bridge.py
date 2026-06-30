@@ -4608,6 +4608,7 @@ def _source_candidate_wiki_fan_in(
                     "applied": True,
                     "wiki_root": _rel(wiki_root),
                     "written_count": len(written_pages),
+                    "ingest_completed": True,
                     "written_pages": written_pages,
                     "log_path": _rel(log_path),
                     "edge_paths": _unique_strings([_rel(path) for path in edge_paths]),
@@ -4627,6 +4628,7 @@ def _source_candidate_wiki_fan_in(
 
     write["status"] = status
     write["applied"] = status == "completed"
+    write["ingest_completed"] = status == "completed"
     write["written_count"] = len(write.get("written_pages") or [])
     evidence = {
         "schema": "source_fan_in_writeback.v1",

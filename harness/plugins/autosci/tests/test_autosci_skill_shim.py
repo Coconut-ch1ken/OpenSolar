@@ -1229,7 +1229,7 @@ def test_autosci_skill_shim_research_scheduler_strict_workflow_config_alignment_
         "shim-research-scheduler-strict-config",
     )
 
-    assert proc.returncode == 0, proc.stderr
+    assert proc.returncode == 2, proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["status"] == "failed"
     assert summary["scheduler_lifecycle_status"] == "failed"
@@ -1257,7 +1257,7 @@ def test_autosci_skill_shim_research_scheduler_strict_production_dispatch_fails(
         "shim-research-scheduler-production-boundary",
     )
 
-    assert proc.returncode == 0, proc.stderr
+    assert proc.returncode == 2, proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["status"] == "failed"
     assert summary["scheduler_lifecycle_status"] == "failed"
@@ -1571,7 +1571,7 @@ def test_autosci_skill_shim_research_scheduler_executes_approved_experiment_comm
     assert "fixture result collected" not in "\n".join(result["logs"]).lower()
 
 
-def test_autosci_skill_shim_research_scheduler_executes_approved_publication_compile(tmp_path: Path) -> None:
+def test_autosci_skill_shim_research_scheduler_records_truthful_legacy_publication_compile_boundary(tmp_path: Path) -> None:
     external_dir = tmp_path / "external-publication-compile"
     external_dir.mkdir()
     review_llm_path = external_dir / "review_llm_artifact_review.json"
@@ -1660,23 +1660,35 @@ def test_autosci_skill_shim_research_scheduler_executes_approved_publication_com
         extra_env={"PATH": f"{fake_bin}{os.pathsep}{os.environ.get('PATH', '')}"},
     )
 
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.returncode == 2, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
-    assert summary["scheduler_lifecycle_status"] == "passed"
-    assert summary["scheduler_lifecycle_node_count"] == 20
-    assert summary["scheduler_workflow_config_alignment_status"] == "aligned"
-    assert summary["scheduler_workflow_config_alignment_ok"] is True
-    assert summary["scheduler_workflow_config_alignment_issues"] == []
+    assert summary["status"] == "failed"
+    assert summary["scheduler_lifecycle_status"] == "failed"
+    assert summary["scheduler_lifecycle_node_count"] == 14
+    assert summary["scheduler_workflow_config_alignment_status"] == "drift"
+    assert summary["scheduler_workflow_config_alignment_ok"] is False
+    assert "configured_nodes_not_required_by_run" in summary["scheduler_workflow_config_alignment_issues"]
+    assert summary["scheduler_dispatch_boundary_status"] == "bounded_smoke"
+    assert summary["scheduler_dispatch_boundary_production_ready"] is False
     scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
-    assert scheduler_summary["workflow_config_alignment"]["status"] == "aligned"
-    compile_evidence = json.loads((tmp_path / scheduler_summary["node_results"]["publication_produce"]["artifact_path"]).read_text(encoding="utf-8"))
-    assert compile_evidence["status"] == "completed"
-    bundle_files = compile_evidence["outputs"]["bundle"]["files"]
-    assert any(item["type"] == "compiled_pdf" and item["path"].endswith("main.pdf") for item in bundle_files)
-    assert any(item["type"] == "compile_runtime_evidence_json" for item in bundle_files)
-    checklist_path = next(item["path"] for item in bundle_files if item["type"] == "paper_compile_checklist_json")
-    checklist = json.loads((tmp_path / checklist_path).read_text(encoding="utf-8"))
-    assert checklist["runtime_semantic"]["verified"] is True
+    assert scheduler_summary["workflow_config_alignment"]["status"] == "drift"
+    report_plan_summary = scheduler_summary["node_summaries"]["report_plan"]
+    assert report_plan_summary["bridge_result"]["status"] == "inconclusive"
+    assert report_plan_summary["gate_result"]["status"] == "inconclusive"
+    report_plan_evidence = json.loads((tmp_path / report_plan_summary["evidence_path"]).read_text(encoding="utf-8"))
+    compile_handoff = report_plan_evidence["outputs"]["report"]["compile_handoff"]
+    assert compile_handoff["status"] == "completed"
+    assert compile_handoff["semantic_runtime"]["verified"] is True
+    assert compile_handoff["executor_result"]["executed"] is True
+    assert any(path.endswith("main.pdf") for path in compile_handoff["pdf_paths"])
+    boundary_artifact = next(
+        artifact
+        for artifact in report_plan_evidence["artifacts"]
+        if artifact["type"] == "paper_plan_final_acceptance_boundary_json"
+    )
+    boundary = json.loads((tmp_path / boundary_artifact["path"]).read_text(encoding="utf-8"))
+    assert boundary["final_plan_accepted"] is False
+    assert "validated idea graph with succeeded experiment evidence is missing" in boundary["blocking_reasons"]
 
 
 def test_autosci_skill_shim_accepts_exp_run_native_options_without_fixture_fallback(tmp_path: Path) -> None:
@@ -1690,7 +1702,7 @@ def test_autosci_skill_shim_accepts_exp_run_native_options_without_fixture_fallb
         "--run-id",
         "shim-exp-run-native",
     )
-    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["skill"] == "exp-run"
     assert summary["execution_status"] == "gated"
@@ -1727,7 +1739,7 @@ def test_autosci_skill_shim_exp_run_full_routes_deploy_and_collect_actions(tmp_p
         "--run-id",
         "shim-exp-run-full-native",
     )
-    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["skill"] == "exp-run"
     assert summary["execution_status"] == "gated"
@@ -2264,7 +2276,8 @@ def test_autosci_skill_shim_exp_run_executes_approved_native_command(tmp_path: P
 
     payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
     action = next(action for action in payload["outputs"]["skill_run"]["actions"] if action["action"] == "run_experiment")
-    assert action["status"] == "schema_only"
+    assert action["status"] == "passed"
+    assert action["gate_status"] == "passed"
     result = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
     experiment_result = result["outputs"]["result"]
     assert result["status"] == "completed"
@@ -7221,7 +7234,10 @@ def test_autosci_skill_shim_uses_semantic_runtime_evidence_for_gated_results(tmp
             encoding="utf-8",
         )
         before.write_text(json.dumps({"before": prefix}), encoding="utf-8")
-        after.write_text(json.dumps({"after": prefix}) if after.suffix != ".pdf" else "%PDF-1.4\n", encoding="utf-8")
+        if after.suffix == ".pdf":
+            after.write_bytes(MINIMAL_STRUCTURAL_PDF)
+        else:
+            after.write_text(json.dumps({"after": prefix}), encoding="utf-8")
         return allowlist, runtime, before, after
 
     allowlist, runtime, before, after = contract_files(
