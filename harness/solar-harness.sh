@@ -3155,9 +3155,13 @@ do_autosci_command() {
     err "AutoSci shim not found: $HARNESS_DIR/plugins/autosci/bin/autosci_skill_shim.py"
     exit 1
   fi
+  export HARNESS_DIR
+  export SOLAR_AUTOSCI_OUTPUT_HARNESS="${SOLAR_AUTOSCI_OUTPUT_HARNESS:-$HARNESS_DIR}"
+  export AUTOSCI_ARTIFACT_ROOT="${AUTOSCI_ARTIFACT_ROOT:-$HARNESS_DIR/artifacts/autosci}"
+  export SCIENTIFIC_ARTIFACT_ROOT="${SCIENTIFIC_ARTIFACT_ROOT:-$HARNESS_DIR/artifacts/scientific}"
 
   py=""
-  for candidate in "$script_harness_dir/bin/python3" "$HARNESS_DIR/bin/python3" python3; do
+  for candidate in "$HARNESS_DIR/bin/python3" "$script_harness_dir/bin/python3" python3; do
     if [[ "$candidate" == "python3" ]]; then
       command -v python3 >/dev/null 2>&1 || continue
     elif [[ ! -x "$candidate" ]]; then

@@ -12,7 +12,10 @@ from typing import Any
 
 REPO_HARNESS = Path(__file__).resolve().parents[3]
 REPO_ROOT = REPO_HARNESS.parent
-OUTPUT_HARNESS = Path(os.environ.get("HARNESS_DIR", REPO_HARNESS)).resolve()
+OUTPUT_HARNESS = Path(
+    os.environ.get("SOLAR_AUTOSCI_OUTPUT_HARNESS")
+    or os.environ.get("HARNESS_DIR", REPO_HARNESS)
+).resolve()
 CONFIG_PATH = REPO_HARNESS / "plugins" / "autosci" / "config" / "feature_parity_routes.v1.json"
 DEFAULT_AUTOSCI_REPO = REPO_ROOT.parent / "AutoSci"
 SCHEMA = "autosci_feature_parity.v1"

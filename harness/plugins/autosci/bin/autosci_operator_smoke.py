@@ -12,7 +12,10 @@ from pathlib import Path
 from typing import Any
 
 REPO_HARNESS = Path(__file__).resolve().parents[3]
-OUTPUT_HARNESS = Path(os.environ.get("HARNESS_DIR", REPO_HARNESS)).resolve()
+OUTPUT_HARNESS = Path(
+    os.environ.get("SOLAR_AUTOSCI_OUTPUT_HARNESS")
+    or os.environ.get("HARNESS_DIR", REPO_HARNESS)
+).resolve()
 BRIDGE = REPO_HARNESS / "plugins" / "autosci" / "bin" / "autosci_bridge.py"
 ROUTE_CONFIG = REPO_HARNESS / "plugins" / "autosci" / "config" / "feature_parity_routes.v1.json"
 BINDING_CONFIG = REPO_HARNESS / "plugins" / "autosci" / "config" / "feature_operator_bindings.v1.json"
@@ -550,6 +553,7 @@ def run_gate(schema: str, evidence_path: Path) -> dict[str, Any]:
     gate_path = REPO_HARNESS / "evaluators" / "scientific" / gate_name
     env = dict(os.environ)
     env["HARNESS_DIR"] = str(OUTPUT_HARNESS)
+    env["SOLAR_AUTOSCI_OUTPUT_HARNESS"] = str(OUTPUT_HARNESS)
     proc = subprocess.run(
         [sys.executable, str(gate_path), str(evidence_path)],
         cwd=REPO_HARNESS,
@@ -578,6 +582,7 @@ def run_bridge_action(action: str, envelope: dict[str, Any], envelope_path: Path
     write_json(envelope_path, envelope)
     env = dict(os.environ)
     env["HARNESS_DIR"] = str(OUTPUT_HARNESS)
+    env["SOLAR_AUTOSCI_OUTPUT_HARNESS"] = str(OUTPUT_HARNESS)
     proc = subprocess.run(
         [sys.executable, str(BRIDGE), "run", "--action", action, "--envelope", str(envelope_path)],
         cwd=REPO_HARNESS,

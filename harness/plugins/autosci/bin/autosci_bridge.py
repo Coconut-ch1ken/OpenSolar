@@ -18,7 +18,10 @@ from pathlib import Path
 from typing import Any, Callable
 
 PLUGIN_DIR = Path(__file__).resolve().parents[1]
-HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", Path(__file__).resolve().parents[3])).resolve()
+HARNESS_DIR = Path(
+    os.environ.get("SOLAR_AUTOSCI_OUTPUT_HARNESS")
+    or os.environ.get("HARNESS_DIR", Path(__file__).resolve().parents[3])
+).resolve()
 REPO_HARNESS_DIR = Path(__file__).resolve().parents[3]
 if str(REPO_HARNESS_DIR) not in sys.path:
     sys.path.insert(0, str(REPO_HARNESS_DIR))

@@ -37,7 +37,22 @@ from autosci_operator_smoke import (  # noqa: E402
 from autosci_workspace_projector import project_run_to_workspace  # noqa: E402
 
 REPO_HARNESS = Path(__file__).resolve().parents[3]
-OUTPUT_HARNESS = Path(os.environ.get("HARNESS_DIR", REPO_HARNESS)).resolve()
+OUTPUT_HARNESS = Path(
+    os.environ.get("SOLAR_AUTOSCI_OUTPUT_HARNESS")
+    or os.environ.get("HARNESS_DIR", REPO_HARNESS)
+).resolve()
+AUTOSCI_ARTIFACT_ROOT = Path(
+    os.environ.get("AUTOSCI_ARTIFACT_ROOT", OUTPUT_HARNESS / "artifacts" / "autosci")
+).expanduser()
+if not AUTOSCI_ARTIFACT_ROOT.is_absolute():
+    AUTOSCI_ARTIFACT_ROOT = OUTPUT_HARNESS / AUTOSCI_ARTIFACT_ROOT
+AUTOSCI_ARTIFACT_ROOT = AUTOSCI_ARTIFACT_ROOT.resolve()
+SCIENTIFIC_ARTIFACT_ROOT = Path(
+    os.environ.get("SCIENTIFIC_ARTIFACT_ROOT", OUTPUT_HARNESS / "artifacts" / "scientific")
+).expanduser()
+if not SCIENTIFIC_ARTIFACT_ROOT.is_absolute():
+    SCIENTIFIC_ARTIFACT_ROOT = OUTPUT_HARNESS / SCIENTIFIC_ARTIFACT_ROOT
+SCIENTIFIC_ARTIFACT_ROOT = SCIENTIFIC_ARTIFACT_ROOT.resolve()
 SCHEMA = "autosci_skill_run.v1"
 
 ACTION_DEPS: dict[str, list[str]] = {
@@ -373,6 +388,9 @@ def run_research_scheduler_lifecycle(args: argparse.Namespace, *, run_id: str, w
             for path in args.after_artifact or []:
                 command.extend(["--source-after-artifact", str(path)])
     else:
+        scientific_run_dir = SCIENTIFIC_ARTIFACT_ROOT / "workflow-runs" / job_id
+        scientific_run_rel = output_rel(scientific_run_dir)
+        summary_rel = Path(scientific_run_rel) / "scientific_lifecycle_runtime.json"
         command = [
             sys.executable,
             str(REPO_HARNESS / "tools" / "run_scientific_workflow.py"),
@@ -425,6 +443,7 @@ def run_research_scheduler_lifecycle(args: argparse.Namespace, *, run_id: str, w
 
     env = dict(os.environ)
     env["HARNESS_DIR"] = str(OUTPUT_HARNESS)
+    env["SOLAR_AUTOSCI_OUTPUT_HARNESS"] = str(OUTPUT_HARNESS)
     env.setdefault("SOLAR_OPERATORD_ONCE_MAX_WAIT_SECONDS", str(max(1, int(float(args.scheduler_timeout or 30.0)))))
     proc = subprocess.run(
         command,
@@ -1129,8 +1148,13 @@ def build_payload(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
     route = routes.get(skill)
     binding = bindings.get(skill)
     run_id = args.run_id or stable_run_id(skill, args)
-    work_dir = (args.work_dir or f"artifacts/autosci/runs/{run_id}").strip("/")
-    out_path = OUTPUT_HARNESS / work_dir / "autosci_skill_run.json"
+    if args.work_dir:
+        work_dir = args.work_dir.strip("/")
+        out_path = OUTPUT_HARNESS / work_dir / "autosci_skill_run.json"
+    else:
+        run_dir = AUTOSCI_ARTIFACT_ROOT / "runs" / run_id
+        work_dir = output_rel(run_dir)
+        out_path = run_dir / "autosci_skill_run.json"
 
     if not route:
         payload = {
@@ -1475,7 +1499,11 @@ def cmd_run_skill(args: argparse.Namespace) -> int:
     skill_run = payload["outputs"]["skill_run"]
     workspace_summary: dict[str, Any] | None = None
     if payload["status"] != "failed" and skill_run["action_count"] > 0:
-        workspace_summary = project_run_to_workspace(out_path, output_harness=OUTPUT_HARNESS)
+        workspace_summary = project_run_to_workspace(
+            out_path,
+            output_harness=OUTPUT_HARNESS,
+            workspace_rel=output_rel(AUTOSCI_ARTIFACT_ROOT / "workspace"),
+        )
         skill_run["workspace"] = workspace_summary
         for path in workspace_summary.get("updated_paths", []):
             payload["artifacts"].append({"type": "human_workspace", "path": str(path)})

@@ -75,6 +75,14 @@ def _resolve_harness_path(root: Path, raw: str | Path) -> Path:
     return path if path.is_absolute() else root / path
 
 
+def _artifact_root_from_env(harness_dir: Path, env_name: str, default_rel: str) -> Path:
+    raw = os.environ.get(env_name)
+    path = Path(raw).expanduser() if raw else harness_dir / default_rel
+    if not path.is_absolute():
+        path = harness_dir / path
+    return path.resolve()
+
+
 def _rel(path: Path, root: Path) -> str:
     try:
         return str(path.resolve().relative_to(root.resolve()))
@@ -324,6 +332,7 @@ def _dispatch_input_profile(spec: dict[str, Any], node_args: argparse.Namespace)
 def _node_args(
     args: argparse.Namespace,
     harness_dir: Path,
+    workflow_output_dir: Path,
     spec: dict[str, Any],
     node_results: dict[str, Any],
 ) -> argparse.Namespace:
@@ -342,7 +351,7 @@ def _node_args(
         paper_id=f"paper-{args.job_id}",
         input_json=None,
         extra_inputs=_extra_inputs_for(spec, node_results, args),
-        output_dir=f"artifacts/scientific/workflow-runs/{args.job_id}/{node_id}",
+        output_dir=_rel(workflow_output_dir / node_id, harness_dir),
         out=None,
         timeout_seconds=float(args.timeout_seconds),
         lease_ttl_seconds=int(args.lease_ttl_seconds),
@@ -467,9 +476,14 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
     args.workflow_id = workflow_id
     args.job_id = args.job_id or f"job-scientific-workflow-{_utc_stamp()}"
 
+    scientific_artifact_root = _artifact_root_from_env(
+        harness_dir,
+        "SCIENTIFIC_ARTIFACT_ROOT",
+        "artifacts/scientific",
+    )
     output_dir = _resolve_harness_path(
         harness_dir,
-        args.output_dir or f"artifacts/scientific/workflow-runs/{args.job_id}",
+        args.output_dir or scientific_artifact_root / "workflow-runs" / args.job_id,
     )
     summary_path = _resolve_harness_path(
         harness_dir,
@@ -509,7 +523,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
             if args.stop_on_blocked:
                 break
             continue
-        node_args = _node_args(args, harness_dir, spec, node_results)
+        node_args = _node_args(args, harness_dir, output_dir, spec, node_results)
         dispatch_input_profiles[node_id] = _dispatch_input_profile(spec, node_args)
         code, node_summary = node_runtime.run(node_args)
         node_summaries[node_id] = node_summary
