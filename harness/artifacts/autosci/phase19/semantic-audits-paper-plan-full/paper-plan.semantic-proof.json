@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-06-30T18:58:50Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-paper-plan-full/paper-plan.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/paper-plan/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/ideas/skillgen.md",
+        "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/experiments/exp-skillgen.md",
+        "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+        "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/concepts/skill-verification.md",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-discovery.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-review.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-compile-runtime.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/scientific_report.plan.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan.md",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_idea_graph_map.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_citation_map.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_draft_compile_handoff.json",
+        "harness/artifacts/autosci/phase19/paper-plan-route-after-final-acceptance.json"
+      ],
+      "native_skill": "paper-plan",
+      "production_ready": true,
+      "proof_id": "runtime:paper-plan:phase19-paper-plan-semantic-audit:20260630T185850Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T18:58:50Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-paper-plan-full/paper-plan.semantic-audit.json --native-skill paper-plan --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-paper-plan-full/paper-plan.semantic-proof.json",
+        "source": "phase19-paper-plan-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

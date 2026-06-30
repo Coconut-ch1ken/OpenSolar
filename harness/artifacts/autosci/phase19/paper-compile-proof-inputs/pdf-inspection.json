@@ -1,0 +1,17 @@
+{
+  "evidence_ids": [
+    "phase19-paper-compile-proof:pdf-inspection"
+  ],
+  "outputs": {
+    "inspection": {
+      "font_span_count": 54,
+      "inspector": "PyMuPDF",
+      "min_font_size": 9.962599754333496,
+      "page_count": 1,
+      "pdf_path": "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+      "pdf_sha256": "06165343c13b1059e3c2f9d230cb037f42fb643985fefd37fda5d707dac20cd3"
+    }
+  },
+  "schema": "autosci_pdf_inspection.v1",
+  "status": "completed"
+}

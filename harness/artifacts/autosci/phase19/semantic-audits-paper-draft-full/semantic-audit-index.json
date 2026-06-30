@@ -1,0 +1,29 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-paper-draft-full/paper-draft.semantic-audit.json"
+  ],
+  "generated_at": "2026-06-30T19:02:56Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "citation_and_bibtex_discipline": "ok",
+        "native_command_surface": "ok",
+        "native_skill_doc_exists": "ok",
+        "paper_directory_generation": "ok",
+        "publication_bundle_truthfulness": "ok",
+        "review_and_compile_boundaries": "ok",
+        "runtime_proof_coverage": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-paper-draft-full/paper-draft.semantic-audit.json",
+      "native_skill": "paper-draft",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

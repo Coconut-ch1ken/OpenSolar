@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-06-30T18:53:59Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-survey-full/survey.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/survey/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/survey/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/survey/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/survey-discovery.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/scientific_report.survey.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_plan.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey.md",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey.tex",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_citation_map.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_final_coverage_boundary.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_bibtex_coverage.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_archive_writeback.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/related-work-topic-skillgen-2026-06-30.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/workspace/wiki/log.md",
+        "harness/artifacts/autosci/phase19/survey-route-after-archive-writeback.json"
+      ],
+      "native_skill": "survey",
+      "production_ready": true,
+      "proof_id": "runtime:survey:phase19-survey-semantic-audit:20260630T185359Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T18:53:59Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-survey-full/survey.semantic-audit.json --native-skill survey --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-survey-full/survey.semantic-proof.json",
+        "source": "phase19-survey-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

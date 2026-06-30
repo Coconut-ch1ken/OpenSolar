@@ -1,0 +1,9 @@
+{
+  "bytes": 2302,
+  "command": "validate",
+  "issues": [],
+  "ok": true,
+  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+  "schema": "autosci_poster_cli.v1",
+  "status": "completed"
+}

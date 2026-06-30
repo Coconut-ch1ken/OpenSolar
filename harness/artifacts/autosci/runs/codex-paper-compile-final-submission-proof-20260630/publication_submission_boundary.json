@@ -1,0 +1,131 @@
+{
+  "blocking_checks": [],
+  "check_statuses": {
+    "anonymity_check": "ok",
+    "font_size_check": "ok",
+    "page_limit_check": "ok",
+    "unconfirmed_marker_scan": "ok"
+  },
+  "compiled_pdf_verified": true,
+  "limitations": [],
+  "pdf_files": [
+    "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf"
+  ],
+  "pdf_inspection": {
+    "applied_fields": [
+      "verified_page_count",
+      "verified_min_font_size"
+    ],
+    "evidence_ids": [
+      "phase19-paper-compile-proof:pdf-inspection"
+    ],
+    "inspection_loaded": true,
+    "inspection_valid": true,
+    "invalid_reasons": [],
+    "min_font_size": 9.962599754333496,
+    "page_count": 1.0,
+    "path": "artifacts/autosci/phase19/paper-compile-proof-inputs/pdf-inspection.json",
+    "pdf_path": "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+    "pdf_sha256": "06165343c13b1059e3c2f9d230cb037f42fb643985fefd37fda5d707dac20cd3",
+    "schema": "autosci_pdf_inspection_boundary.v1",
+    "sha256": "9e40fb3eb5aeb5cb851b740c3b82c601996dfa777bf86c3e2e0002c680f1e8ac",
+    "status": "loaded"
+  },
+  "portal_submission_completed": false,
+  "runtime_semantic_verified": true,
+  "schema": "autosci_publication_submission_boundary.v1",
+  "status": "submission_ready",
+  "submission_audit": {
+    "audit_loaded": true,
+    "audit_verified": true,
+    "blocking_checks": [],
+    "checks": [
+      {
+        "check": "compiles_without_errors",
+        "evidence_ids": [
+          "phase19-paper-compile-proof:runtime"
+        ],
+        "status": "ok"
+      },
+      {
+        "check": "anonymous_submission",
+        "evidence_ids": [
+          "phase19-paper-compile-proof:venue-profile"
+        ],
+        "status": "ok"
+      },
+      {
+        "check": "page_limit",
+        "evidence_ids": [
+          "phase19-paper-compile-proof:pdf-inspection"
+        ],
+        "limit": 8,
+        "observed": 1,
+        "status": "ok"
+      },
+      {
+        "check": "minimum_font_size",
+        "evidence_ids": [
+          "phase19-paper-compile-proof:pdf-inspection"
+        ],
+        "limit": 9.5,
+        "observed": 9.962599754333496,
+        "status": "ok"
+      },
+      {
+        "check": "unconfirmed_markers",
+        "evidence_ids": [
+          "phase19-paper-compile-proof:source-scan"
+        ],
+        "status": "ok"
+      }
+    ],
+    "evidence_ids": [
+      "phase19-paper-compile-proof:submission-audit"
+    ],
+    "invalid_reasons": [],
+    "path": "artifacts/autosci/phase19/paper-compile-proof-inputs/submission-audit.json",
+    "portal_submission_completed": false,
+    "schema": "autosci_publication_submission_audit_boundary.v1",
+    "sha256": "d8ac97beb3033a76e2cfe5e8d0f70489b29ce3b0b19351a7be9bd01e5084dabb",
+    "status": "loaded",
+    "venue": "AutoSci-Parity-Proof"
+  },
+  "submission_audit_blocking_checks": [],
+  "submission_audit_ready": true,
+  "submission_audit_status": "submission_audit_ready",
+  "submission_profile": {
+    "applied_fields": [
+      "venue",
+      "submission_mode",
+      "anonymous",
+      "double_blind",
+      "page_limit",
+      "min_font_size"
+    ],
+    "conflicts": [],
+    "evidence_ids": [
+      "phase19-paper-compile-proof:venue-profile"
+    ],
+    "invalid_reasons": [],
+    "path": "artifacts/autosci/phase19/paper-compile-proof-inputs/submission-profile.json",
+    "profile_loaded": true,
+    "profile_valid": true,
+    "requirements": {
+      "anonymous": true,
+      "double_blind": true,
+      "min_font_size": 9.5,
+      "page_limit": 8.0,
+      "submission_mode": "double_blind",
+      "venue": "AutoSci-Parity-Proof"
+    },
+    "schema": "autosci_submission_profile_boundary.v1",
+    "sha256": "249d6ad05906f062a291663dfa23dd19d0d58e60d306a2e2c04bac16d0d5ccc8",
+    "status": "loaded",
+    "venue": "AutoSci-Parity-Proof"
+  },
+  "submission_ready": true,
+  "venue_blocking_checks": [],
+  "venue_status": "venue_submission_ready",
+  "venue_submission_ready": true
+}

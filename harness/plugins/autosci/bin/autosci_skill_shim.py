@@ -827,6 +827,11 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["paper_path"] = str(args.paper)
         if args.format:
             inputs["format"] = str(args.format)
+        if action in {"plan_report", "write_survey"}:
+            if args.max_papers:
+                inputs["max_papers"] = int(args.max_papers)
+            if args.wiki_root:
+                inputs["wiki_root"] = str(args.wiki_root)
         if action == "draft_rebuttal":
             if args.paper_slug:
                 inputs["paper_slug"] = str(args.paper_slug)
@@ -856,6 +861,25 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
                 inputs["venue"] = str(args.venue)
             if args.anonymous:
                 inputs["anonymous"] = True
+            if args.review:
+                inputs["review"] = True
+                inputs["review_llm_requested"] = True
+            if args.require_review_llm:
+                inputs["require_review_llm"] = True
+                inputs["review_llm_requested"] = True
+            if args.review_llm_evidence:
+                inputs["review_llm_evidence"] = list(args.review_llm_evidence)
+            if args.review_llm_command:
+                inputs["review_llm_command"] = str(args.review_llm_command)
+                inputs["review_llm_requested"] = True
+            if args.review_llm_provider:
+                inputs["review_llm_provider"] = str(args.review_llm_provider)
+                inputs["review_llm_requested"] = True
+            if args.review_llm_model:
+                inputs["review_llm_model"] = str(args.review_llm_model)
+            if args.review_llm_endpoint:
+                inputs["review_llm_endpoint"] = str(args.review_llm_endpoint)
+                inputs["review_llm_requested"] = True
             if args.authors:
                 inputs["authors"] = str(args.authors)
             if args.no_figures:
@@ -1613,6 +1637,7 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--types", help="Native visualize comma-separated node/page types")
     skill.add_argument("--edge-types", dest="edge_types", help="Native visualize comma-separated graph edge types")
     skill.add_argument("--max-ideas", type=int, help="Native ideate maximum ideas")
+    skill.add_argument("--max-papers", type=int, help="Native survey maximum cited paper count")
     skill.add_argument("--skip-validation", action="store_true", help="Native ideate fast path without deep validation")
     skill.add_argument("--skip-pilot", action="store_true", help="Native ideate fast path without pilot execution")
     skill.add_argument("--auto", action="store_true", help="Native automatic mode for research pipelines")

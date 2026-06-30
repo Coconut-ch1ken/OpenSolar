@@ -55,6 +55,14 @@
         "type": "paper_draft_final_manuscript_boundary_json"
       },
       {
+        "path": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/references.bib",
+        "type": "paper_references_bib"
+      },
+      {
+        "path": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_bibtex_coverage.json",
+        "type": "paper_draft_bibtex_coverage_json"
+      },
+      {
         "path": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
         "type": "review_model_runtime_proof_manifest_json"
       },
@@ -88,6 +96,8 @@
       "experiment_id": "exp-supported-001",
       "experiment_result": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/experiment_result.json",
       "native_options": {
+        "add": "",
+        "affiliation_logo": "",
         "after_artifacts": [
           "artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf"
         ],
@@ -97,10 +107,13 @@
         ],
         "anonymous": false,
         "approval_ref": "approval-paper-draft-external-20260630",
+        "authors": "",
         "auto": false,
+        "auto_figures": false,
         "before_artifacts": [
           "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-before.json"
         ],
+        "canvas": false,
         "checklist": false,
         "claims_evidence": [],
         "code_evidence": [],
@@ -114,15 +127,19 @@
         "compile_executor_timeout_seconds": 120,
         "compile_runtime_evidence": [],
         "compile_target": "",
+        "conference_logo": "",
+        "crystallize": false,
         "daily_categories": [],
         "daily_hours": 0,
         "daily_max_auto_ingest": 0,
         "daily_max_recommendations": 0,
         "daily_mode": "",
         "daily_send_email": "",
+        "depth": 0,
         "difficulty": "",
         "discover": false,
         "double_blind": false,
+        "edge_types": "",
         "env": "",
         "execute_approved": false,
         "experiment_after_artifacts": [],
@@ -138,20 +155,27 @@
         "format": "",
         "full": false,
         "idea_approval_ref": "",
+        "layout": "",
         "lifecycle_summary": [],
         "max_ideas": 0,
         "max_rounds": 0,
         "min_font_size": null,
         "model_command": "",
         "model_evidence": [],
+        "no_figures": false,
         "no_introduction": false,
+        "no_logos": false,
+        "no_refine": false,
         "novelty_evidence": [],
+        "obsidian": false,
         "online": false,
         "page_count": null,
         "page_limit": null,
+        "paper_slug": "",
         "pdf_inspection": "",
         "pipeline": "",
         "quick": false,
+        "refine_iterations": 0,
         "remote_check_command": "",
         "remote_run_dir": "",
         "render": false,
@@ -165,6 +189,7 @@
         ],
         "review_llm_model": "",
         "review_llm_provider": "",
+        "reviewer_thread_evidence": [],
         "runtime_evidence": [
           "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-runtime.json"
         ],
@@ -176,16 +201,20 @@
         "scheduler_require_workflow_config_alignment": false,
         "scheduler_run": false,
         "scheduler_timeout": 30.0,
+        "scope": "",
         "serve": false,
         "skip_paper": false,
         "skip_pilot": false,
         "skip_validation": false,
+        "source_evidence": [],
         "start_from": "",
+        "stress_test": null,
         "submission_audit": "",
         "submission_mode": "",
         "submission_profile": "",
         "target_score": 0.0,
         "title": "SkillGen Wiki Draft",
+        "types": "",
         "verbose": false,
         "verified_min_font_size": null,
         "verified_page_count": null,
@@ -486,7 +515,7 @@
     "provenance": {
       "implementation_package": "plugins/autosci",
       "operator_id": "autosci-bridge",
-      "timestamp": "2026-06-30T12:56:03Z"
+      "timestamp": "2026-06-30T19:02:02Z"
     },
     "schema": "scientific_report.v1",
     "sprint_id": "phase19-skillgen-operator-smoke",
@@ -505,12 +534,14 @@
     "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/optional_rebuttal.md",
     "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/main.tex",
     "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/sections",
+    "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/references.bib",
     "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_compile_handoff.json",
     "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-runtime.json",
     "artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
     "artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
     "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
-    "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json"
+    "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+    "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_bibtex_coverage.json"
   ],
   "result_path": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report.result.json",
   "schema": "scientific_report.v1",

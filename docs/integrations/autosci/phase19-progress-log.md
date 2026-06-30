@@ -7354,3 +7354,208 @@ Logged: 2026-06-30 EDT
 | `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for `$poster` building DAG/outline/HTML from real LaTeX paper source before approved render. |
 | `harness/artifacts/autosci/phase19/poster-content-proof-inputs/` | pending | Add bounded paper source fixture for runtime proof. |
 | `docs/integrations/autosci/phase19-progress-log.md` | pending | Record proof/gate result before semantic assessment. |
+
+### Poster Native Content Pipeline Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Shim controls | ok | `$poster` now forwards paper source plus native header/layout controls including `--authors`, `--no-figures`, `--no-logos`, `--auto-figures`, `--no-refine`, `--refine-iterations`, `--affiliation-logo`, `--conference-logo`, and `--layout`. |
+| Native content pipeline | ok | `build_poster` resolves a real paper source and runs paper_dir -> `wiki2dag.py build` -> outline HTML -> `poster.py build/inject-title/inject-header/inject-figures/validate`; render/export remains approval-gated. |
+| Runtime proof | ok | `codex-poster-content-proof-20260630/publication_bundle.poster.json` is `status=completed` with 14 artifacts; `poster_generation_report.json`, `poster_validation.json`, and `poster_validate_result.json` are valid JSON. |
+| Route truthfulness | ok | `poster-route-after-native-content-pipeline.json` passes the parity gate with runtime evidence attached; global inventory also passes ordinary gate. |
+| Sanity checks | ok | `$poster` targeted tests passed: 4 passed; `py_compile`, JSON validation, route/inventory parity gates, and `git diff --cached --check` passed. |
+| Remaining semantic blocker | warn | `$poster` remains semantic partial because the native Review LLM / critique-refine pass is not yet wired; current distillation is extractive and source-bound rather than model-reviewed. |
+
+### Poster Review LLM Critique-Refine Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Forward `$poster --review/--require-review-llm` and Review LLM evidence/command/provider options into `build_poster` inputs. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Attach Review LLM critique/refine evidence to poster generation, emit a poster critique boundary, remove the extractive-only limitation when review evidence completes, and include runtime proof artifacts. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for `$poster` with paper source plus completed Review LLM critique evidence. |
+| `harness/artifacts/autosci/phase19/poster-content-proof-inputs/` | pending | Add bounded poster Review LLM critique fixture for the proof run. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining semantic parity status after the fix. |
+
+### Poster Route Proof Requirement Alignment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Declare `$poster` Review LLM critique/refine as a primary tool/capability so runtime proof categories match route proof requirements. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record strict gate result after route proof requirement alignment. |
+
+### Poster Review LLM Critique-Refine Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Shim controls | ok | `$poster` now forwards `--review`, `--require-review-llm`, Review LLM evidence, command, provider, model, and endpoint options into `build_poster`. |
+| Critique/refine boundary | ok | `poster_review_llm_boundary.json` records requested/completed Review LLM critique/refine status and rejects missing/incomplete review evidence instead of marking it successful. |
+| Runtime proof | ok | `codex-poster-review-proof-20260630` includes `build_poster_review_llm_runtime_proof.json`, approved render/export proof, source DAG/outline/HTML/validation artifacts, and `publication_bundle.poster.json status=completed`. |
+| Route requirement alignment | ok | `$poster` route now declares `tools/review_model_runtime_proof.py from-evidence` and `Review LLM critique/refine`, so `review_llm_or_model_evidence` is an explicit proof requirement. |
+| Semantic audit/proof | ok | `semantic-audits-poster-full/poster.semantic-audit.json` is `semantic_parity=full`; `poster.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `poster-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$poster` is `semantic_parity=full`, `runtime_proof_status=verified`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-poster-semantic-full.json` passes ordinary gate and reports `semantic_full_count=11`, `semantic_partial_count=17`; full global parity still requires remaining routes. |
+| Sanity checks | ok | `$poster` targeted tests passed: 5 passed; `py_compile`, route/inventory gates, semantic proof generation, and `git diff --cached --check` passed. |
+
+### Survey Native Archive And Citation Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Add/forward native `$survey --max-papers` and keep existing `--format` behavior. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Cap citations, generate source-bound thematic related-work sections, write BibTeX coverage sidecar for LaTeX, archive survey output to wiki/outputs, append derived_from edges/log, and emit wiki mutation proof. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Declare survey archive/log/edge and BibTeX coverage capabilities so proof requirements match the native skill. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend survey regression to cover archive writeback, wiki mutation proof, max-papers cap, and BibTeX sidecar. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining semantic parity status after the fix. |
+
+### Survey Native Archive And Citation Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Shim controls | ok | `$survey` now forwards native `--max-papers` plus existing `--format`/`--wiki-root` controls into `write_survey`. |
+| Citation discipline | ok | Citation map is capped by `max_papers` and remains source-backed from supplied discovery/wiki evidence; unsupported citations are not fabricated. |
+| Thematic output | ok | Survey sections now include source-bound thematic related-work groups with citation markers instead of a generic scaffold-only themes block. |
+| LaTeX/BibTeX coverage | ok | LaTeX output now emits `survey_bibtex_coverage.json`; missing external BibTeX fetches are marked with `[UNCONFIRMED]` rather than invented entries. |
+| Wiki archive/writeback | ok | `survey_archive_writeback.json` records archive output under `wiki/outputs`, derived_from edges in `wiki/graph/edges.jsonl`, and `wiki/log.md` operation logging. |
+| Runtime proof | ok | `codex-survey-archive-proof-20260630` includes provider/source proof and `write_survey_wiki_mutation_runtime_proof.json`; `survey-route-after-archive-writeback.json` passes ordinary gate with runtime verified. |
+| Route truthfulness | ok | `$survey` route is now `coverage_status=full`, `backend_mode=solar_native`, explicit `semantic_parity=partial` until audited, and declares archive/log/edge plus BibTeX capabilities. |
+| Semantic audit/proof | ok | `semantic-audits-survey-full/survey.semantic-audit.json` is `semantic_parity=full`; `survey.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `survey-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$survey` is `semantic_parity=full`, `runtime_proof_status=verified`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-survey-semantic-full.json` passes ordinary gate and reports `full_count=5`, `semantic_full_count=12`, `semantic_partial_count=16`; remaining routes still block global full parity. |
+| Sanity checks | ok | `$survey` targeted tests passed: 3 passed; `py_compile`, route/inventory gates, semantic proof generation, and `git diff --cached --check` passed. |
+
+### Paper Plan Final Acceptance Proof Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/publication-external-proof-inputs/` | pending | Add bounded paper-plan compile handoff allowlist, before-state, and runtime evidence JSON referencing the existing compiled PDF. |
+| `harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/` | pending | Generate `$paper-plan` proof with source citation evidence, Review LLM evidence, and verified compile/PDF handoff. |
+| `harness/artifacts/autosci/phase19/paper-plan-route-after-final-acceptance.json` | pending | Capture route proof after final acceptance boundary is completed. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record proof/gate result before semantic assessment. |
+
+### Paper Plan Idea Graph Evidence Map Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Forward `--wiki-root` for `$paper-plan` so native idea graph inputs are available to `plan_report`. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Read target idea pages, linked experiments, and referenced method/concept/topic/paper pages into a `paper_plan_idea_graph_map.json` artifact, add an evidence-map section, and require idea-graph readiness in final acceptance. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Update paper-plan final acceptance regression to include a validated idea graph with succeeded experiment evidence. |
+| `harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/` | pending | Add bounded wiki idea graph fixture for the final proof run. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification before semantic audit. |
+
+### Paper Plan Final Acceptance And Idea Graph Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Shim controls | ok | `$paper-plan` now forwards `--wiki-root`, preserving native idea-graph input scope. |
+| Idea graph map | ok | `paper_plan_idea_graph_map.json` records target slugs, validated/in-progress ideas, linked succeeded experiments, and referenced method/concept/topic/paper pages. |
+| Final acceptance boundary | ok | `paper_plan_final_acceptance_boundary.json` now requires idea graph readiness, source-backed citation planning, completed Review LLM proof, and verified compile/PDF handoff. |
+| Runtime proof | ok | `codex-paper-plan-final-proof-20260630` reaches `final_plan_accepted=True` with idea graph ready, Review LLM evidence, provider/source proof, and compile handoff evidence. |
+| Route truthfulness | ok | `$paper-plan` route is now `coverage_status=full` with explicit `semantic_parity=partial` until audited, and the limitation names final acceptance as gated by source/review/compile handoff evidence. |
+| Semantic audit/proof | ok | `semantic-audits-paper-plan-full/paper-plan.semantic-audit.json` is `semantic_parity=full`; `paper-plan.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `paper-plan-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$paper-plan` is `semantic_parity=full`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-paper-plan-semantic-full.json` passes ordinary gate and reports `full_count=6`, `semantic_full_count=13`, `semantic_partial_count=15`; remaining routes still block global full parity. |
+| Sanity checks | ok | `$paper-plan` targeted tests passed: 4 passed; `py_compile`, route/inventory gates, semantic proof generation, and `git diff --cached --check` passed. |
+
+### Paper Draft Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Promote `$paper-draft` coverage truthfulness from partial to full with explicit semantic partial guard until audit verification. |
+| `harness/artifacts/autosci/phase19/paper-draft-semantic-assessment-20260630.json` | pending | Record full semantic assessment using existing final manuscript, source/review/compile, paper directory, and wiki projection proof artifacts. |
+| `harness/artifacts/autosci/phase19/semantic-audits-paper-draft-full/` | pending | Generate paper-draft full semantic audit and semantic runtime proof. |
+| `harness/artifacts/autosci/phase19/paper-draft-route-full-parity-after-semantic-audit.json` | pending | Verify `$paper-draft` single-route strict full gate. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate outcome and remaining global blockers. |
+
+### Paper Draft References BibTeX Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Generate `paper/references.bib` and `paper_draft_bibtex_coverage.json` from the source-backed citation map, using `[UNCONFIRMED]` placeholders when verified BibTeX is unavailable. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend paper-draft final manuscript regression to assert references.bib and BibTeX coverage artifacts. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification before semantic assessment. |
+
+### Paper Draft Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Route truthfulness | ok | `$paper-draft` route is now `coverage_status=full` with explicit `semantic_parity=partial` until audited; limitation names source/review/compile/paper-dir/wiki projection proof requirements. |
+| References/BibTeX | ok | `write_report` now writes `paper/references.bib` plus `paper_draft_bibtex_coverage.json`; missing verified BibTeX is marked `[UNCONFIRMED]` rather than invented. |
+| Final manuscript proof | ok | `codex-paper-draft-wiki-proof-fixed-20260630` has `paper_draft_final_manuscript_boundary.status=final_manuscript_ready`, source/review proof, compile/PDF handoff, paper directory artifacts, and wiki projection mutation proof. |
+| Semantic audit/proof | ok | `semantic-audits-paper-draft-full/paper-draft.semantic-audit.json` is `semantic_parity=full`; `paper-draft.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `paper-draft-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$paper-draft` is `semantic_parity=full`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-paper-draft-semantic-full.json` passes ordinary gate and reports `full_count=7`, `semantic_full_count=14`, `semantic_partial_count=14`; remaining routes still block global full parity. |
+| Sanity checks | ok | `$paper-draft` targeted tests passed: 2 passed; `py_compile`, route/inventory gates, semantic proof generation, and `git diff --cached --check` passed. |
+
+### Paper Compile PDF Runtime Verification Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Require compile runtime semantic verification to prove the emitted PDF is structurally readable, not merely present on disk. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Replace fake one-line PDF executor tests with minimal valid PDF bytes and add a rejection regression for invalid PDF artifacts. |
+| `harness/artifacts/autosci/phase19/paper-compile-proof-inputs/` | pending | Add bounded submission profile, PDF inspection, and submission audit evidence for a complete native paper-compile proof run. |
+| `harness/artifacts/autosci/phase19/semantic-audits-paper-compile-full/` | pending | Generate full semantic audit/proof only after compile, page/font/anonymity, and checklist evidence pass. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification, strict route gate result, and remaining global blockers. |
+
+### Paper Compile PDF Runtime Verification Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Runtime PDF integrity | ok | `compile_paper` runtime semantic verification now rejects PDF artifacts that are merely present on disk but lack PDF header/xref/EOF structural markers. |
+| Invalid PDF regression | ok | `$paper-compile` tests include an approved executor that exits 0 but writes an invalid one-line PDF; the route returns inconclusive evidence, no `compiled_pdf` artifact, and `schema_only` action status. |
+| Real compile proof | ok | `codex-paper-compile-structural-proof-20260630` ran approved `pdflatex` and produced a structurally valid 1-page PDF under `paper-compile-proof-inputs/paper/main.pdf`. |
+| Submission boundary | ok | `codex-paper-compile-final-submission-proof-20260630/publication_submission_boundary.json` is `submission_ready=true`, `venue_submission_ready=true`, `submission_audit_ready=true`, and `portal_submission_completed=false`. |
+| Route truthfulness | ok | `$paper-compile` remains `coverage_status=gated` because TeX execution/source auto-fix are approval-required side effects, while semantic parity is full via route-level audit. |
+| Semantic audit/proof | ok | `semantic-audits-paper-compile-full/paper-compile.semantic-audit.json` is `semantic_parity=full`; `paper-compile.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `paper-compile-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$paper-compile` is `semantic_parity=full`, `runtime_proof_status=verified`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-paper-compile-semantic-full.json` reports `semantic_full_count=15`, `semantic_partial_count=13`; ordinary global gate is currently blocked by pre-existing `$daily-arxiv` route truthfulness (`coverage_status=full` with `side_effect_policy=approval_required`). |
+| Sanity checks | ok | `$paper-compile` targeted tests passed: 11 passed; `py_compile`, JSON validation, single-route strict gate, `git diff --check`, and `git diff --cached --check` passed. |
+
+### Daily ArXiv Route Truthfulness And Semantic Audit Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Correct `$daily-arxiv` route truthfulness so approval/email/auto-ingest side effects remain `coverage_status=gated` instead of invalid `full`. |
+| `harness/artifacts/autosci/phase19/daily-arxiv-semantic-assessment-20260630.json` | pending | Record full semantic assessment from existing provider, Review LLM, fan-in/writeback, and final delivery boundary proof. |
+| `harness/artifacts/autosci/phase19/semantic-audits-daily-arxiv-full/` | pending | Generate daily-arxiv full semantic audit/proof. |
+| `harness/artifacts/autosci/phase19/daily-arxiv-route-full-parity-after-semantic-audit.json` | pending | Verify daily-arxiv single-route strict full gate. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining global blockers after the fix. |
+
+### Daily ArXiv Auto-Ingest Truthfulness Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Stop treating direct wiki fan-in as native `/daily-arxiv auto-ingest`; emit `/ingest` handoff evidence and require actual delivery/ingest proof before final delivery readiness. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Update daily-arxiv write regression so provider/Review LLM proof stays valid but final readiness is not claimed without `/ingest` completion. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record that daily-arxiv is route-truthful but remains semantic partial until native `/ingest` handoff execution is complete. |
+
+### Daily ArXiv Route Truthfulness And Auto-Ingest Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Route truthfulness | ok | `$daily-arxiv` is now `coverage_status=gated` with `side_effect_policy=approval_required`; global ordinary gate no longer fails on full+approval_required. |
+| Auto-ingest truthfulness | ok | `$daily-arxiv --write` now emits `daily_arxiv_ingest_handoff.json` with `/ingest <source_ref>` commands instead of directly writing wiki paper pages/edges/log. |
+| Final boundary | ok | `codex-daily-ingest-handoff-proof-20260630/daily_arxiv_final_provider_delivery_boundary.json` is `status=daily_provider_ready`, `stage_provider_ready=true`, `final_delivery_ready=false`, `fan_in_completed=false`. |
+| Review/provider proof | ok | New proof keeps provider source evidence and Review LLM evidence attached, but does not emit side-effect execution proof because `/ingest` was not completed. |
+| Route gate | ok | `daily-arxiv-route-after-ingest-handoff-truthfulness.json` passes ordinary gate with `semantic_parity=partial`; no full semantic audit was generated because native auto-ingest completion is still pending. |
+| Global inventory | ok | `current-parity-inventory-after-daily-arxiv-truthfulness.json` passes ordinary gate and reports `semantic_full_count=15`, `semantic_partial_count=13`; remaining blockers are real parity work, not route-truthfulness overclaim. |
+| Sanity checks | ok | `$daily-arxiv` targeted tests passed: 5 passed; `py_compile`, route/inventory gates, `git diff --check`, and `git diff --cached --check` passed. |
+| Remaining blocker | pending | `$daily-arxiv` can only become semantic full after the native `/ingest` route is completed and daily auto-ingest can attach completed ingest evidence rather than handoff-only evidence. |

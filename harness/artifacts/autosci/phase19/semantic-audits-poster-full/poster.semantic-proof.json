@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-06-30T18:46:34Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/poster/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+        "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+        "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+        "harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+      ],
+      "native_skill": "poster",
+      "production_ready": true,
+      "proof_id": "runtime:poster:phase19-poster-semantic-audit:20260630T184634Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T18:46:34Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json --native-skill poster --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-proof.json",
+        "source": "phase19-poster-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

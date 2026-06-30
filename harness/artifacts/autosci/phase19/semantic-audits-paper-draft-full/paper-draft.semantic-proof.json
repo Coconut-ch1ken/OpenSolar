@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-06-30T19:02:56Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-paper-draft-full/paper-draft.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/paper-draft/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-runtime.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/main.tex",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/references.bib",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/sections/summary.tex",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_bibtex_coverage.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/publication_bundle.json",
+        "harness/artifacts/autosci/phase19/paper-draft-route-after-final-manuscript.json"
+      ],
+      "native_skill": "paper-draft",
+      "production_ready": true,
+      "proof_id": "runtime:paper-draft:phase19-paper-draft-semantic-audit:20260630T190256Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T19:02:56Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-paper-draft-full/paper-draft.semantic-audit.json --native-skill paper-draft --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-paper-draft-full/paper-draft.semantic-proof.json",
+        "source": "phase19-paper-draft-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

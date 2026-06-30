@@ -174,3 +174,10 @@
 - Target: `artifacts/autosci/workspace/wiki/outputs/refine-loop-proof.md`
 - Evidence ids: refine_artifact:artifacts-autosci-workspace-wiki-outputs-refine-loop-proof-md
 - Summary: Applied approved after_artifact contents during refine.
+
+## Survey Archive
+
+- Timestamp: `2026-06-30T18:51:46Z`
+- Target: `artifacts/autosci/workspace/wiki/outputs/related-work-topic-skillgen-2026-06-30.md`
+- Evidence ids: lit-survey-external-20260630, topic:skillgen
+- Summary: survey | topic:skillgen | 5 papers, format: latex

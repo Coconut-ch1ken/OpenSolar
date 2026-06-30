@@ -1,0 +1,120 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "poster": {
+      "semantic_parity": "full",
+      "auditor": "phase19-poster-semantic-audit",
+      "summary": "Solar $poster now preserves native AutoSci /poster semantics as a source-backed publication route: it accepts paper directory input and native poster controls, builds a PaperX-compatible DAG from real LaTeX paper source, distills source sections into an outline, generates poster HTML through the native poster toolchain, records validation output, attaches Review LLM critique/refine evidence when requested, and keeps browser render/PNG export behind an explicit approval boundary with runtime proof.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/poster/SKILL.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/poster/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+        "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+        "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+        "harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $poster preserves native paper source, venue, authorship, figure/logo, layout, render, and critique/refine controls through the shim and wrapper surface.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/poster/SKILL.md",
+            ".agents/skills/poster/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "paperx_dag_generation",
+          "status": "ok",
+          "detail": "The poster path builds a PaperX-compatible DAG from a real LaTeX paper directory through tools/wiki2dag.py rather than scaffold-only content.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json"
+          ]
+        },
+        {
+          "check": "outline_and_html_generation",
+          "status": "ok",
+          "detail": "The bridge creates source-bound outline HTML and runs tools/poster.py build/inject-title/inject-header/inject-figures/validate to produce the poster artifact.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json"
+          ]
+        },
+        {
+          "check": "review_llm_critique_refine_boundary",
+          "status": "ok",
+          "detail": "Completed Review LLM critique/refine evidence is attached to the poster path, recorded in poster_review_llm_boundary.json, and backed by a review_model runtime proof manifest.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "approved_render_export_boundary",
+          "status": "ok",
+          "detail": "Browser render, overflow probing, and PNG export remain approval-gated; the proof run executed an allowlisted renderer and recorded approved runtime evidence plus before/after artifact state.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+            "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png"
+          ]
+        },
+        {
+          "check": "publication_bundle_truthfulness",
+          "status": "ok",
+          "detail": "The poster publication bundle is completed only with source content and verified runtime evidence; validation records content pipeline status, Review LLM completion, render/export status, and remaining limitations.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+            "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+            "harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+          ]
+        },
+        {
+          "check": "regression_and_gate_coverage",
+          "status": "ok",
+          "detail": "Regression tests cover native poster content generation, approved render execution, and Review LLM critique boundary; route gate reports runtime_proof_status verified.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+          ]
+        }
+      ],
+      "remaining_requirements": []
+    }
+  }
+}

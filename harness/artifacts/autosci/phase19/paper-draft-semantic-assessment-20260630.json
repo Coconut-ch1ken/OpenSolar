@@ -1,0 +1,102 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "paper-draft": {
+      "semantic_parity": "full",
+      "auditor": "phase19-paper-draft-semantic-audit",
+      "summary": "Solar $paper-draft now preserves native AutoSci /paper-draft semantics as a bounded source-backed manuscript drafting route: it accepts a paper-plan/idea target, produces a paper directory with main.tex and section files, generates references.bib plus BibTeX coverage from source-backed citations, attaches source/review/compile proof, records final manuscript readiness only when source citations, Review LLM evidence, and compile/PDF handoff are complete, and emits workspace wiki projection mutation proof for the generated manuscript outputs.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/paper-draft/SKILL.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/paper-draft/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-runtime.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/main.tex",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/references.bib",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/sections/summary.tex",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_bibtex_coverage.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/publication_bundle.json",
+        "harness/artifacts/autosci/phase19/paper-draft-route-after-final-manuscript.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $paper-draft preserves the native paper-plan/idea target, title, source evidence, Review LLM, and compile handoff controls.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+            ".agents/skills/paper-draft/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "paper_directory_generation",
+          "status": "ok",
+          "detail": "The route writes a paper directory with main.tex and section files suitable for downstream compile handoff.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/main.tex",
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/sections/summary.tex",
+            "harness/plugins/autosci/bin/autosci_bridge.py"
+          ]
+        },
+        {
+          "check": "citation_and_bibtex_discipline",
+          "status": "ok",
+          "detail": "The draft uses a source-backed citation map, writes references.bib, and records BibTeX coverage with [UNCONFIRMED] placeholders when external verified BibTeX is unavailable.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/references.bib",
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_bibtex_coverage.json"
+          ]
+        },
+        {
+          "check": "review_and_compile_boundaries",
+          "status": "ok",
+          "detail": "Final manuscript readiness requires completed Review LLM evidence and verified compile/PDF handoff before publication-ready claims are allowed.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+            "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-runtime.json",
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json"
+          ]
+        },
+        {
+          "check": "runtime_proof_coverage",
+          "status": "ok",
+          "detail": "The proof run attaches Review LLM/model evidence, provider/source citation evidence, compile/PDF evidence, and wiki projection mutation proof.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+            "harness/artifacts/autosci/phase19/paper-draft-route-after-final-manuscript.json"
+          ]
+        },
+        {
+          "check": "publication_bundle_truthfulness",
+          "status": "ok",
+          "detail": "The publication bundle carries paper directory, citation, final manuscript boundary, compile PDF, and proof artifacts without claiming external submission.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/publication_bundle.json",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+          ]
+        }
+      ],
+      "remaining_requirements": []
+    }
+  }
+}

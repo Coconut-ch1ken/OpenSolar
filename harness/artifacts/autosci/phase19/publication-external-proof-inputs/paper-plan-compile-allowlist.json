@@ -1,0 +1,10 @@
+{
+  "approved": true,
+  "scope": "paper-plan-compile-handoff",
+  "commands": [
+    "paper-plan compile handoff verification"
+  ],
+  "evidence_ids": [
+    "approval:paper-plan-compile-handoff"
+  ]
+}

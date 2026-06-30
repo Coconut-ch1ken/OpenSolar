@@ -1,0 +1,42 @@
+{
+  "schema": "artifact_review.v1",
+  "task_id": "poster-review-llm-proof-20260630",
+  "status": "completed",
+  "outputs": {
+    "review": {
+      "review_mode": "review_llm",
+      "review_available": true,
+      "score": 8.7,
+      "recommendation": "accept_with_minor_edits",
+      "difficulty": "standard",
+      "focus": "poster critique/refine",
+      "evidence_ids": [
+        "poster-review:evidence:content-fidelity",
+        "poster-review:evidence:layout-risk"
+      ],
+      "review_llm": {
+        "status": "completed",
+        "provider": "openai_compatible",
+        "model": "gpt-5.5",
+        "evidence_ids": [
+          "poster-review:llm:gpt-5.5"
+        ],
+        "request_sha256": "poster-review-request-20260630",
+        "response_sha256": "poster-review-response-20260630"
+      }
+    },
+    "findings": [
+      {
+        "severity": "minor",
+        "issue": "Method and results blocks should preserve explicit evidence linkage.",
+        "recommendation": "Keep the generated outline source-bound and verify all figure/table references before export."
+      },
+      {
+        "severity": "minor",
+        "issue": "Final poster needs render/overflow proof before publication use.",
+        "recommendation": "Require approved browser render and PNG export evidence before marking runtime complete."
+      }
+    ]
+  },
+  "limitations": []
+}

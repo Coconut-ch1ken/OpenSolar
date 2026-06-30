@@ -2,15 +2,15 @@
 entity_type: "output"
 entity_id: "report-skillgen-operator-smoke"
 title: "SkillGen Wiki Draft"
-run_id: "codex-paper-draft-wiki-proof-20260630"
-source_evidence: "artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/scientific_report.json"
+run_id: "codex-paper-draft-wiki-proof-fixed-20260630"
+source_evidence: "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json"
 managed_by: "solar-autosci-workspace-projector"
 ---
 # SkillGen Wiki Draft
 
 - Report id: `report-skillgen-operator-smoke`
-- Run artifact: `artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/report.md`
-- Evidence: `artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/scientific_report.json`
+- Run artifact: `artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md`
+- Evidence: `artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json`
 
 ## Report Body
 

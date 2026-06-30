@@ -1,0 +1,159 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/paper-plan/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $paper-plan preserves native idea target, venue, title, wiki-root, source evidence, Review LLM evidence, and compile handoff controls.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+        ".agents/skills/paper-plan/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "idea_graph_evidence_map",
+      "detail": "The plan reads a validated target idea, succeeded linked experiment, and referenced method/concept pages into paper_plan_idea_graph_map.json before final acceptance.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/ideas/skillgen.md",
+        "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/experiments/exp-skillgen.md",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_idea_graph_map.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "section_figure_citation_plan",
+      "detail": "The generated plan includes outline, idea evidence map, source evidence map, figure/citation plan, review gate, compile audit, and final acceptance sections backed by explicit evidence ids.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan.md",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_citation_map.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_boundary",
+      "detail": "Review LLM evidence is mandatory for final acceptance and is recorded through the publication review boundary and runtime proof manifest.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-review.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_final_acceptance_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "compile_handoff_boundary",
+      "detail": "Final acceptance requires verified downstream compile/PDF handoff and records the compiled PDF plus runtime evidence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-compile-runtime.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_draft_compile_handoff.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_final_acceptance_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "runtime_proof_coverage",
+      "detail": "The proof run attaches Review LLM/model evidence, provider/source citation evidence, final acceptance boundary, and compile handoff evidence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/paper-plan-route-after-final-acceptance.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "truthfulness_boundary",
+      "detail": "The route remains a bounded local planning artifact; it does not claim manuscript drafting or PDF compilation itself, only verified handoff evidence.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_final_acceptance_boundary.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T18:58:50Z",
+  "auditor": "phase19-paper-plan-semantic-audit",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+    "../AutoSci/i18n/en/skills/paper-plan/SKILL.md"
+  ],
+  "native_skill": "paper-plan",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T18:58:50Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/paper-plan",
+    "backend_mode": "route_plan",
+    "coverage_status": "full",
+    "limitations": [
+      "Paper plan final acceptance is gated by source-backed citation planning, explicit Review LLM proof, and verified downstream compile/PDF handoff; semantic full parity still requires an explicit completed route audit."
+    ],
+    "required_capabilities": [
+      "outline planning",
+      "citation plan",
+      "figure plan",
+      "review gate"
+    ],
+    "side_effect_policy": "dry_run_only",
+    "solar_backend_action": "plan_report"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/paper-plan/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/ideas/skillgen.md",
+    "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/experiments/exp-skillgen.md",
+    "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+    "harness/artifacts/autosci/phase19/paper-plan-proof-inputs/wiki/concepts/skill-verification.md",
+    "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-discovery.json",
+    "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-review.json",
+    "harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-plan-compile-runtime.json",
+    "harness/artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/scientific_report.plan.json",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan.json",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan.md",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_idea_graph_map.json",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_citation_map.json",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_plan_final_acceptance_boundary.json",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/plan_report_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-paper-plan-final-proof-20260630/paper_draft_compile_handoff.json",
+    "harness/artifacts/autosci/phase19/paper-plan-route-after-final-acceptance.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $paper-plan now preserves native AutoSci /paper-plan semantics as an idea-graph-driven paper planning route: it accepts target idea slugs, venue, title, and wiki-root inputs; reads validated/in-progress idea pages, linked succeeded experiments, and referenced method/concept/topic/paper pages; builds an evidence map, citation plan, figure/citation plan, Review LLM boundary, and compile/PDF handoff; and marks final acceptance only when idea graph, source citations, Review LLM proof, and downstream compile handoff are all complete."
+}

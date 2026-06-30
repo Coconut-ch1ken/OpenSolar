@@ -1,0 +1,64 @@
+{
+  "citation_count": 5,
+  "citations": [
+    {
+      "citation_id": "arxiv:2601.01003",
+      "evidence_id": "lit-survey-external-20260630",
+      "source": "literature_discovery",
+      "source_channels": [
+        "references"
+      ],
+      "source_ref": "https://arxiv.org/abs/2601.01003",
+      "title": "SkillGen Survey Evidence"
+    },
+    {
+      "citation_id": "wiki:artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+      "evidence_id": "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+      "path": "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+      "source": "wiki_paper",
+      "source_channels": [
+        "wiki"
+      ],
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+      "title": "Registered SkillGen Source"
+    },
+    {
+      "citation_id": "wiki:artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+      "evidence_id": "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+      "path": "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+      "source": "wiki_paper",
+      "source_channels": [
+        "wiki"
+      ],
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+      "title": "Registered SkillGen Source"
+    },
+    {
+      "citation_id": "wiki:artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+      "evidence_id": "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+      "path": "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+      "source": "wiki_paper",
+      "source_channels": [
+        "wiki"
+      ],
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+      "title": "Research Proof Paper"
+    },
+    {
+      "citation_id": "wiki:artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+      "evidence_id": "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+      "path": "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+      "source": "wiki_paper",
+      "source_channels": [
+        "wiki"
+      ],
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+      "title": "AutoSci Adapter Fixture Paper"
+    }
+  ],
+  "limitations": [
+    "Citation map was capped to max_papers=5."
+  ],
+  "schema": "autosci_publication_citation_map.v1",
+  "status": "completed"
+}

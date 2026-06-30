@@ -1,0 +1,102 @@
+{
+  "entries": [
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{arxiv260101002,\n  title = {SkillGen Draft Evidence},\n  note = {https://arxiv.org/abs/2601.01002}\n}",
+      "key": "arxiv260101002",
+      "source_ref": "https://arxiv.org/abs/2601.01002",
+      "title": "SkillGen Draft Evidence",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperinge,\n  title = {Registered SkillGen Source},\n  note = {artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperinge",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+      "title": "Registered SkillGen Source",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperregi,\n  title = {Registered SkillGen Source},\n  note = {artifacts/autosci/workspace/wiki/papers/paper-registered-source.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperregi",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+      "title": "Registered SkillGen Source",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperrese,\n  title = {Research Proof Paper},\n  note = {artifacts/autosci/workspace/wiki/papers/paper-research-proof.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperrese",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+      "title": "Research Proof Paper",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspapersamp,\n  title = {AutoSci Adapter Fixture Paper},\n  note = {artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspapersamp",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+      "title": "AutoSci Adapter Fixture Paper",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperskil,\n  title = {SKILLGEN: Verified Inference-Time Agent Skill Synthesis},\n  note = {https://arxiv.org/abs/2605.10999v1}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperskil",
+      "source_ref": "https://arxiv.org/abs/2605.10999v1",
+      "title": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperskil,\n  title = {SkillGen PDF Extracted Text},\n  note = {https://arxiv.org/abs/2605.10999v1}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperskil",
+      "source_ref": "https://arxiv.org/abs/2605.10999v1",
+      "title": "SkillGen PDF Extracted Text",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperskil,\n  title = {SKILLGEN: Verified Inference-Time Agent Skill Synthesis},\n  note = {artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperskil",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+      "title": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperskil,\n  title = {SKILLGEN: Verified Inference-Time Agent Skill Synthesis},\n  note = {artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperskil",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+      "title": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspaperskil,\n  title = {SKILLGEN: Verified Inference-Time Agent Skill Synthesis},\n  note = {https://arxiv.org/abs/2605.10999v1}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspaperskil",
+      "source_ref": "https://arxiv.org/abs/2605.10999v1",
+      "title": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipaperspapersola,\n  title = {Solar Harness PDF Smoke},\n  note = {https://arxiv.org/abs/2401.00003}\n}",
+      "key": "wikiartifactsautosciworkspacewikipaperspapersola",
+      "source_ref": "https://arxiv.org/abs/2401.00003",
+      "title": "Solar Harness PDF Smoke",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipapersruntimeso,\n  title = {Runtime Verified Skill Generation Source},\n  note = {artifacts/autosci/workspace/wiki/papers/runtime-source-001.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipapersruntimeso",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+      "title": "Runtime Verified Skill Generation Source",
+      "verified": false
+    },
+    {
+      "bibtex": "% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n@misc{wikiartifactsautosciworkspacewikipapersskillgenm,\n  title = {SkillGen},\n  note = {artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md}\n}",
+      "key": "wikiartifactsautosciworkspacewikipapersskillgenm",
+      "source_ref": "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md",
+      "title": "SkillGen",
+      "verified": false
+    }
+  ],
+  "entry_count": 13,
+  "limitations": [],
+  "references_bib_path": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper/references.bib",
+  "schema": "autosci_paper_draft_bibtex_coverage.v1",
+  "status": "completed",
+  "unconfirmed_count": 13,
+  "verified_count": 0
+}

@@ -1,0 +1,158 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/paper-compile/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $paper-compile preserves the native paper-dir argument plus --checklist, --fix, approval, submission profile, PDF inspection, and submission audit controls.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+        ".agents/skills/paper-compile/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approved_tex_execution_boundary",
+      "detail": "TeX execution is not silently run: the proof uses approval, allowlist, before/after artifacts, and runtime evidence, while unavailable/unapproved toolchains remain diagnostics.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/compile-allowlist.json",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/compile-before.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-structural-proof-20260630/compile_paper_runtime_evidence.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/compile_paper_approval_contract.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "pdf_integrity_verification",
+      "detail": "Runtime semantic verification now requires a structurally valid PDF artifact with PDF header, xref trailer, and EOF marker; invalid one-line PDF artifacts are rejected by regression coverage.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/paper_compile_checklist.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "submission_checklist_coverage",
+      "detail": "The final checklist records successful [UNCONFIRMED] scan, anonymity check, verified page-count check, and verified minimum font-size check.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/submission-profile.json",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/pdf-inspection.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/paper_compile_checklist.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/paper_compile_diagnostics.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "submission_boundary_truthfulness",
+      "detail": "The route separates compile readiness, venue readiness, submission audit readiness, and portal upload; the final boundary is submission_ready without claiming portal submission.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/submission-audit.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/publication_submission_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "auto_fix_boundary",
+      "detail": "The --fix path remains approval-gated and can only replace source from explicit after_artifact evidence, preserving native auto-fix semantics without silent source mutation.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "runtime_proof_coverage",
+      "detail": "The runtime proof manifest includes compile bundle, submission boundary, checklist, diagnostics, approval contract, runtime evidence, compiled PDF, and LaTeX source references.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/compile_paper_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/publication_bundle.compile.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T19:17:10Z",
+  "auditor": "phase19-paper-compile-semantic-audit",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+    "../AutoSci/i18n/en/skills/paper-compile/SKILL.md"
+  ],
+  "native_skill": "paper-compile",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T19:17:10Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/paper-compile",
+    "backend_mode": "side_effect_gated",
+    "coverage_status": "gated",
+    "limitations": [
+      "Native paper compile semantics are complete behind the explicit approval boundary: TeX execution requires allowlist, approval, before/after artifacts, and runtime evidence; compile readiness requires structurally valid PDF output; venue submission readiness requires source-backed --submission-profile plus --pdf-inspection; submission audit readiness requires explicit --submission-audit evidence and does not imply portal upload unless that evidence says portal_submission_completed=true. The route remains coverage_status=gated because compilation and source auto-fix are side effects, while semantic full parity is attached through route-level audit evidence."
+    ],
+    "required_capabilities": [
+      "LaTeX compile",
+      "PDF structural integrity verification",
+      "PDF checks",
+      "submission checklist",
+      "venue submission profile boundary",
+      "PDF inspection evidence",
+      "publication submission audit boundary",
+      "auto-fix proposal"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "compile_paper"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/paper-compile/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.tex",
+    "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+    "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/compile-allowlist.json",
+    "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/compile-before.json",
+    "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/submission-profile.json",
+    "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/pdf-inspection.json",
+    "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/submission-audit.json",
+    "harness/artifacts/autosci/runs/codex-paper-compile-structural-proof-20260630/compile_paper_runtime_evidence.json",
+    "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/publication_bundle.compile.json",
+    "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/publication_submission_boundary.json",
+    "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/paper_compile_checklist.json",
+    "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/paper_compile_diagnostics.md",
+    "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/compile_paper_approval_contract.json",
+    "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/compile_paper_runtime_proof.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $paper-compile now preserves native AutoSci /paper-compile semantics as an approval-gated publication compile route: it accepts paper directory and checklist/fix/submission controls, runs or verifies an allowlisted TeX executor through approval evidence, rejects structurally invalid PDF artifacts, records compile diagnostics and checklist output, verifies page/font/anonymity/[UNCONFIRMED] checks from explicit profile and PDF inspection evidence, supports approved auto-fix writeback from after_artifact evidence, and separates submission readiness from portal upload claims."
+}

@@ -2,7 +2,7 @@
 
 Human-facing research memory projected from Solar-managed evidence.
 
-Last projected run: `codex-poster-content-proof-20260630`
+Last projected run: `codex-daily-ingest-handoff-proof-20260630`
 
 ## Papers
 
@@ -96,6 +96,7 @@ Last projected run: `codex-poster-content-proof-20260630`
 - [pipeline-progress](outputs/pipeline-progress.md)
 - [refine-loop-proof](outputs/refine-loop-proof.md)
 - [refine-proof](outputs/refine-proof.md)
+- [related-work-topic-skillgen-2026-06-30](outputs/related-work-topic-skillgen-2026-06-30.md)
 - [report-skillgen-operator-smoke](outputs/report-skillgen-operator-smoke.md)
 - [what-evidence-supports-skillgen](outputs/what-evidence-supports-skillgen.md)
 

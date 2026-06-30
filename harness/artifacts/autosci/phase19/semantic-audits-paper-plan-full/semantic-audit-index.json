@@ -1,0 +1,30 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-paper-plan-full/paper-plan.semantic-audit.json"
+  ],
+  "generated_at": "2026-06-30T18:58:50Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "compile_handoff_boundary": "ok",
+        "idea_graph_evidence_map": "ok",
+        "native_command_surface": "ok",
+        "native_skill_doc_exists": "ok",
+        "review_llm_boundary": "ok",
+        "runtime_proof_coverage": "ok",
+        "section_figure_citation_plan": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "truthfulness_boundary": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-paper-plan-full/paper-plan.semantic-audit.json",
+      "native_skill": "paper-plan",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

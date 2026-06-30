@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-30T12:56:03Z",
+  "generated_at": "2026-06-30T19:02:03Z",
   "proofs": [
     {
       "categories": [
@@ -16,10 +16,10 @@
       ],
       "native_skill": "paper-draft",
       "production_ready": true,
-      "proof_id": "runtime:paper-draft:workspace-projection:20260630T125603Z",
+      "proof_id": "runtime:paper-draft:workspace-projection:20260630T190203Z",
       "provenance": {
         "artifact_kind": "paper_draft_workspace_projection",
-        "captured_at": "2026-06-30T12:56:03Z",
+        "captured_at": "2026-06-30T19:02:03Z",
         "command": "autosci_skill_shim:project_run_to_workspace",
         "source": "solar_autosci_workspace_projector"
       }

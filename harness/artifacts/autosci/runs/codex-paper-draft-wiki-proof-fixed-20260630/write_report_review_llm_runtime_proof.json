@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-30T12:56:03Z",
+  "generated_at": "2026-06-30T19:02:02Z",
   "proofs": [
     {
       "categories": [
@@ -14,10 +14,10 @@
       ],
       "native_skill": "paper-draft",
       "production_ready": true,
-      "proof_id": "runtime:paper-draft:review-paper-draft-external-20260630:20260630T125603Z",
+      "proof_id": "runtime:paper-draft:review-paper-draft-external-20260630:20260630T190202Z",
       "provenance": {
         "artifact_kind": "artifact_review",
-        "captured_at": "2026-06-30T12:56:03Z",
+        "captured_at": "2026-06-30T19:02:02Z",
         "command": "review_llm_evidence:review-paper-draft-external-20260630",
         "source": "review-paper-draft-external-20260630"
       }

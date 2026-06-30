@@ -814,6 +814,81 @@ def _runtime_logs(records: list[dict[str, Any]]) -> list[str]:
     return logs
 
 
+def _pdf_integrity(path: Path) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "path": _rel(path),
+        "exists": path.exists(),
+        "size_bytes": 0,
+        "header_ok": False,
+        "eof_ok": False,
+        "startxref_ok": False,
+        "valid": False,
+        "detail": "",
+    }
+    if not path.exists() or not path.is_file():
+        result["detail"] = "PDF artifact does not exist."
+        return result
+    try:
+        size = path.stat().st_size
+        with path.open("rb") as handle:
+            head = handle.read(1024)
+            if size > 4096:
+                handle.seek(max(size - 4096, 0))
+                tail = handle.read()
+            else:
+                tail = head
+    except OSError as exc:
+        result["detail"] = f"PDF artifact could not be read: {exc}"
+        return result
+    header_ok = head.startswith(b"%PDF-")
+    eof_ok = b"%%EOF" in tail
+    startxref_ok = b"startxref" in tail
+    valid = bool(size > 32 and header_ok and eof_ok and startxref_ok)
+    result.update({
+        "size_bytes": size,
+        "header_ok": header_ok,
+        "eof_ok": eof_ok,
+        "startxref_ok": startxref_ok,
+        "valid": valid,
+        "detail": "PDF artifact has a readable PDF header, xref trailer, and EOF marker."
+        if valid
+        else "PDF artifact is present but missing required structural markers.",
+    })
+    return result
+
+
+def _compile_runtime_pdf_integrity(contract: dict[str, Any]) -> list[dict[str, Any]]:
+    paths: list[Path] = []
+    records, _errors = _runtime_records(contract)
+    for record in records:
+        for key in ("pdf_path", "output_pdf", "compiled_pdf"):
+            raw = _field(record, key)
+            if not str(raw or "").strip():
+                continue
+            path = _resolve_harness_path(str(raw))
+            if path.suffix.lower() == ".pdf":
+                paths.append(path)
+    after_entries = contract.get("after_artifacts") if isinstance(contract.get("after_artifacts"), list) else []
+    for entry in after_entries:
+        if not isinstance(entry, dict) or not entry.get("exists"):
+            continue
+        raw = str(entry.get("artifact_path") or entry.get("path") or "").strip()
+        if not raw:
+            continue
+        path = _resolve_harness_path(raw)
+        if path.suffix.lower() == ".pdf":
+            paths.append(path)
+    seen: set[str] = set()
+    inspections: list[dict[str, Any]] = []
+    for path in paths:
+        key = str(path.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
+        inspections.append(_pdf_integrity(path))
+    return inspections
+
+
 def _approval_semantic_runtime(contract: dict[str, Any], action: str, *, limit: int = 10) -> dict[str, Any]:
     records, errors = _runtime_records(contract)
     checks: list[dict[str, Any]] = [
@@ -864,17 +939,24 @@ def _approval_semantic_runtime(contract: dict[str, Any], action: str, *, limit: 
         })
     elif action == "compile_paper":
         exit_ok = any(_runtime_exit_ok(record) for record in records)
-        pdf_ready = any(
-            _truthy(_field(record, "pdf_generated", "compiled_pdf_present"))
-            or _record_path_exists(record, "pdf_path", "output_pdf", "compiled_pdf")
-            for record in records
-        )
+        pdf_integrity = _compile_runtime_pdf_integrity(contract)
+        pdf_ready = any(bool(item.get("valid")) for item in pdf_integrity)
         checks.extend([
             {"check": "compile_exit_ok", "status": "ok" if exit_ok else "error", "detail": str(exit_ok)},
-            {"check": "compiled_pdf_verified", "status": "ok" if pdf_ready else "error", "detail": str(pdf_ready)},
+            {
+                "check": "compiled_pdf_verified",
+                "status": "ok" if pdf_ready else "error",
+                "detail": "At least one compiled PDF artifact passed structural integrity checks."
+                if pdf_ready
+                else "No compiled PDF artifact passed structural integrity checks.",
+            },
         ])
         verified = verified and exit_ok and pdf_ready
-        detail.update({"compile_exit_ok": exit_ok, "compiled_pdf_verified": pdf_ready})
+        detail.update({
+            "compile_exit_ok": exit_ok,
+            "compiled_pdf_verified": pdf_ready,
+            "pdf_integrity": pdf_integrity,
+        })
     elif action == "run_pilot_experiment":
         exit_ok = any(_runtime_exit_ok(record) for record in records)
         metrics = [metric for record in records for metric in _runtime_metrics(record)]
@@ -4386,12 +4468,87 @@ def _source_candidate_wiki_fan_in(
     if not requested:
         return {"summary": summary, "artifact": None, "limitations": [], "artifacts": []}
 
-    status = "inconclusive"
-    artifacts: list[dict[str, Any]] = []
-    limitations: list[str] = []
     evidence_ids = _unique_strings(
         [str(item) for item in ((semantic.get("detail") or {}).get("evidence_ids") or []) if str(item).strip()]
     )
+
+    if action == "daily_arxiv_prepare_finalize":
+        ingest_commands = []
+        for index, candidate in enumerate(candidates, start=1):
+            if not isinstance(candidate, dict):
+                continue
+            source_ref = str(candidate.get("source_ref") or candidate.get("url") or "").strip()
+            candidate_id = str(candidate.get("candidate_id") or f"daily-arxiv-candidate-{index:03d}")
+            ingest_commands.append(
+                {
+                    "candidate_id": candidate_id,
+                    "title": str(candidate.get("title") or "Untitled Source Candidate"),
+                    "source_ref": source_ref,
+                    "command": f"/ingest {source_ref}" if source_ref else "/ingest <missing-source-ref>",
+                    "decision_required": "ingest",
+                    "confidence_required": "high",
+                    "evidence_ids": _unique_strings([
+                        str(item)
+                        for item in [
+                            *evidence_ids,
+                            candidate_id,
+                            source_ref,
+                        ]
+                        if str(item).strip()
+                    ]),
+                }
+            )
+        status = "ingest_handoff_ready" if ingest_commands and semantic.get("verified") else "inconclusive"
+        handoff = {
+            **summary,
+            "status": status,
+            "applied": False,
+            "handoff_ready": status == "ingest_handoff_ready",
+            "ingest_completed": False,
+            "written_count": 0,
+            "approval_ref": str(contract.get("approval_ref") or "N/A"),
+            "approval_state": str(contract.get("approval_state") or "unknown"),
+            "semantic_runtime_status": str(semantic.get("status") or "unknown"),
+            "ingest_commands": ingest_commands,
+        }
+        evidence = {
+            "schema": "daily_arxiv_ingest_handoff.v1",
+            "task_id": "task-daily_arxiv_prepare_finalize:ingest-handoff",
+            "sprint_id": str(envelope.get("sprint_id") or "sprint-autosci"),
+            "node_id": "node-daily_arxiv_prepare_finalize:ingest-handoff",
+            "status": status,
+            "inputs": inputs,
+            "outputs": {
+                "handoff": handoff,
+                "query": query,
+                "candidates": candidates,
+                "semantic_runtime": semantic,
+            },
+            "artifacts": [],
+            "provenance": {
+                "operator_id": "autosci-bridge",
+                "implementation_package": "plugins/autosci",
+                "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            },
+            "limitations": [
+                "Daily arXiv auto-ingest must invoke /ingest for each accepted paper; this bridge emitted an ingest handoff and did not write wiki paper pages directly.",
+                "Final delivery readiness requires explicit digest delivery or completed /ingest evidence, not handoff creation alone.",
+            ],
+        }
+        handoff_path = _output_dir(envelope, action) / "daily_arxiv_ingest_handoff.json"
+        handoff["sidecar_path"] = _rel(handoff_path)
+        artifact = {"type": "daily_arxiv_ingest_handoff_json", "path": _write_evidence_payload(handoff_path, evidence)}
+        return {
+            "summary": handoff,
+            "artifact": artifact,
+            "runtime_proof_artifact": None,
+            "limitations": list(evidence["limitations"]),
+            "artifacts": [],
+        }
+
+    status = "inconclusive"
+    artifacts: list[dict[str, Any]] = []
+    limitations: list[str] = []
     write: dict[str, Any] = {
         **summary,
         "approval_ref": str(contract.get("approval_ref") or "N/A"),
@@ -4527,7 +4684,10 @@ def _init_sources_final_fan_in_boundary(
     semantic_verified = semantic.get("verified") is True
     provider_boundary_completed = source_boundary.get("completed") is True
     provider_candidates_ready = bool(candidates) and provider_boundary_completed
-    fan_in_completed = fan_in_summary.get("applied") is True and str(fan_in_summary.get("status") or "") == "completed"
+    fan_in_completed = (
+        fan_in_summary.get("ingest_completed") is True
+        and str(fan_in_summary.get("status") or "") in {"completed", "ingest_completed"}
+    )
     edge_paths = [str(item) for item in fan_in_summary.get("edge_paths") or [] if str(item).strip()]
     rebuilt_paths = [str(item) for item in fan_in_summary.get("rebuilt_paths") or [] if str(item).strip()]
     graph_log_rebuild_ready = bool(
@@ -4764,7 +4924,7 @@ def _daily_arxiv_final_provider_delivery_boundary(
     if not ranking_ready:
         limitations.append("Daily arXiv finality requires ranking score and rationale for every candidate.")
     if not delivery_or_ingest_completed:
-        limitations.append("Daily arXiv finality requires explicit digest delivery or approved wiki ingest/fan-in status.")
+        limitations.append("Daily arXiv finality requires explicit digest delivery or completed /ingest evidence.")
     if not limitations:
         limitations.append("Daily arXiv final boundary passed with provider candidates plus delivery or ingest evidence.")
     return {
@@ -8952,10 +9112,20 @@ def _phase14_report_paths(envelope: dict[str, Any]) -> dict[str, Path]:
         "paper_dir": paper_dir,
         "paper_main_tex": _configured_output_path(envelope, "paper_main_tex_path", paper_dir / "main.tex"),
         "paper_sections_dir": _configured_output_path(envelope, "paper_sections_dir_path", paper_dir / "sections"),
+        "paper_references_bib": _configured_output_path(
+            envelope,
+            "paper_references_bib_path",
+            paper_dir / "references.bib",
+        ),
         "paper_draft_citation_map": _configured_output_path(
             envelope,
             "paper_draft_citation_map_path",
             output_dir / "paper_draft_citation_map.json",
+        ),
+        "paper_draft_bibtex_coverage": _configured_output_path(
+            envelope,
+            "paper_draft_bibtex_coverage_path",
+            output_dir / "paper_draft_bibtex_coverage.json",
         ),
         "paper_draft_final_manuscript_boundary": _configured_output_path(
             envelope,
@@ -9273,6 +9443,56 @@ def _paper_draft_final_manuscript_boundary(
     }
 
 
+def _write_paper_draft_bibtex_artifacts(
+    *,
+    paths: dict[str, Path],
+    citation_map: dict[str, Any],
+) -> list[dict[str, str]]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    entries: list[dict[str, Any]] = []
+    bibtex_blocks: list[str] = []
+    for citation in citations:
+        if not isinstance(citation, dict):
+            continue
+        key = _survey_citation_key(citation)
+        title = str(citation.get("title") or key)
+        source_ref = str(citation.get("source_ref") or citation.get("arxiv_id") or "")
+        bibtex = str(citation.get("bibtex") or "").strip()
+        verified = bool(bibtex)
+        if not bibtex:
+            bibtex = (
+                f"% [UNCONFIRMED] Source-backed citation without verified BibTeX fetch evidence.\n"
+                f"@misc{{{key},\n"
+                f"  title = {{{title}}},\n"
+                f"  note = {{{source_ref or 'source-backed citation'}}}\n"
+                "}"
+            )
+        bibtex_blocks.append(bibtex)
+        entries.append({
+            "key": key,
+            "title": title,
+            "source_ref": source_ref,
+            "verified": verified,
+            "bibtex": bibtex,
+        })
+    references_path = _write_text_sidecar(paths["paper_references_bib"], "\n\n".join(bibtex_blocks).rstrip() + ("\n" if bibtex_blocks else ""))
+    coverage = {
+        "schema": "autosci_paper_draft_bibtex_coverage.v1",
+        "status": "completed" if entries else "inconclusive",
+        "entry_count": len(entries),
+        "verified_count": sum(1 for item in entries if item["verified"]),
+        "unconfirmed_count": sum(1 for item in entries if not item["verified"]),
+        "references_bib_path": references_path,
+        "entries": entries,
+        "limitations": [] if entries else ["No citation entries were available for references.bib generation."],
+    }
+    coverage_path = _write_json_sidecar(paths["paper_draft_bibtex_coverage"], coverage)
+    return [
+        {"type": "paper_references_bib", "path": references_path},
+        {"type": "paper_draft_bibtex_coverage_json", "path": coverage_path},
+    ]
+
+
 def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     paths = _phase14_report_paths(envelope)
@@ -9383,6 +9603,7 @@ def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             {"type": "citation_map_json", "path": citation_map_path},
             {"type": "paper_draft_final_manuscript_boundary_json", "path": final_boundary_path},
         ])
+        artifacts.extend(_write_paper_draft_bibtex_artifacts(paths=paths, citation_map=citation_map))
         evidence_payload_path = _configured_output_path(
             envelope,
             "evidence_payload_path",
@@ -10709,6 +10930,7 @@ def _write_phase14_publication_sidecars(envelope: dict[str, Any], report_evidenc
         file_artifacts.extend([
             _artifact("latex_source", paths["paper_main_tex"]),
             _artifact("paper_sections_directory", paths["paper_sections_dir"]),
+            _artifact("paper_references_bib", paths["paper_references_bib"]),
         ])
     passthrough_types = {
         "paper_draft_compile_handoff_json",
@@ -10717,6 +10939,8 @@ def _write_phase14_publication_sidecars(envelope: dict[str, Any], report_evidenc
         "compiled_pdf",
         "citation_map_json",
         "paper_draft_final_manuscript_boundary_json",
+        "paper_references_bib",
+        "paper_draft_bibtex_coverage_json",
     }
     seen_file_artifacts = {(artifact["type"], artifact["path"]) for artifact in file_artifacts}
     for artifact in report_evidence.get("artifacts") or []:
@@ -10750,6 +10974,8 @@ def _write_phase14_publication_sidecars(envelope: dict[str, Any], report_evidenc
     _write_text_sidecar(paths["rebuttal_md"], _render_rebuttal_markdown(report, limitations_list))
     if inputs.get("paper_draft"):
         _write_text_sidecar(paths["paper_main_tex"], _render_latex_paper(report, limitations_list))
+        if not paths["paper_references_bib"].exists():
+            _write_text_sidecar(paths["paper_references_bib"], "")
         paths["paper_sections_dir"].mkdir(parents=True, exist_ok=True)
         for section in report.get("sections") or []:
             if not isinstance(section, dict):
@@ -10959,10 +11185,236 @@ def _survey_final_coverage_boundary(
     }
 
 
+def _survey_citation_key(citation: dict[str, Any]) -> str:
+    raw = str(citation.get("citation_id") or citation.get("title") or "survey-source")
+    arxiv_id = str(citation.get("arxiv_id") or "").strip()
+    if arxiv_id:
+        raw = f"arxiv-{arxiv_id}"
+    return _slug(raw).replace("-", "")[:48] or "surveysource"
+
+
+def _survey_citation_marker(citation: dict[str, Any], requested_format: str) -> str:
+    key = _survey_citation_key(citation)
+    if requested_format in {"latex", "tex"}:
+        return f"\\cite{{{key}}}"
+    wiki_slug = str(citation.get("path") or citation.get("citation_id") or citation.get("title") or key)
+    return f"[[{Path(wiki_slug).stem}]]"
+
+
+def _survey_apply_max_papers(citation_map: dict[str, Any], max_papers: int) -> dict[str, Any]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    if max_papers <= 0 or len(citations) <= max_papers:
+        return citation_map
+    limited = dict(citation_map)
+    limited["citations"] = citations[:max_papers]
+    limited["citation_count"] = len(limited["citations"])
+    limitations = list(limited.get("limitations") or [])
+    limitations.append(f"Citation map was capped to max_papers={max_papers}.")
+    limited["limitations"] = _unique_strings([str(item) for item in limitations])
+    return limited
+
+
+def _survey_theme_sections(
+    *,
+    citations: list[dict[str, Any]],
+    evidence_ids: list[str],
+    target: str,
+    requested_format: str,
+) -> list[dict[str, Any]]:
+    if not citations:
+        return [
+            {
+                "section_id": "themes",
+                "title": "Themes",
+                "evidence_ids": evidence_ids,
+                "body": "No source-backed papers were available for thematic grouping.",
+            }
+        ]
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for citation in citations:
+        channels = citation.get("source_channels") if isinstance(citation.get("source_channels"), list) else []
+        source = str(citation.get("source") or (channels[0] if channels else "") or "source").lower()
+        if "wiki" in source or "wiki" in [str(item).lower() for item in channels]:
+            group = "Wiki-Registered Prior Work"
+        elif "reference" in source or "references" in [str(item).lower() for item in channels]:
+            group = "Reference-Graph Neighbors"
+        elif "semantic" in source or "s2" in source:
+            group = "Semantic Retrieval Candidates"
+        else:
+            group = "Source-Backed Related Work"
+        groups.setdefault(group, []).append(citation)
+    sections: list[dict[str, Any]] = []
+    for index, (group, group_citations) in enumerate(groups.items(), start=1):
+        cited = []
+        for citation in group_citations[:8]:
+            title = str(citation.get("title") or citation.get("citation_id") or "Untitled source")
+            cited.append(f"{title} {_survey_citation_marker(citation, requested_format)}")
+        body = (
+            f"{group} frames `{target}` through {len(group_citations)} source-backed citation(s). "
+            f"{'; '.join(cited)}. "
+            "Unlike a flat paper list, this group is used to position the current work by shared source channel, evidence role, and methodological proximity recorded in the wiki/citation map."
+        )
+        sections.append({
+            "section_id": f"theme-{index}",
+            "title": group,
+            "evidence_ids": _unique_strings([
+                *evidence_ids,
+                *[str(item.get("citation_id") or item.get("title") or "") for item in group_citations],
+            ]),
+            "body": body,
+        })
+    return sections
+
+
+def _survey_bibtex_coverage(
+    envelope: dict[str, Any],
+    *,
+    citation_map: dict[str, Any],
+) -> dict[str, str]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    entries: list[dict[str, Any]] = []
+    for citation in citations:
+        if not isinstance(citation, dict):
+            continue
+        key = _survey_citation_key(citation)
+        title = str(citation.get("title") or key)
+        source_ref = str(citation.get("source_ref") or "")
+        arxiv_id = str(citation.get("arxiv_id") or "")
+        bibtex = str(citation.get("bibtex") or "").strip()
+        verified = bool(bibtex)
+        if not bibtex:
+            bibtex = (
+                f"@misc{{{key},\n"
+                f"  title = {{{title} [UNCONFIRMED]}},\n"
+                f"  note = {{{source_ref or arxiv_id or 'source-backed citation without fetched BibTeX'}}}\n"
+                "}"
+            )
+        entries.append({
+            "key": key,
+            "title": title,
+            "source_ref": source_ref,
+            "arxiv_id": arxiv_id,
+            "verified": verified,
+            "bibtex": bibtex,
+        })
+    payload = {
+        "schema": "autosci_survey_bibtex_coverage.v1",
+        "status": "completed" if entries else "inconclusive",
+        "entry_count": len(entries),
+        "verified_count": sum(1 for item in entries if item["verified"]),
+        "unconfirmed_count": sum(1 for item in entries if not item["verified"]),
+        "entries": entries,
+        "limitations": [] if entries else ["No citation entries were available for BibTeX coverage."],
+    }
+    path = _write_json_sidecar(_output_dir(envelope, "write_survey") / "survey_bibtex_coverage.json", payload)
+    return {"type": "survey_bibtex_coverage_json", "path": path}
+
+
+def _write_survey_archive_writeback(
+    envelope: dict[str, Any],
+    *,
+    title: str,
+    target: str,
+    markdown_path: str,
+    citation_map: dict[str, Any],
+    evidence_ids: list[str],
+    coverage_boundary: dict[str, Any],
+) -> list[dict[str, str]]:
+    if coverage_boundary.get("final_coverage_ready") is not True:
+        return []
+    wiki_root = _wiki_roots_for_write(envelope)[0]
+    outputs_dir = wiki_root / "outputs"
+    graph_dir = wiki_root / "graph"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    graph_dir.mkdir(parents=True, exist_ok=True)
+    slug = _slug(target or title or "survey")
+    date_stamp = datetime.now(UTC).date().isoformat()
+    output_path = outputs_dir / f"related-work-{slug}-{date_stamp}.md"
+    markdown_abs = _resolve_harness_path(markdown_path)
+    body = markdown_abs.read_text(encoding="utf-8", errors="replace") if markdown_abs.exists() else ""
+    output_path.write_text(
+        "\n".join(
+            [
+                "---",
+                f"title: \"Related Work: {title}\"",
+                "type: related-work",
+                f"format: {str((envelope.get('inputs') or {}).get('format') or 'markdown')}",
+                f"paper_count: {int(citation_map.get('citation_count') or 0)}",
+                f"date_generated: {date_stamp}",
+                "---",
+                "",
+                body,
+            ]
+        ).rstrip()
+        + "\n",
+        encoding="utf-8",
+    )
+    edge_path = graph_dir / "edges.jsonl"
+    edge_count = 0
+    with edge_path.open("a", encoding="utf-8") as handle:
+        for citation in citation_map.get("citations") or []:
+            if not isinstance(citation, dict):
+                continue
+            to_ref = str(citation.get("path") or citation.get("citation_id") or citation.get("title") or "").strip()
+            if not to_ref:
+                continue
+            handle.write(json.dumps({
+                "from": f"outputs/{output_path.stem}",
+                "to": to_ref,
+                "type": "derived_from",
+                "evidence": "Cited in related work section",
+            }, sort_keys=True) + "\n")
+            edge_count += 1
+    log_path = _write_generic_wiki_log(
+        wiki_root,
+        "Survey Archive",
+        output_path,
+        evidence_ids,
+        f"survey | {target or title} | {int(citation_map.get('citation_count') or 0)} papers, format: {str((envelope.get('inputs') or {}).get('format') or 'markdown')}",
+    )
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    writeback = {
+        "schema": "autosci_survey_archive_writeback.v1",
+        "status": "completed",
+        "generated_at": timestamp,
+        "outputs": {
+            "write": {
+                "applied": True,
+                "wiki_root": _rel(wiki_root),
+                "target_path": _rel(output_path),
+                "log_path": _rel(log_path),
+                "edge_path": _rel(edge_path),
+                "citation_count": int(citation_map.get("citation_count") or 0),
+                "edge_count": edge_count,
+            }
+        },
+        "artifacts": [
+            {"type": "wiki_page", "path": _rel(output_path)},
+            {"type": "wiki_graph_edges", "path": _rel(edge_path)},
+            {"type": "wiki_log", "path": _rel(log_path)},
+        ],
+        "limitations": [],
+    }
+    writeback_path = _output_dir(envelope, "write_survey") / "survey_archive_writeback.json"
+    writeback_artifact = {"type": "survey_archive_writeback_json", "path": _write_json_sidecar(writeback_path, writeback)}
+    proof_artifact = _write_wiki_mutation_runtime_proof_manifest(
+        envelope,
+        action="write_survey",
+        native_skill="survey",
+        writeback_path=writeback_path,
+        writeback=writeback,
+    )
+    artifacts = [writeback_artifact, *writeback["artifacts"]]
+    if proof_artifact is not None:
+        artifacts.append(proof_artifact)
+    return artifacts
+
+
 def _paper_plan_final_acceptance_boundary(
     citation_map: dict[str, Any],
     review_boundary: dict[str, Any],
     compile_handoff: dict[str, Any],
+    idea_graph_map: dict[str, Any],
     *,
     has_source_evidence: bool,
     section_ids: list[str],
@@ -10972,7 +11424,10 @@ def _paper_plan_final_acceptance_boundary(
     compile_verified = bool(compile_handoff.get("verified")) and str(compile_handoff.get("status") or "") == "completed"
     pdf_paths = [str(item) for item in compile_handoff.get("pdf_paths") or [] if str(item).strip()]
     has_figure_citation_plan = "figure-citation-plan" in set(section_ids)
+    idea_graph_ready = bool(idea_graph_map.get("idea_graph_ready"))
     blocking_reasons: list[str] = []
+    if not idea_graph_ready:
+        blocking_reasons.append("validated idea graph with succeeded experiment evidence is missing")
     if not has_source_evidence:
         blocking_reasons.append("source evidence was not supplied")
     if not citations:
@@ -10991,6 +11446,9 @@ def _paper_plan_final_acceptance_boundary(
         "draft_compile_ready": final_ready,
         "plan_scope": "source_review_compile_ready" if final_ready else "plan_scaffold",
         "source_evidence_supplied": has_source_evidence,
+        "idea_graph_ready": idea_graph_ready,
+        "idea_count": len(idea_graph_map.get("ideas") or []),
+        "supporting_experiment_count": len(idea_graph_map.get("supporting_experiments") or []),
         "citation_count": len(citations),
         "citation_ids": _unique_strings([
             str(item.get("citation_id") or item.get("title") or "")
@@ -11011,9 +11469,108 @@ def _paper_plan_final_acceptance_boundary(
             ]
             if final_ready
             else [
-                "Paper plan final acceptance requires source evidence, source-backed citation planning, completed Review LLM proof, and verified downstream compile/PDF handoff."
+                "Paper plan final acceptance requires validated idea graph evidence, source-backed citation planning, completed Review LLM proof, and verified downstream compile/PDF handoff."
             ]
         ),
+    }
+
+
+def _paper_plan_target_slugs(target: str) -> list[str]:
+    values = re.split(r"[\s,]+", str(target or "").strip())
+    slugs: list[str] = []
+    for value in values:
+        value = value.strip().strip("[]")
+        if not value:
+            continue
+        name = Path(value).stem if "/" in value else value
+        if name.startswith("idea-"):
+            slugs.append(name.removeprefix("idea-"))
+        slugs.append(name)
+    return _unique_strings([_slug(item) for item in slugs if item])
+
+
+def _frontmatter_value(text: str, key: str) -> str:
+    match = re.search(rf"(?m)^\s*{re.escape(key)}\s*:\s*(.+?)\s*$", text)
+    if not match:
+        return ""
+    return match.group(1).strip().strip("'\"")
+
+
+def _frontmatter_list(text: str, key: str) -> list[str]:
+    raw = _frontmatter_value(text, key)
+    if not raw:
+        return []
+    if raw.startswith("[") and raw.endswith("]"):
+        raw = raw[1:-1]
+    return _unique_strings([item.strip().strip("'\"") for item in raw.split(",") if item.strip()])
+
+
+def _paper_plan_idea_graph_map(envelope: dict[str, Any], *, target: str) -> dict[str, Any]:
+    slugs = _paper_plan_target_slugs(target)
+    ideas: list[dict[str, Any]] = []
+    experiments: list[dict[str, Any]] = []
+    references: list[dict[str, Any]] = []
+    checked_roots: list[str] = []
+    for root in _wiki_roots_for_read(envelope):
+        checked_roots.append(_rel(root))
+        for slug in slugs:
+            idea_path = root / "ideas" / f"{slug}.md"
+            if not idea_path.exists():
+                continue
+            text = idea_path.read_text(encoding="utf-8", errors="replace")
+            status = _frontmatter_value(text, "status") or "unknown"
+            novelty_score = _frontmatter_value(text, "novelty_score")
+            linked_experiments = _frontmatter_list(text, "linked_experiments")
+            idea_refs = []
+            for link in re.findall(r"\[\[([^\]|#]+)", text):
+                ref_slug = _slug(link)
+                for directory, ref_type in (
+                    ("methods", "method"),
+                    ("concepts", "concept"),
+                    ("topics", "topic"),
+                    ("papers", "paper"),
+                ):
+                    ref_path = root / directory / f"{ref_slug}.md"
+                    if ref_path.exists():
+                        references.append({"type": ref_type, "slug": ref_slug, "path": _rel(ref_path)})
+                        idea_refs.append(ref_slug)
+                        break
+            ideas.append({
+                "slug": slug,
+                "status": status,
+                "novelty_score": novelty_score,
+                "path": _rel(idea_path),
+                "linked_experiments": linked_experiments,
+                "referenced_entities": _unique_strings(idea_refs),
+            })
+            for exp_slug in linked_experiments:
+                exp_name = _slug(exp_slug)
+                exp_path = root / "experiments" / f"{exp_name}.md"
+                if not exp_path.exists():
+                    continue
+                exp_text = exp_path.read_text(encoding="utf-8", errors="replace")
+                exp_status = _frontmatter_value(exp_text, "status") or ("succeeded" if re.search(r"\bsucceeded\b", exp_text, re.IGNORECASE) else "unknown")
+                experiments.append({
+                    "slug": exp_name,
+                    "status": exp_status,
+                    "path": _rel(exp_path),
+                    "linked_idea": slug,
+                    "key_result": _frontmatter_value(exp_text, "key_result"),
+                })
+    validated = [idea for idea in ideas if str(idea.get("status") or "").lower() in {"validated", "in_progress"}]
+    succeeded = [exp for exp in experiments if str(exp.get("status") or "").lower() in {"succeeded", "success", "completed"}]
+    ready = bool(validated and succeeded)
+    return {
+        "schema": "autosci_paper_plan_idea_graph_map.v1",
+        "status": "completed" if ready else "incomplete",
+        "idea_graph_ready": ready,
+        "target": target,
+        "target_slugs": slugs,
+        "checked_roots": checked_roots,
+        "ideas": ideas,
+        "supporting_experiments": experiments,
+        "referenced_entities": references,
+        "limitations": [] if ready else ["Paper plan requires at least one validated/in-progress idea with a succeeded linked experiment."],
     }
 
 
@@ -11133,6 +11690,14 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
     has_source_evidence = _native_publication_has_source_evidence(envelope)
     citation_map = _native_publication_citation_map(envelope)
     has_citations = bool(citation_map.get("citations"))
+    idea_graph_map = _paper_plan_idea_graph_map(envelope, target=target)
+    idea_graph_ready = bool(idea_graph_map.get("idea_graph_ready"))
+    if idea_graph_ready:
+        evidence_ids = _unique_strings([
+            *evidence_ids,
+            *[str(item.get("slug") or "") for item in idea_graph_map.get("ideas") or []],
+            *[str(item.get("slug") or "") for item in idea_graph_map.get("supporting_experiments") or []],
+        ])
     if has_citations:
         evidence_ids = _unique_strings([
             *evidence_ids,
@@ -11167,6 +11732,8 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("No source evidence was supplied; plan remains a scaffold until linked evidence is provided.")
     if not has_citations:
         limitations.append("No source-backed citation map was available; citation slots remain incomplete.")
+    if not idea_graph_ready:
+        limitations.extend(str(item) for item in idea_graph_map.get("limitations") or [])
     if not has_review_llm:
         limitations.append("No completed Review LLM evidence was supplied; plan remains pre-review.")
     limitations.extend(str(item) for item in review_boundary.get("limitations") or [])
@@ -11182,6 +11749,16 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
             "title": "Outline Plan",
             "evidence_ids": evidence_ids,
             "body": f"Plan a paper around target `{target}` with title `{title}`.",
+        },
+        {
+            "section_id": "idea-evidence-map",
+            "title": "Idea Evidence Map",
+            "evidence_ids": evidence_ids,
+            "body": (
+                f"Idea graph ready: `{idea_graph_ready}`. "
+                f"Validated/in-progress ideas: `{len(idea_graph_map.get('ideas') or [])}`. "
+                f"Supporting experiments: `{len(idea_graph_map.get('supporting_experiments') or [])}`."
+            ),
         },
         {
             "section_id": "evidence-map",
@@ -11223,6 +11800,7 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         citation_map,
         review_boundary,
         compile_handoff,
+        idea_graph_map,
         has_source_evidence=has_source_evidence,
         section_ids=[str(section.get("section_id") or "") for section in sections if isinstance(section, dict)],
     )
@@ -11255,6 +11833,7 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         ],
         "limitations": limitations,
         "citation_map": citation_map,
+        "idea_graph_map": idea_graph_map,
         "review_llm_completed": has_review_llm,
         "review_boundary": review_boundary,
         "compile_handoff": compile_handoff,
@@ -11262,6 +11841,10 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
     }
     plan_path = _write_json_sidecar(paths["plan_json"], plan_payload)
     citation_map_path = _write_json_sidecar(paths["citation_map"], citation_map)
+    idea_graph_map_path = _write_json_sidecar(
+        paths["markdown"].parent / "paper_plan_idea_graph_map.json",
+        idea_graph_map,
+    )
     final_boundary_path = _write_json_sidecar(
         paths["markdown"].parent / "paper_plan_final_acceptance_boundary.json",
         final_acceptance_boundary,
@@ -11287,12 +11870,13 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         native_skill="paper-plan",
         evidence_path=evidence_payload_path,
         citation_map=citation_map,
-        artifact_refs=[plan_path, markdown_path, citation_map_path, final_boundary_path],
+        artifact_refs=[plan_path, markdown_path, citation_map_path, idea_graph_map_path, final_boundary_path],
     )
     artifacts = [
         {"type": "paper_plan_json", "path": plan_path},
         {"type": "paper_plan_markdown", "path": markdown_path},
         {"type": "citation_map_json", "path": citation_map_path},
+        {"type": "paper_plan_idea_graph_map_json", "path": idea_graph_map_path},
         {"type": "paper_plan_final_acceptance_boundary_json", "path": final_boundary_path},
         *compile_artifacts,
     ]
@@ -11315,11 +11899,17 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
 
 def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
     paths = _native_report_paths(envelope, "write_survey")
+    inputs = dict(envelope.get("inputs") or {})
     title = _native_publication_title(envelope, "AutoSci Literature Survey")
     target = _native_publication_target(envelope)
     evidence_ids = _native_publication_evidence_ids(envelope, "survey:request")
     has_source_evidence = _native_publication_has_source_evidence(envelope)
     citation_map = _native_publication_citation_map(envelope)
+    try:
+        max_papers = int(inputs.get("max_papers") or 30)
+    except (TypeError, ValueError):
+        max_papers = 30
+    citation_map = _survey_apply_max_papers(citation_map, max_papers)
     has_citations = bool(citation_map.get("citations"))
     coverage_boundary = _survey_final_coverage_boundary(citation_map, has_source_evidence=has_source_evidence)
     limitations = [
@@ -11335,6 +11925,13 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
         f"- `{item.get('citation_id')}`: {item.get('title')} ({item.get('source_ref')})"
         for item in citation_preview[:12]
     ) or "No source-backed citation entries were available."
+    requested_format = str(inputs.get("format") or "").strip().lower()
+    theme_sections = _survey_theme_sections(
+        citations=[item for item in citation_preview if isinstance(item, dict)],
+        evidence_ids=evidence_ids,
+        target=target,
+        requested_format=requested_format,
+    )
     sections = [
         {
             "section_id": "scope",
@@ -11342,12 +11939,7 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
             "evidence_ids": evidence_ids,
             "body": f"Survey scope: `{target}`.",
         },
-        {
-            "section_id": "themes",
-            "title": "Themes",
-            "evidence_ids": evidence_ids,
-            "body": "Themes must be derived from linked paper, discovery, claim, or method evidence.",
-        },
+        *theme_sections,
         {
             "section_id": "prior-work-map",
             "title": "Prior Work Map",
@@ -11374,6 +11966,7 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
     plan_path = _write_json_sidecar(paths["plan_json"], {
         "title": title,
         "target": target,
+        "max_papers": max_papers,
         "survey_evidence_ids": evidence_ids,
         "citation_map": citation_map,
         "final_coverage_boundary": coverage_boundary,
@@ -11408,9 +12001,11 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
     )
     if source_runtime_proof_artifact is not None:
         artifacts.append(source_runtime_proof_artifact)
-    requested_format = str((envelope.get("inputs") or {}).get("format") or "").strip().lower()
+    bibtex_artifact = None
     if requested_format in {"latex", "tex"}:
         latex_path = _configured_output_path(envelope, "latex_path", paths["markdown"].with_suffix(".tex"))
+        bibtex_artifact = _survey_bibtex_coverage(envelope, citation_map=citation_map)
+        artifacts.append(bibtex_artifact)
         latex_report = {
             "title": title,
             "sections": sections,
@@ -11421,6 +12016,17 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
                 "path": _write_text_sidecar(latex_path, _render_latex_paper(latex_report, limitations)),
             }
         )
+    artifacts.extend(
+        _write_survey_archive_writeback(
+            envelope,
+            title=title,
+            target=target,
+            markdown_path=markdown_path,
+            citation_map=citation_map,
+            evidence_ids=evidence_ids,
+            coverage_boundary=coverage_boundary,
+        )
+    )
     return convert_scientific_report({
         "report_id": f"survey-{_slug(title)}",
         "title": title,
@@ -12242,6 +12848,172 @@ def _poster_run_tool(command: list[str]) -> dict[str, Any]:
     }
 
 
+def _poster_review_requested(inputs: dict[str, Any]) -> bool:
+    return bool(
+        inputs.get("review")
+        or inputs.get("review_llm_requested")
+        or inputs.get("require_review_llm")
+        or inputs.get("review_llm_evidence")
+        or inputs.get("review_evidence")
+        or inputs.get("artifact_review_evidence")
+        or inputs.get("review_llm_command")
+        or inputs.get("review_llm_provider")
+        or inputs.get("review_llm_endpoint")
+    )
+
+
+def _poster_review_from_command_or_provider(
+    envelope: dict[str, Any],
+    *,
+    poster_html_path: Path,
+) -> tuple[dict[str, Any], list[str], list[dict[str, str]]]:
+    inputs = dict(envelope.get("inputs") or {})
+    review_inputs = dict(inputs)
+    review_inputs["target"] = _rel(poster_html_path)
+    review_inputs["artifact_path"] = _rel(poster_html_path)
+    review_inputs["review_llm_requested"] = True
+    review_inputs.setdefault("focus", "poster critique, content fidelity, layout risks, and missing evidence")
+    raw_review = review_artifact(
+        review_inputs,
+        workspace_root=HARNESS_DIR,
+        repository_root=REPO_HARNESS_DIR,
+    )
+    review = raw_review.get("review") if isinstance(raw_review.get("review"), dict) else {}
+    review_llm = review.get("review_llm") if isinstance(review.get("review_llm"), dict) else {}
+    completed = (
+        str(raw_review.get("status") or "") == "completed"
+        and str(review.get("review_mode") or "") == "review_llm"
+        and review.get("review_available") is True
+        and str(review_llm.get("status") or "completed") == "completed"
+    )
+    evidence_ids = _unique_strings([
+        str(raw_review.get("task_id") or ""),
+        *[str(item) for item in review.get("evidence_ids") or []],
+        *[str(item) for item in review_llm.get("evidence_ids") or []],
+    ])
+    payload = {
+        "schema": "artifact_review.v1",
+        "task_id": str(raw_review.get("task_id") or "poster-review-llm"),
+        "status": "completed" if completed else str(raw_review.get("status") or "inconclusive"),
+        "outputs": {
+            "artifact": raw_review.get("artifact") if isinstance(raw_review.get("artifact"), dict) else {},
+            "review": review,
+            "findings": raw_review.get("findings") if isinstance(raw_review.get("findings"), list) else [],
+        },
+        "provenance": {
+            "operator_id": "autosci-bridge-poster",
+            "implementation_package": "plugins/autosci/backends/artifact_review.py",
+            "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            "source": "poster_review_llm_auto_critique",
+        },
+        "limitations": list(raw_review.get("limitations") or []),
+    }
+    payload_path = _write_json_sidecar(_output_dir(envelope, "build_poster") / "poster_review_llm_round_01.json", payload)
+    artifacts = [{"type": "poster_review_llm_evidence_json", "path": payload_path}]
+    if completed:
+        return (
+            {
+                "status": "completed",
+                "source_path": payload_path,
+                "claim_id": f"poster:{_slug(_rel(poster_html_path))}",
+                "review_mode": "review_llm",
+                "review_available": True,
+                "score": review.get("score", "N/A"),
+                "recommendation": str(review.get("recommendation") or "N/A"),
+                "difficulty": str(review.get("difficulty") or "N/A"),
+                "focus": str(review.get("focus") or review_inputs.get("focus") or "N/A"),
+                "evidence_ids": evidence_ids,
+                "finding_count": len(payload["outputs"]["findings"]),
+                "review_llm": review_llm or {"status": "completed"},
+                "checked_paths": [payload_path],
+            },
+            evidence_ids,
+            artifacts,
+        )
+    return (
+        {
+            "status": "inconclusive",
+            "source_path": payload_path,
+            "claim_id": f"poster:{_slug(_rel(poster_html_path))}",
+            "checked_paths": [payload_path],
+            "reasons": list(raw_review.get("limitations") or ["Review LLM command/provider did not produce completed evidence."]),
+        },
+        [],
+        artifacts,
+    )
+
+
+def _poster_review_llm_boundary(
+    envelope: dict[str, Any],
+    *,
+    poster_html_path: Path,
+    content_report_path: str,
+) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    requested = _poster_review_requested(inputs)
+    if inputs.get("no_refine"):
+        return {
+            "schema": "autosci_poster_review_llm_boundary.v1",
+            "status": "skipped_by_no_refine" if requested else "not_requested",
+            "requested": requested,
+            "review_llm_completed": False,
+            "critique_refine_ready": False,
+            "poster_html_path": _rel(poster_html_path),
+            "content_report_path": content_report_path,
+            "review_llm": {"status": "skipped"},
+            "evidence_ids": [],
+            "artifacts": [],
+            "limitations": ["Poster critique/refine pass was skipped by `--no-refine`."],
+        }
+    if not requested:
+        return {
+            "schema": "autosci_poster_review_llm_boundary.v1",
+            "status": "not_requested",
+            "requested": False,
+            "review_llm_completed": False,
+            "critique_refine_ready": False,
+            "poster_html_path": _rel(poster_html_path),
+            "content_report_path": content_report_path,
+            "review_llm": {"status": "not_requested"},
+            "evidence_ids": [],
+            "artifacts": [],
+            "limitations": ["Poster Review LLM critique/refine was not requested."],
+        }
+    if _input_path_values(inputs, "review_llm_evidence", "review_evidence", "artifact_review_evidence"):
+        review_llm, evidence_ids, artifacts = _claim_review_llm_context(
+            envelope,
+            f"poster:{_slug(_rel(poster_html_path))}",
+            artifact_type="poster_review_llm_evidence_json",
+        )
+    elif inputs.get("review_llm_command") or inputs.get("review_llm_provider") or inputs.get("review_llm_endpoint"):
+        review_llm, evidence_ids, artifacts = _poster_review_from_command_or_provider(
+            envelope,
+            poster_html_path=poster_html_path,
+        )
+    else:
+        review_llm = {
+            "status": "missing",
+            "claim_id": f"poster:{_slug(_rel(poster_html_path))}",
+            "reasons": ["Review was requested but no Review LLM evidence, command, or provider was supplied."],
+        }
+        evidence_ids = []
+        artifacts = []
+    completed = str(review_llm.get("status") or "") == "completed"
+    return {
+        "schema": "autosci_poster_review_llm_boundary.v1",
+        "status": "completed" if completed else "missing_review_llm_evidence",
+        "requested": True,
+        "review_llm_completed": completed,
+        "critique_refine_ready": completed,
+        "poster_html_path": _rel(poster_html_path),
+        "content_report_path": content_report_path,
+        "review_llm": review_llm,
+        "evidence_ids": evidence_ids,
+        "artifacts": artifacts,
+        "limitations": [] if completed else list(review_llm.get("reasons") or ["Poster Review LLM critique/refine evidence is incomplete."]),
+    }
+
+
 def _poster_native_content_pipeline(
     envelope: dict[str, Any],
     *,
@@ -12344,7 +13116,7 @@ def _poster_native_content_pipeline(
     report["status"] = "completed" if successful and validate_ok and paths["html"].exists() else "incomplete"
     if report["status"] != "completed":
         report["limitations"].append("Poster source pipeline did not fully complete; inspect command statuses and validation output.")
-    if not inputs.get("review"):
+    if not _poster_review_requested(inputs):
         report["limitations"].append("Critique/revise Review LLM pass was not requested; content distillation is extractive and source-bound.")
     report_rel = _write_json_sidecar(report_path, report)
     artifacts = [
@@ -12656,6 +13428,15 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
             "</main></body></html>\n"
         )
         html_path = _write_text_sidecar(paths["html"], html_body)
+    review_boundary = _poster_review_llm_boundary(
+        envelope,
+        poster_html_path=paths["html"],
+        content_report_path=str(content_pipeline.get("report_path") or ""),
+    )
+    review_boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "build_poster") / "poster_review_llm_boundary.json",
+        review_boundary,
+    )
     contract, executor_result = _execute_poster_if_approved(envelope, contract, paths["html"])
     semantic = _approval_semantic_runtime(contract, "build_poster")
     contract["semantic_runtime"] = semantic
@@ -12680,11 +13461,16 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("No report/evidence payload was supplied; poster content remains a scaffold.")
     pipeline_report = content_pipeline.get("report") if isinstance(content_pipeline.get("report"), dict) else {}
     limitations.extend(str(item) for item in pipeline_report.get("limitations") or [] if str(item).strip())
+    limitations.extend(str(item) for item in review_boundary.get("limitations") or [] if str(item).strip())
     validation_path = _write_json_sidecar(paths["map_json"], {
         "title": title,
         "target": target,
         "content_pipeline_status": str(pipeline_report.get("status") or "not_run"),
         "content_pipeline_report": str(content_pipeline.get("report_path") or ""),
+        "review_llm_status": str(review_boundary.get("status") or "missing"),
+        "review_llm_completed": bool(review_boundary.get("review_llm_completed")),
+        "critique_refine_ready": bool(review_boundary.get("critique_refine_ready")),
+        "poster_review_llm_boundary": review_boundary_path,
         "browser_rendered": bool(semantic.get("detail", {}).get("browser_rendered")) if isinstance(semantic.get("detail"), dict) else False,
         "png_exported": bool(semantic.get("detail", {}).get("png_exported")) if isinstance(semantic.get("detail"), dict) else False,
         "overflow_probe": "passed" if semantic.get("detail", {}).get("overflow_probe_passed") else "not_run",
@@ -12696,19 +13482,30 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
     files = [
         {"type": "poster_html", "path": html_path},
         {"type": "poster_validation_json", "path": validation_path},
+        {"type": "poster_review_llm_boundary_json", "path": review_boundary_path},
         *list(content_pipeline.get("artifacts") or []),
+        *list(review_boundary.get("artifacts") or []),
         contract_artifact,
         *runtime_evidence_artifacts,
         *_contract_existing_artifacts(contract, "after_artifacts", "poster_runtime_after_artifact"),
     ]
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "build_poster") / "build_poster.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    review_runtime_proof_artifact = _write_review_context_runtime_proof_manifest(
+        envelope,
+        action="build_poster",
+        native_skill="poster",
+        evidence_path=evidence_payload_path,
+        review_llm=review_boundary.get("review_llm") if isinstance(review_boundary.get("review_llm"), dict) else {},
+    )
+    if review_runtime_proof_artifact is not None:
+        files.append(review_runtime_proof_artifact)
     if semantic.get("verified"):
-        evidence_payload_path = _configured_output_path(
-            envelope,
-            "evidence_payload_path",
-            _output_dir(envelope, "build_poster") / "build_poster.evidence.json",
-            legacy_key="evidence_path",
-            legacy_suffix=".json",
-        )
         files.extend(
             _write_approved_mutation_runtime_proof_manifests(
                 envelope,
@@ -13421,7 +14218,8 @@ def _execute_paper_compile_if_approved(
         timeout=int(inputs.get("executor_timeout_seconds") or 120),
     )
     pdf_path = tex_path.with_suffix(".pdf")
-    pdf_generated = proc.returncode == 0 and pdf_path.exists()
+    pdf_integrity = _pdf_integrity(pdf_path)
+    pdf_generated = proc.returncode == 0 and bool(pdf_integrity.get("valid"))
     stdout_path = output_dir / "compile_paper_executor_stdout.txt"
     stderr_path = output_dir / "compile_paper_executor_stderr.txt"
     stdout_rel = _write_text_sidecar(stdout_path, proc.stdout)
@@ -13444,11 +14242,18 @@ def _execute_paper_compile_if_approved(
             {"check": "command_allowlisted", "status": "ok", "detail": allow_reason},
             {"check": "tex_executor", "status": "ok", "detail": executor_name},
             {"check": "exit_code", "status": "ok" if proc.returncode == 0 else "error", "detail": f"exit_code={proc.returncode}"},
-            {"check": "pdf_generated", "status": "ok" if pdf_generated else "error", "detail": _rel(pdf_path) if pdf_path.exists() else "PDF was not found after executor run."},
+            {
+                "check": "pdf_generated",
+                "status": "ok" if pdf_generated else "error",
+                "detail": _rel(pdf_path)
+                if pdf_generated
+                else str(pdf_integrity.get("detail") or "PDF was not found after executor run."),
+            },
         ],
         runtime_fields={
             "pdf_generated": pdf_generated,
             "pdf_path": _rel(pdf_path) if pdf_path.exists() else "",
+            "pdf_integrity": pdf_integrity,
             "tex_executor": executor_name,
             "available_tex_executors": available_tools,
         },
@@ -14830,6 +15635,12 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     contract_artifact = _write_approval_contract_sidecar(envelope, "compile_paper", contract)
     runtime_artifacts = _contract_existing_artifacts(contract, "after_artifacts", "compile_runtime_after_artifact")
     runtime_evidence_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "compile_runtime_evidence_json")
+    pdf_integrity = [_pdf_integrity(path) for path in pdf_files]
+    valid_pdf_files = [
+        path
+        for path, integrity in zip(pdf_files, pdf_integrity)
+        if bool(integrity.get("valid"))
+    ]
 
     checks = [
         _check_row(
@@ -14846,9 +15657,11 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         ),
         _check_row(
             "compiled_pdf_present",
-            "ok" if pdf_files else "warn",
-            f"{len(pdf_files)} PDF file(s) found." if pdf_files else "No compiled PDF was found.",
-            [_rel(path) for path in pdf_files],
+            "ok" if valid_pdf_files else "warn",
+            f"{len(valid_pdf_files)} structurally valid PDF file(s) found."
+            if valid_pdf_files
+            else "No structurally valid compiled PDF was found.",
+            [_rel(path) for path in valid_pdf_files],
         ),
         _check_row(
             "bibliography_present",
@@ -14916,13 +15729,13 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     ]
     submission_profile = _submission_profile_boundary(inputs)
     submission_inputs = _apply_submission_profile_inputs(inputs, submission_profile)
-    pdf_inspection = _pdf_inspection_boundary(inputs, pdf_files=pdf_files)
+    pdf_inspection = _pdf_inspection_boundary(inputs, pdf_files=valid_pdf_files)
     submission_inputs = _apply_pdf_inspection_inputs(submission_inputs, pdf_inspection)
     submission_audit = _submission_audit_boundary(inputs)
     submission_checks = _submission_check_rows(submission_inputs, latex_files=latex_files, markdown_files=markdown_files)
     submission_boundary = _publication_submission_boundary(
         submission_checks=submission_checks,
-        pdf_files=pdf_files,
+        pdf_files=valid_pdf_files,
         semantic=semantic,
         submission_profile=submission_profile,
         pdf_inspection=pdf_inspection,
@@ -14977,8 +15790,8 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("Paper compile target was missing or unresolved.")
     if not latex_files:
         limitations.append("No LaTeX source was found for native paper compilation.")
-    if not pdf_files:
-        limitations.append("No compiled PDF was found in the target path.")
+    if not valid_pdf_files:
+        limitations.append("No structurally valid compiled PDF was found in the target path.")
     if fix_requested:
         limitations.extend(str(item) for item in fix_result.get("limitations") or [])
     if any(row.get("status") != "ok" for row in submission_checks):
@@ -14986,7 +15799,7 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     limitations.extend(str(item) for item in submission_boundary.get("limitations") or [])
     status = (
         "completed"
-        if target_exists and latex_files and (pdf_files or semantic.get("verified")) and (not fix_requested or bool(fix_result.get("applied")))
+        if target_exists and latex_files and (valid_pdf_files or semantic.get("verified")) and (not fix_requested or bool(fix_result.get("applied")))
         else "inconclusive"
     )
     checklist_payload = {
@@ -15014,8 +15827,10 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "pdf_inspection": pdf_inspection,
         "submission_audit": submission_audit,
         "submission_boundary": submission_boundary,
+        "pdf_integrity": pdf_integrity,
         "latex_files": [_rel(path) for path in latex_files],
         "pdf_files": [_rel(path) for path in pdf_files],
+        "verified_pdf_files": [_rel(path) for path in valid_pdf_files],
         "markdown_files": [_rel(path) for path in markdown_files],
         "bibliography_files": [_rel(path) for path in bibliography_files],
         "limitations": limitations,
@@ -15060,7 +15875,7 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         *runtime_evidence_artifacts,
         *runtime_artifacts,
         *[_artifact("latex_source", path) for path in latex_files],
-        *[_artifact("compiled_pdf", path) for path in pdf_files],
+        *[_artifact("compiled_pdf", path) for path in valid_pdf_files],
         *[_artifact("paper_markdown_source", path) for path in markdown_files[:5]],
         *[_artifact("bibliography_source", path) for path in bibliography_files[:5]],
     ]
@@ -15079,7 +15894,7 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         contract=contract,
         artifacts=file_artifacts,
         latex_files=latex_files,
-        pdf_files=pdf_files,
+        pdf_files=valid_pdf_files,
     )
     if runtime_proof_artifact is not None:
         file_artifacts.append(runtime_proof_artifact)
@@ -15093,7 +15908,7 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             source_report_id,
             "paper-compile-checklist",
             *[_rel(path) for path in latex_files[:5]],
-            *[_rel(path) for path in pdf_files[:5]],
+            *[_rel(path) for path in valid_pdf_files[:5]],
         ]),
         "artifacts": file_artifacts,
         "status": status,

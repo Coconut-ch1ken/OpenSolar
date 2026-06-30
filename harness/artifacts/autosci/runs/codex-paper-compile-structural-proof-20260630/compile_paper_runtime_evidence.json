@@ -1,0 +1,85 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/runs/codex-paper-compile-structural-proof-20260630/compile_paper_executor_stdout.txt",
+      "type": "executor_stdout"
+    },
+    {
+      "path": "artifacts/autosci/runs/codex-paper-compile-structural-proof-20260630/compile_paper_executor_stderr.txt",
+      "type": "executor_stderr"
+    },
+    {
+      "path": "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+      "type": "compiled_pdf"
+    }
+  ],
+  "inputs": {
+    "approval_ref": "approval-codex-paper-compile-structural-proof"
+  },
+  "limitations": [
+    "Approved paper compile executor ran pdflatex locally."
+  ],
+  "node_id": "node-compile-paper",
+  "outputs": {
+    "runtime": {
+      "action": "compile_paper",
+      "approval_ref": "approval-codex-paper-compile-structural-proof",
+      "available_tex_executors": [
+        "pdflatex",
+        "xelatex",
+        "lualatex"
+      ],
+      "checks": [
+        {
+          "check": "command_allowlisted",
+          "detail": "executable allowlisted: pdflatex",
+          "status": "ok"
+        },
+        {
+          "check": "tex_executor",
+          "detail": "pdflatex",
+          "status": "ok"
+        },
+        {
+          "check": "exit_code",
+          "detail": "exit_code=0",
+          "status": "ok"
+        },
+        {
+          "check": "pdf_generated",
+          "detail": "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+          "status": "ok"
+        }
+      ],
+      "command_run": "/Library/TeX/texbin/pdflatex -interaction=nonstopmode -halt-on-error main.tex",
+      "evidence_ids": [
+        "paper-compile-runtime:pdflatex",
+        "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.tex"
+      ],
+      "exit_code": 0,
+      "pdf_generated": true,
+      "pdf_integrity": {
+        "detail": "PDF artifact has a readable PDF header, xref trailer, and EOF marker.",
+        "eof_ok": true,
+        "exists": true,
+        "header_ok": true,
+        "path": "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+        "size_bytes": 61093,
+        "startxref_ok": true,
+        "valid": true
+      },
+      "pdf_path": "artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+      "status": "completed",
+      "tex_executor": "pdflatex"
+    }
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-approved-side-effect-executor",
+    "timestamp": "2026-06-30T19:11:32Z"
+  },
+  "schema": "autosci_runtime_evidence.v1",
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "status": "completed",
+  "task_id": "task-autosci-skillgen-compile_paper"
+}

@@ -1,0 +1,42 @@
+{
+  "blocking_reasons": [],
+  "citation_count": 13,
+  "citation_ids": [
+    "arxiv:2601.01001",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md"
+  ],
+  "compile_handoff_status": "completed",
+  "compile_handoff_verified": true,
+  "compiled_pdf_paths": [
+    "artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf"
+  ],
+  "draft_compile_ready": true,
+  "figure_citation_plan_present": true,
+  "final_plan_accepted": true,
+  "idea_count": 1,
+  "idea_graph_ready": true,
+  "limitations": [
+    "Paper plan final acceptance is bounded to supplied source evidence, Review LLM proof, and verified compile/PDF handoff."
+  ],
+  "plan_scope": "source_review_compile_ready",
+  "review_boundary_status": "completed",
+  "review_evidence_ids": [
+    "review:paper-plan-external-20260630"
+  ],
+  "review_llm_completed": true,
+  "schema": "autosci_paper_plan_final_acceptance_boundary.v1",
+  "source_evidence_supplied": true,
+  "status": "final_plan_accepted",
+  "supporting_experiment_count": 1
+}

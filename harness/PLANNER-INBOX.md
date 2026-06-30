@@ -5114,3 +5114,4 @@
 - [ ] [2026-06-30T17:13:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
 - [ ] [2026-06-30T17:17:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
 - [ ] [2026-06-30T17:21:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T17:40:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260625-183818-intent-desktop-app-final-no-dispatc-bf5b34db planner dispatch failed (pane_busy); cooldown 90s, no pane spam

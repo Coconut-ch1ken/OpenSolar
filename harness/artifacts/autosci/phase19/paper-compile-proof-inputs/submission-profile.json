@@ -1,0 +1,14 @@
+{
+  "schema": "autosci_submission_profile.v1",
+  "venue": "AutoSci-Parity-Proof",
+  "evidence_ids": [
+    "phase19-paper-compile-proof:venue-profile"
+  ],
+  "requirements": {
+    "submission_mode": "double_blind",
+    "anonymous": true,
+    "double_blind": true,
+    "page_limit": 8,
+    "min_font_size": 9.5
+  }
+}

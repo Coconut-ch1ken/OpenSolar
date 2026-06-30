@@ -1,0 +1,30 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-survey-full/survey.semantic-audit.json"
+  ],
+  "generated_at": "2026-06-30T18:53:59Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "latex_and_bibtex_coverage": "ok",
+        "native_command_surface": "ok",
+        "native_skill_doc_exists": "ok",
+        "runtime_proof_coverage": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "source_backed_citation_discipline": "ok",
+        "thematic_related_work_output": "ok",
+        "truthfulness_boundary": "ok",
+        "wiki_archive_writeback": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-survey-full/survey.semantic-audit.json",
+      "native_skill": "survey",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

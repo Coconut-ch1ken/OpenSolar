@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-06-30T19:17:10Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-paper-compile-full/paper-compile.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/paper-compile/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.tex",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/paper/main.pdf",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/compile-allowlist.json",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/compile-before.json",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/submission-profile.json",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/pdf-inspection.json",
+        "harness/artifacts/autosci/phase19/paper-compile-proof-inputs/submission-audit.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-structural-proof-20260630/compile_paper_runtime_evidence.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/publication_bundle.compile.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/publication_submission_boundary.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/paper_compile_checklist.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/paper_compile_diagnostics.md",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/compile_paper_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-paper-compile-final-submission-proof-20260630/compile_paper_runtime_proof.json"
+      ],
+      "native_skill": "paper-compile",
+      "production_ready": true,
+      "proof_id": "runtime:paper-compile:phase19-paper-compile-semantic-audit:20260630T191710Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T19:17:10Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-paper-compile-full/paper-compile.semantic-audit.json --native-skill paper-compile --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-paper-compile-full/paper-compile.semantic-proof.json",
+        "source": "phase19-paper-compile-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

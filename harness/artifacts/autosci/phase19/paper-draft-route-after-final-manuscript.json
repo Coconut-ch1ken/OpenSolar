@@ -1,0 +1,863 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ask.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/check.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/daily-arxiv.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/discover.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/edit.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-design.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-eval.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-eval.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-run.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-run.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-status.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ideate.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ingest.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/init.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/novelty.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-compile.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-plan.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/poster.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/prefill.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/refine.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/research.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/reset.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/review.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/setup.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/survey.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/visualize.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current",
+      "type": "semantic_audit_dir"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "paper-draft",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [
+      "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630"
+    ],
+    "runtime_proof_manifest_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json"
+    ],
+    "runtime_proof_manifests": [],
+    "semantic_audit_dirs": [
+      "artifacts/autosci/phase19/semantic-audits-current"
+    ],
+    "semantic_audit_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ask.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/check.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/daily-arxiv.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/discover.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/edit.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-design.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-eval.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-eval.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-run.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-run.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-status.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ideate.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ingest.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/init.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/novelty.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-compile.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-plan.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/poster.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/prefill.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/refine.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/research.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/reset.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/review.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/setup.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/survey.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/visualize.semantic-audit.json"
+    ],
+    "semantic_audits": []
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-paper-draft",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 0,
+        "bounded_local": 1,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 1,
+      "gated_count": 0,
+      "items": [
+        {
+          "autosci_command": "/paper-draft",
+          "autosci_feature": "/paper-draft",
+          "backend_mode": "route_plan",
+          "coverage_status": "full",
+          "evidence_ids": [
+            "route:paper-draft",
+            "native:paper-draft"
+          ],
+          "evidence_schema": "scientific_report.v1",
+          "execution_policy": "bounded_local",
+          "feature_kind": "skill",
+          "limitations": [
+            "Paper draft final manuscript readiness is gated by source-backed citation evidence, completed Review LLM proof, verified compile/PDF handoff, paper directory artifacts, and workspace wiki projection proof; semantic full parity still requires an explicit completed route audit."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/paper-draft/SKILL.md"
+          ],
+          "native_skill": "paper-draft",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/bin/autosci_bridge.py",
+              "ref": "plugins/autosci/bin/autosci_bridge.py run --action write_report",
+              "status": "ok",
+              "token": "plugins/autosci/bin/autosci_bridge.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tools/review_model_runtime_proof.py",
+              "ref": "tools/review_model_runtime_proof.py from-evidence",
+              "status": "ok",
+              "token": "tools/review_model_runtime_proof.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tools/wiki_mutation_runtime_proof.py",
+              "ref": "tools/wiki_mutation_runtime_proof.py from-writeback",
+              "status": "ok",
+              "token": "tools/wiki_mutation_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "plugins/autosci/bin/autosci_bridge.py run --action write_report",
+            "tools/review_model_runtime_proof.py from-evidence",
+            "tools/wiki_mutation_runtime_proof.py from-writeback"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:paper-draft",
+            "native:paper-draft"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:paper-draft"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:paper-draft"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "plugins/autosci/bin/autosci_bridge.py run --action write_report",
+                "tools/review_model_runtime_proof.py from-evidence",
+                "tools/wiki_mutation_runtime_proof.py from-writeback"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "route:paper-draft",
+                "native:paper-draft"
+              ],
+              "status": "pending"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route supplied external runtime evidence for model/review execution.",
+              "evidence_refs": [
+                "runtime:paper-draft:workspace-projection:20260630T190203Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "runtime:paper-draft:review-paper-draft-external-20260630:20260630T190202Z",
+                "review-paper-draft-external-20260630",
+                "runtime:paper-draft:search-s2-wiki:20260630T190202Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+                "https://arxiv.org/abs/2601.01002",
+                "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+                "https://arxiv.org/abs/2605.10999v1",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+                "https://arxiv.org/abs/2401.00003",
+                "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+                "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "review_llm_or_model_evidence",
+              "description": "Model/Review LLM-dependent route needs persisted request/response or supplied review evidence.",
+              "evidence_refs": [
+                "runtime:paper-draft:workspace-projection:20260630T190203Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "runtime:paper-draft:review-paper-draft-external-20260630:20260630T190202Z",
+                "review-paper-draft-external-20260630",
+                "runtime:paper-draft:search-s2-wiki:20260630T190202Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+                "https://arxiv.org/abs/2601.01002",
+                "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+                "https://arxiv.org/abs/2605.10999v1",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+                "https://arxiv.org/abs/2401.00003",
+                "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+                "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "provider_source_evidence",
+              "description": "Source-dependent route needs non-fixture provider/source-channel evidence.",
+              "evidence_refs": [
+                "runtime:paper-draft:workspace-projection:20260630T190203Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "runtime:paper-draft:review-paper-draft-external-20260630:20260630T190202Z",
+                "review-paper-draft-external-20260630",
+                "runtime:paper-draft:search-s2-wiki:20260630T190202Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+                "https://arxiv.org/abs/2601.01002",
+                "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+                "https://arxiv.org/abs/2605.10999v1",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+                "https://arxiv.org/abs/2401.00003",
+                "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+                "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "wiki_mutation_evidence",
+              "description": "Wiki-mutating route needs approved before/after mutation and rebuild evidence.",
+              "evidence_refs": [
+                "runtime:paper-draft:workspace-projection:20260630T190203Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "runtime:paper-draft:review-paper-draft-external-20260630:20260630T190202Z",
+                "review-paper-draft-external-20260630",
+                "runtime:paper-draft:search-s2-wiki:20260630T190202Z",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+                "https://arxiv.org/abs/2601.01002",
+                "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+                "https://arxiv.org/abs/2605.10999v1",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+                "https://arxiv.org/abs/2401.00003",
+                "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+                "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [
+            "Paper draft final manuscript readiness is gated by source-backed citation evidence, completed Review LLM proof, verified compile/PDF handoff, paper directory artifacts, and workspace wiki projection proof; semantic full parity still requires an explicit completed route audit."
+          ],
+          "required_capabilities": [
+            "section drafting",
+            "evidence citation",
+            "figure/table references",
+            "review hooks"
+          ],
+          "runtime_proof_refs": [
+            "runtime:paper-draft:workspace-projection:20260630T190203Z",
+            "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+            "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+            "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+            "artifacts/autosci/workspace/wiki/index.md",
+            "runtime:paper-draft:review-paper-draft-external-20260630:20260630T190202Z",
+            "review-paper-draft-external-20260630",
+            "runtime:paper-draft:search-s2-wiki:20260630T190202Z",
+            "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+            "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+            "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+            "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+            "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+            "https://arxiv.org/abs/2601.01002",
+            "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+            "https://arxiv.org/abs/2605.10999v1",
+            "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+            "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+            "https://arxiv.org/abs/2401.00003",
+            "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+            "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "wiki_mutation_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed paper-draft workspace wiki projection evidence for AutoSci parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+                  "ref": "artifacts/autosci/workspace/wiki/index.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+                "artifacts/autosci/workspace/wiki/index.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+              "native_skill": "paper-draft",
+              "production_ready": true,
+              "proof_id": "runtime:paper-draft:workspace-projection:20260630T190203Z",
+              "provenance": {
+                "artifact_kind": "paper_draft_workspace_projection",
+                "captured_at": "2026-06-30T19:02:03Z",
+                "command": "autosci_skill_shim:project_run_to_workspace",
+                "source": "solar_autosci_workspace_projector"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "review_llm_or_model_evidence",
+                "external_runtime_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed Review LLM evidence for AutoSci `paper-draft` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "external",
+                  "ref": "review-paper-draft-external-20260630",
+                  "status": "external_ref"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                "review-paper-draft-external-20260630"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+              "native_skill": "paper-draft",
+              "production_ready": true,
+              "proof_id": "runtime:paper-draft:review-paper-draft-external-20260630:20260630T190202Z",
+              "provenance": {
+                "artifact_kind": "artifact_review",
+                "captured_at": "2026-06-30T19:02:02Z",
+                "command": "review_llm_evidence:review-paper-draft-external-20260630",
+                "source": "review-paper-draft-external-20260630"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "provider_source_evidence",
+                "external_runtime_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed citation/source evidence for AutoSci `paper-draft` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+                  "ref": "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+                  "ref": "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "external",
+                  "ref": "https://arxiv.org/abs/2601.01002",
+                  "status": "external_ref"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "external",
+                  "ref": "https://arxiv.org/abs/2605.10999v1",
+                  "status": "external_ref"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "external",
+                  "ref": "https://arxiv.org/abs/2401.00003",
+                  "status": "external_ref"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md",
+                  "ref": "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/scientific_report.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report_plan.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/report.md",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_citation_map.json",
+                "artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_final_manuscript_boundary.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-discovery.json",
+                "artifacts/autosci/phase19/publication-external-proof-inputs/paper-draft-review.json",
+                "https://arxiv.org/abs/2601.01002",
+                "artifacts/autosci/workspace/wiki/papers/paper-ingest-wiki-proof-20260630.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+                "https://arxiv.org/abs/2605.10999v1",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+                "artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+                "https://arxiv.org/abs/2401.00003",
+                "artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+                "artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json",
+              "native_skill": "paper-draft",
+              "production_ready": true,
+              "proof_id": "runtime:paper-draft:search-s2-wiki:20260630T190202Z",
+              "provenance": {
+                "artifact_kind": "publication_citation_map",
+                "captured_at": "2026-06-30T19:02:02Z",
+                "command": "write_report:citation_source_map",
+                "source": "search_s2+wiki"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [
+                "audit semantic_parity must be full",
+                "audit acceptance_checks must all pass"
+              ],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.agents/skills/paper-draft/SKILL.md",
+                  "ref": ".agents/skills/paper-draft/SKILL.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/paper-draft/SKILL.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+              "native_skill": "paper-draft",
+              "production_ready": false,
+              "proof_id": "runtime:paper-draft:semantic-audit:paper-draft.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-06-30T13:17:09Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-semantic-audit-matrix"
+              },
+              "status": "blocked"
+            }
+          ],
+          "runtime_proof_status": "not_required",
+          "semantic_audit_reasons": [
+            "runtime:paper-draft:semantic-audit:paper-draft.semantic-audit: audit semantic_parity must be full",
+            "runtime:paper-draft:semantic-audit:paper-draft.semantic-audit: audit acceptance_checks must all pass"
+          ],
+          "semantic_audit_refs": [],
+          "semantic_audit_status": "inconclusive",
+          "semantic_parity": "partial",
+          "side_effect_policy": "dry_run_only",
+          "solar_backend_action": "write_report",
+          "solar_capability": "cap.research-report-draft",
+          "solar_logical_operator": "ScientificReportDrafter",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "paper-draft"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 1,
+        "supplied": 4
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 1,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 0
+      },
+      "semantic_full_count": 0,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 1
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-06-30T19:02:12.942475Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

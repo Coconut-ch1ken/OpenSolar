@@ -1,0 +1,167 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/poster/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $poster preserves native paper source, venue, authorship, figure/logo, layout, render, and critique/refine controls through the shim and wrapper surface.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/poster/SKILL.md",
+        ".agents/skills/poster/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "paperx_dag_generation",
+      "detail": "The poster path builds a PaperX-compatible DAG from a real LaTeX paper directory through tools/wiki2dag.py rather than scaffold-only content.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "outline_and_html_generation",
+      "detail": "The bridge creates source-bound outline HTML and runs tools/poster.py build/inject-title/inject-header/inject-figures/validate to produce the poster artifact.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_critique_refine_boundary",
+      "detail": "Completed Review LLM critique/refine evidence is attached to the poster path, recorded in poster_review_llm_boundary.json, and backed by a review_model runtime proof manifest.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approved_render_export_boundary",
+      "detail": "Browser render, overflow probing, and PNG export remain approval-gated; the proof run executed an allowlisted renderer and recorded approved runtime evidence plus before/after artifact state.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+        "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "publication_bundle_truthfulness",
+      "detail": "The poster publication bundle is completed only with source content and verified runtime evidence; validation records content pipeline status, Review LLM completion, render/export status, and remaining limitations.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+        "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+        "harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "regression_and_gate_coverage",
+      "detail": "Regression tests cover native poster content generation, approved render execution, and Review LLM critique boundary; route gate reports runtime_proof_status verified.",
+      "evidence_refs": [
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T18:46:34Z",
+  "auditor": "phase19-poster-semantic-audit",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+    "../AutoSci/i18n/en/skills/poster/SKILL.md"
+  ],
+  "native_skill": "poster",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T18:46:34Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/poster",
+    "backend_mode": "side_effect_gated",
+    "coverage_status": "gated",
+    "limitations": [
+      "Browser rendering and image conversion run only through explicit approved renderer configuration; root and bridge render paths emit runtime evidence and keep unavailable renderers inconclusive."
+    ],
+    "required_capabilities": [
+      "PaperX DAG",
+      "HTML poster",
+      "figure extraction",
+      "overflow probe",
+      "PNG render"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "build_poster"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/poster/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+    "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+    "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+    "harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+    "harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+    "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+    "harness/artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+    "harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $poster now preserves native AutoSci /poster semantics as a source-backed publication route: it accepts paper directory input and native poster controls, builds a PaperX-compatible DAG from real LaTeX paper source, distills source sections into an outline, generates poster HTML through the native poster toolchain, records validation output, attaches Review LLM critique/refine evidence when requested, and keeps browser render/PNG export behind an explicit approval boundary with runtime proof."
+}

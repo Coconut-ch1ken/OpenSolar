@@ -1,0 +1,160 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/survey/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/survey/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $survey preserves the native query/topic, --format latex|markdown, --max-papers, and wiki-root controls through the shim and wrapper surface.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/survey/SKILL.md",
+        ".agents/skills/survey/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "source_backed_citation_discipline",
+      "detail": "Survey citations come from supplied discovery/wiki evidence and are capped by max_papers; unsupported citations are not fabricated.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/survey-discovery.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_citation_map.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_final_coverage_boundary.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "thematic_related_work_output",
+      "detail": "The generated survey includes source-bound thematic sections with citation markers and positioning text rather than a pure scaffold or ungrounded flat paper list.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey.md",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/scientific_report.survey.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "latex_and_bibtex_coverage",
+      "detail": "Requested LaTeX output is generated and accompanied by BibTeX coverage that records verified entries when supplied and [UNCONFIRMED] placeholders when external BibTeX fetch evidence is unavailable.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey.tex",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_bibtex_coverage.json",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "wiki_archive_writeback",
+      "detail": "The survey output is archived to wiki/outputs, derived_from edges are appended to wiki/graph/edges.jsonl, and a wiki/log.md operation entry is recorded.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_archive_writeback.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/related-work-topic-skillgen-2026-06-30.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/workspace/wiki/log.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "runtime_proof_coverage",
+      "detail": "The proof run emits provider/source runtime evidence for citation grounding and wiki mutation runtime evidence for archive/log/edge writeback.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/survey-route-after-archive-writeback.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "truthfulness_boundary",
+      "detail": "The route explicitly keeps exhaustive_coverage_verified=false and does not claim live exhaustive literature coverage without provider evidence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_final_coverage_boundary.json",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T18:53:59Z",
+  "auditor": "phase19-survey-semantic-audit",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/survey/SKILL.md",
+    "../AutoSci/i18n/en/skills/survey/SKILL.md"
+  ],
+  "native_skill": "survey",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T18:53:59Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/survey",
+    "backend_mode": "solar_native",
+    "coverage_status": "full",
+    "limitations": [
+      "Survey synthesis is bounded to supplied wiki/discovery citation evidence and records exhaustive_coverage_verified=false; external exhaustive literature search is not claimed without provider evidence."
+    ],
+    "required_capabilities": [
+      "related work grouping",
+      "gap analysis",
+      "citation-backed survey",
+      "max-papers cap",
+      "BibTeX coverage",
+      "wiki output archive",
+      "derived_from graph edges",
+      "wiki log writeback"
+    ],
+    "side_effect_policy": "dry_run_only",
+    "solar_backend_action": "write_survey"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/survey/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/artifacts/autosci/phase19/publication-external-proof-inputs/survey-discovery.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/scientific_report.survey.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_plan.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey.md",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey.tex",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_citation_map.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_final_coverage_boundary.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_bibtex_coverage.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_archive_writeback.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_wiki_mutation_runtime_proof.json",
+    "harness/artifacts/autosci/workspace/wiki/outputs/related-work-topic-skillgen-2026-06-30.md",
+    "harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+    "harness/artifacts/autosci/workspace/wiki/log.md",
+    "harness/artifacts/autosci/phase19/survey-route-after-archive-writeback.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $survey now preserves native AutoSci /survey semantics as a bounded source-backed related-work generator: it accepts query/topic input, format and max-papers controls, reads supplied wiki/discovery citation evidence, caps citations, produces thematic related-work sections with citation markers, emits LaTeX plus BibTeX coverage when requested, archives the output to wiki/outputs, appends derived_from graph edges and wiki log entries, and records provider/source plus wiki mutation runtime proofs without claiming exhaustive live literature coverage."
+}

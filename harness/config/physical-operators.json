@@ -27,7 +27,7 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
       "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
@@ -64,20 +64,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "cooldown",
-        "cooldown_until": "2026-06-30T17:47:26Z",
+        "cooldown_until": "2026-06-30T20:11:09Z",
         "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-06-30T17:32:26Z",
-        "last_pruned_at": "2026-06-30T17:32:25Z"
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T17:32:26Z",
-        "last_block_expires_at": "2026-06-30T17:47:26Z",
-        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:32:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -118,7 +118,7 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
       "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-06-01T23:58:00Z",
@@ -168,19 +168,19 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "cooldown",
-        "cooldown_until": "2026-06-30T17:47:26Z",
+        "cooldown_until": "2026-06-30T20:11:09Z",
         "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-06-30T17:32:26Z",
-        "last_pruned_at": "2026-06-30T17:32:25Z"
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T17:32:26Z",
-        "last_block_expires_at": "2026-06-30T17:47:26Z",
-        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
-        "last_pruned_at": "2026-06-30T17:32:25Z",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
+        "last_pruned_at": "2026-06-30T19:56:08Z",
         "last_prune_reason": "weak_pane_rate_limit_evidence"
       }
     },
@@ -209,7 +209,7 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
       "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-06-01T23:58:00Z",
@@ -259,19 +259,19 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "cooldown",
-        "cooldown_until": "2026-06-30T17:47:26Z",
+        "cooldown_until": "2026-06-30T20:11:09Z",
         "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-06-30T17:32:26Z",
-        "last_pruned_at": "2026-06-30T17:32:25Z"
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T17:32:26Z",
-        "last_block_expires_at": "2026-06-30T17:47:26Z",
-        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
-        "last_pruned_at": "2026-06-30T17:32:25Z",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
+        "last_pruned_at": "2026-06-30T19:56:08Z",
         "last_prune_reason": "weak_pane_rate_limit_evidence"
       }
     },
@@ -300,8 +300,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -341,21 +341,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -1311,7 +1311,7 @@
       "launch_cmd_kind": "print_once",
       "compat_alias_for": "tmux_pane",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
       "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-23T00:53:00Z",
@@ -1361,20 +1361,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "cooldown",
-        "cooldown_until": "2026-06-30T17:47:26Z",
+        "cooldown_until": "2026-06-30T20:11:09Z",
         "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-06-30T17:32:26Z",
-        "last_pruned_at": "2026-06-30T17:32:25Z"
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T17:32:26Z",
-        "last_block_expires_at": "2026-06-30T17:47:26Z",
-        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:32:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -1415,8 +1415,8 @@
       "launch_cmd_kind": "print_once",
       "compat_alias_for": "tmux_pane",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-23T00:53:00Z",
       "available": true,
@@ -1468,21 +1468,21 @@
       ],
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -2442,8 +2442,8 @@
       "billing_pool": "anthropic_agent_sdk_credit",
       "launch_cmd_kind": "print_once",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -2488,21 +2488,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -2543,8 +2543,8 @@
       "billing_pool": "anthropic_agent_sdk_credit",
       "launch_cmd_kind": "print_once",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -2589,21 +2589,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3354,8 +3354,8 @@
       "auth_mode": "api_key_or_gateway",
       "key_ref": "zhipu_api_key",
       "quota_cycle": "none",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-30T00:00:00Z",
       "available": true,
@@ -3417,21 +3417,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3464,8 +3464,8 @@
       "auth_mode": "api_key_or_gateway",
       "key_ref": "zhipu_api_key",
       "quota_cycle": "none",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-30T00:00:00Z",
       "available": true,
@@ -3527,21 +3527,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3574,8 +3574,8 @@
       "auth_mode": "api_key_or_gateway",
       "key_ref": "zhipu_api_key",
       "quota_cycle": "none",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-30T00:00:00Z",
       "available": true,
@@ -3637,21 +3637,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -4266,8 +4266,8 @@
       "launch_cmd_kind": "print_once",
       "compat_alias_for": "tmux_pane",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T20:11:09Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-23T00:53:00Z",
       "available": true,
@@ -4314,21 +4314,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T17:20:30Z",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T20:11:09Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T19:56:09Z",
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
-        "last_block_source": "tmux_pane:solar-harness:0.1",
-        "last_block_detected_at": "2026-06-30T17:20:30Z",
-        "last_block_expires_at": "2026-06-30T17:35:30Z",
-        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_block_source": "tmux_pane:solar-harness:0.2",
+        "last_block_detected_at": "2026-06-30T19:56:09Z",
+        "last_block_expires_at": "2026-06-30T20:11:09Z",
+        "last_block_excerpt": "ore information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --help └ Run Codex non-interactively … +98 lines (ctrl + t to view transcrip",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T17:21:25Z"
+        "last_pruned_at": "2026-06-30T19:56:08Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
