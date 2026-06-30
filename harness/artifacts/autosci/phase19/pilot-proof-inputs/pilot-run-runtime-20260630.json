@@ -1,0 +1,1 @@
+{"status":"completed","exit_code":0,"outcome":"supports","result_collected":true,"metrics":[{"name":"accuracy","value":0.92}],"evidence_ids":["runtime:pilot-run-proof-20260630"]}

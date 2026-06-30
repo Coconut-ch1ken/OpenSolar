@@ -1,0 +1,23 @@
+{
+  "schema": "artifact_review.v1",
+  "task_id": "review-llm-rebuttal-20260630",
+  "status": "completed",
+  "outputs": {
+    "review": {
+      "review_available": true,
+      "review_mode": "review_llm",
+      "score": 0.84,
+      "recommendation": "accept_with_revisions",
+      "evidence_ids": ["review-llm:rebuttal-thread-20260630"],
+      "findings": [],
+      "review_llm": {
+        "status": "completed",
+        "invocation_mode": "command",
+        "provider": "codex-review-llm-proof",
+        "model": "gpt-5.5",
+        "evidence_ids": ["review-llm:rebuttal-thread-20260630"],
+        "source_path": "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json"
+      }
+    }
+  }
+}

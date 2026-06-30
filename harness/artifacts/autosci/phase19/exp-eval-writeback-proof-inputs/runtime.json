@@ -1,0 +1,7 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "task_id": "runtime-exp-eval-proof-20260630",
+  "status": "completed",
+  "exit_code": 0,
+  "evidence_ids": ["runtime:exp-eval-writeback-20260630"]
+}

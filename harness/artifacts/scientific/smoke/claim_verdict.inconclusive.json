@@ -1,0 +1,70 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/smoke/claim_verdict.inconclusive.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "claim_id": "claim-001",
+    "claims_evidence": "artifacts/scientific/smoke/research_claims.json",
+    "code_evidence": "artifacts/scientific/smoke/code_evidence_map.json",
+    "experiment_result": "plugins/autosci/tests/fixtures/inconclusive_experiment_result.json"
+  },
+  "limitations": [
+    "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation.",
+    "Supplied experiment evidence is missing, failed, or inconclusive; the claim was not upgraded."
+  ],
+  "node_id": "node-verify-claim-inconclusive",
+  "outputs": {
+    "verdicts": [
+      {
+        "basis": "Verdict derived from raw fixture experiment outcome `inconclusive` for `exp-inconclusive-001`. Claim text: The fixture path should produce a `result.json` file and an `evidence.jsonl` ledger entry without invoking a monolithic AutoSci workflow owner.",
+        "claim_evidence_ids": [
+          "claim-001",
+          "paper-sample-paper",
+          "sample_paper.md#results"
+        ],
+        "claim_id": "claim-001",
+        "code_evidence_ids": [
+          "task-autosci-code-evidence-fixture",
+          "map-001",
+          "plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py",
+          "claim-001"
+        ],
+        "confidence": 0.32,
+        "evidence_ids": [
+          "claim-001",
+          "paper-sample-paper",
+          "sample_paper.md#results",
+          "exp-inconclusive-001",
+          "experiment.inconclusive.001",
+          "metric.fixture_unknown",
+          "task-autosci-code-evidence-fixture",
+          "map-001",
+          "plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py"
+        ],
+        "evidence_outcome": "inconclusive",
+        "experiment_evidence_ids": [
+          "exp-inconclusive-001",
+          "experiment.inconclusive.001",
+          "metric.fixture_unknown"
+        ],
+        "limitations": [
+          "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation.",
+          "Supplied experiment evidence is missing, failed, or inconclusive; the claim was not upgraded."
+        ],
+        "verdict": "inconclusive"
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-18T21:22:23Z"
+  },
+  "schema": "claim_verdict.v1",
+  "sprint_id": "sprint-autosci-phase13",
+  "status": "completed",
+  "task_id": "task-autosci-verdict-inconclusive-fixture"
+}

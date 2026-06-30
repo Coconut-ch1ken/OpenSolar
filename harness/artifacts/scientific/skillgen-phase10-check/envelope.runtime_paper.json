@@ -1,0 +1,22 @@
+{
+  "capability_capsule_id": "cap.research-paper-ingest",
+  "handoff_path": "artifacts/scientific/skillgen-phase10-check/handoff.md",
+  "inputs": {
+    "paper_id": "paper-skillgen-phase10",
+    "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+  },
+  "lease_ttl_seconds": 120,
+  "mode": "fixture",
+  "node_id": "node-phase10-paper-ingest",
+  "objective": "Phase 10 SkillGen check for autosci-paper-ingest-worker.",
+  "operator_id": "autosci-paper-ingest-worker",
+  "output_dir": "artifacts/scientific/skillgen-phase10-check",
+  "outputs": {
+    "evidence_jsonl": "artifacts/scientific/skillgen-phase10-check/evidence.jsonl",
+    "evidence_payload_path": "artifacts/scientific/skillgen-phase10-check/research_paper.json",
+    "result_path": "artifacts/scientific/skillgen-phase10-check/runtime_paper.result.json"
+  },
+  "sprint_id": "sprint-autosci-phase10-skillgen-check",
+  "task_id": "task-phase10-skillgen-paper-ingest",
+  "task_type": "SCIENCE_PAPER_INGEST"
+}

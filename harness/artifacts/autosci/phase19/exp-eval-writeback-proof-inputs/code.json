@@ -1,0 +1,15 @@
+{
+  "schema": "code_evidence_map.v1",
+  "task_id": "code-exp-eval-proof-20260630",
+  "status": "completed",
+  "outputs": {
+    "mappings": [
+      {
+        "mapping_id": "code-map-skillgen-write-20260630",
+        "claim_id": "claim-skillgen-write-20260630",
+        "evidence_ids": ["code:skillgen-write-20260630"],
+        "files": ["experiments/skillgen_write_eval.py"]
+      }
+    ]
+  }
+}

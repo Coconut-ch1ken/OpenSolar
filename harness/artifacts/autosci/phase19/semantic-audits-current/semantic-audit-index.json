@@ -1,0 +1,348 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-current/ask.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/check.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/daily-arxiv.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/discover.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/edit.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/exp-design.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/exp-eval.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-eval.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-run.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/exp-run.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/exp-status.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/ideate.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/ingest.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/init.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/novelty.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/paper-compile.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/paper-plan.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/poster.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/prefill.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/refine.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/research.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/reset.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/review.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/setup.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/survey.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-current/visualize.semantic-audit.json"
+  ],
+  "generated_at": "2026-06-30T13:17:09Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/ask.semantic-audit.json",
+      "native_skill": "ask",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/check.semantic-audit.json",
+      "native_skill": "check",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/daily-arxiv.semantic-audit.json",
+      "native_skill": "daily-arxiv",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/discover.semantic-audit.json",
+      "native_skill": "discover",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/edit.semantic-audit.json",
+      "native_skill": "edit",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/exp-design.semantic-audit.json",
+      "native_skill": "exp-design",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/exp-eval.semantic-audit.json",
+      "native_skill": "exp-eval",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-eval.semantic-audit.json",
+      "native_skill": "exp-pilot-eval",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-run.semantic-audit.json",
+      "native_skill": "exp-pilot-run",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/exp-run.semantic-audit.json",
+      "native_skill": "exp-run",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/exp-status.semantic-audit.json",
+      "native_skill": "exp-status",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/ideate.semantic-audit.json",
+      "native_skill": "ideate",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/ingest.semantic-audit.json",
+      "native_skill": "ingest",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/init.semantic-audit.json",
+      "native_skill": "init",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/novelty.semantic-audit.json",
+      "native_skill": "novelty",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/paper-compile.semantic-audit.json",
+      "native_skill": "paper-compile",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+      "native_skill": "paper-draft",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/paper-plan.semantic-audit.json",
+      "native_skill": "paper-plan",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/poster.semantic-audit.json",
+      "native_skill": "poster",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/prefill.semantic-audit.json",
+      "native_skill": "prefill",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+      "native_skill": "rebuttal",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/refine.semantic-audit.json",
+      "native_skill": "refine",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/research.semantic-audit.json",
+      "native_skill": "research",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/reset.semantic-audit.json",
+      "native_skill": "reset",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/review.semantic-audit.json",
+      "native_skill": "review",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/setup.semantic-audit.json",
+      "native_skill": "setup",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/survey.semantic-audit.json",
+      "native_skill": "survey",
+      "semantic_parity": "partial"
+    },
+    {
+      "acceptance_check_statuses": {
+        "full_semantic_assessment_supplied": "pending",
+        "native_skill_doc_exists": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-current/visualize.semantic-audit.json",
+      "native_skill": "visualize",
+      "semantic_parity": "partial"
+    }
+  ],
+  "route_count": 28,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 0,
+  "semantic_partial_count": 28,
+  "status": "completed"
+}

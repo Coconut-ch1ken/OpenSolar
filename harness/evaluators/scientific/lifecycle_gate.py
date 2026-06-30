@@ -31,6 +31,7 @@ FULL_LIFECYCLE_OPERATORS = [
     "ScientificClaimVerifier",
     "ScientificReportPlanner",
     "ScientificReportDrafter",
+    "ScientificArtifactReviewer",
     "ScientificPublicationProducer",
     "ScientificMemoryUpdater",
     "ScientificWorkflowEvolver",

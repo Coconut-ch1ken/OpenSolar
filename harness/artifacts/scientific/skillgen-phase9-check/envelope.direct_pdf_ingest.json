@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "paper_id": "paper-skillgen-direct-pdf",
+    "paper_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AI4Research-B/docs/SkillGen.pdf"
+  },
+  "mode": "fixture",
+  "node_id": "node-skillgen-direct-pdf-ingest",
+  "output_dir": "artifacts/scientific/skillgen-phase9-check/direct_pdf",
+  "outputs": {
+    "evidence_jsonl": "artifacts/scientific/skillgen-phase9-check/direct_pdf/evidence.jsonl",
+    "evidence_payload_path": "artifacts/scientific/skillgen-phase9-check/direct_pdf/research_paper.json",
+    "result_path": "artifacts/scientific/skillgen-phase9-check/direct_pdf/ingest_paper.result.json"
+  },
+  "sprint_id": "sprint-autosci-phase9-skillgen-check",
+  "task_id": "task-skillgen-direct-pdf-ingest"
+}

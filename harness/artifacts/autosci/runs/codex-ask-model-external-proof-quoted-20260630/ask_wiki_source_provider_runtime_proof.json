@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-06-30T12:44:17Z",
+  "proofs": [
+    {
+      "categories": [
+        "provider_source_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed workspace wiki source retrieval evidence for AutoSci `ask` parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-ask-model-external-proof-quoted-20260630/research_memory_update.ask.json",
+        "artifacts/autosci/runs/codex-ask-model-external-proof-quoted-20260630/ask_wiki_retrieval.json",
+        "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+        "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+        "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+        "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+        "artifacts/autosci/workspace/wiki/log.md"
+      ],
+      "native_skill": "ask",
+      "production_ready": true,
+      "proof_id": "runtime:ask:workspace_wiki:20260630T124417Z",
+      "provenance": {
+        "artifact_kind": "workspace_wiki_retrieval",
+        "captured_at": "2026-06-30T12:44:17Z",
+        "command": "ask_wiki:wiki_retrieval",
+        "source": "workspace_wiki"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

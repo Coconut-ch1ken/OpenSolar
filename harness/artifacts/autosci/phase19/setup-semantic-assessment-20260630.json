@@ -1,0 +1,96 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "setup": {
+      "semantic_parity": "full",
+      "auditor": "phase19-setup-semantic-audit",
+      "summary": "Solar $setup now preserves native AutoSci setup semantics as an approval-gated route: it reads the setup guide/env template, detects provider-key readiness without recording secrets, reports Python/venv status, keeps .env writes blocked by default, and recognizes approved external setup runtime evidence for user-directed credential/configuration changes.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/setup/SKILL.md",
+        "../AutoSci/config/setup-guide.md",
+        "../AutoSci/.env.example"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/setup/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/config/setup-guide.md",
+        "harness/plugins/autosci/config/.env.example",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+        "harness/artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+        "harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+        "harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "configuration_reference",
+          "status": "ok",
+          "detail": "Solar setup route has a local setup guide and env template matching the native role of explaining optional source/review provider configuration.",
+          "evidence_refs": [
+            "../AutoSci/config/setup-guide.md",
+            "harness/plugins/autosci/config/setup-guide.md",
+            "harness/plugins/autosci/config/.env.example"
+          ]
+        },
+        {
+          "check": "environment_status_detection",
+          "status": "ok",
+          "detail": "The setup status smoke detected provider key readiness, Python executable/version, .env presence, and .venv presence and archived autosci_setup_status.v1.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json"
+          ]
+        },
+        {
+          "check": "secret_redaction",
+          "status": "ok",
+          "detail": "Regression coverage and the setup smoke verify that setup records key names and booleans only; dummy secret values were not serialized into run artifacts.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+            "harness/artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json"
+          ]
+        },
+        {
+          "check": "non_mutating_default",
+          "status": "ok",
+          "detail": "Default $setup remains proposal/status evidence only and does not mutate .env, wiki, tools, or runtime paths.",
+          "evidence_refs": [
+            ".agents/skills/setup/SKILL.md",
+            "harness/artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json"
+          ]
+        },
+        {
+          "check": "approval_gated_secret_write_boundary",
+          "status": "ok",
+          "detail": "Approved external setup runtime evidence is recognized through approval and side-effect proof manifests; local secret/config mutation remains blocked unless explicitly user-approved.",
+          "evidence_refs": [
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "regression_coverage",
+          "status": "ok",
+          "detail": "Targeted setup/control tests cover gated execution status, workflow gate compatibility, setup status artifact emission, Review LLM readiness booleans, and secret redaction.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The setup route is semantically full as an approval-gated route: status detection is native and non-mutating by default, while credential writes remain approval/runtime-evidence governed."
+        },
+        {
+          "status": "ok",
+          "finding": "No setup evidence stores credential values; only key names, booleans, paths, and readiness summaries are serialized."
+        }
+      ]
+    }
+  }
+}

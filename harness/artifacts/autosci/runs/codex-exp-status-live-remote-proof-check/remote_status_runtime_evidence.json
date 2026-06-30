@@ -1,0 +1,99 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-check/remote_status_executor_stdout.txt",
+      "type": "executor_stdout"
+    },
+    {
+      "path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-check/remote_status_executor_stderr.txt",
+      "type": "executor_stderr"
+    }
+  ],
+  "inputs": {
+    "approval_ref": "approval-live-remote-status-check"
+  },
+  "limitations": [
+    "Approved remote status check ran an allowlisted command and verified status artifacts; no results were collected.",
+    "Remote status was derived from local run-dir artifacts or unverified transport metadata, not a proven live SSH/provider poll."
+  ],
+  "node_id": "node-monitor-experiment",
+  "outputs": {
+    "runtime": {
+      "action": "monitor_experiment",
+      "approval_ref": "approval-live-remote-status-check",
+      "checked_paths": [],
+      "checks": [
+        {
+          "check": "command_allowlisted",
+          "detail": "Remote status command selected from inputs.remote_check_command: command allowlist template matched by commands",
+          "status": "ok"
+        },
+        {
+          "check": "exit_code",
+          "detail": "exit_code=2",
+          "status": "error"
+        },
+        {
+          "check": "remote_cli_check_output",
+          "detail": "not-structured",
+          "status": "error"
+        },
+        {
+          "check": "remote_status_artifacts_present",
+          "detail": "live_provider_payload",
+          "status": "error"
+        },
+        {
+          "check": "remote_poll_boundary",
+          "detail": "remote check did not declare live provider polling,remote check did not declare a recognized live transport,remote check did not include a provider/session identifier,remote check did not resolve a concrete remote state,status was derived from local run-dir artifacts",
+          "status": "warn"
+        }
+      ],
+      "command_run": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/tools/remote.py check --experiment exp-live-remote-proof --run-dir /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-inputs/live-run --approval-ref approval-live-remote-status-provider --allowlist-evidence /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-inputs/provider-allowlist.json --status-command '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python' '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-inputs/fake_live_status_provider.py' --transport ssh --session-id ssh-session-proof --execute-approved",
+      "evidence_ids": [
+        "remote-status:exp-live-remote-proof"
+      ],
+      "evidence_paths": [],
+      "exit_code": 2,
+      "logs": [],
+      "remote_cli_command": "",
+      "remote_cli_status": "",
+      "remote_poll_boundary": {
+        "checked_paths": [],
+        "evidence_paths": [],
+        "invalid_reasons": [
+          "remote check did not declare live provider polling",
+          "remote check did not declare a recognized live transport",
+          "remote check did not include a provider/session identifier",
+          "remote check did not resolve a concrete remote state",
+          "status was derived from local run-dir artifacts"
+        ],
+        "limitations": [
+          "Remote status was derived from local run-dir artifacts or unverified transport metadata, not a proven live SSH/provider poll."
+        ],
+        "live_remote_poll_verified": false,
+        "local_artifact_check": true,
+        "poll_scope": "",
+        "remote_state": "unknown",
+        "run_dir": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-inputs/live-run",
+        "schema": "autosci_remote_poll_boundary.v1",
+        "session_id": "",
+        "status": "local_run_dir_check",
+        "transport": ""
+      },
+      "remote_status_state": "unknown",
+      "result_collected": false,
+      "run_dir": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-inputs/live-run",
+      "status": "failed"
+    }
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-approved-side-effect-executor",
+    "timestamp": "2026-06-30T05:27:48Z"
+  },
+  "schema": "autosci_runtime_evidence.v1",
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "status": "failed",
+  "task_id": "task-autosci-skillgen-monitor_experiment"
+}

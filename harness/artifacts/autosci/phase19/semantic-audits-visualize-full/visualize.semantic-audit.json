@@ -1,0 +1,158 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/visualize/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/visualize/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $visualize accepts the native mode and filter flags for all/obsidian/canvas/focus/depth/types/edge-types plus serve.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/visualize/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "obsidian_artifacts",
+      "detail": "The approved smoke generated Obsidian graph config and preserves app.json creation semantics through the Solar-managed tool path.",
+      "evidence_refs": [
+        "tools/visualize.py",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_obsidian_config_stdout.json",
+        "harness/artifacts/autosci/workspace/wiki/.obsidian/graph.json",
+        "harness/artifacts/autosci/workspace/wiki/.obsidian/app.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "canvas_focus_and_filter_artifacts",
+      "detail": "Canvas generation supports native focus/depth, node type filters, and edge type filters; regression coverage verifies filtered focused output.",
+      "evidence_refs": [
+        "tools/visualize.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_canvas_stdout.json",
+        "harness/artifacts/autosci/workspace/wiki/canvases/knowledge-map.canvas"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "spa_graph_and_recommendations",
+      "detail": "Solar archives graph data, SPA serve health output, and list-recommendations output for the native interactive graph workflow.",
+      "evidence_refs": [
+        "tools/serve.py",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_data_stdout.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_recommendations_stdout.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approval_and_side_effect_boundary",
+      "detail": "Local web serving remains approval-gated and produces explicit approval plus side-effect runtime proof when executed.",
+      "evidence_refs": [
+        ".agents/skills/visualize/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "wiki_log",
+      "detail": "Solar $visualize appends a wiki log entry listing generated visualization artifacts, matching the native Step 5 logging requirement.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/workspace/wiki/log.md",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T13:40:23Z",
+  "auditor": "phase19-visualize-semantic-audit",
+  "findings": [
+    {
+      "finding": "The visualize route is semantically full as an approval-gated route: local artifact generation is explicit, and local web serve health is executed only with approval evidence.",
+      "status": "ok"
+    },
+    {
+      "finding": "No original AutoSci wiki/raw paths are mutated; all generated artifacts are under the Solar-managed workspace and evidence directories.",
+      "status": "ok"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/visualize/SKILL.md",
+    "../AutoSci/i18n/en/skills/visualize/SKILL.md",
+    "../AutoSci/tools/visualize.py",
+    "../AutoSci/tools/serve.py"
+  ],
+  "native_skill": "visualize",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:40:23Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/visualize",
+    "backend_mode": "side_effect_gated",
+    "coverage_status": "gated",
+    "limitations": [
+      "Serving a local web UI or opening a browser is an external side effect; generated local artifacts must remain explicit."
+    ],
+    "required_capabilities": [
+      "Obsidian graph config",
+      "Canvas graph",
+      "SPA graph runbook",
+      "recommendations"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "visualize_graph"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/visualize/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "tools/visualize.py",
+    "tools/serve.py",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/research_graph_update.visualize.json",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_obsidian_config_stdout.json",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_canvas_stdout.json",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_data_stdout.json",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_recommendations_stdout.json",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_approval_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json",
+    "harness/artifacts/autosci/workspace/wiki/.obsidian/graph.json",
+    "harness/artifacts/autosci/workspace/wiki/.obsidian/app.json",
+    "harness/artifacts/autosci/workspace/wiki/canvases/knowledge-map.canvas",
+    "harness/artifacts/autosci/workspace/wiki/log.md"
+  ],
+  "status": "completed",
+  "summary": "Solar $visualize now preserves the native command surface for Obsidian, Canvas, focus/depth, type filters, edge filters, recommendations, SPA serve health, and wiki logging while keeping web serving approval-gated."
+}

@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-06-30T02:46:21Z",
+  "proofs": [
+    {
+      "categories": [
+        "review_llm_or_model_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed Review LLM evidence for AutoSci `exp-design` parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-exp-design-review-proof-check/experiment_plan.json",
+        "artifacts/autosci/runs/codex-review-proof-check-quoted/artifact_review.json"
+      ],
+      "native_skill": "exp-design",
+      "production_ready": true,
+      "proof_id": "runtime:exp-design:artifacts-autosci-runs-codex-review-proof-check-quoted-artifact-review-json:20260630T024621Z",
+      "provenance": {
+        "artifact_kind": "artifact_review",
+        "captured_at": "2026-06-30T02:46:21Z",
+        "command": "review_llm_evidence:artifacts/autosci/runs/codex-review-proof-check-quoted/artifact_review.json",
+        "source": "artifacts/autosci/runs/codex-review-proof-check-quoted/artifact_review.json"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

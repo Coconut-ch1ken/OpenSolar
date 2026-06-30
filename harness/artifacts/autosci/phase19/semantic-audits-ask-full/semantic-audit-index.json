@@ -1,0 +1,31 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-ask-full/ask.semantic-audit.json"
+  ],
+  "generated_at": "2026-06-30T14:41:53Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "approved_default_crystallize_writeback": "ok",
+        "context_and_gap_loading": "ok",
+        "model_final_answer_boundary": "ok",
+        "native_format_modes": "ok",
+        "native_skill_doc_exists": "ok",
+        "read_only_default": "ok",
+        "regression_coverage": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "source_grounded_retrieval_and_citations": "ok",
+        "typed_crystallize_target_selection": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-ask-full/ask.semantic-audit.json",
+      "native_skill": "ask",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

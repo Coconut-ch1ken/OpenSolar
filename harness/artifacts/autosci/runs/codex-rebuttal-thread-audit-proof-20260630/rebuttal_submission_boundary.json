@@ -1,0 +1,47 @@
+{
+  "blocking_checks": [],
+  "concern_count": 2,
+  "formal_rebuttal_text_path": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+  "format": "formal",
+  "limitations": [
+    "Portal submission is not claimed by this dry-run bridge unless external audit evidence records completion."
+  ],
+  "portal_submission_completed": false,
+  "schema": "autosci_rebuttal_submission_boundary.v1",
+  "status": "submission_audit_ready",
+  "submission_audit": {
+    "audit_loaded": true,
+    "audit_verified": true,
+    "blocking_checks": [],
+    "checks": [
+      {
+        "check": "concern_coverage",
+        "status": "ok"
+      },
+      {
+        "check": "word_limit",
+        "status": "ok"
+      },
+      {
+        "check": "no_unconfirmed_claims",
+        "status": "ok"
+      },
+      {
+        "check": "submission_copy_paste_format",
+        "status": "ok"
+      }
+    ],
+    "evidence_ids": [
+      "submission-audit:rebuttal-20260630"
+    ],
+    "invalid_reasons": [],
+    "path": "artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+    "portal_submission_completed": false,
+    "schema": "autosci_publication_submission_audit_boundary.v1",
+    "sha256": "4675ad0de5d0be559315f2d0bc6777c8427d22381e1be3a33d9e704bed2151f5",
+    "status": "loaded",
+    "venue": "ICLR"
+  },
+  "submission_audit_ready": true,
+  "venue": "ICLR"
+}

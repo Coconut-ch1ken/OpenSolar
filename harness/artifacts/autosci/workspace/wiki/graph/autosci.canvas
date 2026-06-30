@@ -1,0 +1,1158 @@
+{
+  "edges": [
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-1",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-2",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-3",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-4",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-5",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-6",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-7",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-8",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-9",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-10",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-11",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-12",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-13",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-14",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-SkillGen.extracted",
+      "id": "edge-15",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen.extracted",
+      "id": "edge-16",
+      "label": "has_source",
+      "toNode": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md"
+    },
+    {
+      "fromNode": "paper-SkillGen.extracted",
+      "id": "edge-17",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen.extracted",
+      "id": "edge-18",
+      "label": "has_source",
+      "toNode": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md"
+    },
+    {
+      "fromNode": "paper-SkillGen.extracted",
+      "id": "edge-19",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen.extracted",
+      "id": "edge-20",
+      "label": "has_source",
+      "toNode": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-21",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-22",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "id": "edge-23",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "id": "edge-24",
+      "label": "has_source",
+      "toNode": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-25",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-26",
+      "label": "has_source",
+      "toNode": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-27",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-28",
+      "label": "has_source",
+      "toNode": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-29",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-30",
+      "label": "has_source",
+      "toNode": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-31",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-32",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-33",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-34",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-35",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-36",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-37",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-38",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-39",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-40",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-41",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-42",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-43",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-44",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-45",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-46",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-47",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-48",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-49",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-50",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-51",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-52",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-53",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-54",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-55",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-56",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-57",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-58",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-59",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-60",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-61",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-62",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-63",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-operator-smoke-paper",
+      "id": "edge-64",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "fromNode": "paper-sample-paper",
+      "id": "edge-65",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-sample-paper",
+      "id": "edge-66",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/sample_paper.md"
+    },
+    {
+      "fromNode": "paper-sample-paper",
+      "id": "edge-67",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-sample-paper",
+      "id": "edge-68",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/sample_paper.md"
+    },
+    {
+      "fromNode": "paper-sample-paper",
+      "id": "edge-69",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-sample-paper",
+      "id": "edge-70",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/sample_paper.md"
+    },
+    {
+      "fromNode": "paper-SkillGen(1)",
+      "id": "edge-71",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen(1)",
+      "id": "edge-72",
+      "label": "has_source",
+      "toNode": "artifacts/autosci/workspace/raw/tmp/papers/skillgen-1.tex"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-73",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-SkillGen",
+      "id": "edge-74",
+      "label": "has_source",
+      "toNode": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex"
+    },
+    {
+      "fromNode": "paper-skillgen-sample-paper",
+      "id": "edge-75",
+      "label": "describes",
+      "toNode": "concept.solar_evidence_abi"
+    },
+    {
+      "fromNode": "paper-skillgen-sample-paper",
+      "id": "edge-76",
+      "label": "has_source",
+      "toNode": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+    },
+    {
+      "fromNode": "codex-exp-run-final-proof",
+      "id": "edge-77",
+      "label": "produced_result",
+      "toNode": "codex-exp-run-final-proof"
+    },
+    {
+      "fromNode": "pilot-proof-20260630",
+      "id": "edge-78",
+      "label": "produced_result",
+      "toNode": "pilot-run:pilot-proof-20260630"
+    }
+  ],
+  "nodes": [
+    {
+      "height": 100,
+      "id": "experiments/codex-exp-run-final-proof.md",
+      "text": "codex-exp-run-final-proof",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 100,
+      "id": "experiments/exp-001.md",
+      "text": "Validate evidence coverage for `claim-001` using a bounded fixture experiment.",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 0
+    },
+    {
+      "height": 100,
+      "id": "experiments/exp-idea-skillgen-design.md",
+      "text": "Validate evidence coverage for `idea-skillgen-design` using a bounded fixture experiment.",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 0
+    },
+    {
+      "height": 100,
+      "id": "experiments/exp-native-001.md",
+      "text": "Validate evidence coverage for `exp-native-001` using an approval-gated native experiment.",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 0
+    },
+    {
+      "height": 100,
+      "id": "experiments/exp-research-proof.md",
+      "text": "Research Proof Experiment",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 0
+    },
+    {
+      "height": 100,
+      "id": "experiments/exp-skillgen.md",
+      "text": "Validate evidence coverage for `exp-skillgen` using an approval-gated native experiment.",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 0
+    },
+    {
+      "height": 100,
+      "id": "experiments/pilot-proof-20260630.md",
+      "text": "pilot-proof-20260630",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 180
+    },
+    {
+      "height": 100,
+      "id": "graph/context_brief.md",
+      "text": "Solar AutoSci Context Brief",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 180
+    },
+    {
+      "height": 100,
+      "id": "graph/open_questions.md",
+      "text": "Open Questions",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 180
+    },
+    {
+      "height": 100,
+      "id": "ideas/edit-proof.md",
+      "text": "Edit Proof",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 180
+    },
+    {
+      "height": 100,
+      "id": "ideas/idea-001.md",
+      "text": "Evidence-linked verification coverage experiment",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 180
+    },
+    {
+      "height": 100,
+      "id": "ideas/idea-duplicate-001.md",
+      "text": "Repeat existing fixture bridge smoke",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 180
+    },
+    {
+      "height": 100,
+      "id": "ideas/idea-method-incremental-001.md",
+      "text": "Patch a limitation in Method protocol",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 360
+    },
+    {
+      "height": 100,
+      "id": "ideas/idea-research-proof.md",
+      "text": "Research Proof Idea",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 360
+    },
+    {
+      "height": 100,
+      "id": "ideas/idea-smoke-skillgen-proof.md",
+      "text": "Skill transfer verifier audit",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 360
+    },
+    {
+      "height": 100,
+      "id": "ideas/idea-wiki-discovery-001.md",
+      "text": "Close the evidence gap around agent",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 360
+    },
+    {
+      "height": 100,
+      "id": "ideas/idea-wiki-discovery-002.md",
+      "text": "Stress-test method transfer from Runtime Verified Skill Generation Source",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 360
+    },
+    {
+      "height": 100,
+      "id": "ideas/pilot-claim-proof-20260630.md",
+      "text": "Pilot Claim Proof 20260630",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 360
+    },
+    {
+      "height": 100,
+      "id": "index.md",
+      "text": "Solar AutoSci Wiki",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 540
+    },
+    {
+      "height": 100,
+      "id": "log.md",
+      "text": "log",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 540
+    },
+    {
+      "height": 100,
+      "id": "methods/method-001.md",
+      "text": "Method protocol",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 540
+    },
+    {
+      "height": 100,
+      "id": "outputs/PIPELINE_REPORT.md",
+      "text": "AutoSci Research Pipeline Report",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 540
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-ask-2277d32ac4.md",
+      "text": "Claims from `ask-2277d32ac4`",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 540
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-ask-7a544555ad.md",
+      "text": "Claims from `ask-7a544555ad`",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 540
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-audit-format-latex-check.md",
+      "text": "Claims from `audit-format-latex-check`",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 720
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-exp-design-0f52a1d9b5.md",
+      "text": "Claims from `exp-design-0f52a1d9b5`",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 720
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-exp-design-9888d7f734.md",
+      "text": "Claims from `exp-design-9888d7f734`",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 720
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-exp-eval-c87c02a34a.md",
+      "text": "Claims from `exp-eval-c87c02a34a`",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 720
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-exp-run-8b6d0a2615.md",
+      "text": "Claims from `exp-run-8b6d0a2615`",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 720
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-exp-status-5a6b22da38.md",
+      "text": "Claims from `exp-status-5a6b22da38`",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 720
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-harness-dollarsurvey.md",
+      "text": "Claims from `harness-dollarsurvey`",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 900
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-harness-dollarsurvey2.md",
+      "text": "Claims from `harness-dollarsurvey2`",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 900
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-ideate-95798047c0.md",
+      "text": "Claims from `ideate-95798047c0`",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 900
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-ideate-b4632dc219.md",
+      "text": "Claims from `ideate-b4632dc219`",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 900
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-manual.md",
+      "text": "Claims from `manual`",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 900
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-paper-compile-2a74e4dc86.md",
+      "text": "Claims from `paper-compile-2a74e4dc86`",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 900
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-paper-draft-8035ae7f7a.md",
+      "text": "Claims from `paper-draft-8035ae7f7a`",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 1080
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-paper-plan-3bf27167a5.md",
+      "text": "Claims from `paper-plan-3bf27167a5`",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 1080
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-repro.md",
+      "text": "Claims from `repro`",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 1080
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-shim-exp-run-native-command.md",
+      "text": "Claims from `shim-exp-run-native-command`",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 1080
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-shim-survey-format.md",
+      "text": "Claims from `shim-survey-format`",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 1080
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-solar-projection-research-smoke.md",
+      "text": "Claims from `solar-projection-research-smoke`",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 1080
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-test-exp-status.md",
+      "text": "Claims from `test-exp-status`",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 1260
+    },
+    {
+      "height": 100,
+      "id": "outputs/claims-test-paper-compile-token.md",
+      "text": "Claims from `test-paper-compile-token`",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 1260
+    },
+    {
+      "height": 100,
+      "id": "outputs/paper-plan-research-proof.md",
+      "text": "Research Proof Paper Plan",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 1260
+    },
+    {
+      "height": 100,
+      "id": "outputs/pipeline-progress.md",
+      "text": "AutoSci Research Pipeline Progress",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 1260
+    },
+    {
+      "height": 100,
+      "id": "outputs/refine-proof.md",
+      "text": "Refine Proof",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 1260
+    },
+    {
+      "height": 100,
+      "id": "outputs/report-skillgen-operator-smoke.md",
+      "text": "SkillGen Draft",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 1260
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-research-proof.md",
+      "text": "Research Proof Paper",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 1440
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-sample-paper.md",
+      "text": "AutoSci Adapter Fixture Paper",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 1440
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-skillgen-1.md",
+      "text": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 1440
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-skillgen-extracted.md",
+      "text": "SkillGen PDF Extracted Text",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 1440
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-skillgen-operator-smoke-paper.md",
+      "text": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 1440
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-skillgen-sample-paper.md",
+      "text": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 1440
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-skillgen.md",
+      "text": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 1620
+    },
+    {
+      "height": 100,
+      "id": "papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+      "text": "Solar Harness PDF Smoke",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 1620
+    },
+    {
+      "height": 100,
+      "id": "papers/runtime-source-001.md",
+      "text": "Runtime Verified Skill Generation Source",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 1620
+    },
+    {
+      "height": 100,
+      "id": "topics/foundation-foundation-skillgen-prefill-proof-20260630.md",
+      "text": "foundation:skillgen-prefill-proof-20260630",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 1620
+    },
+    {
+      "height": 100,
+      "id": "paper-skillgen-operator-smoke-paper",
+      "text": "paper-skillgen-operator-smoke-paper",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 1620
+    },
+    {
+      "height": 100,
+      "id": "concept.solar_evidence_abi",
+      "text": "concept.solar_evidence_abi",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 1620
+    },
+    {
+      "height": 100,
+      "id": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md",
+      "text": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 1800
+    },
+    {
+      "height": 100,
+      "id": "paper-SkillGen.extracted",
+      "text": "paper-SkillGen.extracted",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 1800
+    },
+    {
+      "height": 100,
+      "id": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md",
+      "text": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 1800
+    },
+    {
+      "height": 100,
+      "id": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "text": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 1800
+    },
+    {
+      "height": 100,
+      "id": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+      "text": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 1800
+    },
+    {
+      "height": 100,
+      "id": "paper-SkillGen",
+      "text": "paper-SkillGen",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 1800
+    },
+    {
+      "height": 100,
+      "id": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex",
+      "text": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 1980
+    },
+    {
+      "height": 100,
+      "id": "paper-sample-paper",
+      "text": "paper-sample-paper",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 1980
+    },
+    {
+      "height": 100,
+      "id": "plugins/autosci/tests/fixtures/sample_paper.md",
+      "text": "plugins/autosci/tests/fixtures/sample_paper.md",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 1980
+    },
+    {
+      "height": 100,
+      "id": "paper-SkillGen(1)",
+      "text": "paper-SkillGen(1)",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 1980
+    },
+    {
+      "height": 100,
+      "id": "artifacts/autosci/workspace/raw/tmp/papers/skillgen-1.tex",
+      "text": "artifacts/autosci/workspace/raw/tmp/papers/skillgen-1.tex",
+      "type": "text",
+      "width": 220,
+      "x": 1040,
+      "y": 1980
+    },
+    {
+      "height": 100,
+      "id": "paper-skillgen-sample-paper",
+      "text": "paper-skillgen-sample-paper",
+      "type": "text",
+      "width": 220,
+      "x": 1300,
+      "y": 1980
+    },
+    {
+      "height": 100,
+      "id": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md",
+      "text": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md",
+      "type": "text",
+      "width": 220,
+      "x": 0,
+      "y": 2160
+    },
+    {
+      "height": 100,
+      "id": "codex-exp-run-final-proof",
+      "text": "codex-exp-run-final-proof",
+      "type": "text",
+      "width": 220,
+      "x": 260,
+      "y": 2160
+    },
+    {
+      "height": 100,
+      "id": "pilot-proof-20260630",
+      "text": "pilot-proof-20260630",
+      "type": "text",
+      "width": 220,
+      "x": 520,
+      "y": 2160
+    },
+    {
+      "height": 100,
+      "id": "pilot-run:pilot-proof-20260630",
+      "text": "pilot-run:pilot-proof-20260630",
+      "type": "text",
+      "width": 220,
+      "x": 780,
+      "y": 2160
+    }
+  ]
+}

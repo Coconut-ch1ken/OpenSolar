@@ -1,0 +1,6 @@
+Solar Harness PDF Smoke
+arXiv: 2401.00003
+Abstract
+This PDF verifies Solar harness offline source preparation.
+1. Method
+The pipeline writes synthetic TeX fallback artifacts.

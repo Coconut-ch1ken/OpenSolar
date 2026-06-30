@@ -1,0 +1,73 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/init/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/init/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/init/SKILL.md"
+  ],
+  "native_skill": "init",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "Approved runtime source manifests can complete init evidence only with non-fixture provider channel boundary proof, and --write can fan candidates into wiki papers/log/graph; init_sources_final_fan_in_boundary requires provider candidates, approved wiki fan-in, graph/log/index rebuild evidence, and verified approval/runtime evidence before initialization is final; native network fetch and bulk ingest execution remain approval/provider-gated.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/init",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "Approved runtime source manifests can complete init evidence only with non-fixture provider channel boundary proof, and --write can fan candidates into wiki papers/log/graph; init_sources_final_fan_in_boundary requires provider candidates, approved wiki fan-in, graph/log/index rebuild evidence, and verified approval/runtime evidence before initialization is final; native network fetch and bulk ingest execution remain approval/provider-gated."
+    ],
+    "required_capabilities": [
+      "raw source preparation",
+      "discovery plan",
+      "fan-in ingest",
+      "best-effort visualization"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "init_sources"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/init/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}

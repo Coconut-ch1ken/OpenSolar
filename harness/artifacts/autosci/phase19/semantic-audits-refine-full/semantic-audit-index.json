@@ -1,0 +1,30 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-refine-full/refine.semantic-audit.json"
+  ],
+  "generated_at": "2026-06-30T15:41:41Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "approval_gated_after_artifact_apply": "ok",
+        "native_command_surface": "ok",
+        "native_skill_doc_exists": "ok",
+        "post_apply_quality_gate": "ok",
+        "refine_loop_report": "ok",
+        "regression_and_inventory": "ok",
+        "review_llm_evidence_boundary": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "source_and_route_proofs": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-refine-full/refine.semantic-audit.json",
+      "native_skill": "refine",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-06-30T12:33:58Z",
+  "proofs": [
+    {
+      "categories": [
+        "external_runtime_evidence",
+        "approval_boundary_evidence"
+      ],
+      "collection_mode": "approved_side_effect",
+      "description": "Verified approval/runtime evidence for AutoSci `exp-pilot-run` parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/experiment_result.pilot.json",
+        "artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/run_pilot_experiment_approval_contract.json",
+        "artifacts/autosci/phase19/pilot-proof-inputs/pilot-run-allowlist-20260630.json",
+        "artifacts/autosci/phase19/pilot-proof-inputs/pilot-run-runtime-20260630.json",
+        "artifacts/autosci/phase19/pilot-proof-inputs/pilot-run-before-20260630.json",
+        "artifacts/autosci/phase19/pilot-proof-inputs/pilot-run-after-20260630.json"
+      ],
+      "native_skill": "exp-pilot-run",
+      "production_ready": true,
+      "proof_id": "runtime:exp-pilot-run:approval-contract:20260630T123358Z",
+      "provenance": {
+        "artifact_kind": "pilot_runtime_wiki_writeback",
+        "captured_at": "2026-06-30T12:33:58Z",
+        "command": "run_pilot_experiment:approved_mutation",
+        "source": "approval_contract"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

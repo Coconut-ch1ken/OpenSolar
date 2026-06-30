@@ -1,0 +1,14 @@
+{
+  "schema": "research_claims.v1",
+  "task_id": "claims-exp-eval-proof-20260630",
+  "status": "completed",
+  "outputs": {
+    "claims": [
+      {
+        "claim_id": "claim-skillgen-write-20260630",
+        "text": "SkillGen verifier gates improve generated-skill reliability on held-out repair tasks.",
+        "evidence_ids": ["claim:skillgen-write-20260630"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-06-30T15:45:25Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-review-full/review.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/review/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/review/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/review/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/backends/artifact_review.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/model-external-proof-inputs/review-target-20260630.md",
+        "harness/artifacts/autosci/phase19/model-external-proof-inputs/review-llm-20260630.json",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.json",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.md",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_artifact_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-review-proof-check-quoted/artifact_review.json",
+        "harness/artifacts/autosci/runs/codex-review-proof-check-quoted/review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-review-source-proof-check/artifact_review.json",
+        "harness/artifacts/autosci/runs/codex-review-source-proof-check/review_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-review-source-proof-check/review_artifact_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-refine-semantic-full.json"
+      ],
+      "native_skill": "review",
+      "production_ready": true,
+      "proof_id": "runtime:review:phase19-review-semantic-audit:20260630T154525Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T15:45:25Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-review-full/review.semantic-audit.json --native-skill review --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-review-full/review.semantic-proof.json",
+        "source": "phase19-review-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

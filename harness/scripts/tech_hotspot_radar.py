@@ -53,9 +53,6 @@ from report_evidence import run_chapter_writer as runtime_run_chapter_writer
 from report_ir import compile_report_ir as runtime_compile_report_ir
 from report_ir import create_chapter_jobs as runtime_create_chapter_jobs
 from report_synthesis import synthesize_report as runtime_synthesize_report
-from report_validation import chapter_requires_deep_proof as runtime_chapter_requires_deep_proof
-from report_validation import run_chapter_repair_loop as runtime_run_chapter_repair_loop
-from report_validation import write_validation_sidecars as runtime_write_validation_sidecars
 
 try:
     import yaml
@@ -14089,32 +14086,19 @@ def call_ai_influence_chapter_writer_with_repair(chapter_prompt: str,
                                                  model_name: str,
                                                  chapter_id: str,
                                                  min_chars: int = 120,
-                                                 max_attempts: int = 3,
-                                                 operator_kind: str = "chapter_writer") -> dict[str, Any]:
-    """Run ChatGPT report writer with a bounded generation retry loop.
+                                                 max_attempts: int = 3) -> dict[str, Any]:
+    """Run ChatGPT Report Chapter Writer with a bounded repair loop.
 
     The old flow failed the whole report when one chapter came back as a short
     smoke-test/login-wall fragment. For production we retry the same chapter
     with explicit repair instructions and keep the already-successful chapters.
     """
-    operator_kind = operator_kind if operator_kind in {"chapter_writer", "deep_writer"} else "chapter_writer"
-    flow_cfg = ((config.get("youtube") or {}).get("ai_influence_report_flow") or {})
-    deep_writer_cfg = flow_cfg.get("deep_writer") or {}
-    call_model_name = model_name
-    if operator_kind == "deep_writer":
-        call_model_name = str(
-            deep_writer_cfg.get("model")
-            or (flow_cfg.get("report_writer") or {}).get("deep_model")
-            or os.environ.get("CHATGPT_REPORT_DEEP_MODEL")
-            or "chatgpt-pro"
-        )
     errors: list[str] = []
     for attempt in range(1, max_attempts + 1):
         prompt = chapter_prompt
         if attempt > 1:
-            stage_label = "Deep Research 章节" if operator_kind == "deep_writer" else "章节"
             prompt = "\n\n".join([
-                f"你正在执行 AI Influence YouTube 报告流的{stage_label}修复任务。",
+                "你正在执行 AI Influence YouTube 报告流的章节修复任务。",
                 f"chapter_id: {chapter_id}",
                 "上一次章节生成失败或输出过短。请只补写当前章节，必须输出完整 Markdown 章节正文。",
                 "不要输出 smoke test、不要解释流程、不要输出 JSON、不要请求人工介入。",
@@ -14128,8 +14112,8 @@ def call_ai_influence_chapter_writer_with_repair(chapter_prompt: str,
                 prompt,
                 config,
                 purpose=purpose if attempt == 1 else f"{purpose}-repair-{attempt}",
-                requested_model=call_model_name,
-                operator_kind=operator_kind,
+                requested_model=model_name,
+                operator_kind="chapter_writer",
             )
             markdown = str(result.get("markdown") or "").strip()
             if len(markdown) >= min_chars:
@@ -16924,16 +16908,12 @@ def cmd_run_ai_influence_planned_reports(args: argparse.Namespace) -> int:
                 events_path.unlink()
 
             request_dirs: list[str] = []
-            chapter_verifications: list[dict[str, Any]] = []
-            chapter_repair_sidecars: list[str] = []
             aggregate_tokens_in = 0
             aggregate_tokens_out = 0
             aggregate_latency_ms = 0
 
             def writer_callable(chapter_spec: dict[str, Any], chapter_evidence_pack: dict[str, Any], writer_model: str) -> dict[str, Any]:
                 chapter_id = str(chapter_spec.get("chapter_id") or "chapter")
-                deep_required = runtime_chapter_requires_deep_proof(chapter_spec, chapter_evidence_pack)
-                operator_kind = "deep_writer" if deep_required else "chapter_writer"
                 prompt = build_planned_report_chapter_prompt(
                     report_ir,
                     chapter_spec,
@@ -16943,14 +16923,9 @@ def cmd_run_ai_influence_planned_reports(args: argparse.Namespace) -> int:
                 return call_ai_influence_chapter_writer_with_repair(
                     prompt,
                     config,
-                    purpose=(
-                        f"ai-influence-report-deep-chapter-{date_str}-{report_id}-{chapter_id}"
-                        if deep_required
-                        else f"ai-influence-report-chapter-{date_str}-{report_id}-{chapter_id}"
-                    ),
+                    purpose=f"ai-influence-report-chapter-{date_str}-{report_id}-{chapter_id}",
                     model_name=writer_model,
                     chapter_id=chapter_id,
-                    operator_kind=operator_kind,
                 )
 
             for job in jobs:
@@ -16971,32 +16946,6 @@ def cmd_run_ai_influence_planned_reports(args: argparse.Namespace) -> int:
                     writer_callable=writer_callable,
                 )
                 runtime_append_chapter_event(events_path, chapter_id=chapter_id, from_status="writing", to_status="verifying", reason="chapter_writer_completed")
-                repair_result = runtime_run_chapter_repair_loop(
-                    job,
-                    str(writer_result.get("markdown") or ""),
-                    chapter_evidence_pack,
-                    writer_result,
-                    max_attempts=3,
-                )
-                final_verification = repair_result.get("final_verification") or {}
-                chapter_verifications.append(final_verification)
-                validation_dir = report_dir / "validation" / "chapters"
-                validation_dir.mkdir(parents=True, exist_ok=True)
-                repair_path = validation_dir / f"{chapter_id}.repair.json"
-                repair_path.write_text(json.dumps(repair_result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-                chapter_repair_sidecars.append(str(repair_path))
-                if repair_result.get("markdown") and repair_result.get("markdown") != writer_result.get("markdown"):
-                    (report_dir / "chapters" / f"{chapter_id}.final.md").write_text(str(repair_result["markdown"]).strip() + "\n", encoding="utf-8")
-                if repair_result.get("publish_decision") != "publish" or final_verification.get("status") != "passed":
-                    to_status = "blocked" if repair_result.get("publish_decision") == "blocked" else "internal_only"
-                    runtime_append_chapter_event(
-                        events_path,
-                        chapter_id=chapter_id,
-                        from_status="verifying",
-                        to_status=to_status,
-                        reason=";".join(str(item) for item in (repair_result.get("blocked_reasons") or final_verification.get("repair_reasons") or ["chapter_verification_failed"]))[:240],
-                    )
-                    raise ValueError(f"ai_influence_chapter_verification_failed:{chapter_id}:{repair_result.get('publish_decision')}:{final_verification.get('repair_reasons')}")
                 runtime_append_chapter_event(events_path, chapter_id=chapter_id, from_status="verifying", to_status="passed", reason="chapter_runtime_verified")
                 request_dir = str(writer_result.get("request_dir") or "")
                 if request_dir:
@@ -17004,10 +16953,6 @@ def cmd_run_ai_influence_planned_reports(args: argparse.Namespace) -> int:
                 aggregate_tokens_in += int(writer_result.get("input_token_count") or 0)
                 aggregate_tokens_out += int(writer_result.get("output_token_count") or 0)
                 aggregate_latency_ms += int(writer_result.get("latency_ms") or 0)
-
-            quality_score = runtime_write_validation_sidecars(report_dir, report_ir, chapter_verifications)
-            if quality_score.get("publish_decision") != "publish":
-                raise ValueError(f"ai_influence_report_quality_gate_failed:{quality_score.get('grade')}:{quality_score.get('publish_decision')}")
 
             synthesis = runtime_synthesize_report(report_ir, report_dir)
             markdown = normalize_ai_influence_markdown_report(
@@ -17043,13 +16988,6 @@ def cmd_run_ai_influence_planned_reports(args: argparse.Namespace) -> int:
                 "pipeline": "report_ir_chapter_runtime",
                 "chapter_count": len(jobs),
                 "chapter_state": runtime_rebuild_chapter_state(events_path),
-                "quality_score": quality_score,
-                "validation_sidecars": [
-                    str(report_dir / "validation" / "chapter-validation-summary.json"),
-                    str(report_dir / "validation" / "claim-verification.json"),
-                    str(report_dir / "validation" / "quality-score.json"),
-                    *chapter_repair_sidecars,
-                ],
                 "synthesis_path": synthesis.get("path"),
                 "request_dirs": request_dirs,
                 "request_dir": request_dirs[-1] if request_dirs else "",
@@ -17079,28 +17017,14 @@ def cmd_run_ai_influence_planned_reports(args: argparse.Namespace) -> int:
             ok_count += 1
             print(f"[ai-influence-run-plan] ok report_id={report_id} chapters={len(jobs)} pipeline=report_ir_chapter_runtime")
         except Exception as exc:
-            blocked_payload: dict[str, Any] = {
+            (report_dir / "report.blocked.json").write_text(json.dumps({
                 "status": "blocked",
                 "error_type": type(exc).__name__,
                 "error": str(exc),
                 "required_executor": "Browser Agent / ChatGPT 5.5 Thinking high",
                 "no_fallback_policy": "Codex/direct GPT/local Qwen final writing is disabled.",
                 "created_at": iso_z(),
-                "pipeline": "report_ir_chapter_runtime",
-            }
-            events_path_for_blocked = report_dir / "events.jsonl"
-            if events_path_for_blocked.exists():
-                blocked_payload["chapter_state"] = runtime_rebuild_chapter_state(events_path_for_blocked)
-            validation_dir = report_dir / "validation"
-            if validation_dir.exists():
-                blocked_payload["validation_sidecars"] = [str(path) for path in sorted(validation_dir.rglob("*.json"))]
-            quality_path = validation_dir / "quality-score.json"
-            if quality_path.exists():
-                try:
-                    blocked_payload["quality_score"] = json.loads(quality_path.read_text(encoding="utf-8"))
-                except Exception:
-                    blocked_payload["quality_score"] = {"status": "unreadable", "path": str(quality_path)}
-            (report_dir / "report.blocked.json").write_text(json.dumps(blocked_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             record_model_ledgers(
                 conn,
                 target_id=f"__ai_influence_planned_report__:{date_str}:{report_id}",

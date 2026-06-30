@@ -1,0 +1,5 @@
+{
+  "commands": [
+    "'/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python' '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-inputs/fake_live_status_provider.py'"
+  ]
+}

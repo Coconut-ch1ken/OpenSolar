@@ -1,0 +1,16 @@
+{
+  "schema": "artifact_review.v1",
+  "task_id": "review-exp-eval-proof-20260630",
+  "status": "completed",
+  "outputs": {
+    "review": {
+      "review_mode": "review_llm",
+      "review_available": true,
+      "difficulty": "hard",
+      "focus": "evidence",
+      "score": 0.83,
+      "recommendation": "pass_with_caveats",
+      "evidence_ids": ["review:exp-eval-proof-20260630"]
+    }
+  }
+}

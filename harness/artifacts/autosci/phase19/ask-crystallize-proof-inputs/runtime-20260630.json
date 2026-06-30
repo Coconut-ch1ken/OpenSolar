@@ -1,0 +1,9 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "status": "completed",
+  "task_id": "codex-ask-crystallize-proof-20260630",
+  "outputs": {
+    "approved_action": "ask_crystallize",
+    "expected_output": "wiki/outputs/what-evidence-supports-skillgen.md"
+  }
+}

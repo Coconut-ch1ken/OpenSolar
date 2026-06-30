@@ -1,0 +1,10 @@
+{
+  "allowed": [
+    "ask_crystallize",
+    "wiki_concept_write",
+    "wiki_graph_edge",
+    "wiki_navigation_rebuild"
+  ],
+  "approval_scope": "codex-ask-target-proof-20260630",
+  "schema": "autosci_approval_allowlist.v1"
+}

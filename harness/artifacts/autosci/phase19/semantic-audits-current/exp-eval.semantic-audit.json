@@ -1,0 +1,73 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/exp-eval/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md"
+  ],
+  "native_skill": "exp-eval",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "Experiment result, claim, code, and Review LLM evidence can be supplied explicitly for review-backed verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked; experiment_evaluation_final_verdict_boundary requires completed experiment_result.v1 evidence, linked claim/code evidence, completed Review LLM proof, and completed approved wiki writeback before a verdict is treated as final.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/exp-eval",
+    "backend_mode": "external_optional",
+    "coverage_status": "partial",
+    "limitations": [
+      "Experiment result, claim, code, and Review LLM evidence can be supplied explicitly for review-backed verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked; experiment_evaluation_final_verdict_boundary requires completed experiment_result.v1 evidence, linked claim/code evidence, completed Review LLM proof, and completed approved wiki writeback before a verdict is treated as final."
+    ],
+    "required_capabilities": [
+      "result review",
+      "four-path verdict",
+      "idea status update proposal",
+      "cross-model review binding"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "verify_claim"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/exp-eval/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}

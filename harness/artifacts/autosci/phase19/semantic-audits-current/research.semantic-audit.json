@@ -1,0 +1,86 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/research/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md"
+  ],
+  "native_skill": "research",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied.",
+    "`$research --scheduler-run` now defaults to `run_scientific_workflow.py`, a config-driven generic workflow runner that dispatches selected workflow nodes through operator_runtime and records `runner_contract=generic_workflow_runner`; the old bounded lifecycle smoke runner remains available only through `--scheduler-legacy-smoke-runner`.",
+    "Scheduler resume runs on the legacy smoke path still emit `autosci_scheduler_resume_boundary.v1` with reused-node fingerprints and no-rerun checks; generic workflow lifecycle summaries emit `scientific_workflow_runtime_manifest.v1`, but production scheduler parity still requires complete non-fixture node selection plus distributed lease/quota/runtime audit.",
+    "`--scheduler-require-workflow-config-alignment` passes only for the full supplied-evidence tail; partial/default runs surface workflow_config_alignment drift or inconclusive status rather than full parity.",
+    "`--scheduler-require-production-dispatch` now fails when the selected scheduler runner reports fixture/smoke input markers or blocked provider/runtime evidence.",
+    "`--scheduler-include-human-gates` records idea/results approval pauses as scheduler-visible blocked nodes, `--online` can carry supplied approval/runtime source evidence into strict scheduler source mode with non-fixture provider channel boundary checks, scheduler experiment stages can carry explicit `--experiment-*` approval/runtime evidence without reusing source evidence paths, `--experiment-execute-approved` can run an allowlisted approved local experiment command, and scheduler publication compile can use compile-specific approved runtime evidence or `--compile-execute-approved`.",
+    "Full parity still requires real provider evidence, audited remote/session stage runners, production scheduler dispatch, and submission/anonymity checks.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/research",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied.",
+      "`$research --scheduler-run` now defaults to `run_scientific_workflow.py`, a config-driven generic workflow runner that dispatches selected workflow nodes through operator_runtime and records `runner_contract=generic_workflow_runner`; the old bounded lifecycle smoke runner remains available only through `--scheduler-legacy-smoke-runner`.",
+      "Scheduler resume runs on the legacy smoke path still emit `autosci_scheduler_resume_boundary.v1` with reused-node fingerprints and no-rerun checks; generic workflow lifecycle summaries emit `scientific_workflow_runtime_manifest.v1`, but production scheduler parity still requires complete non-fixture node selection plus distributed lease/quota/runtime audit.",
+      "`--scheduler-require-workflow-config-alignment` passes only for the full supplied-evidence tail; partial/default runs surface workflow_config_alignment drift or inconclusive status rather than full parity.",
+      "`--scheduler-require-production-dispatch` now fails when the selected scheduler runner reports fixture/smoke input markers or blocked provider/runtime evidence.",
+      "`--scheduler-include-human-gates` records idea/results approval pauses as scheduler-visible blocked nodes, `--online` can carry supplied approval/runtime source evidence into strict scheduler source mode with non-fixture provider channel boundary checks, scheduler experiment stages can carry explicit `--experiment-*` approval/runtime evidence without reusing source evidence paths, `--experiment-execute-approved` can run an allowlisted approved local experiment command, and scheduler publication compile can use compile-specific approved runtime evidence or `--compile-execute-approved`.",
+      "Full parity still requires real provider evidence, audited remote/session stage runners, production scheduler dispatch, and submission/anonymity checks."
+    ],
+    "required_capabilities": [
+      "idea discovery",
+      "human gates",
+      "experiment lifecycle",
+      "paper lifecycle",
+      "resume state"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "run_research_lifecycle"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/research/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}

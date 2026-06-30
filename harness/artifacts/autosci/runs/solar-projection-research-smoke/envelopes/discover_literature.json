@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "query": "agent skill learning"
+  },
+  "mode": "fixture",
+  "node_id": "node-discover-literature",
+  "output_dir": "artifacts/autosci/runs/solar-projection-research-smoke",
+  "outputs": {
+    "evidence_jsonl": "artifacts/autosci/runs/solar-projection-research-smoke/evidence.jsonl",
+    "evidence_payload_path": "artifacts/autosci/runs/solar-projection-research-smoke/literature_discovery.json",
+    "result_path": "artifacts/autosci/runs/solar-projection-research-smoke/discover_literature.result.json"
+  },
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "task_id": "task-autosci-skillgen-discover_literature"
+}

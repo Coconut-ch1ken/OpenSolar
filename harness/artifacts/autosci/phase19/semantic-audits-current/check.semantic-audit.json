@@ -1,0 +1,72 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/check/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/check/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/check/SKILL.md"
+  ],
+  "native_skill": "check",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "LLM-assisted content quality checks can be backed by explicit model evidence or a model command with persisted request/response provenance; check_final_quality_boundary requires passing local wiki checks plus completed model-backed recommendation evidence, and absent model evidence is not treated as deterministic pass/fail.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/check",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "LLM-assisted content quality checks can be backed by explicit model evidence or a model command with persisted request/response provenance; check_final_quality_boundary requires passing local wiki checks plus completed model-backed recommendation evidence, and absent model evidence is not treated as deterministic pass/fail."
+    ],
+    "required_capabilities": [
+      "wiki lint",
+      "graph consistency check",
+      "tiered recommendations"
+    ],
+    "side_effect_policy": "none",
+    "solar_backend_action": "check_wiki_health"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/check/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}

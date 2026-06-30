@@ -1,0 +1,59 @@
+{
+  "catalog": {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.agents/skills/prefill/foundations-catalog.yaml",
+    "status": "completed"
+  },
+  "catalog_domain_count": 5,
+  "dedup": [
+    {
+      "domain": "NLP",
+      "exists": false,
+      "foundation_id": "foundation-lora-disabled-fetch-20260630",
+      "path": "artifacts/autosci/workspace/wiki/foundations/foundation-lora-disabled-fetch-20260630.md",
+      "seed_slug": "lora-disabled-fetch-20260630",
+      "source_evidence_path": "",
+      "source_status": "fallback_llm_analysis",
+      "source_url": "",
+      "title": "LoRA Disabled Fetch 20260630"
+    }
+  ],
+  "domain": "NLP",
+  "domain_resolution": {
+    "domain": "NLP",
+    "source": "input.domain",
+    "status": "explicit"
+  },
+  "fetch_attempts": [
+    {
+      "path": "artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+      "status": "fetch_disabled",
+      "title": "LoRA Disabled Fetch 20260630"
+    }
+  ],
+  "limitations": [],
+  "mode": "add",
+  "schema": "autosci_prefill_plan.v1",
+  "seed_count": 1,
+  "selected_count": 1,
+  "selected_seeds": [
+    {
+      "domain": "NLP",
+      "exists": false,
+      "foundation_id": "foundation-lora-disabled-fetch-20260630",
+      "path": "artifacts/autosci/workspace/wiki/foundations/foundation-lora-disabled-fetch-20260630.md",
+      "seed_slug": "lora-disabled-fetch-20260630",
+      "slug": "lora-disabled-fetch-20260630",
+      "source": "add",
+      "source_evidence": {},
+      "source_evidence_path": "",
+      "source_status": "fallback_llm_analysis",
+      "source_url": "",
+      "summary": "",
+      "title": "LoRA Disabled Fetch 20260630"
+    }
+  ],
+  "skipped_existing_count": 0,
+  "source_evidence_count": 0,
+  "source_evidence_refs": [],
+  "status": "completed"
+}

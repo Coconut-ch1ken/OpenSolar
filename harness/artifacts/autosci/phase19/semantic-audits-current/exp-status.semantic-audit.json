@@ -1,0 +1,72 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/exp-status/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md"
+  ],
+  "native_skill": "exp-status",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "Wiki/run-state lookup, local session registry status, approved tools/remote.py check execution, approved live/provider status command execution, approved runtime evidence, approved pull-results collection evidence, and local collection identity ledger are wired; `$exp-status` emits an explicit remote poll boundary so local run-dir status-file checks are not counted as live SSH/provider polling; live SSH/provider polling and distributed exactly-once remote collection remain partial until real external connectivity smoke is audited.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/exp-status",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "Wiki/run-state lookup, local session registry status, approved tools/remote.py check execution, approved live/provider status command execution, approved runtime evidence, approved pull-results collection evidence, and local collection identity ledger are wired; `$exp-status` emits an explicit remote poll boundary so local run-dir status-file checks are not counted as live SSH/provider polling; live SSH/provider polling and distributed exactly-once remote collection remain partial until real external connectivity smoke is audited."
+    ],
+    "required_capabilities": [
+      "status read",
+      "collect-ready detection",
+      "anomaly summary"
+    ],
+    "side_effect_policy": "none",
+    "solar_backend_action": "monitor_experiment"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/exp-status/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}

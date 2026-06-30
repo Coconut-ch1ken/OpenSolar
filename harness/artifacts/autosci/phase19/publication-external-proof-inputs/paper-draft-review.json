@@ -1,0 +1,14 @@
+{
+  "schema": "artifact_review.v1",
+  "task_id": "review-paper-draft-external-20260630",
+  "status": "completed",
+  "outputs": {
+    "review": {
+      "review_available": true,
+      "review_mode": "review_llm",
+      "recommendation": "accept",
+      "evidence_ids": ["review:paper-draft-external-20260630"],
+      "review_llm": {"status": "completed"}
+    }
+  }
+}

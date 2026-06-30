@@ -1,0 +1,12 @@
+{
+  "schema": "experiment_result.v1",
+  "task_id": "result-exp-eval-proof-20260630",
+  "status": "completed",
+  "outputs": {
+    "result": {
+      "experiment_id": "exp-skillgen-write-20260630",
+      "outcome": "supports",
+      "evidence_ids": ["experiment:skillgen-write-20260630"]
+    }
+  }
+}

@@ -1,0 +1,668 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_final_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-ask-full/ask.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-check-full/check.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ask.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/check.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/daily-arxiv.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/discover.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/edit.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-design.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-eval.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-eval.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-run.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-run.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-status.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ideate.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ingest.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/init.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/novelty.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-compile.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-plan.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/poster.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/prefill.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/refine.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/research.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/reset.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/review.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/setup.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/survey.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/visualize.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-edit-full/edit.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-refine-full/refine.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-reset-full/reset.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-review-full/review.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-visualize-full/visualize.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19",
+      "type": "semantic_audit_dir"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "rebuttal",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [
+      "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630"
+    ],
+    "runtime_proof_manifest_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_final_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json"
+    ],
+    "runtime_proof_manifests": [],
+    "semantic_audit_dirs": [
+      "artifacts/autosci/phase19"
+    ],
+    "semantic_audit_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-ask-full/ask.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-check-full/check.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ask.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/check.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/daily-arxiv.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/discover.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/edit.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-design.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-eval.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-eval.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-pilot-run.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-run.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/exp-status.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ideate.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/ingest.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/init.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/novelty.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-compile.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-draft.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/paper-plan.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/poster.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/prefill.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/refine.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/research.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/reset.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/review.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/setup.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/survey.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/visualize.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-edit-full/edit.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-refine-full/refine.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-reset-full/reset.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-review-full/review.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-visualize-full/visualize.semantic-audit.json"
+    ],
+    "semantic_audits": []
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-rebuttal",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 0,
+        "bounded_local": 1,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 0,
+      "gated_count": 0,
+      "items": [
+        {
+          "autosci_command": "/rebuttal",
+          "autosci_feature": "/rebuttal",
+          "backend_mode": "external_optional",
+          "coverage_status": "partial",
+          "evidence_ids": [
+            "route:rebuttal",
+            "native:rebuttal"
+          ],
+          "evidence_schema": "publication_bundle.v1",
+          "execution_policy": "bounded_local",
+          "feature_kind": "skill",
+          "limitations": [
+            "Reviewer-thread evidence is atomized into RvX-CY concerns, mapped to wiki/source evidence, rendered as rich/formal rebuttal artifacts, and gated by Review LLM stress-test plus supplied submission audit evidence; portal submission itself is not claimed unless external audit evidence records it."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/rebuttal/SKILL.md"
+          ],
+          "native_skill": "rebuttal",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/bin/autosci_bridge.py",
+              "ref": "plugins/autosci/bin/autosci_bridge.py run --action draft_rebuttal",
+              "status": "ok",
+              "token": "plugins/autosci/bin/autosci_bridge.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tools/review_model_runtime_proof.py",
+              "ref": "tools/review_model_runtime_proof.py from-evidence",
+              "status": "ok",
+              "token": "tools/review_model_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "plugins/autosci/bin/autosci_bridge.py run --action draft_rebuttal",
+            "tools/review_model_runtime_proof.py from-evidence"
+          ],
+          "proof_level": "E2",
+          "proof_refs": [
+            "route:rebuttal",
+            "native:rebuttal"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:rebuttal"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:rebuttal"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "plugins/autosci/bin/autosci_bridge.py run --action draft_rebuttal",
+                "tools/review_model_runtime_proof.py from-evidence"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "route:rebuttal",
+                "native:rebuttal"
+              ],
+              "status": "pending"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:rebuttal:thread-audit:20260630T160056Z",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+                "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+                "runtime:rebuttal:codex-review-llm-proof:20260630T160056Z"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "review_llm_or_model_evidence",
+              "description": "Model/Review LLM-dependent route needs persisted request/response or supplied review evidence.",
+              "evidence_refs": [
+                "runtime:rebuttal:thread-audit:20260630T160056Z",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+                "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+                "runtime:rebuttal:codex-review-llm-proof:20260630T160056Z"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "provider_source_evidence",
+              "description": "Source-dependent route needs non-fixture provider/source-channel evidence.",
+              "evidence_refs": [
+                "runtime:rebuttal:thread-audit:20260630T160056Z",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+                "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+                "runtime:rebuttal:codex-review-llm-proof:20260630T160056Z"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [
+            "Reviewer-thread evidence is atomized into RvX-CY concerns, mapped to wiki/source evidence, rendered as rich/formal rebuttal artifacts, and gated by Review LLM stress-test plus supplied submission audit evidence; portal submission itself is not claimed unless external audit evidence records it."
+          ],
+          "required_capabilities": [
+            "review comment atomization",
+            "evidence mapping",
+            "response drafting",
+            "stress-test",
+            "reviewer-thread ingestion",
+            "formal rebuttal export",
+            "submission audit boundary"
+          ],
+          "runtime_proof_refs": [
+            "runtime:rebuttal:thread-audit:20260630T160056Z",
+            "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+            "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+            "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+            "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+            "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+            "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+            "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+            "artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+            "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+            "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+            "artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+            "runtime:rebuttal:codex-review-llm-proof:20260630T160056Z"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "review_llm_or_model_evidence",
+                "external_runtime_evidence",
+                "provider_source_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed reviewer-thread, wiki/source mapping, Review LLM stress-test, and submission audit evidence for AutoSci `rebuttal` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                  "ref": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+                  "ref": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+                  "ref": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+                  "ref": "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+                  "ref": "artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+                  "ref": "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                  "ref": "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+                  "ref": "artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+                "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                "artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_final_runtime_proof.json",
+              "native_skill": "rebuttal",
+              "production_ready": true,
+              "proof_id": "runtime:rebuttal:thread-audit:20260630T160056Z",
+              "provenance": {
+                "artifact_kind": "autosci_rebuttal_response_map",
+                "captured_at": "2026-06-30T16:00:56Z",
+                "command": "draft_rebuttal:thread_stress_submission_audit",
+                "source": "rebuttal_thread_stress_submission_boundary"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "review_llm_or_model_evidence",
+                "external_runtime_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed Review LLM evidence for AutoSci `rebuttal` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                  "ref": "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                  "ref": "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+                "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json",
+              "native_skill": "rebuttal",
+              "production_ready": true,
+              "proof_id": "runtime:rebuttal:codex-review-llm-proof:20260630T160056Z",
+              "provenance": {
+                "artifact_kind": "artifact_review",
+                "captured_at": "2026-06-30T16:00:56Z",
+                "command": "review_llm_evidence:codex-review-llm-proof",
+                "source": "codex-review-llm-proof"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [
+                "audit semantic_parity must be full",
+                "audit acceptance_checks must all pass"
+              ],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.agents/skills/rebuttal/SKILL.md",
+                  "ref": ".agents/skills/rebuttal/SKILL.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/rebuttal/SKILL.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-current/rebuttal.semantic-audit.json",
+              "native_skill": "rebuttal",
+              "production_ready": false,
+              "proof_id": "runtime:rebuttal:semantic-audit:rebuttal.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-06-30T13:17:09Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-semantic-audit-matrix"
+              },
+              "status": "blocked"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_reasons": [
+            "runtime:rebuttal:semantic-audit:rebuttal.semantic-audit: audit semantic_parity must be full",
+            "runtime:rebuttal:semantic-audit:rebuttal.semantic-audit: audit acceptance_checks must all pass"
+          ],
+          "semantic_audit_refs": [],
+          "semantic_audit_status": "inconclusive",
+          "semantic_parity": "partial",
+          "side_effect_policy": "dry_run_only",
+          "solar_backend_action": "draft_rebuttal",
+          "solar_capability": "cap.research-publication-produce",
+          "solar_logical_operator": "ScientificPublicationProducer",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "rebuttal"
+      ],
+      "partial_count": 1,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 1,
+        "E3": 0,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 1,
+        "supplied": 3
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 0,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 1
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-06-30T16:01:05.884338Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

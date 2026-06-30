@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-06-30T12:56:32Z",
+  "proofs": [
+    {
+      "categories": [
+        "wiki_mutation_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed paper-draft workspace wiki projection evidence for AutoSci parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/autosci_skill_run.json",
+        "artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/scientific_report.json",
+        "artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/report.md",
+        "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+        "artifacts/autosci/workspace/wiki/index.md"
+      ],
+      "native_skill": "paper-draft",
+      "production_ready": true,
+      "proof_id": "runtime:paper-draft:workspace-projection:20260630T125632Z",
+      "provenance": {
+        "artifact_kind": "paper_draft_workspace_projection",
+        "captured_at": "2026-06-30T12:56:32Z",
+        "command": "autosci_skill_shim:project_run_to_workspace",
+        "source": "solar_autosci_workspace_projector"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

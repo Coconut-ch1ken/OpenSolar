@@ -1,0 +1,23 @@
+{
+  "evidence_ids": [
+    "task-autosci-verdict-supported-fixture",
+    "claim-001",
+    "paper-sample-paper",
+    "sample_paper.md#results",
+    "exp-supported-001",
+    "experiment.supported.001",
+    "metric.fixture_passed",
+    "task-autosci-code-evidence-fixture",
+    "map-001",
+    "plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py",
+    "task-autosci-claims-fixture",
+    "claim-002",
+    "sample_paper.md#abstract",
+    "task-autosci-experiment-run-fixture",
+    "exp-001",
+    "evidence:autosci-fixture-result",
+    "evidence:autosci-fixture-ledger"
+  ],
+  "report_id": "report-autosci-phase14",
+  "unsupported_claims": []
+}

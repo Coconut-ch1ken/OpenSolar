@@ -38,9 +38,24 @@ def _write_paper(path: Path, *, job_id: str = "job-runtime", node_id: str = "pap
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _write_runtime_sidecars(tmp_path: Path) -> tuple[str, str]:
+    operator_result = tmp_path / "operator-result.json"
+    bridge_result = tmp_path / "bridge-result.json"
+    operator_result.write_text(
+        json.dumps({"status": "completed", "exit_code": 0}, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    bridge_result.write_text(
+        json.dumps({"ok": True, "action": "ingest_paper", "status": "completed"}, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return str(operator_result), str(bridge_result)
+
+
 def _runtime_payload(tmp_path: Path) -> dict:
     artifact = tmp_path / "research_paper.v1.json"
     digest = _write_paper(artifact)
+    operator_result, bridge_result = _write_runtime_sidecars(tmp_path)
     return {
         "schema": "scientific_lifecycle.v1",
         "workflow_id": "scientific_paper_ingestion_v1",
@@ -52,6 +67,9 @@ def _runtime_payload(tmp_path: Path) -> dict:
                 "job_id": "job-runtime",
                 "node_id": "paper_ingest",
                 "status": "passed",
+                "gate": "G_PAPER_INGEST",
+                "operator_result_path": operator_result,
+                "bridge_result_path": bridge_result,
                 "artifact_path": str(artifact),
                 "artifact_sha256": digest,
                 "expected_schema": "research_paper.v1",
@@ -182,6 +200,29 @@ def test_lifecycle_runtime_gate_rejects_inconclusive_node(tmp_path: Path) -> Non
 
     assert result.ok is False
     assert "status must be passed" in " ".join(result.reasons)
+
+
+def test_lifecycle_runtime_gate_rejects_missing_runtime_result_paths(tmp_path: Path) -> None:
+    payload = _runtime_payload(tmp_path)
+    payload["node_results"]["paper_ingest"].pop("operator_result_path")
+    payload["node_results"]["paper_ingest"]["bridge_result_path"] = str(tmp_path / "missing-bridge.json")
+
+    result = lifecycle_runtime_gate.evaluate(payload)
+
+    assert result.ok is False
+    joined = " ".join(result.reasons)
+    assert "operator_result_path is required" in joined
+    assert "bridge_result_path does not exist" in joined
+
+
+def test_lifecycle_runtime_gate_rejects_missing_gate_name(tmp_path: Path) -> None:
+    payload = _runtime_payload(tmp_path)
+    payload["node_results"]["paper_ingest"].pop("gate")
+
+    result = lifecycle_runtime_gate.evaluate(payload)
+
+    assert result.ok is False
+    assert "node_results.paper_ingest.gate is required" in " ".join(result.reasons)
 
 
 def test_lifecycle_runtime_gate_rejects_bridge_owned_lifecycle(tmp_path: Path) -> None:

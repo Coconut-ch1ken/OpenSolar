@@ -1,0 +1,35 @@
+{
+  "blocking_reasons": [
+    "verified compile/PDF handoff is missing"
+  ],
+  "citation_count": 8,
+  "citation_ids": [
+    "runtime-source-001",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+    "wiki:artifacts/autosci/workspace/wiki/papers/runtime-source-001.md"
+  ],
+  "compile_handoff_status": "inconclusive",
+  "compile_handoff_verified": false,
+  "compiled_pdf_paths": [],
+  "final_manuscript_ready": false,
+  "limitations": [
+    "Final manuscript readiness requires source evidence, a source-backed citation map, completed Review LLM proof, and verified compile/PDF handoff."
+  ],
+  "manuscript_scope": "draft_scaffold",
+  "publication_ready_claim_allowed": false,
+  "review_boundary_status": "completed",
+  "review_evidence_ids": [
+    "artifact:idea-001",
+    "review.underspecified",
+    "review-llm:smoke"
+  ],
+  "review_llm_completed": true,
+  "schema": "autosci_paper_draft_final_manuscript_boundary.v1",
+  "source_evidence_supplied": true,
+  "status": "paper_draft_final_manuscript_incomplete"
+}

@@ -1,0 +1,62 @@
+{
+  "boundaries": [
+    {
+      "blocking_reasons": [
+        "external_novelty status is `unavailable`, not `completed`",
+        "external_novelty provenance status is `unavailable`, not `passed`",
+        "review_llm status is `unavailable`, not `completed`"
+      ],
+      "evidence_ids": [
+        "idea-smoke-skillgen-proof",
+        "wiki:papers/skillgen",
+        "discovery:Trace2Skill: Distill Trajectory-Local Lessons into Transferable Agent Skills",
+        "discovery:SoK: Agentic Skills - Beyond Tool Use in LLM Agents",
+        "discovery:Skill-R1: Agent Skill Evolution via Reinforcement Learning",
+        "wiki:ideas/idea-wiki-discovery-002",
+        "discovery:CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification"
+      ],
+      "external_novelty_provenance_status": "unavailable",
+      "external_novelty_status": "unavailable",
+      "external_source_count": 0,
+      "final_acceptance_ready": false,
+      "idea_id": "idea-smoke-skillgen-proof",
+      "limitations": [
+        "Novelty final acceptance requires completed external novelty evidence, passed provider provenance, and completed Review LLM evidence."
+      ],
+      "novelty": 0.685,
+      "novelty_score": 4,
+      "provider_statuses": [
+        {
+          "fetched_at": "2026-06-30T02:44:35Z",
+          "provider": "semantic_scholar",
+          "query": "agent skill learning",
+          "reason": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+          "status": "failed"
+        },
+        {
+          "fetched_at": "2026-06-30T02:44:35Z",
+          "provider": "web",
+          "query": "agent skill learning",
+          "reason": "missing AUTOSCI_WEB_SEARCH_EVIDENCE_URL or SERPER_API_KEY",
+          "status": "unavailable"
+        },
+        {
+          "fetched_at": "2026-06-30T02:44:35Z",
+          "provider": "deepxiv",
+          "query": "agent skill learning",
+          "reason": "missing AUTOSCI_DEEPXIV_SEARCH_URL",
+          "status": "unavailable"
+        }
+      ],
+      "recommendation": "revise",
+      "review_available": false,
+      "review_invocation_mode": "unavailable",
+      "review_llm_status": "unavailable",
+      "review_mode": "local_surrogate",
+      "schema": "autosci_novelty_final_acceptance_boundary.v1",
+      "status": "novelty_acceptance_incomplete"
+    }
+  ],
+  "schema": "autosci_novelty_final_acceptance_boundary_set.v1",
+  "status": "novelty_acceptance_incomplete"
+}

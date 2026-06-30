@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-06-30T16:02:46Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-rebuttal-full/rebuttal.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/rebuttal/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/experiments/exp-skillgen.md",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.md",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_final_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/rebuttal-route-after-thread-audit-proof.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-rebuttal-thread-audit-proof.json"
+      ],
+      "native_skill": "rebuttal",
+      "production_ready": true,
+      "proof_id": "runtime:rebuttal:phase19-rebuttal-semantic-audit:20260630T160246Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T16:02:46Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-rebuttal-full/rebuttal.semantic-audit.json --native-skill rebuttal --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-rebuttal-full/rebuttal.semantic-proof.json",
+        "source": "phase19-rebuttal-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

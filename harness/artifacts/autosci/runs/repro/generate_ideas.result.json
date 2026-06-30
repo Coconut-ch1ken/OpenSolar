@@ -1,0 +1,147 @@
+{
+  "action": "generate_ideas",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/autosci/runs/repro/wiki_state_resolver.json",
+        "type": "wiki_state_resolver_json"
+      },
+      {
+        "path": "artifacts/autosci/runs/repro/idea_candidate.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "after_artifacts": [
+        "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-native-debug2-krx7xx64/after.json"
+      ],
+      "allowlist_evidence": [
+        "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-native-debug2-krx7xx64/allow.json"
+      ],
+      "approval_ref": "approval-exp-native-001",
+      "before_artifacts": [
+        "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-native-debug2-krx7xx64/before.json"
+      ],
+      "claims_evidence": "artifacts/autosci/runs/repro/research_claims.json",
+      "execute_approved_side_effect": true,
+      "memory_evidence": "artifacts/autosci/runs/repro/research_memory_update.json",
+      "method_evidence": "artifacts/autosci/runs/repro/research_method.json",
+      "native_options": {
+        "after_artifacts": [
+          "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-native-debug2-krx7xx64/after.json"
+        ],
+        "all": false,
+        "allowlist_evidence": [
+          "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-native-debug2-krx7xx64/allow.json"
+        ],
+        "approval_ref": "approval-exp-native-001",
+        "auto": false,
+        "before_artifacts": [
+          "/var/folders/cm/mkjwtys548g3qz7rpq1vbpf00000gn/T/exp-native-debug2-krx7xx64/before.json"
+        ],
+        "checklist": false,
+        "claims_evidence": [],
+        "code_evidence": [],
+        "collect": false,
+        "collect_ready": false,
+        "difficulty": "",
+        "discover": false,
+        "env": "local",
+        "execute_approved": true,
+        "experiment_result_evidence": [],
+        "fix": false,
+        "focus": "",
+        "format": "",
+        "full": false,
+        "max_ideas": 0,
+        "max_rounds": 0,
+        "model_command": "",
+        "model_evidence": [],
+        "no_introduction": false,
+        "novelty_evidence": [],
+        "online": false,
+        "pipeline": "",
+        "quick": false,
+        "review": true,
+        "review_llm_command": "",
+        "review_llm_endpoint": "",
+        "review_llm_evidence": [],
+        "review_llm_model": "",
+        "review_llm_provider": "",
+        "runtime_evidence": [],
+        "skip_paper": false,
+        "skip_pilot": false,
+        "skip_validation": false,
+        "start_from": "",
+        "target_score": 0.0,
+        "title": "",
+        "verbose": false,
+        "visualize": false,
+        "write": false
+      },
+      "paper_evidence": "artifacts/autosci/runs/repro/research_paper.json",
+      "review_llm_requested": true,
+      "smoke_mode": false,
+      "topic": "exp-native-001"
+    },
+    "limitations": [
+      "Ideas are source-grounded deterministic candidates; external novelty and Review LLM validation remain required.",
+      "Failed idea overlap is checked with token overlap and should be reviewed by a human.",
+      "Resolver is read-only; it does not mutate wiki state, add graph edges, or rebuild wiki indexes.",
+      "Frontmatter parsing supports scalar values and simple lists only; complex YAML is reported through missing fields."
+    ],
+    "node_id": "node-generate-ideas",
+    "outputs": {
+      "ideas": [
+        {
+          "approach": "Build an experiment plan from the shared assumptions and limitations in the cited wiki/discovery sources, then compare it against the strongest baseline found in the evidence graph.",
+          "duplicate_of": "",
+          "duplicate_status": "new",
+          "generation_path": "A:landscape-driven",
+          "grounding_summary": "Primary source: CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification; secondary source: Trace2Skill: Distill Trajectory-Local Lessons into Transferable Agent Skills.",
+          "hypothesis": "Combining `CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification` with `Trace2Skill: Distill Trajectory-Local Lessons into Transferable Agent Skills` can expose a testable gap that is not captured by single-source reading.",
+          "idea_id": "idea-wiki-discovery-001",
+          "novelty_hypothesis": "The candidate is grounded in current wiki/discovery evidence and targets an explicit evidence gap.",
+          "origin_evidence_ids": [
+            "discovery:CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification",
+            "discovery:Trace2Skill: Distill Trajectory-Local Lessons into Transferable Agent Skills"
+          ],
+          "source_mode": "mixed",
+          "status": "candidate",
+          "title": "Close the evidence gap around exp-native-001"
+        },
+        {
+          "approach": "Extract the reusable mechanism from the first source, map assumptions against the third source, and run a pilot that checks whether the transferred mechanism is compatible.",
+          "duplicate_status": "new",
+          "generation_path": "E:cross-domain-transfer",
+          "grounding_summary": "Transfer source: CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification; target context: EvoSkill: Automated Skill Discovery for Multi-Agent Systems.",
+          "hypothesis": "A mechanism or limitation in `CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification` can be transferred to the context of `EvoSkill: Automated Skill Discovery for Multi-Agent Systems` and evaluated with a bounded pilot.",
+          "idea_id": "idea-wiki-discovery-002",
+          "novelty_hypothesis": "Cross-source transfer is considered novel only after novelty/review validation.",
+          "origin_evidence_ids": [
+            "discovery:CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification",
+            "discovery:EvoSkill: Automated Skill Discovery for Multi-Agent Systems"
+          ],
+          "source_mode": "mixed",
+          "status": "candidate",
+          "title": "Stress-test method transfer from CoEvoSkills: Self-Evolving Agent Skills via Co-E"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-25T20:48:00Z"
+    },
+    "schema": "idea_candidate.v1",
+    "sprint_id": "phase19-skillgen-operator-smoke",
+    "status": "completed",
+    "task_id": "task-autosci-skillgen-generate_ideas"
+  },
+  "evidence_jsonl": "artifacts/autosci/runs/repro/evidence.jsonl",
+  "evidence_path": "artifacts/autosci/runs/repro/idea_candidate.json",
+  "ok": true,
+  "result_path": "artifacts/autosci/runs/repro/generate_ideas.result.json",
+  "schema": "idea_candidate.v1",
+  "status": "completed"
+}

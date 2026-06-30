@@ -1,0 +1,39 @@
+{
+  "claim_count": 12,
+  "claim_status_counts": {
+    "blocked": 7,
+    "not_reproduced": 2,
+    "partially_reproduced": 3
+  },
+  "detailed_readiness_counts": {
+    "blocked_by_alfworld_ood_execution": 1,
+    "partially_ready_full_matrix": 2,
+    "ready_for_execution": 2,
+    "ready_for_full_matrix_execution_after_dependencies": 1,
+    "ready_for_full_scope_artifact_check": 1,
+    "ready_for_full_token_cost_execution": 1,
+    "ready_for_reconstructed_ablation_human_review": 1,
+    "ready_for_reconstructed_alfworld_implementation": 1,
+    "ready_for_reconstructed_baseline_comparison": 1,
+    "ready_for_trace_generation_after_full_runs": 1
+  },
+  "executable_target_count": 7,
+  "execution_readiness_summary": {
+    "blocked": 1,
+    "partially_ready": 2,
+    "ready": 9
+  },
+  "full_paper_claim_status": "blocked",
+  "generated_at": "2026-06-11T14:27:40+00:00",
+  "limitations": [
+    "This report replays recorded Phase 0 artifacts; it does not execute new benchmark commands.",
+    "Planning evidence and execution readiness are not treated as claim reproduction evidence.",
+    "Detailed readiness labels are preserved separately from broad Solar readiness categories."
+  ],
+  "mode": "artifact_replay",
+  "paper_level_status": "not_reproduced",
+  "report_path": "phase0_solar/runs/skillgen_artifact_replay_20260611/phase0_verification_report.md",
+  "run_id": "skillgen-artifact-replay-20260611",
+  "schema_version": "solar.phase0.verification_report.v0",
+  "source_matrix_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AI4Research-B/phase_0/runs/20260604/artifacts/all_claim_verification_matrix.json"
+}

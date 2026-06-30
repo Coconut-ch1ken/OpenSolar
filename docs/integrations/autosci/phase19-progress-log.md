@@ -2604,6 +2604,7 @@ Logged: 2026-06-25 EDT
 
 Planned file changes (pre-fix):
 - `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
 - `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
 - `docs/integrations/autosci/phase19-progress-log.md`
 
@@ -2684,3 +2685,4672 @@ Planned file changes (pre-fix):
 |---|---|
 | `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_review_resolves_harness_prefixed_workspace_path -q` | ok: 1 passed. |
 | `python3 harness/plugins/autosci/bin/autosci_skill_shim.py text "\$review --paper harness/artifacts/autosci/workspace/wiki/ideas/idea-001.md --difficulty hard --focus method --run-id harness-review-test-review-fixed"` | ok: resolved to `harness/artifacts/autosci/workspace/wiki/ideas/idea-001.md` with `status=completed`, `passed_count=1`, `schema_only_count=0`. |
+
+## Phase 19 Route Truthfulness Sync For Steps 45-48
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+### Route Sync Scope
+
+This documentation-only sync records route-parity changes already made during
+the scheduler/native lifecycle continuation:
+
+- Step 45: `$research` route limitations now say default scheduler runs block
+  at `report_plan` / `publication_produce` unless explicit Review LLM and
+  compile/PDF evidence are supplied with external-evidence dispatch.
+- Step 45: `$research.primary_tools` now points at the real
+  `harness/tools/run_scientific_lifecycle_smoke.py` path instead of the missing
+  `tools/run_scientific_lifecycle_smoke.py`.
+- Step 47: `/exp-status` route limitations now distinguish approved
+  `tools/remote.py check` execution from registry-only status and keep live
+  SSH/provider polling partial.
+- Step 48: `/ask`, `/check`, and `/ideate` route limitations now describe
+  persisted model-command request/response provenance without claiming hosted
+  provider parity.
+
+### Remaining After Route Truthfulness Sync
+
+| Block | Status | Notes |
+|---|---|---|
+| Route truthfulness for continuation steps | ok | Phase 19 now references the route config truthfulness updates made in Steps 45, 47, and 48. |
+| Full parity | blocked | Route inventory remains 0 full, 17 partial, 11 gated until live providers, generic scheduler dispatch, remote polling, and publication parity are proven. |
+
+### Route Truthfulness Sync Verification
+
+| Command | Result |
+|---|---|
+| `git diff --check -- docs/integrations/autosci/phase19-progress-log.md` | ok |
+| `rg -n "Phase 19 Route Truthfulness Sync|Step 45|Step 47|Step 48" docs/integrations/autosci/phase19-progress-log.md` | ok: sync section and referenced continuation steps are present. |
+
+## Phase 19 Publication Review Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten `$paper-plan` route truthfulness by recording an explicit
+Review LLM boundary object instead of only a permissive boolean completion flag.
+
+### Publication Review Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `$paper-plan` boundary object | ok | `paper_plan_json` now includes `autosci_publication_review_boundary.v1`. |
+| Boundary completion rules | ok | Completion requires `artifact_review.v1`, completed payload status, LLM review mode, `review_available=true`, and non-empty evidence ids. |
+| Weak Review LLM evidence | ok | Weak Review LLM-shaped JSON is recorded as invalid/inconclusive and does not complete the plan. |
+| Route limitation | ok | `/paper-plan` limitation now states explicit Review LLM boundary requirements. |
+
+### Publication Review Boundary Verification
+
+| Command | Result |
+|---|---|
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'paper_plan_completes_with_citations_and_review_llm or paper_plan_rejects_weak_review_llm_boundary or paper_plan_attaches_verified_compile_handoff' -q` | ok: 3 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'paper_plan or paper_draft or paper_compile or research_scheduler_executes_approved_publication_compile' -q` | ok: 13 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 101 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step49.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 49 files | ok before log write |
+
+## Phase 19 Scheduler Production Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten `$research` route truthfulness by adding a scheduler
+production-dispatch boundary and strict failure flag for smoke/fixture-backed
+lifecycle runs.
+
+### Scheduler Production Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `$research` dispatch boundary | ok | Scheduler lifecycle summaries now include `autosci_scheduler_dispatch_boundary.v1`. |
+| Strict production dispatch | ok | `--scheduler-require-production-dispatch` fails while bounded smoke runner or fixture/smoke input markers remain. |
+| Route limitation | ok | `/research` now documents the production-dispatch boundary failure condition without changing `coverage_status`. |
+
+### Scheduler Production Boundary Verification
+
+| Command | Result |
+|---|---|
+| Runner + shim targeted tests | ok: 2 passed |
+| Lifecycle smoke + runtime gate subset | ok: 25 passed |
+| `$research` scheduler shim subset | ok: 8 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 102 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step50.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 50 files | ok before log write |
+
+## Phase 19 Source Provider Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/adapters/autosci_to_literature_discovery.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten source/discover route truthfulness by requiring non-fixture
+provider channels before source runtime evidence is treated as completed.
+
+### Source Provider Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source provider boundary | ok | `literature_discovery.v1.outputs.source_provider_boundary` records `autosci_source_provider_boundary.v1`. |
+| Generic runtime candidates | ok | Generic `approved_runtime` candidates no longer complete source runtime evidence without provider channels. |
+| Provider-backed candidates | ok | `search_s2` channel runtime evidence completes and records provider boundary proof. |
+| Route limitation | ok | `/discover`, `/init`, and `$research --online` limitations now describe provider boundary requirements. |
+
+### Source Provider Boundary Verification
+
+| Command | Result |
+|---|---|
+| Source-boundary targeted tests | ok: 2 passed |
+| Literature backend/source CLI subset | ok: 6 passed |
+| Source-related shim subset | ok: 6 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 103 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step51.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 51 files | ok before log write |
+
+## Phase 19 Remote Poll Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: tighten `$exp-status` route truthfulness by emitting an explicit
+remote poll boundary that separates local run-dir status-file checks from live
+SSH/provider polling.
+
+### Remote Poll Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Runtime boundary | ok | Approved `$exp-status` remote-check evidence includes `autosci_remote_poll_boundary.v1`. |
+| Local status check classification | ok | `tools/remote.py check` against local `run_dir/status.json` now reports boundary status `local_run_dir_check`, not live provider polling. |
+| Route limitation | ok | `/exp-status` documents that local run-dir status-file checks do not count as live SSH/provider polling. |
+
+### Remote Poll Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config `json.tool` | ok |
+| `$exp-status` approved remote-check boundary test | ok: 1 passed |
+| exp-status/run/collect remote subset | ok: 12 passed |
+| runtime binding audit | ok: 28 nodes, 2 workflows, 0 issues |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 103 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step52.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 52 files | ok before log write |
+
+## Phase 19 Approved Live Remote Status Command Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `tools/remote.py`
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add an approved live/provider status command path that can satisfy the
+remote poll boundary without weakening allowlist or approval requirements.
+
+### Approved Live Remote Status Command Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `tools/remote.py check --status-command` | ok | Live/provider status command path is approval-gated and allowlisted. |
+| Remote poll boundary | ok | Approved status command payload can satisfy `autosci_remote_poll_boundary.v1` with transport/session metadata and `remote_state`. |
+| Local check preservation | ok | Plain run-dir checks still report `local_run_dir_check`, not live polling. |
+| Route limitation | ok | `/exp-status` now names approved live/provider status command execution while keeping real external connectivity smoke pending. |
+
+### Approved Live Remote Status Command Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` tools/bridge/tests | ok |
+| route config `json.tool` | ok |
+| local + live `$exp-status` targeted tests | ok: 2 passed |
+| exp-status/run/collect remote subset | ok: 13 passed |
+| runtime binding audit | ok: 28 nodes, 2 workflows, 0 issues |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 104 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step53.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 53 files | ok before log write |
+
+## Phase 19 Remote Pull Results Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `tools/remote.py`
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add an approved remote/provider pull-results path and collection
+boundary so local result-dir reads are not counted as live provider collection.
+
+### Remote Pull Results Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| `tools/remote.py pull-results --pull-command` | ok | Live/provider pull-results command path is approval-gated and allowlisted. |
+| Remote collection boundary | ok | Collect runtime evidence includes `autosci_remote_collection_boundary.v1`. |
+| Local collection preservation | ok | Plain result-dir reads report `local_result_dir_collection`, not live provider collection. |
+| Route limitation | ok | `/exp-run` names approved live/provider pull-results boundary and keeps distributed exactly-once/external smoke pending. |
+
+### Remote Pull Results Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` tools/bridge/tests | ok |
+| route config `json.tool` | ok |
+| local + live pull-results targeted tests | ok: 2 passed |
+| exp-status/run/collect remote subset | ok: 15 passed |
+| runtime binding audit | ok: 28 nodes, 2 workflows, 0 issues |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step54.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 54 files | ok before log write |
+
+## Phase 19 Scheduler Replay Resume Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add scheduler replay/resume evidence so lifecycle dispatch cannot be
+mistaken for production parity without durable node state and no-rerun proof.
+
+### Scheduler Replay Resume Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Resume boundary | ok | Resume summaries emit `autosci_scheduler_resume_boundary.v1`. |
+| No-rerun proof | ok | Boundary records reused-node fingerprints, changed reused nodes, dispatched nodes, and `no_rerun_verified`. |
+| Route limitation | ok | `/research` now names resume boundary while keeping non-smoke dispatcher and lease/runtime audit pending. |
+
+### Scheduler Replay Resume Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` runner/test | ok |
+| route config `json.tool` | ok |
+| human-gate resume targeted test | ok: 1 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `$research` scheduler shim subset | ok: 8 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step55.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 55 files | ok before log write |
+
+## Phase 19 Scheduler Lease Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add scheduler lease evidence and boundary fields so local smoke-run
+lease ownership is visible and not confused with distributed production leases.
+
+### Scheduler Lease Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Lease sidecar | ok | Lifecycle run/resume writes `autosci_scheduler_lease.v1` sidecar evidence. |
+| Lease boundary | ok | Lifecycle summaries include `autosci_scheduler_lease_boundary.v1`. |
+| Route limitation | ok | `/research` now names local lease boundary while keeping distributed lease/quota/runtime audit pending. |
+
+### Scheduler Lease Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` runner/test | ok |
+| route config `json.tool` | ok |
+| blocked lifecycle + resume targeted tests | ok: 2 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/tests/evaluators/scientific -q` | ok: 87 passed |
+| `$research` scheduler shim subset | ok: 8 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step56.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 56 files | ok before log write |
+
+## Phase 19 Publication Submission Checklist Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add publication submission checklist boundary so compile/PDF success is
+not confused with submission/anonymity/page/font readiness.
+
+### Publication Submission Checklist Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Submission boundary | ok | Paper compile writes `autosci_publication_submission_boundary.v1` sidecar evidence. |
+| Checklist/diagnostics | ok | Checklist embeds boundary and diagnostics render a Submission Boundary section. |
+| Bundle artifact | ok | Publication bundle includes `publication_submission_boundary_json`. |
+| Route limitation | ok | `/paper-compile` now separates compile/PDF evidence from submission readiness. |
+
+### Publication Submission Checklist Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config `json.tool` | ok |
+| submission checklist boundary targeted test | ok: 1 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 10 passed |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py -q` | ok: 105 passed with elevated local bind permission |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step57.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 57 files | ok before log write |
+
+## Phase 19 Paper Compile Submission Evidence Flags Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose paper-compile submission evidence flags for anonymous mode,
+page-count/page-limit, and minimum font-size proof.
+
+### Paper Compile Submission Evidence Flags Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI flags | ok | `$paper-compile` now forwards anonymity, page, and font-size evidence flags into compile inputs. |
+| Submission boundary | ok | Explicit evidence can make `autosci_publication_submission_boundary.v1` report `submission_ready`. |
+| Route limitation | ok | `/paper-compile` now records that CLI flags satisfy readiness only with explicit proof. |
+
+### Paper Compile Submission Evidence Flags Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` shim/tests | ok |
+| route config JSON load | ok |
+| submission incomplete + submission-ready targeted tests | ok: 2 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 11 passed |
+| full shim suite with elevated local bind permission | ok: 106 passed |
+| default sandbox full shim suite | warn: local `127.0.0.1` bind was denied before elevated rerun |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step58.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 58 files | ok before log write |
+
+## Phase 19 Paper Compile Venue Submission Profile Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add source-backed venue submission profile input so compile readiness
+uses explicit venue requirements rather than loose CLI-only claims.
+
+### Paper Compile Venue Submission Profile Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Profile input | ok | `$paper-compile --submission-profile` forwards source-backed venue requirements into compile inputs. |
+| Venue boundary | ok | Publication boundary now includes `venue_submission_ready`, `venue_status`, `venue_blocking_checks`, and embedded profile evidence. |
+| Diagnostics/artifacts | ok | Diagnostics and bundle artifacts expose the loaded profile and SHA-256. |
+| Route limitation | ok | `/paper-compile` now requires source-backed profile evidence for venue-specific readiness. |
+
+### Paper Compile Venue Submission Profile Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| missing evidence + CLI evidence + venue profile targeted tests | ok: 3 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 12 passed |
+| full shim suite with elevated local bind permission | ok: 107 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step59.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 59 files | ok before log write |
+
+## Phase 19 Paper Compile PDF Inspection Evidence Ingestion Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: ingest explicit PDF inspection evidence for verified page count and
+minimum font size instead of relying only on loose numeric CLI flags.
+
+### Paper Compile PDF Inspection Evidence Ingestion Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| PDF inspection input | ok | `$paper-compile --pdf-inspection` forwards PDF inspection evidence to compile inputs. |
+| PDF evidence boundary | ok | Bridge validates inspection sidecars against discovered PDFs by path or SHA-256. |
+| Venue readiness | ok | `venue_submission_ready` now requires profile plus PDF inspection evidence. |
+| Diagnostics/artifacts | ok | Diagnostics and bundle artifacts expose PDF inspection status and SHA-256. |
+| Route limitation | ok | `/paper-compile` now distinguishes generic CLI checks from source-backed venue readiness. |
+
+### Paper Compile PDF Inspection Evidence Ingestion Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| missing evidence + CLI evidence + profile-only + profile/PDF-inspection targeted tests | ok: 4 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 13 passed |
+| full shim suite with elevated local bind permission | ok: 108 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step60.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 60 files | ok before log write |
+
+## Phase 19 Publication Submission Audit Evidence Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit publication submission audit evidence so venue readiness
+and final submission audit readiness are separate source-backed states.
+
+### Publication Submission Audit Evidence Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Submission audit input | ok | `$paper-compile --submission-audit` forwards explicit audit evidence into compile inputs. |
+| Audit boundary | ok | Publication boundary now includes audit readiness, audit blocking checks, and portal completion as separate fields. |
+| Portal truthfulness | ok | Portal completion is not implied by audit readiness. |
+| Diagnostics/artifacts | ok | Diagnostics and bundle artifacts expose submission audit status and SHA-256. |
+| Route limitation | ok | `/paper-compile` now names explicit submission audit evidence as required for audit readiness. |
+
+### Publication Submission Audit Evidence Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| paper-compile submission/profile/PDF/audit targeted tests | ok: 5 passed |
+| paper-compile/paper-plan/paper-draft publication subset | ok: 14 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step61.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 61 files | ok before log write |
+
+## Phase 19 Review LLM Final Acceptance Boundary Sync
+
+Logged: 2026-06-26 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit Review LLM final acceptance evidence so local surrogate
+review is not confused with provider/command/evidence-backed final review.
+
+### Review LLM Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Requirement flag | ok | `$review --require-review-llm` records that local surrogate review is insufficient for final acceptance. |
+| Final boundary | ok | Review evidence includes `autosci_review_final_acceptance_boundary.v1`. |
+| Local surrogate separation | ok | Local surrogate review now reports `review_llm_incomplete` rather than final acceptance. |
+| Provider/evidence readiness | ok | Supplied Review LLM evidence, command bridge, and OpenAI-compatible provider mode can report `final_acceptance_ready`. |
+| Route limitation | ok | `/review` now names the final acceptance boundary and local surrogate insufficiency. |
+
+### Review LLM Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/shim/tests | ok |
+| route config JSON load | ok |
+| local/evidence/command/provider review boundary targeted tests | ok: 4 passed |
+| `-k review` subset | ok: 15 passed with elevated local bind permission |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step62.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 62 files | ok before log write |
+
+## Phase 19 Novelty Final Acceptance Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit novelty final acceptance boundary requiring external
+novelty evidence plus Review LLM proof, while keeping local/source-only checks
+incomplete for final acceptance.
+
+### Novelty Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Evaluation boundary | ok | Novelty evaluations embed `autosci_novelty_final_acceptance_boundary.v1`. |
+| Boundary sidecar | ok | Evaluate-ideas writes `novelty_final_acceptance_boundary.json`. |
+| Source/review requirements | ok | Final acceptance requires external novelty completion, provider provenance pass, Review LLM completion, and numeric novelty score. |
+| Writeback linkage | ok | Novelty writeback records final acceptance status without changing existing writeback gating order. |
+| Route limitation | ok | `/novelty` now names the final acceptance boundary and required evidence. |
+
+### Novelty Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| local/external-only/external+Review LLM/missing-review novelty targeted tests | ok: 4 passed |
+| `-k novelty` subset | ok: 11 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step63.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 63 files | ok before log write |
+
+## Phase 19 Ask Final Answer Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit final answer boundary for `/ask` requiring retrieval/source
+evidence plus model-backed synthesis, without treating retrieval-only local
+summaries as final.
+
+### Ask Final Answer Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final answer boundary | ok | `/ask` retrieval JSON embeds `autosci_ask_final_answer_boundary.v1`. |
+| Boundary sidecar | ok | Ask runs write `ask_final_answer_boundary.json`. |
+| Retrieval/model separation | ok | Retrieval-only answers report `ask_final_answer_incomplete`. |
+| Model-backed readiness | ok | Retrieval plus completed model synthesis reports `final_answer_ready`. |
+| Route limitation | ok | `/ask` now names the boundary and source/model requirements. |
+
+### Ask Final Answer Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| retrieval-only and model-command ask targeted tests | ok: 2 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step64.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 64 files | ok before log write |
+
+## Phase 19 Check Final Quality Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit final quality boundary for `/check` requiring local wiki
+checks plus model-backed recommendation evidence, without treating lint-only
+output as final review.
+
+### Check Final Quality Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final quality boundary | ok | `/check` embeds `autosci_check_final_quality_boundary.v1` in workflow evolution review metadata. |
+| Boundary sidecar | ok | Check runs write `check_final_quality_boundary.json`. |
+| Local/model separation | ok | Local structural checks alone remain incomplete for final quality. |
+| Model-backed readiness | ok | Completed model evidence plus passing local checks can report `final_quality_ready`. |
+| Route limitation | ok | `/check` now names the final quality boundary and local/model requirements. |
+
+### Check Final Quality Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| retrieval/check local and model-command check targeted tests | ok: 2 passed |
+| `-k 'ask or check'` subset | ok: 8 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step65.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 65 files | ok before log write |
+
+## Phase 19 Discover Final Shortlist Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit discovery final shortlist boundary requiring source-backed
+provider evidence, without treating local fallback/fixture candidates as final
+discovery.
+
+### Discover Final Shortlist Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final shortlist boundary | ok | Discover source provider boundary embeds `autosci_discover_final_shortlist_boundary.v1`. |
+| Boundary sidecar | ok | Discover writes `discover_final_shortlist_boundary.json`. |
+| Local/provider separation | ok | Empty/local/generic runtime candidates remain incomplete for final shortlist readiness. |
+| Provider-backed readiness | ok | Provider-backed candidates can report `final_shortlist_ready`. |
+| Route limitation | ok | `/discover` now names the final shortlist boundary and provider-channel requirements. |
+
+### Discover Final Shortlist Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| wiki/local, generic runtime, and provider-backed runtime discovery targeted tests | ok |
+| `-k 'discover or source_runtime_evidence'` subset | ok: 4 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step66.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 66 files | ok before log write |
+
+## Phase 19 Survey Final Coverage Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit survey final coverage boundary requiring source-backed
+citation coverage, without treating partial/local citation maps as exhaustive
+survey evidence.
+
+### Survey Final Coverage Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final coverage boundary | ok | `/survey` writes `autosci_survey_final_coverage_boundary.v1`. |
+| Boundary sidecar | ok | Survey artifacts include `survey_final_coverage_boundary_json`. |
+| Bounded/exhaustive separation | ok | Bounded source-backed coverage can pass while exhaustive coverage remains false without provider audit. |
+| Scaffold separation | ok | Survey scaffolds without citations remain incomplete. |
+| Route limitation | ok | `/survey` now names bounded coverage and keeps exhaustive live coverage pending. |
+
+### Survey Final Coverage Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| survey scaffold and citation-map completion targeted tests | ok: 2 passed |
+| `-k 'survey or paper_plan or paper_compile or paper_draft'` subset | ok: 19 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step67.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 67 files | ok before log write |
+
+## Phase 19 Paper Draft Final Manuscript Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit paper-draft final manuscript boundary requiring source
+evidence, citation map, Review LLM proof, and compile/PDF handoff before
+treating a draft as publication-ready.
+
+### Paper Draft Final Manuscript Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final manuscript boundary | ok | `/paper-draft` writes `autosci_paper_draft_final_manuscript_boundary.v1`. |
+| Boundary sidecar | ok | Draft artifacts include `paper_draft_final_manuscript_boundary_json`; publication bundle passthrough includes it. |
+| Citation map sidecar | ok | Draft artifacts include `citation_map_json` from `paper_draft_citation_map.json`. |
+| Publication-ready separation | ok | Plain LaTeX drafts stay incomplete for final manuscript readiness. |
+| Final-ready path | ok | Source citation evidence, completed Review LLM proof, and verified compile/PDF handoff can satisfy `final_manuscript_ready`. |
+| Route limitation | ok | `/paper-draft` now names final manuscript boundary requirements. |
+
+### Paper Draft Final Manuscript Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| paper-draft incomplete and final-ready boundary targeted tests | ok: 2 passed |
+| `-k 'survey or paper_plan or paper_compile or paper_draft'` subset | ok: 19 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step68.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 68 files | ok before log write |
+
+## Phase 19 Paper Plan Final Acceptance Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit paper-plan final acceptance boundary requiring source-backed
+citation plan, Review LLM proof, and downstream compile/PDF handoff before
+treating a plan as draft/compile-ready.
+
+Scope amendment before fix:
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+
+Reason: full shim verification showed scheduler `report_plan` did not receive
+compile/PDF handoff inputs, so the new paper-plan final acceptance boundary
+could not pass in the approved publication compile lifecycle. Propagate existing
+approved compile evidence only; do not loosen the boundary.
+
+### Paper Plan Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final plan acceptance boundary | ok | `/paper-plan` writes `autosci_paper_plan_final_acceptance_boundary.v1`. |
+| Boundary sidecar | ok | Plan artifacts include `paper_plan_final_acceptance_boundary_json`. |
+| Draft/compile readiness separation | ok | Citation plus Review LLM without compile/PDF stays incomplete for final acceptance. |
+| Final-ready path | ok | Source citation plan, Review LLM proof, and verified compile/PDF handoff can satisfy `final_plan_accepted`. |
+| Scheduler handoff | ok | Scheduler `report_plan` receives approved compile contract fields; approved compile execution can generate plan-boundary runtime/PDF handoff. |
+| Route limitation | ok | `/paper-plan` now names final acceptance boundary requirements. |
+
+### Paper Plan Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/scheduler/tests | ok |
+| route config JSON load | ok |
+| paper-plan final acceptance boundary targeted tests | ok: 3 passed |
+| approved publication compile scheduler regression | ok: 1 passed |
+| `-k 'survey or paper_plan or paper_compile or paper_draft or research_scheduler_executes_approved_publication_compile'` subset | ok: 20 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step69.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 69 files | ok before log write |
+
+## Phase 19 Ideate Final Promotion Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/ideate` final promotion boundary requiring wiki maturity
+scan, failed-idea banlist check, source-backed evidence, model brainstorm
+provenance, and novelty/review gate references before generated ideas are
+promotable.
+
+### Ideate Final Promotion Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final promotion boundary | ok | `/ideate` writes `autosci_ideate_final_promotion_boundary.v1`. |
+| Per-idea boundary | ok | Generated ideas include `autosci_ideate_idea_promotion_boundary.v1` and `promotion_ready`. |
+| Boundary sidecar | ok | Generate-ideas artifacts include `ideate_final_promotion_boundary_json`. |
+| Source/model/gate separation | ok | Source-grounded and model-command ideas remain non-promotable until novelty/review gate references are supplied. |
+| Missing-source separation | ok | Missing-source ideation remains inconclusive and boundary records missing source evidence. |
+| Route limitation | ok | `/ideate` now names final promotion boundary requirements. |
+
+### Ideate Final Promotion Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| ideate source/model/missing-source boundary targeted tests | ok: 3 passed |
+| `-k 'ideate or novelty'` subset | ok: 14 passed |
+| full shim suite with elevated local bind permission | ok: 109 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step70.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 70 files | ok before log write |
+
+## Phase 19 Experiment Design Final Execution Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-design` final execution-readiness boundary requiring
+resolved idea/evaluation evidence, completed Review LLM design validation, and
+declared runtime/artifact handoff requirements before an experiment plan is
+executable.
+
+### Experiment Design Final Execution Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final execution boundary | ok | `/exp-design` writes `autosci_experiment_design_final_execution_boundary.v1`. |
+| Boundary sidecar | ok | Experiment-plan artifacts include `experiment_design_final_execution_boundary_json`. |
+| Plan embedding | ok | `source_context.final_execution_boundary` records target, Review LLM, approval preflight, command handoff, and artifact handoff state. |
+| Review-only separation | ok | Review-only designs remain incomplete for execution readiness. |
+| Execution-ready path | ok | Review LLM plus approval/allowlist/before preflight can satisfy `execution_ready`. |
+| Network isolation | ok | Local novelty test disables network fetch so live S2 availability cannot alter local-source expectations. |
+| Route limitation | ok | `/exp-design` now names final execution boundary requirements. |
+
+### Experiment Design Final Execution Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| exp-design final execution boundary targeted tests | ok: 2 passed |
+| failed full-suite cases after isolation fix | ok: 2 passed |
+| `-k 'exp_design or exp_run or exp_status or exp_pilot or novelty'` subset | ok: 28 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step71.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 71 files | ok before log write |
+
+## Phase 19 Experiment Evaluation Final Verdict Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-eval` final verdict boundary requiring experiment
+result evidence, linked claim/code evidence, completed Review LLM proof, and
+explicit writeback status before verdicts are treated as final.
+
+### Experiment Evaluation Final Verdict Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final verdict boundary | ok | `/exp-eval` writes `autosci_experiment_evaluation_final_verdict_boundary.v1`. |
+| Boundary sidecar | ok | Claim-verdict artifacts include `experiment_evaluation_final_verdict_boundary_json`. |
+| Verdict embedding | ok | Verdict payloads include `final_verdict_boundary` and `final_verdict_ready`. |
+| Non-final separation | ok | Evidence-backed verdicts without approved wiki writeback remain `final_verdict_incomplete`. |
+| Final-ready path | ok | Experiment result, claim/code evidence, Review LLM proof, and completed approved writeback satisfy `final_verdict_ready`. |
+| Route limitation | ok | `/exp-eval` now records approval-required writeback policy and final verdict boundary requirements. |
+
+### Experiment Evaluation Final Verdict Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| exp-eval final verdict boundary targeted tests | ok: 2 passed |
+| `-k 'exp_eval or exp_pilot_eval or exp_design or exp_run or exp_status or exp_pilot'` subset | ok: 19 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step72.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 72 files | ok before log write |
+
+## Phase 19 Experiment Run Final Runtime Audit Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-run` final runtime audit boundary requiring approved
+deploy/run evidence, monitor/collect evidence, collection ledger, and wiki state
+mutation proof before a run is treated as fully executed/collected.
+
+### Experiment Run Final Runtime Audit Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final runtime audit boundary | ok | `/exp-run` run/collect paths write `autosci_experiment_run_final_runtime_audit_boundary.v1`. |
+| Boundary sidecar | ok | Run/status artifacts include `experiment_run_final_runtime_audit_boundary_json`. |
+| Run-only separation | ok | Approved run plus wiki mutation is `stage_runtime_audit_ready`, not final lifecycle ready. |
+| Local collect separation | ok | Local result-dir collection records ledger evidence but remains non-final without live provider/SSH proof. |
+| Live collect final path | ok | Approved live/provider pull-results with ledger and wiki mutation satisfies `final_runtime_audit_ready`. |
+| Route limitation | ok | `/exp-run` now names final runtime audit boundary requirements. |
+
+### Experiment Run Final Runtime Audit Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| exp-run runtime/local collect/live collect boundary targeted tests | ok: 3 passed |
+| `-k 'exp_eval or exp_pilot_eval or exp_design or exp_run or exp_status or exp_pilot or exp_collect'` subset | ok: 24 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step73.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 73 files | ok before log write |
+
+## Phase 19 Pilot Experiment Final Acceptance Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/exp-pilot-run` and `/exp-pilot-eval` final pilot
+acceptance boundaries requiring approved pilot runtime evidence, collected pilot
+result evidence, verdict linkage, and approved wiki writeback status before pilot
+success/evaluation is treated as final.
+
+### Pilot Experiment Final Acceptance Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Pilot run boundary | ok | `/exp-pilot-run` writes `autosci_pilot_experiment_final_acceptance_boundary.v1` with `stage=pilot_run`. |
+| Pilot eval boundary | ok | `/exp-pilot-eval` writes `autosci_pilot_experiment_final_acceptance_boundary.v1` with `stage=pilot_eval`. |
+| Runtime/final separation | ok | Pilot runtime readiness is separate from final pilot acceptance. |
+| Final-ready path | ok | Runtime-linked verdict plus approved wiki writeback satisfies `final_pilot_acceptance_ready`. |
+| Route limitation | ok | Pilot run/eval limitations now name final acceptance boundary requirements. |
+
+### Pilot Experiment Final Acceptance Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| pilot runtime/eval/writeback boundary targeted tests | ok: 3 passed |
+| `-k 'exp_pilot or pilot_eval or pilot_run or exp_eval or exp_run or exp_status or exp_design'` subset | ok: 21 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step74.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 74 files | ok before log write |
+
+## Phase 19 Daily Arxiv Final Provider Delivery Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/daily-arxiv` final provider/delivery boundary requiring
+approved live provider runtime, source-channel candidate evidence,
+ranking/finalize evidence, and explicit delivery or ingest status before a daily
+digest is treated as final.
+
+### Daily Arxiv Final Provider Delivery Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final provider/delivery boundary | ok | `/daily-arxiv` writes `autosci_daily_arxiv_final_provider_delivery_boundary.v1`. |
+| Boundary sidecar | ok | Daily artifacts include `daily_arxiv_final_provider_delivery_boundary_json`. |
+| Runtime/final separation | ok | Runtime provider/ranking evidence is stage-ready but non-final without delivery/ingest. |
+| Final-ready path | ok | Approved wiki fan-in/ingest after provider candidates satisfies `daily_final_delivery_ready`. |
+| Route limitation | ok | `/daily-arxiv` now names provider, ranking, delivery/ingest boundary requirements. |
+
+### Daily Arxiv Final Provider Delivery Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| daily runtime digest and auto-ingest boundary targeted tests | ok: 2 passed |
+| `-k 'daily_arxiv or discover or init_sources or source_fan_in or ingest'` subset | ok: 10 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step75.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 75 files | ok before log write |
+
+## Phase 19 Init Sources Final Fan-In Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/init` source initialization final fan-in boundary
+requiring approved provider runtime, provider-backed candidates, approved wiki
+fan-in, graph/log/index rebuild evidence, and visible incomplete status when any
+piece is missing.
+
+### Init Sources Final Fan-In Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Init final fan-in boundary | ok | `/init` writes `autosci_init_sources_final_fan_in_boundary.v1`. |
+| Boundary sidecar | ok | Init artifacts include `init_sources_final_fan_in_boundary_json`. |
+| Runtime/final separation | ok | Provider runtime source evidence is provider-ready but non-final without approved fan-in. |
+| Final-ready path | ok | Approved wiki fan-in plus log/edge/index/context rebuild satisfies `init_sources_final_fan_in_ready`. |
+| Route limitation | ok | `/init` now names final fan-in boundary requirements and approval-required side effects. |
+
+### Init Sources Final Fan-In Boundary Verification
+
+| Command | Result |
+|---|---|
+| `py_compile` bridge/tests | ok |
+| route config JSON load | ok |
+| init diagnostics/runtime-only/approved fan-in targeted tests | ok: 3 passed |
+| `-k 'init or daily_arxiv or discover or source_fan_in or ingest'` subset | ok: 13 passed |
+| full shim suite with elevated local bind permission | ok: 110 passed |
+| `env PYTHONPATH=harness .venv/bin/python harness/plugins/autosci/bin/autosci_parity_bridge.py inventory --out /tmp/autosci-parity-step76.json` | warn: 28 routed, 0 missing, 0 full, 17 partial, 11 gated |
+| `git diff --check` over Step 76 files | ok before log write |
+
+## Phase 19 Ingest Final Source Registration Boundary Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit `/ingest` final source registration boundary requiring
+verified source preparation, parsed paper metadata/text, raw artifact provenance,
+wiki paper registration/log/graph evidence, and downstream discovery handoff
+before an ingest is treated as final.
+
+Plan refinement: include `autosci_skill_shim.py` so `/ingest --wiki-root`
+propagates into bridge inputs and the boundary checks the intended wiki root.
+
+### Ingest Final Source Registration Boundary Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Final source registration boundary | ok | `/ingest` writes `autosci_ingest_final_source_registration_boundary.v1`. |
+| Boundary sidecar | ok | Ingest artifacts include final boundary plus phase9 memory/graph sidecars. |
+| Custom wiki root | ok | `/ingest --wiki-root` propagates into bridge inputs. |
+| Runtime/final separation | ok | Parsed source without wiki paper/log/graph/index/context registration remains non-final. |
+| Final-ready path | ok | Pre-registered wiki evidence satisfies `ingest_source_registration_ready`. |
+| Targeted/subset tests | ok | Targeted ingest tests: 2 passed; source/ingest subset: 14 passed. |
+| Full suite | warn | Full shim suite: 105 passed, 6 failed because scheduler AutoSci worker entries are missing from `physical-operators.json`. |
+
+## Phase 19 Scheduler AutoSci Worker Registry Restore Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/config/physical-operators.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore bounded AutoSci worker entries required by scheduler lifecycle
+smoke so `$research --scheduler-run` can dispatch configured AutoSci bridge
+actions through `operator_runtime`.
+
+### Scheduler AutoSci Worker Registry Restore Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Physical workers | ok | `physical-operators.json` now has scheduler-referenced `autosci-*` bounded command workers. |
+| Scheduler regression group | ok | `$research --scheduler-run` group: 6 passed. |
+| Full shim suite | ok | Full AutoSci shim suite: 111 passed. |
+| Static binding audit | warn | Next blocker is missing Scientific* logical operators/bindings in `logical-operators.json`. |
+
+## Phase 19 Scientific Logical Operator Binding Restore Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/config/logical-operators.json`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore Scientific* logical operators and bindings to the bounded
+AutoSci workers so static runtime binding audit can validate workflow
+node-to-operator-to-bridge coverage.
+
+### Scientific Logical Operator Binding Restore Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Logical operators/bindings | ok | Scientific* definitions and bounded worker bindings restored. |
+| Static runtime binding audit | ok | 28 workflow nodes across 2 workflows, 0 issues. |
+| Scheduler/full shim regression | ok | Scheduler group: 6 passed; full shim suite: 111 passed. |
+| Inventory | warn | Route inventory remains 17 partial and 11 gated. |
+
+## Phase 19 Two-Axis Parity Status Model Sync
+
+Logged: 2026-06-28 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add authoritative two-axis parity/proof fields to generated inventory
+and gate validation without upgrading any route to semantic full absent E3/E4
+evidence.
+
+### Two-Axis Parity Status Model Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Inventory fields | ok | Parity inventory route items now expose `semantic_parity`, `execution_policy`, `proof_level`, `proof_refs`, and `remaining_requirements`. |
+| Gate enforcement | ok | `autosci_feature_parity_gate.py` validates semantic/execution/proof values and rejects semantic-full claims without enough proof. |
+| Truthfulness guard | ok | No route was promoted to semantic full; Step 80 inventory remains semantic partial for all 28 routes. |
+| Tests | ok | Parity bridge/gate targeted tests: 10 passed; full AutoSci plugin suite: 161 passed. |
+| Inventory | warn | `/tmp/autosci-parity-step80.json`: route coverage 0 full / 17 partial / 11 gated; semantic 0 full / 28 partial / 0 missing. |
+
+## Phase 19 Skill Run Terminal Status Truthfulness Gate Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/evaluators/scientific/autosci_skill_run_gate.py`
+- `harness/tests/evaluators/scientific/test_autosci_skill_run_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make the skill-run gate reject evidence that claims top-level
+`status: completed` while `outputs.skill_run.execution_status` is `partial` or
+`gated`.
+
+Non-goal: do not change route execution, side-effect policy, schema enums, or
+the shim's existing `inconclusive` status for partial/gated runs.
+
+### Skill Run Terminal Status Truthfulness Gate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Gate guard | ok | `autosci_skill_run_gate.py` rejects top-level `completed` for `partial`/`gated` execution status. |
+| Tests | ok | New skill-run gate tests: 3 passed; gated/partial shim subsets and operator smoke gate remain green. |
+| Full plugin suite | ok | Elevated local-bind AutoSci plugin suite: 161 passed. |
+| Inventory | warn | Step 81 parity inventory remains 17 partial and 11 gated; semantic inventory remains 28 partial. |
+| Broad evaluator suite | warn | Scientific evaluator suite exposed next blocker: full lifecycle external/resume tails drift from the 20-node workflow config. |
+
+## Phase 19 Scheduler Full Lifecycle Tail Alignment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make full external/resume lifecycle smoke paths dispatch the configured
+publication/finalization tail and treat an explicitly supplied compile-target
+PDF as handoff evidence without claiming approved executor runtime.
+
+Non-goal: do not make bounded smoke dispatch production-ready, execute
+unapproved TeX/remote effects, or relax lifecycle runtime gate requirements.
+
+### Scheduler Tail Alignment Adjustment Plan
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: keep the Step 82 boundary and wire supplied compile-target evidence
+into paper-plan handoff readiness so configured tail dispatch can proceed only
+after verified handoff.
+
+Non-goal: do not change test expectations, production readiness claims, TeX
+execution policy, or unrelated scheduler nodes.
+
+### Scheduler Resume Blocker Adjustment Plan
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_lifecycle_smoke.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: preserve all unresolved external unblock points during resume when
+earlier external evidence is missing, without dispatching downstream configured
+tail nodes.
+
+Non-goal: do not change human-gate behavior, node execution order, or
+publication/finalization dispatch semantics.
+
+### Scheduler Full Lifecycle Tail Alignment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Supplied compile handoff | ok | `plan_report` now treats `supplied_compile_target_evidence` as a compile handoff request and verifies existing PDF targets without claiming TeX execution. |
+| Full external tail | ok | Full external lifecycle dispatch reaches all configured tail nodes when Review LLM and compile-target evidence are supplied. |
+| Resume tail | ok | Resume dispatch reaches configured tail nodes after supplied external evidence and preserves no-rerun fingerprints. |
+| Resume blocked externals | ok | Human-gate resume with no external evidence records both `report_plan` and `publication_produce` blockers. |
+| Focused lifecycle tests | ok | 3 targeted lifecycle regressions passed. |
+| Broad evaluator suite | ok | Scientific evaluator suite: 91 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 161 passed. |
+| Inventory/gate | warn | Step 82 inventory still reports 17 partial and 11 gated route statuses; semantic parity remains 28 partial. |
+
+## Phase 19 External Runtime Proof Registry Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add explicit external runtime proof references and required proof
+categories to parity inventory/gate output so remaining non-full routes are
+auditable.
+
+Non-goal: do not mark any route full, fabricate provider/runtime evidence, or
+execute external side effects.
+
+### External Runtime Proof Registry Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Inventory fields | ok | Route items now include `runtime_proof_status`, `runtime_proof_refs`, and `proof_requirements`. |
+| Gate enforcement | ok | Gate validates requirement shape/status, runtime proof status/counts, and approval/provider proof-category presence. |
+| Tests | ok | Parity bridge tests: 4 passed; feature parity gate tests: 8 passed; scientific evaluator suite: 93 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 161 passed. |
+| Inventory | warn | Step 83 inventory reports 25 pending runtime proof slots and 0 supplied/verified runtime proofs. |
+
+## Phase 19 Runtime Proof Manifest Ingestion Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: allow parity inventory to ingest explicit runtime proof manifests and
+mark matching route proof slots as supplied without promoting route/semantic
+full status.
+
+Non-goal: do not trust arbitrary manifests as verified runtime, mark routes
+full, execute providers, or execute side effects.
+
+### Runtime Proof Manifest Strictness Adjustment Plan
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: require supplied runtime proof source categories to match declared proof
+requirements and actually satisfy at least one requirement.
+
+Non-goal: do not change manifest ingestion semantics, route statuses, or proof
+verification level.
+
+### Runtime Proof Manifest Ingestion Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI ingestion | ok | `inventory` and `route` accept repeated `--runtime-proof-manifest` paths. |
+| Proof attachment | ok | Manifest proofs attach to matching native skills as `runtime_proof_sources` and supplied proof requirements. |
+| Gate strictness | ok | Gate rejects skill mismatch, unknown categories, supplied-without-supplied-requirement, and count drift. |
+| Tests | ok | Targeted bridge/gate group: 15 passed; scientific evaluator suite: 95 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 162 passed. |
+| Inventory | warn | No-manifest Step 84 inventory still has 25 pending runtime proof slots and no supplied/verified proof. |
+
+## Phase 19 Runtime Proof Evidence Ref Audit Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: audit runtime proof evidence refs so path-like local refs must resolve
+and missing local refs cannot satisfy supplied proof requirements.
+
+Non-goal: do not verify external provider ids as live, promote supplied proof
+to verified, or execute external side effects.
+
+### Runtime Proof Evidence Ref Audit Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Ref audit | ok | Manifest proof sources now include `evidence_ref_statuses`; local path refs must resolve. |
+| Blocked proof handling | ok | Missing local proof refs produce blocked proof sources and do not satisfy supplied requirements. |
+| Gate enforcement | ok | Gate rejects blocked sources and unresolved local refs. |
+| Tests | ok | Phase19 bridge tests: 6 passed; feature parity gate tests: 10 passed; scientific evaluator suite: 95 passed. |
+| Full plugin suite | ok | AutoSci plugin suite with elevated local bind permission: 163 passed. |
+| Inventory | warn | Step 85 inventory remains non-full and has no verified live runtime proof. |
+
+## Phase 19 Runtime Proof CLI Summary Visibility Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/native-lifecycle-continuation-log.md`
+- `docs/integrations/autosci/phase15-progress-log.md`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: include runtime proof status counts in parity bridge CLI summaries so
+pending/supplied/verified proof state is visible without opening the JSON
+artifact.
+
+Non-goal: do not change inventory payload semantics, gate rules, route status,
+or proof verification.
+
+### Runtime Proof CLI Summary Visibility Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI summary | ok | Inventory/route stdout summaries now include `runtime_proof_status_counts`. |
+| Tests | ok | Phase19 bridge tests: 6 passed. |
+| Inventory/gate | ok | Step 86 inventory gates successfully and stdout reports 25 pending / 3 not_required / 0 supplied / 0 verified runtime proof states. |
+| Full parity claim | warn | Remaining work requires real runtime proof manifests or approved live provider execution. |
+
+## Phase 19 Setup Env Example ABI Restore Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/config/.env.example`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the non-secret setup provider template required by the `/setup`
+primary tool ABI gate.
+
+Non-goal: do not write real secrets, enable providers, change route status, or
+promote setup/full parity.
+
+### Setup Env Example ABI Restore Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Template restored | ok | `harness/plugins/autosci/config/.env.example` exists and contains only empty provider variables / offline switch. |
+| Setup tool ABI | ok | `/setup` primary tool statuses now resolve both `config/setup-guide.md` and `.env.example`. |
+| Feature parity gate | ok | `autosci_feature_parity_gate.py /tmp/autosci-parity-after-env-example.json` passed with only non-full parity warnings. |
+| Targeted tests | ok | Phase19 parity bridge + feature gate group: 16 passed. |
+| Full parity claim | warn | Route inventory remains 0 full / 17 partial / 11 gated; runtime proof remains 25 pending / 0 supplied / 0 verified. |
+
+## Phase 19 Capability Registry Drift Restore Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/config/capability-capsules.registry.yaml`
+- `harness/capability-capsules/cap.research-artifact-review.yaml`
+- `harness/tests/config/test_autosci_research_capsule_registry.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: register all AutoSci manifest research capsules, restore the missing
+artifact-review capsule file, and add a regression test for manifest/registry
+drift.
+
+Non-goal: do not promote route parity status, alter scoring/routing logic, run
+side effects, or claim live provider proof.
+
+### Capability Registry Drift Restore Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Manifest/registry drift | ok | AutoSci manifest 19 research capsules are all registered; missing registry/files/unregistered counts are zero. |
+| Missing capsule file | ok | Restored `cap.research-artifact-review.yaml` with artifact review evidence contract and no side-effect execution semantics. |
+| Registry loader | ok | `iter_registry_entries()` resolves 19 stable `cap.research-*` entries and `cap.research-artifact-review`. |
+| Regression tests | ok | `harness/tests/config/test_autosci_research_capsule_registry.py`: 2 passed; capability capsule group: 10 passed. |
+| Parity inventory/gate | ok | Inventory gate passes after registry restore; inventory remains 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Registry ABI drift is fixed, but runtime proof/live provider/approved side-effect evidence remains pending. |
+
+## Phase 19 Generic Scientific Workflow Runner Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/tools/run_scientific_node_smoke.py`
+- `harness/tools/run_scientific_workflow.py`
+- `harness/tests/evaluators/scientific/test_scientific_workflow_runner.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add a config-driven scientific workflow runner that reuses the existing
+single-node operator runtime path and records an auditable generic workflow
+dispatch boundary.
+
+Non-goal: do not change lifecycle gate rules, mark provider/runtime proof as
+verified, bypass side-effect approvals, or remove the bounded smoke runner.
+
+### Generic Scientific Workflow Runner Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Runner added | ok | `harness/tools/run_scientific_workflow.py` reads workflow config nodes and dispatches each through `operator_runtime` -> AutoSci bridge node runtime. |
+| Node runtime metadata | ok | `run_scientific_node_smoke.py` now accepts `runtime_mode` / `runner_contract` without changing bounded smoke defaults. |
+| Generic runner contract test | ok | `test_scientific_workflow_runner.py`: 1 passed with no fixture/smoke input markers and `runner_contract=generic_workflow_runner`. |
+| Smoke compatibility | ok | Node/lifecycle smoke + lifecycle gate group: 27 passed; old bounded smoke guardrails still reject production dispatch when appropriate. |
+| Syntax check | ok | `py_compile` passed for `run_scientific_workflow.py` and `run_scientific_node_smoke.py`. |
+| Parity inventory/gate | ok | Inventory gate passes after runner addition; counts remain 0 full / 17 partial / 11 gated and runtime proof remains 25 pending / 0 supplied / 0 verified. |
+| Full parity claim | warn | Generic workflow dispatch exists, but live provider evidence, approved side-effect execution proof, and route semantic-full promotion remain pending. |
+
+## Phase 19 Research Scheduler Generic Default Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: route explicit `$research --scheduler-run` through the generic
+scientific workflow runner by default while keeping the old bounded smoke
+runner available via an explicit legacy flag.
+
+Non-goal: do not auto-complete ordinary `$research` stage evidence, remove the
+legacy smoke runner, bypass external evidence/approval requirements, or
+promote the route to full parity.
+
+### Research Scheduler Generic Default Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Default scheduler runner | ok | Explicit `$research --scheduler-run` now calls `run_scientific_workflow.py` unless `--scheduler-legacy-smoke-runner` is supplied. |
+| Legacy compatibility | ok | Existing bounded lifecycle smoke path remains available via `--scheduler-legacy-smoke-runner`. |
+| Route ABI | ok | `/research` primary tools now include `run_scientific_workflow.py` plus the legacy smoke runner. |
+| Generic default test | ok | `$research --scheduler-run --paper <non-fixture>` records `runner_contract=generic_workflow_runner`, 1 dispatched node, and no fixture/smoke input markers. |
+| Regression tests | ok | Scheduler shim subset: 8 passed; root/shim ABI subset: 10 passed; workflow runner test: 1 passed. |
+| Parity inventory/gate | ok | Inventory gate passes and remains honest at 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Generic default dispatch is fixed for explicit scheduler-run, but complete lifecycle node selection, live/provider evidence, and approved side-effect runtime proof remain pending. |
+
+## Phase 19 Wiki State Resolver Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/research_wiki.py`
+- `harness/plugins/autosci/tests/test_research_wiki_tool.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add an explicit wiki state resolver command for slug/page status,
+frontmatter, novelty score, graph edges, linked experiments, and log snippets.
+
+Non-goal: do not mutate wiki state, infer missing status from heuristics, or
+promote any route to full parity.
+
+### Wiki State Resolver Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Resolver ABI | ok | Added `tools/research_wiki.py resolve <entity>` to resolve page path, group, title, frontmatter, status, and novelty score. |
+| Graph state | ok | Resolver returns linked graph edges, edge evidence ids, edge errors, and linked experiment pages. |
+| Run log state | ok | Resolver returns bounded matching `wiki/log.md` snippets without mutating wiki files. |
+| Tests | ok | `test_research_wiki_tool.py`: 1 passed; root ABI wiki subset: 2 passed; `py_compile` passed. |
+| Parity inventory/gate | ok | Inventory gate passes and remains 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Read-only wiki state resolution is present, but route-level full parity still requires live/provider/runtime evidence and final lifecycle audits. |
+
+## Phase 19 Wiki Resolver Route ABI Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose the read-only wiki resolver in route inventory primary tools for
+wiki-grounded commands that depend on concrete state resolution.
+
+Non-goal: do not change route status, execution policy, scoring, or mutation
+behavior.
+
+### Wiki Resolver Route ABI Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Route exposure | ok | `/ask`, `/check`, `/edit`, and `/ideate` primary tools now include `tools/research_wiki.py resolve`. |
+| Root ABI test | ok | `test_feature_parity_routes_reference_existing_root_tools`: 1 passed. |
+| Route JSON audit | ok | Parsed `feature_parity_routes.v1.json` and confirmed resolver tool references for wiki-grounded routes. |
+| Parity inventory/gate | ok | Inventory and feature gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Resolver ABI is exposed, but provider/live runtime proof and semantic-full route audits remain pending. |
+
+## Phase 19 Runtime Proof Provenance Gate Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: require runtime proof manifests to carry auditable provenance,
+production readiness, and collection mode before any proof can count as
+supplied parity evidence.
+
+Non-goal: do not promote any route to full parity or treat smoke/generic runner
+artifacts as production runtime proof.
+
+### Runtime Proof Provenance Gate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Bridge normalization | ok | Runtime proof manifests now normalize `collection_mode`, `production_ready`, `provenance`, and `block_reasons`. |
+| Supplied proof guard | ok | Proof status is `supplied` only when evidence refs exist, local refs resolve, `production_ready=true`, collection mode is allowed, and provenance is complete. |
+| Gate validation | ok | Feature parity gate now requires collection mode, boolean production readiness, provenance source/captured_at/artifact_kind, and coherent block reasons. |
+| Regression tests | ok | `test_phase19_parity_bridge.py`: 7 passed; feature parity gate tests: 10 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory gate passes after contract tightening; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Runtime proof contract is stricter, but no route is promoted; live/provider/approval evidence still needs to be collected and attached. |
+
+## Phase 19 Provider Source Runtime Proof Writer Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/autosci_runtime_proof.py`
+- `tools/fetch_s2.py`
+- `tools/fetch_deepxiv.py`
+- `tools/fetch_paper_copilot.py`
+- `harness/plugins/autosci/tests/test_source_cli_tools.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: let completed provider fetch helpers persist source evidence and emit
+parity-ingestable runtime proof manifests with the new production provenance
+contract.
+
+Non-goal: do not synthesize source results, bypass network-disabled states, or
+claim external runtime/semantic full parity from provider-source evidence alone.
+
+### Provider Source Runtime Proof Writer Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Shared writer | ok | Added `tools/autosci_runtime_proof.py` to write evidence JSON and `autosci_runtime_proof_manifest.v1` with provenance/collection mode/production readiness. |
+| S2 source CLI | ok | `tools/fetch_s2.py` supports optional evidence/proof outputs and does not write supplied proof for inconclusive network-disabled runs. |
+| DeepXiv source CLI | ok | `tools/fetch_deepxiv.py` supports optional evidence/proof outputs while preserving explicit unavailable/inconclusive provider states. |
+| Paper Copilot source CLI | ok | `tools/fetch_paper_copilot.py` writes provider-source proof for completed provider fetches, including `file://` native replay tests. |
+| Regression tests | ok | `test_source_cli_tools.py`: 6 passed; `py_compile` passed for the shared writer and all three fetch CLIs. |
+| Cross-tool proof ingest | ok | Generated Paper Copilot `discover` proof was accepted by `autosci_parity_bridge.py route` and `autosci_feature_parity_gate.py`; semantic parity stayed partial. |
+| Full parity claim | warn | Provider-source evidence can now be collected and attached, but external runtime, review/model, side-effect, wiki mutation, and semantic equivalence proof remain pending. |
+
+## Phase 19 Review/Model Runtime Proof Writer Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/review_model_runtime_proof.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `harness/plugins/autosci/tests/test_review_model_runtime_proof.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: convert completed Review LLM/model evidence into
+parity-ingestable runtime proof manifests for
+`review_llm_or_model_evidence`.
+
+Non-goal: do not call a model, synthesize Review LLM output, or promote any
+route to full parity without external/runtime/semantic proof.
+
+### Review/Model Runtime Proof Writer Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Proof writer | ok | Added `tools/review_model_runtime_proof.py from-evidence` for completed `artifact_review.v1` and `autosci_model_response.v1`. |
+| Surrogate guard | ok | Local surrogate review evidence is rejected as inconclusive and does not write a runtime proof manifest. |
+| Route ABI exposure | ok | Model/Review-dependent routes now list the proof writer in `primary_tools` without changing route status or execution policy. |
+| Regression tests | ok | `test_review_model_runtime_proof.py`: 4 passed; `test_root_tool_abi.py::test_feature_parity_routes_reference_existing_root_tools`: 1 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Review/model evidence can now be packaged for parity proof, but routes still need actual completed Review LLM/model artifacts plus remaining runtime/source/side-effect/wiki/semantic proof. |
+
+## Phase 19 Approval Runtime Proof Writer Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/approval_runtime_proof.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `harness/plugins/autosci/tests/test_approval_runtime_proof.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: convert verified `autosci_approval_contract.v1` sidecars into
+parity-ingestable approval/side-effect runtime proof manifests.
+
+Non-goal: do not execute side effects, approve commands, mutate wiki state, or
+mark unverified approval contracts as supplied proof.
+
+### Approval Runtime Proof Writer Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Proof writer | ok | Added `tools/approval_runtime_proof.py from-contract` for verified `autosci_approval_contract.v1` sidecars. |
+| Verification guard | ok | Tool requires approval ref plus existing allowlist/runtime/before/after artifacts and `execution_verified=true`; incomplete contracts remain inconclusive and write no proof. |
+| Route ABI exposure | ok | Approval-gated routes now list the proof writer in `primary_tools` without changing coverage status, side-effect policy, or execution policy. |
+| Regression tests | ok | `test_approval_runtime_proof.py`: 3 passed; root tool ABI: 1 passed; source/review/approval proof writer group: 13 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Approval/side-effect proof can now be packaged, but actual verified approval contracts must still be produced per route and semantic/runtime/source/wiki proof remains pending. |
+
+## Phase 19 Wiki Mutation Runtime Proof Writer Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/wiki_mutation_runtime_proof.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `harness/plugins/autosci/tests/test_wiki_mutation_runtime_proof.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: convert completed wiki writeback sidecars into parity-ingestable
+`wiki_mutation_evidence` runtime proof manifests.
+
+Non-goal: do not mutate wiki state, infer success from missing artifacts, or
+count incomplete/proposed writebacks as supplied proof.
+
+### Wiki Mutation Runtime Proof Writer Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Proof writer | ok | Added `tools/wiki_mutation_runtime_proof.py from-writeback` for completed wiki writeback sidecars. |
+| Completion guard | ok | Tool requires recognized writeback schema, `status=completed`, `outputs.write.applied=true`, and existing wiki mutation artifacts. |
+| Route ABI exposure | ok | Wiki-mutating routes now list the proof writer in `primary_tools` without changing route state or mutation behavior. |
+| Regression tests | ok | `test_wiki_mutation_runtime_proof.py`: 3 passed; root tool ABI: 1 passed; source/review/approval/wiki proof writer group: 16 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Wiki mutation proof can now be packaged, but actual completed writeback sidecars still need to be produced and attached per route, and semantic/external runtime proof remains pending. |
+
+## Phase 19 Semantic Parity Audit Proof Writer Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/semantic_parity_runtime_proof.py`
+- `harness/plugins/autosci/tests/test_semantic_parity_runtime_proof.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: convert completed semantic parity audit reports into
+parity-ingestable `semantic_equivalence_evidence` runtime proof manifests.
+
+Non-goal: do not infer semantic equivalence automatically, change route
+coverage status, or promote any route to full parity without supplied audit
+evidence.
+
+### Semantic Parity Audit Proof Writer Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Proof writer | ok | Added `tools/semantic_parity_runtime_proof.py from-audit` for completed semantic parity audits. |
+| Audit guard | ok | Tool requires `autosci_semantic_parity_audit.v1`, `status=completed`, `semantic_parity=full`, auditor, native/solar refs, and passing acceptance checks. |
+| Regression tests | ok | `test_semantic_parity_runtime_proof.py`: 2 passed; full proof writer group: 18 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Semantic equivalence proof can now be packaged, but completed per-route semantic audits must still be supplied and attached before any route can be promoted. |
+
+## Phase 19 External Runtime Category Mapping Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/fetch_s2.py`
+- `tools/fetch_deepxiv.py`
+- `tools/fetch_paper_copilot.py`
+- `tools/approval_runtime_proof.py`
+- `harness/plugins/autosci/tests/test_source_cli_tools.py`
+- `harness/plugins/autosci/tests/test_approval_runtime_proof.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: ensure completed live provider fetches and verified approval contracts
+can satisfy `external_runtime_evidence` without letting native replay or
+inconclusive runs overclaim external runtime.
+
+Non-goal: do not mark local file replay as live external runtime, and do not
+change route parity counts without supplied runtime manifests.
+
+### External Runtime Category Mapping Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Live provider mapping | ok | S2/DeepXiv/Paper Copilot live provider proof defaults now include `provider_source_evidence` and `external_runtime_evidence`. |
+| Native replay guard | ok | Paper Copilot `file://` provider replay defaults to `provider_source_evidence` only unless categories are explicitly supplied. |
+| Approval runtime mapping | ok | Verified approval contracts now default to `approval_boundary_evidence`, `side_effect_execution_evidence`, and `external_runtime_evidence`. |
+| Regression tests | ok | Source + approval tests: 10 passed; full proof writer group: 19 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Category mapping is ready, but actual live provider or verified approval manifests must still be collected and attached before pending slots can clear. |
+
+## Phase 19 Runtime Proof Directory Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: let parity inventory/route commands recursively attach
+`autosci_runtime_proof_manifest.v1` files from a proof directory, so generated
+proof bundles can be collected without passing every manifest path manually.
+
+Non-goal: do not auto-promote routes, accept non-proof JSON, or treat blocked
+proofs as supplied evidence.
+
+### Runtime Proof Directory Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI attachment | ok | `autosci_parity_bridge.py inventory/route` now accept `--runtime-proof-dir` and recursively scan JSON proof manifests. |
+| Manifest filtering | ok | Directory scan accepts `autosci_runtime_proof_manifest.v1`/proof-list JSON and ignores ordinary JSON files. |
+| Audit trail | ok | Evidence inputs now include `runtime_proof_dirs` and expanded `runtime_proof_manifest_paths`. |
+| Regression tests | ok | `test_phase19_parity_bridge.py`: 8 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Proof bundles can now be attached by directory, but real proof manifests still need to be generated per route before pending requirements clear. |
+
+## Phase 19 Semantic Proof Requirement Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make supplied `semantic_equivalence_evidence` runtime proof satisfy the
+semantic proof requirement instead of leaving it permanently pending.
+
+Non-goal: do not auto-promote route coverage or semantic parity status from
+partial to full without a separate promotion policy.
+
+### Semantic Proof Requirement Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Requirement mapping | ok | `semantic_equivalence_evidence` now becomes `supplied` when a valid runtime proof manifest supplies that category. |
+| No auto-promotion | ok | Test verifies a route with supplied semantic proof remains partial until remaining runtime/source/review proof is supplied and promotion policy is applied. |
+| Regression tests | ok | `test_phase19_parity_bridge.py`: 9 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with 25 pending runtime proof slots. |
+| Full parity claim | warn | Semantic proof can now clear its requirement, but full parity still needs remaining proof categories and promotion policy. |
+
+## Phase 19 Runtime Proof Verified State Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: compute `runtime_proof_status=verified` when all runtime/source/
+approval/review/wiki proof requirements are satisfied by ok/supplied evidence.
+
+Non-goal: do not promote route coverage or semantic parity from partial/gated
+to full solely because runtime proof is verified.
+
+### Runtime Proof Verified State Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Runtime-only verification | ok | `runtime_proof_status=verified` is now computed only from runtime/source/approval/review/wiki proof categories, excluding route/static/semantic requirements. |
+| No semantic auto-promotion | ok | New daily-arxiv regression covers all runtime proof categories supplied while `semantic_equivalence_evidence` remains pending and route stays gated/partial. |
+| Regression tests | ok | `test_phase19_parity_bridge.py`: 10 passed; `py_compile` passed for bridge/test files. |
+| Inventory/gate | ok | Real route inventory and feature parity gate pass; counts remain 0 full / 17 partial / 11 gated with runtime proof counts 3 not_required / 25 pending / 0 supplied / 0 verified. |
+| Full parity claim | warn | Verified runtime status is now representable, but real route proof manifests and semantic parity audits still need to be collected before any route can be promoted. |
+
+## Phase 19 Full-Parity Acceptance Gate Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/evaluators/scientific/autosci_feature_parity_gate.py`
+- `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add a strict acceptance check for final full parity so the existing
+honesty/schema gate can keep passing partial/gated inventories while a separate
+check fails until every route has semantic full parity, verified/not-required
+runtime proof, and no unresolved proof requirements.
+
+Non-goal: do not promote any route, change route config counts, weaken gated
+side-effect safety, or claim full parity from documentation.
+
+### Full-Parity Acceptance Gate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Strict acceptance API | ok | Added `evaluate_full_parity_acceptance()` and `--require-full-parity` to `autosci_feature_parity_gate.py`. |
+| Side-effect safety | ok | Strict acceptance allows approval-required routes to remain `coverage_status=gated`, but only with `runtime_proof_status=verified`, semantic full parity, and no unresolved proof requirements. |
+| Ordinary gate compatibility | ok | Normal feature parity gate still passes the current honest inventory without requiring full parity. |
+| Regression tests | ok | `test_autosci_feature_parity_gate.py`: 12 passed; `test_phase19_parity_bridge.py`: 10 passed; `py_compile` passed. |
+| Real strict gate | ok | `autosci_feature_parity_gate.py --require-full-parity /tmp/autosci-parity-full-acceptance.json` exits 2 and lists route-specific blockers instead of overclaiming completion. |
+| Full parity claim | warn | Strict acceptance gate is in place, but current inventory still fails it for all 28 routes because semantic audits/runtime proofs/promotion-safe coverage states are not complete. |
+
+## Phase 19 Survey Requested LaTeX Output Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `harness/plugins/autosci/config/feature_parity_routes.v1.json`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make `$survey --format latex` produce an explicit LaTeX survey artifact
+instead of only recording the requested format in inputs.
+
+Non-goal: do not claim exhaustive survey coverage, live provider parity, or
+semantic full parity from a format sidecar alone.
+
+### Survey Requested LaTeX Output Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| LaTeX artifact | ok | `$survey --format latex` now emits `survey_latex_source` with a real `.tex` document in addition to markdown, plan, citation map, and coverage boundary. |
+| Status honesty | ok | Missing source/citation/provider coverage still leaves survey evidence inconclusive/partial; LaTeX output does not imply exhaustive coverage. |
+| Route truthfulness | ok | Survey route limitation now says markdown and requested LaTeX sidecar generation are wired while live/exhaustive coverage remains pending. |
+| Regression tests | ok | Survey latex target: 1 passed; survey shim subset: 3 passed; bridge/test `py_compile` and route JSON validation passed. |
+| Inventory/gate | ok | Real route inventory and ordinary feature gate pass; counts remain 0 full / 17 partial / 11 gated. Strict full-parity gate still fails as expected on unresolved survey source/semantic/runtime proof. |
+| Full parity claim | warn | Requested LaTeX output parity improved for survey, but full survey parity still needs live/exhaustive source coverage, semantic audit, runtime proof, and final promotion-safe status. |
+
+## Phase 19 Poster Render Flag CLI Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: accept and record native-style `$poster --render` requests so the
+poster route no longer rejects a render intent before the existing approval
+and allowlist runtime boundary can evaluate it.
+
+Non-goal: do not execute browser rendering, overflow probing, or PNG export
+without explicit approval and allowlisted renderer evidence.
+
+### Poster Render Flag CLI Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI compatibility | ok | `$poster --render` is now accepted and records `native_options.render=true` plus `inputs.render_requested=true`. |
+| Approval boundary | ok | Without approval/allowlist evidence, render intent remains gated/inconclusive and browser/PNG validation stays false. |
+| Existing executor path | ok | Existing approved poster executor tests still pass; this flag does not change allowlisted execution semantics. |
+| Regression tests | ok | Poster render flag target: 1 passed; poster shim subset: 3 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real CLI smoke for `$poster --render` succeeds with gated/inconclusive status; route inventory and ordinary/strict gates remain honest. |
+| Full parity claim | warn | Poster CLI parity improved, but full poster parity still requires approved renderer evidence, semantic audit, runtime proof attachment, and final acceptance. |
+
+## Phase 19 Visualize Serve Flag CLI Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: accept and record native-style `$visualize --serve` requests so web UI
+serving intent reaches the existing visualization evidence path.
+
+Non-goal: do not start a long-lived local server, open a browser, or mark web
+UI parity complete without explicit approval/runtime evidence.
+
+### Visualize Serve Flag CLI Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI compatibility | ok | `$visualize --serve` is now accepted and records `native_options.serve=true` plus `inputs.serve_requested=true`. |
+| Side-effect boundary | ok | Without `--execute-approved` and approval/allowlist evidence, no long-lived server/web health execution occurs. |
+| Local artifacts | ok | The visualize action still generates graph/canvas artifacts from local wiki state. |
+| Regression tests | ok | Visualize serve flag target: 1 passed; visualize shim subset: 1 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real CLI smoke for `$visualize --serve` succeeds with gated/inconclusive status; route inventory and ordinary/strict gates remain honest. |
+| Full parity claim | warn | Visualize CLI parity improved, but full visualize parity still requires approved web runtime proof, semantic audit, and final acceptance. |
+
+## Phase 19 Latest Continuation Summary
+
+Logged: 2026-06-30 EDT
+
+This section mirrors the detailed entries recorded above for the latest
+continuation so the newest audit state is visible at the end of the log.
+
+| Fix | Status | Evidence |
+|---|---|---|
+| Exp-status live remote proof | ok | `codex-exp-status-live-remote-proof-fixed-check`; `$exp-status` runtime proof verified for live-provider status polling. |
+| Research lifecycle route proof | ok | `codex-research-lifecycle-proof-check`; `$research` runtime proof verified from source, Review LLM, approval/runtime evidence. |
+| Edit/refine approved mutation proof | ok | `codex-edit-proof-check` and `codex-refine-proof-check`; `$edit` and `$refine` runtime proof verified for approved mutation/apply evidence. |
+| Exp-run final collect proof | ok | `codex-exp-run-final-proof-check`; `$exp-run` proof emitted only from `final_runtime_audit_ready=true` live-provider collect evidence. |
+| Paper-compile runtime proof | ok | `codex-paper-compile-final-proof-check`; `$paper-compile` proof emitted from completed approved compile/runtime evidence. |
+| Provider-source blockers | ok | Cleared for all routes in `current-parity-inventory-after-exp-run-paper-compile-proofs.json`; no pending `provider_source_evidence` rows remain. |
+| Runtime proof inventory | warn | Runtime counts are `{not_required: 3, pending: 7, supplied: 9, verified: 9}`; remaining pending runtime routes still need real approved side-effect/runtime proof. |
+| Semantic parity | warn | `semantic_full_count=0`; all 28 routes still require audited native AutoSci semantic equivalence evidence before full parity can be claimed. |
+| Verification | ok | Full shim suite: 121 passed; parity/proof tests: 21 passed; exp-run/collect/paper-compile subset: 22 passed; `py_compile` and `git diff --check` passed. |
+
+## Phase 19 Exp-Status Live Remote Proof Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make `$exp-status` attach a runtime proof only when the remote status
+path performs an approved live provider poll, so provider-source and external
+runtime evidence are not inferred from local run-directory inspection.
+
+Non-goal: do not promote local status checks, collection/result readiness, or
+semantic full parity from status polling alone.
+
+### Exp-Status Live Remote Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Live-only proof artifact | ok | Approved live remote status checks now emit `monitor_experiment_remote_status_runtime_proof.json` with `external_runtime_evidence` and `provider_source_evidence`. |
+| Local check boundary | ok | Run-directory status checks remain evidence-only and do not attach provider/source proof manifests. |
+| Regression tests | ok | Exp-status shim subset: 9 passed; focused live/local proof tests passed before inventory refresh; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-exp-status-live-remote-proof-fixed-check` produced a `live_provider` proof referencing `experiment_status.json`, approval contract, executor output, and command stdout/stderr. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-exp-status-live-proof-fixed.json` marks `$exp-status` runtime proof `verified`; provider-source and external-runtime requirements are `supplied`, semantic remains `pending`. |
+| Full parity claim | warn | Exp-status still needs audited semantic equivalence evidence before it can count as full parity. |
+
+## Phase 19 Research Lifecycle Runtime Proof Plan
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make `$research` attach route-level runtime proof manifests when its
+native lifecycle evidence report contains explicit source/provider evidence,
+Review LLM evidence, and approved runtime/approval evidence.
+
+Non-goal: do not promote synthetic strict scheduler handoff fixtures, incomplete
+stage plans, side effects, or semantic full parity.
+
+### Research Lifecycle Runtime Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source proof artifact | ok | `$research` now emits `run_research_lifecycle_source_provider_runtime_proof.json` only when discovery/novelty/paper source evidence is present. |
+| Review proof artifact | ok | `$research` now emits `run_research_lifecycle_review_llm_runtime_proof.json` only when Review LLM evidence is completed. |
+| Approval/runtime proof artifact | ok | `$research` now emits `run_research_lifecycle_approval_runtime_proof.json` only when approval contract execution is verified and experiment/compile runtime evidence is verified. |
+| Synthetic scheduler boundary | ok | Strict synthetic lifecycle summaries do not emit route-level provider/review/approval proof manifests by themselves. |
+| Regression tests | ok | Research shim subset: 14 passed; focused lifecycle proof tests: 4 passed; `py_compile` and `git diff --check` passed. |
+| Real CLI smoke | ok | `codex-research-lifecycle-proof-check` passed the lifecycle action and attached source, review, and approval/runtime proof manifests to `workflow_evolution.research.json`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-research-lifecycle-proofs.json` marks `$research` runtime proof `verified`; runtime counts are `{not_required: 3, pending: 11, supplied: 9, verified: 5}`. |
+| Full parity claim | warn | Research still needs audited semantic equivalence evidence before it can count as full parity. Provider-source pending routes are now `edit`, `exp-run`, `paper-compile`, and `refine`. |
+
+## Phase 19 Edit/Refine Approved Mutation Proof Plan
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make `$edit` and `$refine` attach runtime proof manifests only when an
+approved mutation/apply path has explicit approval, before, runtime, and
+after-artifact evidence.
+
+Non-goal: do not make proposal-only edits/refinements look executed, do not
+change mutation permission semantics, and do not claim semantic full parity.
+
+### Edit/Refine Approved Mutation Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Edit proof artifacts | ok | Approved `$edit` now emits provider/source, approval/runtime, side-effect execution, and wiki-mutation runtime proof manifests when approval/before/runtime/after evidence is verified. |
+| Refine proof artifacts | ok | Approved `$refine` now emits provider/source, approval/runtime, and side-effect execution proof manifests when the approved after-artifact apply is completed. |
+| Proposal boundary | ok | Proposal-only edit/refine paths do not emit proof manifests; existing mutation permission behavior was not changed. |
+| Regression tests | ok | Edit/refine focused tests: 2 passed; `py_compile` and `git diff --check` passed. |
+| Real CLI smoke | ok | `codex-edit-proof-check` and `codex-refine-proof-check` both passed their action gates and emitted the expected proof manifests. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-edit-refine-proofs.json` marks `$edit` and `$refine` runtime proof `verified`; runtime counts are `{not_required: 3, pending: 9, supplied: 9, verified: 7}`. |
+| Full parity claim | warn | Edit/refine still need audited semantic equivalence evidence. Provider-source pending routes are now only `exp-run` and `paper-compile`. |
+
+## Phase 19 Exp-Run/Paper-Compile Runtime Proof Plan
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make `$exp-run` and `$paper-compile` attach runtime proof manifests from
+their strict final/runtime boundaries: live-provider collect audit for exp-run,
+and verified approval/runtime compile evidence for paper-compile.
+
+Non-goal: do not promote local run-only experiment execution, local-only result
+collection, unverified compile diagnostics, or semantic full parity.
+
+### Exp-Run/Paper-Compile Runtime Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Exp-run final proof | ok | `$exp-run --collect` now emits `monitor_experiment_final_runtime_proof.json` only when `final_runtime_audit_ready=true`, including live-provider collection, approval/runtime evidence, side-effect execution, provider/source evidence, collection ledger, and wiki mutation artifacts. |
+| Local collect boundary | ok | Local-only collect keeps final proof absent; stage audit can pass without promoting full runtime proof. |
+| Paper compile proof | ok | `$paper-compile` now emits `compile_paper_runtime_proof.json` only when status is completed and approval/runtime semantic verification passes. |
+| Regression tests | ok | Exp-run/collect/paper-compile shim subset: 22 passed; focused proof tests: 3 passed; `py_compile` and `git diff --check` passed. |
+| Real CLI smoke | ok | `codex-exp-run-final-proof-check` produced live-provider final collect proof; `codex-paper-compile-final-proof-check` produced approved side-effect compile proof. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-exp-run-paper-compile-proofs.json` marks `$exp-run` and `$paper-compile` runtime proof `verified`; runtime counts are `{not_required: 3, pending: 7, supplied: 9, verified: 9}`. |
+| Full parity claim | warn | Provider-source blockers are cleared, but semantic equivalence remains pending for all routes and runtime proof is still pending for remaining side-effect routes. |
+
+## Phase 19 Native Tool Sync Inventory Snapshot
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: record the post-native-tool-sync parity gate baseline before the
+next blocker fix. This is an audit/log-only step.
+
+### Native Tool Sync Inventory Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Ordinary parity gate | ok | `autosci_feature_parity_gate.py current-parity-inventory-after-native-tools.json` passed with warnings that non-full routes must remain limitation-aware. |
+| Strict full-parity gate | error | `--require-full-parity` still fails because all 28 routes remain semantic partial and 25 routes have pending runtime proof status in this bare inventory. |
+| Inventory shape | ok | Current inventory is a `ScientificEvidenceEnvelope`; route rows live under `outputs.parity.items`. |
+| Counts | warn | `routed=28`, `full=0`, `partial=17`, `gated=11`, `semantic_full=0`, `semantic_partial=28`, runtime proof status counts: `not_required=3`, `pending=25`, `supplied=0`, `verified=0`. |
+| Boundary honesty | ok | The gate failure is treated as authoritative evidence of remaining blockers; no route is promoted to full parity without semantic audit and required runtime proof. |
+
+## Phase 19 Reset Native Tool Parity Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `tools/reset_wiki.py`
+- `harness/plugins/autosci/tests/test_root_tool_abi.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the original AutoSci `/reset` scope planner and reset
+execution mechanics while preserving Solar's approval boundary for destructive
+filesystem mutation.
+
+Non-goal: do not silently run destructive reset from compatibility smoke paths
+or mark reset full parity without approval/runtime/semantic evidence.
+
+### Reset Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native scope planner | ok | `tools/reset_wiki.py` now supports original `--scope wiki,raw,log,checkpoints,all`, `--project-root`, `--yes`, and `--dry-run` behavior plus Solar `--wiki-root` compatibility. |
+| Approval boundary | ok | `--yes/--apply` without both `--approval-ref` and `--execute-approved` returns `approval_required` and leaves files untouched. |
+| Approved execution | ok | Approved reset executes the original scoped wiki/raw/log/checkpoint mutation mechanics only against the requested project root and writes `autosci_runtime_evidence.v1` with action `reset_plan`. |
+| Runtime evidence gate | ok | Reset runtime evidence includes a reset-plan artifact and passes `autosci_runtime_evidence_gate` in the targeted test. |
+| Regression tests | ok | Target reset test: 1 passed; side-effect root smoke: 1 passed; full `test_root_tool_abi.py`: 6 passed with escalated loopback bind for the SMTP test; `py_compile` passed. |
+| Full parity claim | warn | Reset still needs semantic parity audit and durable approval-contract proof attachment before the route can move from gated partial toward full parity. |
+
+## Phase 19 Serve Native Tool Parity Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `tools/serve.py`
+- `harness/plugins/autosci/tests/test_root_tool_abi.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the original AutoSci/OmegaWiki local server API surface for
+`/visualize` and wiki mutation parity, while keeping smoke checks non-serving
+through a bounded `--health-check` path.
+
+Non-goal: do not auto-start a long-lived server/browser session from tests or
+ungated shim execution.
+
+### Serve Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native server surface | ok | `tools/serve.py` was mechanically restored from original AutoSci/OmegaWiki, including read APIs, loopback write APIs, SSE live reload, lint/regenerate endpoints, checkpoint browsing, and skill intent synthesis. |
+| Solar health compatibility | ok | Added `--wiki-root` and `--health-check` so tests can validate app/wiki graph health without starting a long-lived HTTP server. |
+| Boundary honesty | ok | Normal `tools/serve.py` execution still starts the native server explicitly; shim smoke and health checks remain bounded and non-serving. |
+| Regression tests | ok | Serve health CLI smoke passed; `$visualize --serve` shim target: 1 passed; side-effect root smoke: 1 passed; full `test_root_tool_abi.py`: 6 passed with escalated loopback bind for SMTP; `py_compile` passed. |
+| Full parity claim | warn | Visualize/serve still needs approved web runtime proof and semantic audit before the route can be promoted beyond gated partial parity. |
+
+## Phase 19 Poster Native Tool Parity Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `tools/poster.py`
+- `harness/plugins/autosci/tests/test_root_tool_abi.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the original AutoSci/PaperX DAG-to-poster mechanical pipeline
+while preserving Solar's approval-gated render/export runtime-evidence ABI.
+
+Non-goal: do not auto-run browser rendering without explicit approval,
+allowlist, and `--execute-approved`.
+
+### Poster Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native PaperX mechanics | ok | `tools/poster.py` was restored from original AutoSci/PaperX with template/outline build, DAG title/author injection, header/logo injection, figure copy/convert, validation, overflow probe, and browser render paths. |
+| Solar compatibility | ok | `build --out --title --summary`, JSON `validate`, and approval-gated render/export flags remain supported for existing Solar root/shim ABI. |
+| Approval boundary | ok | `render` only runs the allowlisted executor when `--approval-ref`, allowlist evidence, and `--execute-approved` are supplied; otherwise it stays approval-required/inconclusive. |
+| Runtime evidence | ok | Approved render writes `autosci_runtime_evidence.v1` with action `build_poster`, render checks, PNG/validation artifacts, and passes the runtime evidence gate. |
+| Regression tests | ok | Native template/outline pipeline: 1 passed; approved render root test: 1 passed; side-effect root smoke: 1 passed; poster shim render targets: 2 passed; full `test_root_tool_abi.py`: 7 passed with escalated loopback bind for SMTP; `py_compile` passed. |
+| Full parity claim | warn | Poster route still needs semantic audit and durable approval-contract proof promotion before full parity; browser rendering remains correctly gated. |
+
+## Phase 19 Send Email Native Tool Parity Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `tools/send_email.py`
+- `harness/plugins/autosci/tests/test_root_tool_abi.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the original AutoSci daily-arxiv SMTP ABI for env-based
+configuration, `--body-file`, and `--check-config`, while preserving Solar's
+approval-gated delivery runtime evidence.
+
+Non-goal: do not send email from original-style flags unless explicit approval
+and execution are supplied.
+
+### Send Email Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native SMTP ABI | ok | `tools/send_email.py` now supports original env configuration (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `DAILY_ARXIV_EMAIL_TO`, SSL/STARTTLS), top-level `--check-config`, and `--body-file`. |
+| Solar approval boundary | ok | Original-style top-level send/body-file flags still return `approval_required` unless explicit approval and `--execute-approved` are supplied. |
+| Approved delivery | ok | Existing approved SMTP path now accepts body-file content and continues to write `autosci_runtime_evidence.v1` with action `send_email`. |
+| Regression tests | ok | Env check-config target: 1 passed; approved SMTP body-file target: 1 passed with escalated loopback bind; side-effect root smoke: 1 passed; full `test_root_tool_abi.py`: 8 passed; `py_compile` passed. |
+| Full parity claim | warn | Daily/send-email side-effect parity still needs durable approval-contract proof promotion and semantic audit before full parity. |
+
+## Phase 19 Side-Effect Tool Inventory Snapshot
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: record the parity baseline after reset/serve/poster/send-email native
+tool restoration before moving to proof-promotion blockers.
+
+### Side-Effect Tool Inventory Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Inventory generation | ok | `autosci_parity_bridge.py inventory --out artifacts/autosci/phase19/current-parity-inventory-after-side-effect-tools.json` completed. |
+| Counts | warn | Inventory remains `routed=28`, `full=0`, `partial=17`, `gated=11`, `semantic_full=0`, `semantic_partial=28`, runtime proof counts `not_required=3`, `pending=25`, `supplied=0`, `verified=0`. |
+| Source/wiki regressions | ok | `test_source_cli_tools.py` + `test_research_wiki_tool.py`: 8 passed after helper restoration. |
+| Interpretation | warn | Helper parity improved, but bare inventory remains strict-full failed until semantic audits and route-specific runtime proof manifests are supplied/promoted. |
+
+## Phase 19 Coverage Promotion Gate Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: allow parity inventory to promote `coverage_status` only when semantic
+audit and all runtime/tool proof requirements are satisfied, so strict full
+parity can be reached from evidence instead of manual route-config edits.
+
+Non-goal: do not promote bare partial routes, blocked proofs, missing tools, or
+approval-required routes to ungated `full`.
+
+### Coverage Promotion Gate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Evidence-based promotion | ok | `coverage_status` is now recalculated after proof requirements are built; promotion requires semantic parity `full`, tool ABI ok, every requirement `ok/supplied`, and runtime status `verified/not_required`. |
+| Approval boundary | ok | Approval-required or side-effect-gated routes can only promote to `gated`, not ungated `full`. |
+| Strict route proof | ok | New novelty full-proof fixture supplies semantic audit plus external runtime, Review LLM/model, provider/source, and wiki mutation categories; route promotes to `coverage_status=full` and strict `--require-full-parity` passes for that route. |
+| Regression tests | ok | Coverage promotion target: 1 passed; semantic/runtime promotion targets: 2 passed; full `test_phase19_parity_bridge.py`: 12 passed; `py_compile` passed. |
+| Full parity claim | warn | This unlocks evidence-based full coverage promotion, but each real route still needs its own verified semantic audit/runtime proof manifest before strict global full parity can pass. |
+
+## Phase 19 Research E4 Proof Promotion Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: let `/research` reach strict full-parity proof level E4 from verified
+semantic and lifecycle/runtime proof evidence instead of being capped at E3.
+
+Non-goal: do not promote research to E4 from semantic audit alone or from
+partial/blocked runtime proof categories.
+
+### Research E4 Proof Promotion Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| E4 promotion | ok | `/research` proof level now promotes to `E4` only after semantic parity is full, runtime proof is verified/not-required, coverage is full/gated, and all proof requirements are `ok/supplied`. |
+| Approval boundary | ok | Research remains `coverage_status=gated` because the route is approval-required; it is not promoted to ungated `full`. |
+| Strict route proof | ok | New research lifecycle fixture supplies semantic audit plus external runtime, approval, Review LLM/model, and provider/source proof; strict `--require-full-parity` passes for that route. |
+| Regression tests | ok | Research E4 target: 1 passed; coverage promotion target: 1 passed; full `test_phase19_parity_bridge.py`: 13 passed; `py_compile` passed. |
+| Full parity claim | warn | This removes the research-specific proof-level ceiling, but real `/research` still needs a verified lifecycle audit/runtime manifest in the production artifact set. |
+
+## Phase 19 Aggregate Regression Snapshot
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: record the post-helper-sync and proof-promotion regression baseline.
+
+### Aggregate Regression Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Parity/proof bridge tests | ok | `test_phase19_parity_bridge.py`, `test_semantic_parity_runtime_proof.py`, and `test_approval_runtime_proof.py`: 18 passed. |
+| Source/wiki tests | ok | `test_source_cli_tools.py` and `test_research_wiki_tool.py`: 8 passed. |
+| Root tool ABI | ok | Full `test_root_tool_abi.py`: 8 passed with escalated loopback bind for the SMTP test. |
+| Interpretation | warn | Core helper ABI and proof promotion are stable, but global full parity still depends on supplying verified route-level semantic/runtime proof artifacts. |
+
+## Phase 19 Runtime Proof Directory Path Resolution Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: fix `--runtime-proof-dir harness/...` resolution so repo-relative
+proof directories are scanned instead of becoming `harness/harness/...`.
+
+Non-goal: do not auto-consume arbitrary proof artifacts; callers still must
+pass explicit runtime proof dirs/manifests.
+
+### Runtime Proof Directory Path Resolution Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Repo-relative path handling | ok | `resolve_output("harness/artifacts/autosci/runs")` now resolves to the repository `harness/artifacts/autosci/runs` directory instead of `harness/harness/...`. |
+| Runtime proof absorption | ok | Inventory with `--runtime-proof-dir harness/artifacts/autosci/runs` now reports `runtime_proof_status_counts={not_required:3,pending:14,supplied:8,verified:3}`. |
+| Requirement accounting | ok | The same inventory reports `proof_requirement_status_counts={ok:84,pending:94,supplied:24,blocked:0,missing:0}` and keeps semantic parity partial until semantic audits are supplied. |
+| Regression tests | ok | Path-resolution and runtime-proof directory attachment targets: 2 passed; `py_compile` passed for bridge and tests. |
+| Full parity claim | warn | This fixes proof discovery for existing run artifacts; global full parity still requires semantic full audits and the remaining pending proof categories. |
+
+## Phase 19 Direct Semantic Audit Ingestion Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: let parity inventory consume strict route-level
+`autosci_semantic_parity_audit.v1` JSON directly through explicit audit paths
+or audit directories, without requiring a separate runtime-proof wrapping step.
+
+Non-goal: do not promote any route from the old overall audit report or from
+partial/incomplete audits; promotion must still require skill-matching,
+completed/full semantic audits with existing native/solar evidence refs and
+passing acceptance checks.
+
+### Direct Semantic Audit Ingestion Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI evidence path | ok | `autosci_parity_bridge.py inventory/route` now accepts `--semantic-audit` and `--semantic-audit-dir`. |
+| Strict audit validation | ok | Direct audits are converted to semantic proof sources only when `autosci_semantic_parity_audit.v1` is completed/full, skill-matching, has auditor/native/solar refs, and all acceptance checks pass. |
+| Partial-audit guard | ok | Partial semantic audits discovered from a directory remain blocked proof sources, expose `semantic_audit_status=inconclusive` with reasons, and keep `semantic_equivalence_evidence=pending`. |
+| Path safety | ok | `artifacts/...` outputs continue to resolve under `HARNESS_DIR`; repo-relative `harness/...` proof dirs still resolve to the repository harness path. |
+| Regression tests | ok | Full `test_phase19_parity_bridge.py`: 16 passed; `py_compile` passed for bridge and tests. |
+| Real inventory | ok | Inventory with `--runtime-proof-dir harness/artifacts/autosci/runs` still reports `runtime_proof_status_counts={not_required:3,pending:14,supplied:8,verified:3}` and `semantic_full_count=0`. |
+| Full parity claim | warn | This unblocks direct route-level semantic audit ingestion, but no real completed/full route audit is currently supplied in the artifact set. |
+
+## Phase 19 Ideate Five-Phase Pipeline Report Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make `$ideate` emit explicit native five-phase pipeline evidence and
+A/B/C/D/E generation-path coverage, so missing native ideation semantics are
+visible as structured blockers instead of being buried in prose limitations.
+
+Non-goal: do not fabricate dual-model brainstorms, novelty/review decisions,
+wiki writeback, or pilot execution; missing evidence must remain incomplete.
+
+### Ideate Five-Phase Pipeline Report Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Pipeline evidence | ok | `$ideate` now emits `autosci_ideate_pipeline_report.v1` as `ideate_pipeline_report_json`. |
+| Five-phase blockers | ok | Report records phase1 landscape scan, phase2 dual-model brainstorm, phase3 novelty/review validation, phase4 wiki writeback, and phase5 pilot handoff as explicit phase rows with evidence refs and blockers. |
+| A-E path coverage | ok | Final promotion boundary and pipeline report both record required A/B/C/D/E paths, present paths, missing paths, and coverage status. |
+| Promotion honesty | ok | Ideas without a native A/B/C/D/E generation path now carry the blocker `structured generation path A/B/C/D/E is missing`; missing dual-model/review/write/pilot evidence remains incomplete. |
+| Regression tests | ok | Ideate source/model/missing-source targets: 3 passed; ideate/novelty/review shim subset: 16 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-ideate-pipeline-report-check` produced `ideate_pipeline_report.json` with `status=incomplete`, `present_paths=[A,E]`, `missing_paths=[B,C,D]`, and explicit phase2-5 blockers. |
+| Full parity claim | warn | This makes native five-phase gaps machine-readable; full `/ideate` parity still needs real dual-model evidence, B/C/D path generation, novelty/review validation, approved wiki writeback, and pilot handoff/skip proof. |
+
+## Phase 19 Ideate Source-Grounded A-E Candidate Coverage Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/backends/idea_source.py`
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: extend source-grounded deterministic `/ideate` candidates to cover
+native generation paths B/C/D when wiki method evidence exists, so A-E path
+coverage can be audited separately from the still-required dual-model and
+validation phases.
+
+Non-goal: do not treat deterministic B/C/D candidates as Codex/Review LLM
+brainstorm parity; model/review evidence and downstream gates remain required.
+
+### Ideate Source-Grounded A-E Candidate Coverage Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| B path | ok | Source-grounded ideate now emits `B:incremental` candidates from wiki method evidence. |
+| C path | ok | With two wiki methods, ideate emits `C:combination` candidates grounded in both method evidence ids. |
+| D path | ok | With two wiki methods, ideate emits `D:innovation` candidates for shared-assumption relaxation. |
+| A/E preservation | ok | Existing landscape-driven `A` and cross-domain-transfer `E` candidates remain present. |
+| Boundary honesty | ok | A-E coverage can become complete, but pipeline report remains `incomplete` without dual-model brainstorm, novelty/review validation, approved writeback, and pilot handoff/skip proof. |
+| Regression tests | ok | Ideate source/model/missing-source targets: 3 passed; ideate/novelty/review shim subset: 16 passed; `py_compile` passed. |
+| Full parity claim | warn | Source-grounded A-E candidate coverage is improved, but deterministic candidates are not a replacement for native Codex + Review LLM brainstorm parity. |
+
+## Phase 19 Ideate Skip-Validation Action Routing Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make `$ideate --skip-validation` skip the `evaluate_ideas` action, as
+native `/ideate` defines skip-validation as Phase 3 deep-validation bypass.
+
+Non-goal: do not mark generated ideas promotion-ready without novelty/review
+evidence; skipped validation remains explicit in the pipeline report.
+
+### Ideate Skip-Validation Action Routing Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Action routing | ok | `$ideate --skip-validation` now selects only `generate_ideas`; default `/ideate` still runs `generate_ideas` plus `evaluate_ideas`. |
+| Pipeline semantics | ok | `ideate_pipeline_report.v1` records phase3 as `skipped` when `--skip-validation` is supplied. |
+| Pilot semantics | ok | `--skip-pilot` records phase5 as `skipped` without pretending pilot runtime evidence exists. |
+| Regression tests | ok | Skip-validation target plus source ideate target: 2 passed; ideate/novelty/review shim subset: 17 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-ideate-skip-validation-check` returned `action_count=1`; pipeline report had phase3=`skipped`, phase5=`skipped`, and `pipeline_ready=false`. |
+| Full parity claim | warn | Skip flags now affect routing/reporting, but full `/ideate` still needs dual-model brainstorm, validation evidence when not skipped, approved writeback, and semantic audit proof. |
+
+## Phase 19 Ideate Max-Ideas Selection Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/backends/idea_source.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make native `$ideate --max-ideas N` affect candidate selection by
+marking the first N non-filtered candidates as selected for write/promotion,
+while keeping the full candidate pool available for audit.
+
+Non-goal: do not truncate evidence, discard eliminated ideas, or perform wiki
+writeback without explicit approved mutation.
+
+### Ideate Max-Ideas Selection Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Candidate preservation | ok | `--max-ideas` no longer drops candidates; full candidate evidence remains auditable. |
+| Selection marker | ok | Non-filtered candidates now carry `selected_for_write` and `selection_rank`; candidates beyond max carry a selection reason. |
+| Model/source consistency | ok | Selection is applied in the bridge attach path, so source-grounded and model-command ideas share the same max-ideas semantics. |
+| Pipeline report | ok | `ideate_pipeline_report.v1` records `max_ideas` and `selected_for_write_count`. |
+| Regression tests | ok | Max-ideas source ideate, model-command ideate, and skip-validation targets: 3 passed; ideate/novelty/review shim subset: 17 passed; `py_compile` passed. |
+| Full parity claim | warn | Selection semantics are wired, but approved wiki writeback is still required before selected ideas become persisted wiki pages. |
+
+## Phase 19 Ideate Review LLM Brainstorm Completion Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: require completed Review LLM evidence, not merely a
+`review_llm_evidence` path reference, before phase2 dual-model brainstorm is
+considered complete in `ideate_pipeline_report.v1`.
+
+Non-goal: do not execute a Review LLM provider automatically or count local
+surrogate review evidence as independent Review LLM brainstorm parity.
+
+### Ideate Review LLM Brainstorm Completion Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Completion rule | ok | Phase2 dual-model brainstorm now requires `_review_llm_evidence_completed(...)`, not just a non-empty review evidence path. |
+| Surrogate guard | ok | Local surrogate or malformed review evidence remains incomplete for independent Review LLM brainstorm parity. |
+| Pipeline report | ok | `ideate_pipeline_report.v1` records `review_llm_evidence_completed` and uses the blocker `independent Review LLM brainstorm evidence is missing or incomplete`. |
+| Regression tests | ok | Source/model/skip-validation ideate targets: 3 passed; ideate/novelty/review shim subset: 17 passed; `py_compile` passed. |
+| Full parity claim | warn | This tightens phase2 truthfulness; actual full parity still requires real completed Review LLM brainstorm evidence plus Codex/model brainstorm evidence. |
+
+## Phase 19 Experiment Full Mode Action Routing Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: make native `$exp-run --full` route through deploy plus monitor/collect
+actions, rather than stopping after the deploy-side `run_experiment` action.
+
+Non-goal: do not execute unapproved experiment code or remote commands; full
+mode remains approval-gated and evidence-driven.
+
+### Experiment Full Mode Action Routing Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Full-mode route | ok | `$exp-run --full` now selects `design_experiment`, `run_experiment`, and `monitor_experiment`. |
+| Dependency scope | ok | Full mode uses the native experiment lifecycle chain only; it does not pull the broader research/ingest/ideate dependency chain. |
+| Collect preservation | ok | `$exp-run --collect` remains monitor-only. |
+| Safety boundary | ok | Without approval/runtime evidence, full mode remains `gated`/`inconclusive`; no experiment command or remote side effect is executed. |
+| Regression tests | ok | Full/deploy/collect exp-run targets: 3 passed; exp-run/exp-status/exp-collect shim subset: 21 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-exp-run-full-routing-check` returned `action_count=3`, `execution_status=gated`, `status=inconclusive`. |
+| Full parity claim | warn | Full mode routing is closer to native, but deploy/monitor/collect still needs approved runtime, remote/provider, collection-ledger, wiki mutation, and semantic audit proof before full parity. |
+
+## Phase 19 Exp/Ideate Aggregate Snapshot
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: record the post-exp-full-routing aggregate verification baseline before
+moving to the next full-parity blocker.
+
+### Exp/Ideate Aggregate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Parity/proof tests | ok | `test_phase19_parity_bridge.py`, `test_semantic_parity_runtime_proof.py`, and `test_approval_runtime_proof.py`: 21 passed. |
+| Shim regression subset | ok | `test_autosci_skill_shim.py -k 'ideate or novelty or review_resolves or exp_run or exp_status or exp_collect'`: 38 passed, 83 deselected. |
+| Inventory artifact | ok | Generated `harness/artifacts/autosci/phase19/current-parity-inventory-after-exp-full-routing.json`. |
+| Inventory honesty | ok | Inventory remains 0 full, 17 partial, 11 gated, `semantic_full_count=0`, runtime counts `{not_required:3,pending:14,supplied:8,verified:3}`. |
+| Interpretation | warn | Exp full routing and ideate pipeline evidence are now stricter, but global full parity is still blocked by semantic audits plus remaining runtime/side-effect proofs. |
+
+## Phase 19 Ask Workspace Source Proof Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose `$ask` workspace wiki retrieval as source-channel runtime proof
+for `provider_source_evidence` when retrieved wiki source paths are present.
+
+Non-goal: do not count workspace wiki retrieval as external provider/runtime
+execution; `external_runtime_evidence` remains pending unless a real provider
+or approved runtime proof is supplied.
+
+### Ask Workspace Source Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source proof artifact | ok | `$ask` now writes `ask_wiki_source_provider_runtime_proof.json` when wiki retrieval returns source paths. |
+| Category boundary | ok | The manifest category is exactly `provider_source_evidence`; it does not include `external_runtime_evidence`. |
+| Regression tests | ok | Ask/check targeted tests: 8 passed; focused source/model ask tests: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-ask-source-proof-check` generated the source proof from `artifacts/autosci/workspace/wiki` SkillGen sources. |
+| Inventory recognition | ok | `current-parity-inventory-after-ask-source-proof.json` marks `ask.provider_source_evidence=supplied` while `ask.external_runtime_evidence` remains pending. |
+| Full parity claim | warn | Ask still needs semantic equivalence audit plus external runtime/provider evidence before full parity. |
+
+## Phase 19 Ideate Source Proof Attachment Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/backends/idea_source.py`
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose source-grounded ideate candidates as `provider_source_evidence`
+runtime proof when wiki/discovery source refs are present.
+
+Non-goal: do not count source-grounded deterministic candidates as external
+runtime, novelty validation, Review LLM brainstorm, or semantic full parity.
+
+### Ideate Source Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source refs | ok | `idea_source.py` now records `source_ids` and file-backed `source_refs` in `source_summary`. |
+| Source proof artifact | ok | `generate_ideas_source_provider_runtime_proof.json` is written for source-backed ideate runs. |
+| Category boundary | ok | The manifest category is exactly `provider_source_evidence`; logical ids remain in provenance and are not path-like `evidence_refs`. |
+| Regression tests | ok | Source/model/skip-validation ideate targets: 3 passed; ideate/novelty/review shim subset: 17 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-ideate-source-proof-fixed-check` generated a supplied source proof from current workspace wiki/discovery evidence. |
+| Inventory recognition | ok | `current-parity-inventory-after-ideate-source-proof-clean.json` marks `ideate.provider_source_evidence=supplied` with no blocked ideate source proof. |
+| Full parity claim | warn | Ideate still needs semantic audit, external runtime/provider proof, completed independent Review LLM brainstorm, novelty/review gates, and approved wiki write/pilot evidence before full parity. |
+
+## Phase 19 Survey Citation Source Proof Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose `$survey` citation-map source evidence as
+`provider_source_evidence` when discovery/paper/wiki citation entries are
+present.
+
+Non-goal: do not count citation-map assembly as live external runtime or
+exhaustive survey coverage.
+
+### Survey Citation Source Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source input refs | ok | Phase14 publication source input keys are centralized, and source evidence file paths can be referenced by proof manifests. |
+| Citation proof artifact | ok | `$survey` now writes `write_survey_source_provider_runtime_proof.json` when citation-map entries exist. |
+| Category boundary | ok | The manifest category is exactly `provider_source_evidence`; `external_runtime_evidence` remains pending. |
+| Regression tests | ok | Survey shim targets: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-survey-source-proof-check` generated survey source proof from discovery evidence and workspace wiki citations. |
+| Inventory recognition | ok | `current-parity-inventory-after-survey-source-proof.json` marks `survey.provider_source_evidence=supplied`; runtime counts moved to `{not_required:3,pending:13,supplied:9,verified:3}`. |
+| Full parity claim | warn | Survey still needs semantic audit and external runtime/provider proof before full parity. |
+
+## Phase 19 Publication Citation Source Proof Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: reuse the strict citation-map source proof path for `$paper-plan` and
+`$paper-draft` so source-backed citation evidence is visible to parity
+inventory.
+
+Non-goal: do not mark paper plan final acceptance, manuscript readiness,
+compile/PDF handoff, external runtime, or semantic parity complete from
+citation-map proof alone.
+
+### Publication Citation Source Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Paper-plan proof artifact | ok | `$paper-plan` now writes `plan_report_source_provider_runtime_proof.json` when citation entries exist. |
+| Paper-draft proof artifact | ok | `$paper-draft` now writes `write_report_source_provider_runtime_proof.json` when citation entries exist. |
+| Category boundary | ok | Both manifests declare only `provider_source_evidence`; external runtime remains pending. |
+| Regression tests | ok | Paper-plan/paper-draft shim targets: 6 passed; focused source proof targets: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-paper-plan-source-proof-check` and `codex-paper-draft-source-proof-check` generated supplied source proof manifests from discovery + Review LLM evidence. |
+| Inventory recognition | ok | `current-parity-inventory-after-publication-source-proofs.json` marks `paper-plan.provider_source_evidence=supplied` and `paper-draft.provider_source_evidence=supplied`. |
+| Full parity claim | warn | Paper-plan and paper-draft still need semantic audits, external runtime proof, and verified compile/PDF or final readiness evidence before full parity. |
+
+## Phase 19 Review Target Source Proof Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose the concrete artifact reviewed by `$review` as
+`provider_source_evidence` when the target artifact path resolves locally.
+
+Non-goal: do not count review target availability as Review LLM completion,
+external provider execution, or semantic parity.
+
+### Review Target Source Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source proof artifact | ok | `$review` now writes `review_artifact_source_provider_runtime_proof.json` when the reviewed artifact path exists. |
+| Category boundary | ok | The source proof category is exactly `provider_source_evidence`; Review LLM proof remains a separate manifest. |
+| Regression tests | ok | Review shim targets: 14 passed; focused review source targets: 4 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-review-source-proof-check` generated both target source proof and Review LLM runtime proof from existing workspace/review evidence. |
+| Inventory recognition | ok | `current-parity-inventory-after-review-source-proof.json` marks `review.provider_source_evidence=supplied` while external runtime remains pending. |
+| Full parity claim | warn | Review still needs semantic audit and external/live provider runtime proof before full parity. |
+
+## Phase 19 Ingest Source Proof Attachment Sync
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: expose `$ingest` paper source preparation and parse provenance as
+`provider_source_evidence` when source preparation, parse quality, and raw
+artifact provenance checks pass.
+
+Non-goal: do not mark ingest wiki mutation proof supplied without an approved
+writeback/before-after mutation sidecar; current source proof does not satisfy
+`wiki_mutation_evidence`.
+
+### Ingest Source Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Source proof artifact | ok | `$ingest` now writes `ingest_paper_source_provider_runtime_proof.json` when paper source preparation is verified. |
+| Boundary honesty | ok | Provider-source proof can be supplied while wiki mutation evidence remains pending. |
+| Regression tests | ok | Ingest shim targets: 7 passed; focused ingest source tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-ingest-source-proof-check` generated source proof from `skillgen_sample_paper.md`. |
+| Inventory recognition | ok | `current-parity-inventory-after-ingest-source-proof.json` marks `ingest.provider_source_evidence=supplied`; `ingest.wiki_mutation_evidence` remains pending. |
+| Full parity claim | warn | Ingest still needs semantic audit and approved wiki mutation proof before full parity. |
+
+## Phase 19 Ideate Pipeline Aggregate Snapshot
+
+Logged: 2026-06-30 EDT
+
+Planned file changes (pre-fix):
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: record the post-ideate-pipeline regression and inventory baseline.
+
+### Ideate Pipeline Aggregate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Parity/proof tests | ok | `test_phase19_parity_bridge.py`, `test_semantic_parity_runtime_proof.py`, and `test_approval_runtime_proof.py`: 21 passed. |
+| Ideate/novelty/review shim subset | ok | `test_autosci_skill_shim.py -k 'ideate or novelty or review_resolves'`: 17 passed. |
+| Inventory honesty | ok | `current-parity-inventory-after-ideate-pipeline-sync.json` remains 0 full, 17 partial, 11 gated, `semantic_full_count=0`, runtime counts `{not_required:3,pending:14,supplied:8,verified:3}`. |
+| Interpretation | warn | Ideate evidence is more native-shaped and more truthful, but global full parity still depends on semantic audits and remaining runtime/side-effect proofs. |
+
+## Phase 19 Novelty Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$novelty` has completed external novelty provider evidence and
+completed Review LLM evidence, attach runtime proof manifests for
+`provider_source_evidence` and `review_llm_or_model_evidence`.
+
+Non-goal: do not mark novelty final acceptance, semantic parity, or wiki
+mutation proof complete unless their existing strict evidence gates pass.
+
+### Novelty Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Provider/source proof artifact | ok | `$novelty --novelty-evidence` now emits `evaluate_ideas_external_novelty_runtime_proof.json` only when external novelty is completed and provider provenance passed. |
+| Review LLM proof artifact | ok | `$novelty --review-llm-evidence` now emits `evaluate_ideas_review_llm_runtime_proof.json` only when Review LLM evidence is completed and carries evidence ids. |
+| Boundary honesty | ok | Novelty final acceptance still depends on existing external novelty, provider provenance, Review LLM, and numeric novelty-score gates; missing evidence remains incomplete. |
+| Regression tests | ok | Novelty targeted tests: 4 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-novelty-runtime-proof-check` attached provider-source and Review LLM proof manifests; final boundary was ready only because both supplied evidence paths were valid. |
+| Parity inventory recognition | ok | Inventory with the novelty proof dir marks `novelty.review_llm_or_model_evidence=supplied` and `novelty.provider_source_evidence=supplied`; ordinary gate passed. |
+| Full parity claim | warn | Strict full-parity gate still fails; novelty still needs semantic equivalence, live external runtime proof where applicable, and wiki mutation proof before full parity. |
+
+## Phase 19 Novelty Wiki Mutation Runtime Proof Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$novelty --write` actually applies the wiki novelty-score
+mutation, attach an `autosci_runtime_proof_manifest.v1` for
+`wiki_mutation_evidence` using the existing `novelty_writeback.v1` sidecar
+boundary.
+
+Non-goal: do not mark skipped/inconclusive writebacks as wiki mutation proof,
+and do not promote semantic parity or coverage status from writeback alone.
+
+### Novelty Wiki Mutation Runtime Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Wiki mutation proof artifact | ok | Completed `$novelty --write` now emits `evaluate_ideas_wiki_mutation_runtime_proof.json` with category `wiki_mutation_evidence`. |
+| Skip boundary | ok | Inconclusive/skipped writebacks do not emit wiki mutation runtime proof. |
+| Regression tests | ok | Novelty writeback targeted tests: 4 passed; wiki mutation proof tool tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-novelty-wiki-mutation-proof-check` wrote `novelty_writeback.json`, updated the wiki idea/log/edges/index/context, and attached wiki mutation proof. |
+| Parity inventory recognition | ok | Inventory with the novelty writeback proof dir marks `novelty.wiki_mutation_evidence=supplied` alongside provider-source and Review LLM proof. |
+| Full parity claim | warn | Strict full-parity gate still fails; novelty still needs semantic equivalence evidence and live external runtime evidence before full parity. |
+
+## Phase 19 Novelty Live Provider Runtime Proof Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: verify that `$novelty --online` marks external provider runtime proof
+only when the completed novelty evidence came from an HTTP provider endpoint.
+
+Non-goal: do not treat supplied local/file evidence as live external runtime,
+and do not promote novelty semantic parity or route coverage from provider
+runtime proof alone.
+
+### Novelty Live Provider Runtime Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| HTTP provider classification | ok | Added targeted coverage showing HTTP web-provider novelty evidence emits categories `provider_source_evidence` and `external_runtime_evidence`. |
+| Local evidence boundary | ok | Supplied/file evidence remains `provider_source_evidence` only and is not treated as live external runtime. |
+| Regression tests | ok | Novelty provider subset: 3 passed with local HTTP bind allowed; `py_compile` passed. |
+| Sandbox note | warn | The non-escalated test run could not bind `127.0.0.1` in this sandbox; the same targeted test passed with local bind permission. |
+| Full parity claim | warn | This makes live provider runtime proof attachable, but novelty still needs semantic equivalence audit before strict full parity can pass. |
+
+## Phase 19 Discover Provider Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$discover` produces a completed non-fixture source-provider
+boundary from approved runtime evidence or live provider execution, attach an
+AutoSci runtime proof manifest for `provider_source_evidence` and
+`external_runtime_evidence`.
+
+Non-goal: do not mark disabled-network, fixture, empty-shortlist, or
+approval-pending discovery as provider/runtime complete.
+
+### Discover Provider Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Provider/runtime proof artifact | ok | Completed source-provider `$discover` now emits `discover_literature_source_provider_runtime_proof.json`. |
+| Boundary honesty | ok | Generic approved runtime without non-fixture provider channel still emits no provider proof and remains incomplete. |
+| Regression tests | ok | Discover runtime/provider targeted tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-discover-provider-proof-check` produced a verified source-provider boundary and attached provider-source/external-runtime proof. |
+| Parity inventory recognition | ok | Inventory with the discover proof dir marks `discover.external_runtime_evidence=supplied`, `discover.provider_source_evidence=supplied`, and route runtime status `verified`; ordinary gate passed. |
+| Full parity claim | warn | Strict full-parity gate still fails because discover lacks semantic equivalence evidence and route coverage remains partial. |
+
+## Phase 19 Init Daily Source Provider Runtime Proof Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$init` or `$daily-arxiv` has verified approved source runtime
+evidence with a completed non-fixture provider boundary, attach provider-source
+and external-runtime proof manifests.
+
+Non-goal: do not treat pending approval, generic runtime channels, delivery
+completion, or wiki fan-in as automatically complete from provider proof alone.
+
+### Init Daily Source Provider Runtime Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Init provider/runtime proof | ok | `$init` with verified approved source runtime now emits `init_sources_source_provider_runtime_proof.json`. |
+| Daily provider/runtime proof | ok | `$daily-arxiv` with verified approved source runtime now emits `daily_arxiv_prepare_finalize_source_provider_runtime_proof.json`. |
+| Boundary honesty | ok | Provider proof does not mark approval boundary, delivery, wiki fan-in, side-effect execution, or semantic parity complete. |
+| Regression tests | ok | Init/daily targeted tests: 4 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-init-provider-proof-check` and `codex-daily-provider-proof-check` attached provider-source/external-runtime proof manifests. |
+| Parity inventory recognition | ok | Inventory with both proof dirs marks `init` and `daily-arxiv` provider/source and external/runtime requirements as supplied; ordinary gate passed. |
+| Full parity claim | warn | Strict full-parity gate still fails for remaining approval, wiki mutation, side-effect, Review LLM, semantic, and coverage requirements. |
+
+## Phase 19 Init Daily Approval Boundary Proof Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$init` or `$daily-arxiv` has a verified approval contract,
+attach an approval-boundary runtime proof manifest.
+
+Non-goal: do not mark side-effect execution, delivery, auto-ingest, or wiki
+mutation complete from approval-boundary proof alone.
+
+### Init Daily Approval Boundary Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Init approval proof | ok | `$init` with verified approval contract now emits `init_sources_approval_boundary_runtime_proof.json`. |
+| Daily approval proof | ok | `$daily-arxiv` with verified approval contract now emits `daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json`. |
+| Side-effect honesty | ok | Approval proof category is limited to `approval_boundary_evidence`; side-effect execution, delivery, and wiki mutation remain pending unless separately proven. |
+| Regression tests | ok | Init/daily approval targeted tests: 2 passed; approval proof tool tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-init-provider-proof-check` and `codex-daily-provider-proof-check` attached approval-boundary proof manifests. |
+| Parity inventory recognition | ok | Inventory marks `init.approval_boundary_evidence=supplied` and `daily-arxiv.approval_boundary_evidence=supplied`; ordinary gate passed. |
+| Full parity claim | warn | Strict full-parity gate still fails for semantic, route coverage, wiki mutation, and daily side-effect/review proof blockers. |
+
+## Phase 19 Source Fan-In Wiki Mutation Proof Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when source fan-in writeback completes for `$init --write` or
+`$daily-arxiv --write`, attach `wiki_mutation_evidence` proof from the
+`source_fan_in_writeback.v1` sidecar.
+
+Non-goal: do not mark unrequested, skipped, or inconclusive fan-in writebacks
+as wiki mutation evidence, and do not mark daily delivery as complete from
+wiki ingest alone.
+
+### Source Fan-In Wiki Mutation Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Init fan-in proof | ok | `$init --write` completed fan-in now emits `init_sources_wiki_mutation_runtime_proof.json`. |
+| Daily fan-in proof | ok | `$daily-arxiv --write` completed fan-in now emits `daily_arxiv_prepare_finalize_wiki_mutation_runtime_proof.json`. |
+| Boundary honesty | ok | Wiki mutation proof is emitted only from completed `source_fan_in_writeback.v1`; daily delivery/side-effect execution remains separately pending. |
+| Regression tests | ok | Source fan-in targeted tests: 3 passed; wiki mutation proof tool tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-init-fanin-proof-check` and `codex-daily-fanin-proof-check` attached wiki mutation proof manifests. |
+| Parity inventory recognition | ok | Inventory marks `init.wiki_mutation_evidence=supplied` and `daily-arxiv.wiki_mutation_evidence=supplied`; ordinary gate passed. |
+| Full parity claim | warn | Strict full-parity gate still fails; init now mainly lacks semantic equivalence, while daily-arxiv still lacks semantic, side-effect delivery, and Review LLM proof. |
+
+## Phase 19 Daily Side-Effect Execution Proof Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$daily-arxiv` reaches its final provider-delivery boundary
+through verified digest delivery or approved auto-ingest/fan-in, attach
+`side_effect_execution_evidence`.
+
+Non-goal: do not mark side-effect execution from approval-only or
+provider-source-only evidence, and do not mark Review LLM or semantic parity
+complete.
+
+### Daily Side-Effect Execution Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Side-effect proof artifact | ok | `$daily-arxiv --write` now emits `daily_arxiv_prepare_finalize_side_effect_execution_runtime_proof.json` only when `final_provider_delivery_boundary.final_delivery_ready=true`. |
+| False-positive guard | ok | Runtime digest without delivery/fan-in remains provider-ready only and does not emit `side_effect_runtime_proof_manifest_json`. |
+| Boundary honesty | ok | Proof category is limited to `side_effect_execution_evidence`; approval, provider source, wiki mutation, Review LLM, and semantic parity remain separate requirements. |
+| Regression tests | ok | Daily verified digest/write fan-in targeted tests: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-daily-fanin-proof-check` produced side-effect proof while preserving gated/inconclusive run status. |
+| Parity inventory recognition | ok | `codex-daily-side-effect-proof-inventory.json` marks `daily-arxiv.side_effect_execution_evidence=supplied`; ordinary gate passed. |
+| Full parity claim | warn | Strict full-parity gate still fails; daily-arxiv still lacks semantic equivalence and Review LLM/model evidence. |
+
+## Phase 19 Daily Review LLM Runtime Proof Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$daily-arxiv` receives completed Review LLM digest-selection
+evidence, attach a `review_llm_or_model_evidence` runtime proof.
+
+Non-goal: do not mark semantic equivalence, delivery, provider source, or wiki
+mutation complete from Review LLM evidence alone.
+
+### Daily Review LLM Runtime Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI argument propagation | ok | `$daily-arxiv` now forwards `--review-llm-evidence` and related Review LLM flags into `daily_arxiv_prepare_finalize`. |
+| Review proof artifact | ok | Completed Review LLM digest-selection evidence emits `daily_arxiv_prepare_finalize_review_llm_runtime_proof.json`. |
+| False-positive guard | ok | Daily runtime without Review LLM evidence records `review_llm_completed=false` and does not emit `review_model_runtime_proof_manifest_json`. |
+| Boundary honesty | ok | Review proof only satisfies `review_llm_or_model_evidence`; semantic equivalence and other runtime boundaries remain independently gated. |
+| Regression tests | ok | Daily verified digest/write fan-in targeted tests: 2 passed; `py_compile` passed for `autosci_bridge.py` and `autosci_skill_shim.py`. |
+| Real CLI smoke | ok | `codex-daily-fanin-proof-check` with `daily-review-llm.json` attached Review LLM proof while preserving gated/inconclusive status. |
+| Parity inventory recognition | ok | `codex-daily-review-proof-inventory.json` marks `daily-arxiv.review_llm_or_model_evidence=supplied` and `runtime_proof_status=verified`; ordinary gate passed. |
+| Full parity claim | warn | Strict full-parity gate still fails; daily-arxiv now only lacks `semantic_equivalence_evidence`, while many other routes still have unresolved requirements. |
+
+## Phase 19 Verified Semantic Audit Promotion Gate
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_parity_bridge.py`
+- `harness/plugins/autosci/tests/test_phase19_parity_bridge.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: promote a route to `semantic_parity=full` only when supplied runtime
+proof references a completed, full, skill-matching
+`autosci_semantic_parity_audit.v1` with passing acceptance checks.
+
+Non-goal: do not promote semantic parity from proof category presence alone,
+and do not change route coverage/runtime status without the corresponding
+runtime proof requirements.
+
+### Verified Semantic Audit Promotion Gate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Strict promotion rule | ok | Inventory now promotes `semantic_parity=full` only from supplied `semantic_audit` proof that references a valid completed/full skill-matching `autosci_semantic_parity_audit.v1`. |
+| False-positive guard | ok | Existing incomplete semantic proof test still marks `semantic_equivalence_evidence=supplied` without promoting semantic parity. |
+| Proof-level consistency | ok | Verified semantic audit promotion raises proof level to at least `E3`, satisfying ordinary gate consistency for `semantic_parity=full`. |
+| Requirement consistency | ok | Promoted routes retain `semantic_equivalence_evidence=supplied` in `proof_requirements`, so runtime proof source categories remain declared. |
+| Regression tests | ok | `test_phase19_parity_bridge.py`: 11 passed; `test_semantic_parity_runtime_proof.py`: 2 passed; `py_compile` passed. |
+| Real inventory guard | ok | Existing `codex-daily-review-proof-inventory.json` remains `daily-arxiv.semantic_parity=partial` and `semantic_full_count=0` because no semantic audit was supplied; ordinary gate passed. |
+| Full parity claim | warn | This enables audited semantic promotion but does not itself produce route-specific semantic audits or clear route coverage/runtime blockers. |
+
+## Phase 19 Daily Native Tool Parity Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/daily_arxiv.py`
+- `tools/fetch_arxiv.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: replace the Solar daily-arxiv stub with the original AutoSci helper
+behavior for config, prepare, finalize, recommend-llm, and digest support, and
+include the missing arXiv fetch helper required by prepare.
+
+Non-goal: do not execute network fetches, SMTP delivery, scheduling, or
+auto-ingest during verification without explicit approved runtime evidence.
+
+### Daily Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Tool sync | ok | `tools/daily_arxiv.py` was mechanically synchronized from the corrected original AutoSci repo, replacing the 57-line approval stub with the full helper. |
+| Missing dependency | ok | Added `tools/fetch_arxiv.py`, the direct arXiv feed helper imported by the native daily tool. |
+| Byte comparison | ok | `cmp -s` confirms OpenSolar `tools/daily_arxiv.py` and `tools/fetch_arxiv.py` match the original AutoSci files. |
+| Command ABI | ok | `tools/daily_arxiv.py --help` exposes `config`, `prepare`, `finalize`, `recommend-llm`, and `digest`. |
+| Deterministic local smoke | ok | `config`, `prepare --feed --no-external`, `finalize`, and `digest` completed against `codex-daily-tool-parity-check` fixtures without network execution. |
+| Regression tests | ok | Daily shim target tests: 2 passed; `py_compile` passed for `tools/daily_arxiv.py` and `tools/fetch_arxiv.py`. |
+| Full parity claim | warn | This removes a native tool blocker for daily-arxiv, but semantic full parity still requires a route-specific audit covering the shim/bridge behavior and approval boundaries. |
+
+## Phase 19 Daily Native Option ABI Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: accept and preserve native `/daily-arxiv` option inputs
+(`--mode`, `--hours`, `--categories`, `--max-recommendations`,
+`--max-auto-ingest`, `--send-email`) in the Solar shim and action envelope.
+
+Non-goal: do not execute feed fetches, SMTP delivery, scheduler mutation, or
+auto-ingest from options alone.
+
+### Daily Native Option ABI Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Parser ABI | ok | `$daily-arxiv` shim now accepts `--mode`, `--hours`, `--categories`, `--max-recommendations`, `--max-auto-ingest`, and `--send-email`. |
+| Native option preservation | ok | `autosci_skill_run.inputs.native_options` records all daily native options. |
+| Action envelope preservation | ok | `daily_arxiv_prepare_finalize` envelope inputs record mode/hours/categories/recommendation cap/auto-ingest cap/send-email; `--max-recommendations` overrides action `limit`. |
+| Side-effect honesty | ok | Options alone do not execute feed fetches, SMTP, scheduler mutation, or auto-ingest; smoke remains `execution_status=gated`, `status=inconclusive`. |
+| Regression tests | ok | Daily shim target tests: 2 passed; `py_compile` passed for `autosci_skill_shim.py`. |
+| Real CLI smoke | ok | `codex-daily-option-abi-check` preserved all native options in run payload and action envelope. |
+| Full parity claim | warn | Daily command submodes `setup/status/disable` still need native UX routing and evidence boundaries before daily semantic audit can be full. |
+
+## Phase 19 Daily Management Subcommand Routing
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_skill_shim.py`
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: route native `/daily-arxiv setup|status|disable` subcommands through
+Solar evidence instead of treating them as recommendation query text.
+
+Non-goal: do not mutate `.github/workflows`, config files, secrets, scheduler
+state, or SMTP settings without a separate approved execution path.
+
+### Daily Management Subcommand Routing Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Subcommand detection | ok | First positional `setup`, `status`, or `disable` is now recorded as `daily_command` instead of recommendation query text. |
+| Evidence boundary | ok | Management subcommands return `workflow_evolution.v1` evidence from `daily_arxiv_prepare_finalize`, including recommended changes and patch candidates artifacts required by the gate. |
+| Protected mutation honesty | ok | `setup` and `disable` remain gated/proposed and do not mutate config, workflow, secrets, scheduler state, SMTP, or wiki files. |
+| Read-only status | ok | `status` returns completed workflow evidence while still preserving route-level `execution_status=gated` because the daily route is approval-required. |
+| Regression tests | ok | Daily management/default route target tests: 5 passed; `py_compile` passed for `autosci_bridge.py` and `autosci_skill_shim.py`. |
+| Real CLI smoke | ok | `codex-daily-management-setup-check`, `codex-daily-management-status-check`, and `codex-daily-management-disable-check` all completed without failed actions. |
+| Full parity claim | warn | Native management UX is now routed, but actual approved setup/disable mutation and scheduler/secret probes are still future side-effect execution blockers. |
+
+## Phase 19 Discover Native Tool Parity Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/discover.py`
+- `tools/_env.py`
+- `tools/fetch_s2.py`
+- `tools/fetch_deepxiv.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: replace the lightweight Solar discover wrapper with the original
+AutoSci discovery helper while preserving OpenSolar provider-proof CLI behavior
+in `fetch_s2.py` and `fetch_deepxiv.py`.
+
+Non-goal: do not run live Semantic Scholar, DeepXiv, Paper Copilot, or network
+venue fetches during verification.
+
+### Discover Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native helper sync | ok | `tools/discover.py` was replaced with the corrected original AutoSci discovery helper, then locally patched only for OpenSolar no-network compatibility flags. |
+| Environment helper sync | ok | `tools/_env.py` matches the corrected original AutoSci helper byte-for-byte. |
+| Provider API preservation | ok | `tools/fetch_s2.py` and `tools/fetch_deepxiv.py` now expose the native import-time discovery functions required by `discover.py` while preserving existing provider-proof CLI behavior. |
+| No-network boundary | ok | `AUTOSCI_DISABLE_NETWORK_FETCH=1 tools/discover.py from-wiki ... --no-network-fetch` returns an inconclusive compatibility payload with wiki anchors and no provider request. |
+| CLI ABI | ok | `tools/discover.py --help` exposes native `from-anchors`, `from-topic`, `from-wiki`, and `from-venue` subcommands. |
+| Regression tests | ok | `test_source_cli_tools.py`: 7 passed; `py_compile` passed for `discover.py`, `_env.py`, `fetch_s2.py`, and `fetch_deepxiv.py`. |
+| Full parity claim | warn | Discover now has the native helper surface, but live provider proof and semantic parity still require approved network-backed runs and route-level evidence promotion. |
+
+## Phase 19 Review LLM Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$review` obtains completed Review LLM evidence through supplied
+evidence, command bridge, or provider mode, attach an `autosci_runtime_proof_manifest.v1`
+with `review_llm_or_model_evidence` so parity inventory can see the proof.
+
+Non-goal: do not treat local surrogate review or missing artifacts as final
+acceptance/runtime proof.
+
+### Review LLM Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Runtime proof sidecar | ok | Completed Review LLM-backed `$review` evidence now emits `review_llm_runtime_proof.json` with `schema=autosci_runtime_proof_manifest.v1` and `categories=["review_llm_or_model_evidence"]`. |
+| Surrogate boundary | ok | Local surrogate review still emits no runtime proof and remains `review_llm_incomplete`. |
+| Regression tests | ok | Review shim subset: 4 passed; `test_review_model_runtime_proof.py`: 4 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `$review ... --review-llm-command ... --run-id codex-review-proof-check-quoted` passed with `passed_count=1` and attached `review_model_runtime_proof_manifest_json`. |
+| Parity inventory recognition | ok | `autosci_parity_bridge.py inventory --runtime-proof-dir artifacts/autosci/runs/codex-review-proof-check-quoted` reports runtime proof counts `not_required=3 / pending=24 / supplied=1 / verified=0`; review route has `review_llm_or_model_evidence=supplied`. |
+| Full parity claim | warn | Review route still lacks semantic equivalence proof, external/provider source evidence, verified runtime status, and promotion-safe `coverage_status=full`; strict full-parity gate still fails as expected. |
+
+## Phase 19 Review Provider Runtime Proof Categories Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$review` completes through a live OpenAI-compatible provider,
+mark the runtime proof as Review LLM, external runtime, and provider source
+evidence; keep command/supplied evidence limited to Review LLM proof only.
+
+Non-goal: do not mark provider/source proof for local surrogate, supplied
+artifact evidence, or command-only review bridges.
+
+### Review Provider Runtime Proof Categories Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Provider categories | ok | Live provider `$review` runtime proof now emits `review_llm_or_model_evidence`, `external_runtime_evidence`, and `provider_source_evidence`. |
+| Command/evidence boundary | ok | Command bridge and supplied artifact evidence remain `collection_mode=manual_review` and only satisfy Review LLM proof, not provider/source proof. |
+| Regression tests | ok | Provider/command/supplied review tests: 3 passed after escalated local HTTP bind; `py_compile` passed. |
+| Gate compatibility | ok | Ordinary feature parity gate still passes current inventory; strict full-parity gate remains blocked on semantic and route-wide unresolved proofs. |
+| Full parity claim | warn | Provider category mapping is now representable for review, but a persisted provider-run proof must still be collected and attached before review can become verified/full. |
+
+## Phase 19 Init Discovery Native Tool Parity Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/init_discovery.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: replace the lightweight Solar init-discovery wrapper with the corrected
+original AutoSci source preparation and discovery planner while preserving the
+OpenSolar no-network root-tool ABI used by safety smoke tests.
+
+Non-goal: do not run live source downloads, Semantic Scholar, DeepXiv, or arXiv
+network fetches during verification.
+
+### Init Discovery Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native helper sync | ok | `tools/init_discovery.py` now carries the corrected original AutoSci prepare/plan/fetch/download implementation surface. |
+| OpenSolar ABI compatibility | ok | Legacy `plan <topic> --no-network-fetch` emits `autosci_init_discovery_cli.v1` with a nested native plan and explicit no-network limitations. |
+| Native CLI path | ok | Native `plan --topic ... --allow-introduction false` emits the original AutoSci plan shape without the compatibility wrapper. |
+| Import compatibility | ok | Added a local `slugify` fallback because current Solar `tools/research_wiki.py` has not yet been fully synced with original AutoSci. |
+| Verification | ok | `py_compile` passed; no-network compatibility smoke passed; native no-introduction plan smoke passed; `--help` exposes `prepare`, `plan`, `fetch`, and `download`. |
+| Follow-up blocker | warn | Full root-tool ABI smoke now reaches an unrelated daily blocker: original `daily_arxiv.py prepare` requires `--out`, while the OpenSolar smoke still calls `prepare --topic` without `--out`. |
+| Full parity claim | warn | Init discovery helper parity improved, but full init parity still needs approved live provider/source runs, wiki mutation proof, and semantic parity promotion. |
+
+## Phase 19 Daily Prepare Root ABI Compatibility
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/daily_arxiv.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: preserve the corrected original AutoSci daily helper while restoring
+the OpenSolar non-mutating root-tool ABI for `daily_arxiv.py prepare --topic`
+without a mandatory `--out` path.
+
+Non-goal: do not auto-ingest, send email, mutate wiki state, or run external
+provider fetches from the compatibility path.
+
+### Daily Prepare Root ABI Compatibility Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Compatibility path | ok | `daily_arxiv.py prepare --topic ...` without `--out` now emits `autosci_daily_arxiv_cli.v1` JSON and performs no feed/provider/email/wiki side effects. |
+| Native path preservation | ok | The original `prepare --out ...` path remains the context-writing recommendation preparation path. |
+| Regression tests | ok | Daily shim digest/write/management subset: 5 passed; `py_compile` passed for `tools/daily_arxiv.py`. |
+| Root-tool ABI | ok | `test_root_tool_abi.py`: 5 passed after escalated local SMTP bind; sandbox-only bind denial was the only non-code failure before escalation. |
+| Full parity claim | warn | Daily root ABI is restored, but full daily parity still requires approved live feed/provider runs, approved write/notification side effects, and semantic audit promotion. |
+
+## Phase 19 Research Wiki Native Runtime Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `runtime/__init__.py`
+- `runtime/loader.py`
+- `runtime/policy/writers.yaml`
+- `runtime/schema/conventions.yaml`
+- `runtime/schema/edges.yaml`
+- `runtime/schema/entities.yaml`
+- `runtime/schema/xref.yaml`
+- `tools/research_wiki.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the corrected original AutoSci wiki/runtime schema layer so
+native wiki operations have the same entity, edge, slug, checkpoint, rebuild,
+query, and lifecycle command surface.
+
+Non-goal: do not relax Solar's existing `--wiki-root --json` smoke ABI; keep
+that as an explicit compatibility pre-parser instead of changing original
+AutoSci command semantics.
+
+### Research Wiki Native Runtime Sync Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Runtime schema sync | ok | Added original AutoSci `runtime/loader.py`, schema YAML, and writer policy files needed by native wiki, lint, visualize, reset, and serve helpers. |
+| Native wiki helper sync | ok | `tools/research_wiki.py` now exposes original AutoSci commands including `init`, `slug`, `add-edge`, `add-citation`, rebuilds, stats, maturity, query, neighbors, lifecycle transitions, and checkpoint operations. |
+| OpenSolar ABI preservation | ok | Added a pre-parser for existing `--wiki-root --json` smoke commands: `set-meta`, `add-edge`, `log`, `rebuild`, `query`, `neighbors`, `resolve`, and `stats`. |
+| Init import cleanup | ok | `tools/init_discovery.py` now imports native `research_wiki.slugify` instead of relying on its fallback path. |
+| Regression tests | ok | `test_research_wiki_tool.py`: 1 passed; `py_compile` passed for `runtime/loader.py`, `tools/research_wiki.py`, and `tools/init_discovery.py`. |
+| Native smoke | ok | `research_wiki.py init <tmp-wiki>`, `research_wiki.py stats <tmp-wiki> --json`, and `research_wiki.py slug ...` completed with native runtime schema loaded. |
+| Full parity claim | warn | Wiki runtime command surface is restored, but route-level full parity still needs each workflow to attach approved mutation/rebuild proof and semantic audits. |
+
+## Phase 19 Visualize Native Tool Parity Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/visualize.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: replace the lightweight Solar visualize helper with the corrected
+original AutoSci visualization generator while preserving the JSON stdout ABI
+used by Solar bridge calls and `tools/serve.py`.
+
+Non-goal: do not start a local web server or run approved browser/render
+side effects from this helper sync.
+
+### Visualize Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native helper sync | ok | `tools/visualize.py` now carries the corrected original AutoSci visualization generator and uses the restored `runtime.loader` schema. |
+| Bridge JSON ABI | ok | Preserved `generate-obsidian-config --wiki-root --out`, `generate-canvas --wiki-root --graph-out --out`, and `graph-data --wiki-root --out` JSON stdout paths used by Solar bridge. |
+| Serve import ABI | ok | Restored `default_wiki_root`, `graph_data`, and `write_json` exports required by `tools/serve.py`. |
+| Native CLI smoke | ok | `list-recommendations` completed with the original AutoSci visualization guidance. |
+| Regression tests | ok | `py_compile` passed for `visualize.py` and `serve.py`; `$visualize --serve` shim regression: 1 passed; bridge JSON CLI smokes produced graph/config/canvas artifacts. |
+| Full parity claim | warn | Visualization helper parity improved, but full route parity still needs approved web-server/browser-render proof and semantic audit promotion. |
+
+## Phase 19 Remote Native Command ABI Gate
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/remote.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: add the corrected original AutoSci remote command surface
+(`status`, `gpu-status`, `sync-code`, `setup-env`, `tail-log`) to the
+OpenSolar remote helper while preserving approval-gated execution boundaries.
+
+Non-goal: do not run SSH, rsync, screen, remote package installation, or log
+tail commands without explicit approval and an allowlisted execution command.
+
+### Remote Native Command ABI Gate Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native command surface | ok | `remote.py` now accepts original AutoSci remote command names: `status`, `gpu-status`, `sync-code`, `setup-env`, and `tail-log`. |
+| Approval boundary | ok | Each new command returns `autosci_remote_cli.v1` with `status=approval_required` and explicit side-effect categories when no approval is supplied. |
+| Existing executable paths | ok | Existing approved `launch --command`, `check --status-command`, and `pull-results --pull-command` paths remain the only executable remote proof surfaces. |
+| Regression tests | ok | `py_compile` passed; root approved remote launch plus exp-run/exp-status/exp-collect remote helper subset: 4 passed. |
+| CLI smokes | ok | `status`, `gpu-status`, `sync-code --dry-run`, `setup-env --requirements ...`, and `tail-log --name ...` all returned structured approval-required evidence. |
+| Full parity claim | warn | Remote ABI is broader, but full exp-run parity still requires approved deploy/monitor/collect TaskGraph evidence, live remote proofs, and semantic audit promotion. |
+
+## Phase 19 Wiki Lint Native Tool Parity Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/lint.py`
+- `harness/plugins/autosci/tests/test_root_tool_abi.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: replace the lightweight Solar wiki lint helper with the corrected
+original AutoSci schema-driven linter while preserving the OpenSolar
+`--wiki-root` JSON smoke ABI.
+
+Non-goal: do not auto-fix wiki files unless `--fix` is explicitly requested by
+the caller; smoke validation remains read-only.
+
+### Wiki Lint Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native linter sync | ok | `tools/lint.py` now carries the corrected original AutoSci schema-driven linter backed by `runtime.loader`. |
+| OpenSolar ABI preservation | ok | `--wiki-root` is accepted as an alias and emits `autosci_wiki_lint_cli.v1` with page/edge counts and normalized severities. |
+| Strictness honesty | ok | Invalid or incomplete wiki pages now fail under the compatibility wrapper instead of being reported as ok; the root smoke fixture was updated to use minimal valid idea frontmatter. |
+| Regression tests | ok | `py_compile` passed; root lint smoke passed; full `test_root_tool_abi.py` passed after escalated local SMTP bind. |
+| Full parity claim | warn | Lint/check quality is now closer to native AutoSci, but route-level full parity still requires check outputs to attach semantic audit and wiki-state evidence where applicable. |
+
+## Phase 19 Prepare Paper Source Native Tool Parity Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/prepare_paper_source.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: replace the lightweight Solar paper-source preparation wrapper with
+the corrected original AutoSci source normalizer used by `init_discovery.py`
+while preserving OpenSolar's structured CLI evidence ABI.
+
+Non-goal: do not force network metadata recovery during tests; no-network
+smokes must remain provider-safe.
+
+### Prepare Paper Source Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native helper sync | ok | `tools/prepare_paper_source.py` now carries the corrected original AutoSci local paper/source normalizer used by `init_discovery.py`. |
+| OpenSolar CLI ABI | ok | CLI accepts both original `--source` and Solar positional source forms, plus `--workspace-root`, `--repository-root`, and `--no-network-fetch`. |
+| External source handling | ok | Positional sources outside `raw_root` are copied into `raw/input/` before calling the native normalizer, preserving current Solar CLI behavior. |
+| Structured evidence | ok | Success and failure paths emit `autosci_prepare_paper_source_cli.v1`; native `usable` is mapped to `status=completed`. |
+| Regression tests | ok | `test_source_cli_tools.py`: 7 passed; `py_compile` passed for `prepare_paper_source.py` and `init_discovery.py`; `init_discovery.py prepare` smoke completed. |
+| Full parity claim | warn | Source preparation is closer to native AutoSci, but full ingest/init parity still requires live source-provider proof, wiki writeback proof, and semantic audit promotion. |
+
+## Phase 19 Rasterize LaTeX Native API Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/rasterize_latex.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the original AutoSci `RasterizeError` and
+`rasterize_latex_snippet` API required by native `wiki2dag.py`, while keeping
+OpenSolar structured diagnostic CLI commands.
+
+Non-goal: do not require TeX/PDF tools to be installed for smoke tests; missing
+rendering binaries must report diagnostics instead of pretending success.
+
+### Rasterize LaTeX Native API Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native API sync | ok | `tools/rasterize_latex.py` now exposes original AutoSci `RasterizeError`, `extract_tikz_setup`, and `rasterize_latex_snippet` APIs required by native `wiki2dag.py`. |
+| Structured diagnostics | ok | Preserved OpenSolar `diagnose`, `check-pdf`, and `rasterize` subcommands with `autosci_rasterize_latex_cli.v1` JSON output. |
+| Tool availability honesty | ok | `diagnose` reports actual local tool paths/nulls; it does not mark missing `latexmk` or `gs` as installed. |
+| Regression tests | ok | `py_compile` passed; API import check returned both required symbols; root-tool smoke for `rasterize_latex.py diagnose` passed. |
+| Full parity claim | warn | Rasterizer API is restored, but full poster/paper parity still depends on native `wiki2dag`, poster build stages, and verified PDF/render gates. |
+
+## Phase 19 Wiki2DAG Native Tool Parity Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `tools/wiki2dag.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: restore the corrected original AutoSci/PaperX-compatible
+LaTeX-to-DAG builder while preserving the OpenSolar lightweight wiki DAG
+smoke command.
+
+Non-goal: do not require a real LaTeX paper fixture for the wiki smoke path;
+native paper-dir DAG generation will be verified with CLI/API availability and
+kept separate from the compatibility path.
+
+### Wiki2DAG Native Tool Parity Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native helper sync | ok | `tools/wiki2dag.py` now carries the corrected original PaperX-compatible LaTeX paper-dir DAG builder. |
+| Rasterizer dependency | ok | Native `wiki2dag.py` can import the restored `rasterize_latex` API. |
+| OpenSolar wiki ABI | ok | `build --wiki-root ... --out ...` still emits `autosci_wiki_dag.v1` for lightweight wiki smoke checks. |
+| Native CLI surface | ok | `wiki2dag.py build --help` exposes original `--paper-dir`, `--output`, `--anonymous`, and `--citations` options. |
+| Regression tests | ok | `py_compile` passed for `wiki2dag.py` and `rasterize_latex.py`; root-tool wiki DAG smoke passed. |
+| Full parity claim | warn | DAG generation surface is restored, but full publication parity still needs real LaTeX paper fixtures, poster build/inject stages, PDF compile gates, and semantic audit promotion. |
+
+## Phase 19 Ask/Check Model Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$ask` or `$check` obtains completed `autosci_model_response.v1`
+evidence through supplied evidence or a model command bridge, attach an
+`autosci_runtime_proof_manifest.v1` for `review_llm_or_model_evidence`.
+
+Non-goal: do not mark missing model output, local deterministic structure
+checks, or command failures as runtime proof.
+
+### Ask/Check Model Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Ask model proof | ok | `$ask --model-command` now emits `ask_wiki_model_runtime_proof.json`; parity inventory marks `ask.review_llm_or_model_evidence=supplied`. |
+| Check model proof | ok | `$check --model-command` now emits `check_wiki_health_model_runtime_proof.json`; parity inventory marks `check.review_llm_or_model_evidence=supplied` while route runtime status remains `not_required`. |
+| Surrogate/missing boundary | ok | No proof is emitted unless `model_output.status=completed` and model evidence ids are present. |
+| Regression tests | ok | Ask/check model-command tests: 2 passed; review/model proof writer tests: 4 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-ask-model-proof-check` and `codex-check-model-proof-check` produced model proof manifests with valid local evidence refs. |
+| Feature gate | ok | Inventory with the two proof dirs passes the ordinary feature parity gate. |
+| Full parity claim | warn | Ask/check still need semantic equivalence proof; ask also still needs external/provider source evidence before full parity can be considered. |
+
+## Phase 19 Ideate Model Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$ideate` obtains completed `autosci_model_response.v1`
+brainstorm evidence through a model command, attach an
+`autosci_runtime_proof_manifest.v1` for `review_llm_or_model_evidence`.
+
+Non-goal: do not mark ideation source evidence, novelty/review gates, wiki
+mutation, or semantic parity as complete from model brainstorm evidence alone.
+
+### Ideate Model Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Model brainstorm proof | ok | `$ideate --model-command` now emits `generate_ideas_model_runtime_proof.json` when completed model output contains usable ideas and evidence ids. |
+| Boundary honesty | ok | The ideate final promotion boundary remains incomplete unless source evidence, novelty/review gates, wiki scan, and failed-idea banlist requirements are met. |
+| Regression tests | ok | Ideate/ask/check model-command tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-ideate-model-proof-check` produced `passed_count=2` and a model proof manifest with local evidence refs. |
+| Parity inventory recognition | ok | `autosci_parity_bridge.py inventory --runtime-proof-dir artifacts/autosci/runs/codex-ideate-model-proof-check` marks `ideate.review_llm_or_model_evidence=supplied`. |
+| Full parity claim | warn | Ideate still needs semantic equivalence proof, live/source provider evidence, external runtime proof, novelty/review gate evidence, and approved wiki mutation proof. |
+
+## Phase 19 Experiment Design Review Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$exp-design` receives completed Review LLM design validation
+evidence, attach an `autosci_runtime_proof_manifest.v1` for
+`review_llm_or_model_evidence`.
+
+Non-goal: do not mark experiment execution, approval preflight, external
+runtime, or semantic parity complete from design-review evidence alone.
+
+### Experiment Design Review Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Review proof artifact | ok | `$exp-design --review-llm-evidence` now emits `design_experiment_review_llm_runtime_proof.json` when supplied Review LLM evidence is completed. |
+| Boundary honesty | ok | Experiment execution boundary remains incomplete without approval preflight/runtime execution even when design review is complete. |
+| Regression tests | ok | Exp-design/ideate/ask/check targeted tests: 4 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-exp-design-review-proof-check` passed and attached a proof manifest referencing `experiment_plan.json` plus the source review artifact. |
+| Parity inventory recognition | ok | Inventory with the exp-design proof dir marks `exp-design.review_llm_or_model_evidence=supplied`; route runtime status remains `not_required`. |
+| Full parity claim | warn | Exp-design still needs semantic equivalence proof before it can move toward full parity; experiment execution proof belongs to exp-run/exp-pilot-run, not design. |
+
+## Phase 19 Paper Plan Review Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$paper-plan` receives completed Review LLM boundary evidence,
+attach an `autosci_runtime_proof_manifest.v1` for
+`review_llm_or_model_evidence`.
+
+Non-goal: do not mark source coverage, compile/PDF handoff, external runtime,
+or final plan acceptance complete from Review LLM evidence alone.
+
+### Paper Plan Review Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Review proof artifact | ok | `$paper-plan --review-llm-evidence` now emits `plan_report_review_llm_runtime_proof.json` when review boundary evidence is completed. |
+| Boundary honesty | ok | Paper plan remains `schema_only`/inconclusive without source coverage and verified compile/PDF handoff, even with Review LLM proof. |
+| Regression tests | ok | Paper-plan and exp-design review targeted tests: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-paper-plan-review-proof-check` attached a proof manifest referencing `scientific_report.plan.json`. |
+| Parity inventory recognition | ok | Inventory with the paper-plan proof dir marks `paper-plan.review_llm_or_model_evidence=supplied`; external/source/semantic requirements remain pending. |
+| Full parity claim | warn | Paper-plan still needs semantic proof, source/provider proof, external runtime proof, and verified compile/PDF handoff before full parity. |
+
+## Phase 19 Paper Draft Review Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$paper-draft` receives completed Review LLM boundary evidence,
+attach an `autosci_runtime_proof_manifest.v1` for
+`review_llm_or_model_evidence`.
+
+Non-goal: do not mark source coverage, compile/PDF handoff, final manuscript
+readiness, or semantic parity complete from Review LLM evidence alone.
+
+### Paper Draft Review Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Review proof artifact | ok | `$paper-draft --review-llm-evidence` now emits `write_report_review_llm_runtime_proof.json` when review boundary evidence is completed. |
+| Boundary honesty | ok | Paper draft remains schema-only/inconclusive without source coverage, wiki mutation proof, and verified compile/PDF handoff. |
+| Regression tests | ok | Paper-draft compile handoff and paper-plan review targeted tests: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-paper-draft-review-proof-check` attached a proof manifest referencing `scientific_report.json`. |
+| Parity inventory recognition | ok | Inventory with the paper-draft proof dir marks `paper-draft.review_llm_or_model_evidence=supplied`; source/external/wiki/semantic requirements remain pending. |
+| Full parity claim | warn | Paper-draft still needs semantic proof, provider/source proof, external runtime proof, wiki mutation proof, and verified compile/PDF handoff before full parity. |
+
+## Phase 19 Rebuttal Review Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$rebuttal` receives completed Review LLM reviewer-comment
+evidence, attach an `autosci_runtime_proof_manifest.v1` for
+`review_llm_or_model_evidence`.
+
+Non-goal: do not mark rebuttal submission readiness, external runtime, or
+semantic parity complete from mapped reviewer comments alone.
+
+### Rebuttal Review Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Review proof artifact | ok | `$rebuttal --review-llm-evidence` now emits `draft_rebuttal_review_llm_runtime_proof.json` when supplied Review LLM evidence is completed. |
+| Boundary honesty | ok | Rebuttal can remain schema-only/inconclusive when supplied review evidence lacks structured concerns; proof only satisfies Review LLM evidence presence. |
+| Regression tests | ok | Rebuttal/paper-draft/paper-plan targeted tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-rebuttal-review-proof-check` attached a proof manifest referencing `publication_bundle.rebuttal.json`. |
+| Parity inventory recognition | ok | Inventory with the rebuttal proof dir marks `rebuttal.review_llm_or_model_evidence=supplied`; external runtime and semantic requirements remain pending. |
+| Full parity claim | warn | Rebuttal still needs semantic proof and external runtime/submission-readiness evidence before full parity. |
+
+## Phase 19 Experiment Evaluation Review Runtime Proof Attachment Sync
+
+Logged: 2026-06-29 EDT
+
+Planned file changes (pre-fix):
+- `harness/plugins/autosci/bin/autosci_bridge.py`
+- `harness/plugins/autosci/tests/test_autosci_skill_shim.py`
+- `docs/integrations/autosci/phase19-progress-log.md`
+
+Intent: when `$exp-eval` receives completed Review LLM evidence for claim
+verification, attach an `autosci_runtime_proof_manifest.v1` for
+`review_llm_or_model_evidence`.
+
+Non-goal: do not mark experiment result readiness, code evidence, wiki
+writeback, external runtime, or semantic parity complete from Review LLM proof.
+
+### Experiment Evaluation Review Runtime Proof Attachment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Review proof artifact | ok | `$exp-eval --review-llm-evidence` now emits `verify_claim_review_llm_runtime_proof.json` when supplied Review LLM evidence is completed. |
+| Verdict honesty | ok | Final verdict boundary still requires experiment result, claim/code linkage, approved wiki writeback, and runtime/approval evidence before final readiness. |
+| Regression tests | ok | Exp-eval/rebuttal/exp-design targeted tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-exp-eval-review-proof-check` passed/gated and attached a proof manifest referencing `claim_verdict.json` plus the source review artifact. |
+| Parity inventory recognition | ok | Inventory with the exp-eval proof dir marks `exp-eval.review_llm_or_model_evidence=supplied`; runtime/approval/wiki/semantic requirements remain pending. |
+| Full parity claim | warn | Exp-eval still needs semantic proof, external runtime proof, approval boundary proof, and approved wiki mutation proof before full parity. |
+
+### Visualize Serve Flag CLI Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| CLI compatibility | ok | `$visualize --serve` is now accepted and records `native_options.serve=true` plus `inputs.serve_requested=true`. |
+| Side-effect boundary | ok | Without `--execute-approved` and approval/allowlist evidence, no long-lived server/web health execution occurs. |
+| Local artifacts | ok | The visualize action still generates graph/canvas artifacts from local wiki state. |
+| Regression tests | ok | Visualize serve flag target: 1 passed; visualize shim subset: 1 passed; `py_compile` passed. |
+| Inventory/gate | ok | Real CLI smoke for `$visualize --serve` succeeds with gated/inconclusive status; route inventory and ordinary/strict gates remain honest. |
+| Full parity claim | warn | Visualize CLI parity improved, but full visualize parity still requires approved web runtime proof, semantic audit, and final acceptance. |
+
+## Phase 19 Latest Continuation EOF Marker
+
+Logged: 2026-06-30 EDT
+
+| Check | Status | Evidence |
+|---|---|---|
+| Latest inventory | warn | `current-parity-inventory-after-exp-run-paper-compile-proofs.json`: runtime counts `{not_required: 3, pending: 7, supplied: 9, verified: 9}`, `semantic_full_count=0`, `full_count=0`. |
+| Provider-source blockers | ok | Pending `provider_source_evidence` count is `0`. |
+| Verification | ok | Full shim suite 121 passed; parity/proof tests 21 passed; exp-run/collect/paper-compile subset 22 passed; `py_compile` and `git diff --check` passed. |
+| Remaining blockers | warn | Full parity still requires semantic equivalence audits for all routes and runtime/approval/side-effect proof for the seven remaining pending side-effect routes. |
+
+### Prefill Runtime Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Attach verified approval and side-effect runtime proof manifests to approved `$prefill` wiki writes without emitting undeclared provider-source or wiki-mutation categories. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend the approved `$prefill` regression test with allowlist/runtime/before/after artifacts and proof manifest assertions. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record implementation, verification, and refreshed inventory result for the `$prefill` parity blocker. |
+
+### Prefill Runtime Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Approved `$prefill` wiki writes now refresh an approval contract after the page exists, attach `approval_runtime_proof_manifest_json`, and attach `side_effect_runtime_proof_manifest_json`. |
+| Category boundary | ok | `$prefill` proof generation explicitly suppresses undeclared `provider_source_evidence` and `wiki_mutation_evidence` categories. |
+| Regression tests | ok | `pytest test_autosci_skill_shim.py -k prefill_applies_approved_wiki_mutation`: 1 passed; prefill/edit approved mutation subset: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `$prefill foundation:skillgen-prefill-proof-20260630` with approval/allowlist/runtime/before/after evidence passed and generated verified proof manifests under `harness/artifacts/autosci/runs/codex-prefill-proof-check-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-prefill-proof.json` marks `$prefill.runtime_proof_status=verified`; runtime counts are `{not_required: 3, pending: 6, supplied: 9, verified: 10}`. |
+| Remaining blocker | warn | Full parity still requires semantic equivalence audits for all 28 routes and runtime proof for `exp-pilot-eval`, `exp-pilot-run`, `poster`, `reset`, `setup`, and `visualize`. |
+
+### Visualize Runtime Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Convert approved `$visualize --serve` health-check execution into approval and side-effect runtime proof manifests without changing unapproved serve behavior. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add approved `$visualize --serve` regression coverage with allowlist/runtime/before/after artifacts and proof category assertions. |
+| `harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/` | pending | Persist real CLI smoke output for inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-visualize-proof.json` | pending | Refresh parity inventory after the visualize proof. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record implementation, verification, inventory status, and remaining blockers. |
+
+### Visualize Runtime Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Approved `$visualize --serve` health-check execution now records health JSON as runtime/after evidence, refreshes the approval contract, and emits approval plus side-effect runtime proof manifests. |
+| Unapproved behavior | ok | `$visualize --serve` without `--execute-approved` still does not run the web health side effect and emits no web health/proof artifact. |
+| Category boundary | ok | `$visualize` proof manifests include only `external_runtime_evidence`, `approval_boundary_evidence`, and `side_effect_execution_evidence`; no provider-source or wiki-mutation category is emitted. |
+| Regression tests | ok | Visualize serve/remaining gated subset: 3 passed; visualize/prefill/edit proof subset: 4 passed; `py_compile` and `git diff --check` passed. |
+| Real CLI smoke | ok | `$visualize "autosci graph proof 20260630" --serve --execute-approved` passed and wrote proof artifacts under `harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-visualize-proof.json` marks `$visualize.runtime_proof_status=verified`; runtime counts are `{not_required: 3, pending: 5, supplied: 9, verified: 11}`. |
+| Remaining blocker | warn | Full parity still requires semantic equivalence audits for all 28 routes and runtime proof for `exp-pilot-eval`, `exp-pilot-run`, `poster`, `reset`, and `setup`. |
+
+### Poster Runtime Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Attach approval and side-effect runtime proof manifests when approved `$poster --render` execution verifies browser render, overflow probe, and PNG export. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend the approved poster executor regression test with proof manifest assertions and category boundary checks. |
+| `harness/artifacts/autosci/runs/codex-poster-proof-check-20260630/` | pending | Persist real CLI smoke output with an approved fake renderer for inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-poster-proof.json` | pending | Refresh parity inventory after the poster proof. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record implementation, verification, inventory status, and remaining blockers. |
+
+### Poster Runtime Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Verified approved `$poster --render` execution now emits approval and side-effect runtime proof manifests when browser render, overflow probe, and PNG export are confirmed by runtime evidence. |
+| Category boundary | ok | `$poster` proof manifests include only `external_runtime_evidence`, `approval_boundary_evidence`, and `side_effect_execution_evidence`; no provider-source or wiki-mutation category is emitted. |
+| Regression tests | ok | Poster native/render/executor subset: 3 passed; poster/visualize/prefill proof subset: 4 passed; `py_compile` and `git diff --check` passed. |
+| Real CLI smoke | ok | `$poster report-proof-20260630 --render --execute-approved` ran a persisted fake renderer and generated proof artifacts under `harness/artifacts/autosci/runs/codex-poster-proof-check-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-poster-proof.json` marks `$poster.runtime_proof_status=verified`; runtime counts are `{not_required: 3, pending: 4, supplied: 9, verified: 12}`. |
+| Remaining blocker | warn | Full parity still requires semantic equivalence audits for all 28 routes and runtime proof for `exp-pilot-eval`, `exp-pilot-run`, `reset`, and `setup`. |
+
+### Setup Reset External Runtime Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Attach approval and side-effect runtime proof manifests for `$setup` and `$reset` only from explicit approved external runtime evidence; do not execute local config writes or destructive reset. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add approved external-runtime regression coverage for `$setup` and `$reset` with proof category assertions. |
+| `harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/` | pending | Persist real CLI smoke output for `$setup` proof inventory scanning. |
+| `harness/artifacts/autosci/runs/codex-reset-proof-check-20260630/` | pending | Persist real CLI smoke output for `$reset` proof inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-setup-reset-proofs.json` | pending | Refresh parity inventory after setup/reset proofs. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record implementation, verification, inventory status, and remaining blockers. |
+
+### Setup Reset External Runtime Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | `$setup` and `$reset` now attach approval and side-effect runtime proof manifests from explicit approved external runtime evidence while preserving proposal-only workflow-evolution schema fields. |
+| Safety boundary | ok | The bridge does not write secrets, mutate persistent config, or execute destructive reset; proof is emitted only when `--execute-approved` plus approval/allowlist/runtime/before/after evidence are supplied. |
+| Category boundary | ok | `$setup` and `$reset` proof manifests include only `external_runtime_evidence`, `approval_boundary_evidence`, and `side_effect_execution_evidence`. |
+| Regression tests | ok | Setup/reset external runtime proof plus gated proposal subset: 4 passed; proof regression subset: 6 passed; `py_compile` and `git diff --check` passed. |
+| Real CLI smoke | ok | `$setup autosci --execute-approved` and `$reset autosci --execute-approved` generated proof artifacts under `codex-setup-proof-check-20260630/` and `codex-reset-proof-check-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-setup-reset-proofs.json` marks `$setup` and `$reset` runtime proof `verified`; runtime counts are `{not_required: 3, pending: 2, supplied: 9, verified: 14}`. |
+| Remaining blocker | warn | Full parity still requires semantic equivalence audits for all 28 routes and runtime/wiki proof for `exp-pilot-eval` and `exp-pilot-run`. |
+
+### Pilot Runtime Wiki Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Attach runtime/approval/side-effect/wiki proof manifests for approved `$exp-pilot-run`, and runtime/approval/wiki proof manifests for approved `$exp-pilot-eval` writeback. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend pilot run/eval tests with approved proof assertions and wiki mutation category checks. |
+| `harness/artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/` | pending | Persist real CLI smoke output for `$exp-pilot-run` proof inventory scanning. |
+| `harness/artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/` | pending | Persist real CLI smoke output for `$exp-pilot-eval` proof inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-pilot-proofs.json` | pending | Refresh parity inventory after pilot proofs. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record implementation, verification, final runtime inventory status, and remaining semantic blockers. |
+
+### Pilot Runtime Wiki Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Approved `$exp-pilot-run` now writes pilot experiment wiki state and emits approval, side-effect, and wiki-mutation proof manifests; approved `$exp-pilot-eval --write` now emits approval and wiki-mutation proof manifests without emitting undeclared side-effect proof. |
+| Category boundary | ok | `$exp-pilot-run` covers `external_runtime_evidence`, `approval_boundary_evidence`, `side_effect_execution_evidence`, and `wiki_mutation_evidence`; `$exp-pilot-eval` covers `external_runtime_evidence`, `approval_boundary_evidence`, and `wiki_mutation_evidence`. |
+| Regression tests | ok | Pilot runtime/eval subset: 3 passed; broad proof subset: 8 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `$exp-pilot-run pilot-proof-20260630 --execute-approved` and `$exp-pilot-eval pilot-claim-proof-20260630 --write --execute-approved` generated proof artifacts under `codex-pilot-run-proof-check-20260630/` and `codex-pilot-eval-proof-check-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-pilot-proofs.json` marks `$exp-pilot-run` and `$exp-pilot-eval` runtime proof `verified`; runtime counts are `{not_required: 3, pending: 0, supplied: 9, verified: 16}`. |
+| Remaining blocker | warn | Full parity is still blocked: semantic parity remains partial for all 28 routes, and detailed proof requirements still show non-semantic pending items for ask, exp-eval, ideate, ingest, novelty, paper-draft, paper-plan, rebuttal, review, and survey. |
+
+### Model Review External Runtime Category Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Add `external_runtime_evidence` to completed model/Review LLM proof manifests where the route already has explicit model/review evidence; do not change local fallback behavior. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Update model/review proof assertions and add coverage where needed for ask/review/rebuttal category boundaries. |
+| `harness/artifacts/autosci/runs/` | pending | Regenerate affected route smoke artifacts so inventory scans updated proof manifests. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-model-external-proofs.json` | pending | Refresh inventory after model/review external runtime proof categories. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining blockers. |
+
+Interim check: the first regenerated ask/ideate model smoke did not emit
+`*_model_runtime_proof.json` because the CLI smoke passed an unquoted
+repository path containing spaces to `--model-command`; bridge behavior itself
+still requires explicit completed model evidence with `evidence_ids`. Re-run the
+smoke with `shlex`-quoted command parts before making any further product logic
+changes.
+
+### Model Review External Runtime Category Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Completed model/Review LLM proof manifests now include `external_runtime_evidence` alongside `review_llm_or_model_evidence` where explicit completed model/review evidence exists. |
+| Product-logic boundary | ok | Local fallback behavior remains unchanged; failed, missing, or schema-incomplete model outputs still do not emit model runtime proof. |
+| Smoke correction | ok | Ask/ideate proof smokes were regenerated with `shlex`-quoted absolute model commands; ideate proof input was corrected to include required `approach` and `origin_evidence_ids`. |
+| Real CLI smoke | ok | `$ask` generated `ask_wiki_model_runtime_proof.json`; `$ideate` generated `generate_ideas_model_runtime_proof.json`; both proofs include `review_llm_or_model_evidence` and `external_runtime_evidence`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-model-external-proofs.json` reports runtime counts `{not_required: 3, pending: 0, supplied: 4, verified: 21}`; the parity gate passes with semantic/non-full warnings. |
+| Remaining blocker | warn | Detailed non-semantic proof requirements remain for `exp-eval` (`external_runtime_evidence`, `approval_boundary_evidence`, `wiki_mutation_evidence`), `paper-plan` (`external_runtime_evidence`), `paper-draft` (`external_runtime_evidence`, `wiki_mutation_evidence`), and `survey` (`external_runtime_evidence`), plus semantic equivalence evidence for all 28 routes. |
+
+### Experiment Evaluation Approved Writeback Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Attach approval and wiki-mutation runtime proof manifests after completed approved `$exp-eval --write` claim verdict writeback. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend `$exp-eval --write` regression coverage with approval/wiki proof category assertions. |
+| `harness/artifacts/autosci/runs/codex-exp-eval-writeback-proof-20260630/` | pending | Persist real CLI smoke output for inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-exp-eval-writeback-proof.json` | pending | Refresh inventory after exp-eval writeback proof. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining blockers. |
+
+### Experiment Evaluation Approved Writeback Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Completed approved `$exp-eval --write` now emits `verify_claim_approval_runtime_proof.json` and `verify_claim_wiki_mutation_runtime_proof.json` after claim-verdict wiki writeback succeeds. |
+| Safety boundary | ok | Proof emission still requires a verified approval contract: approval ref, allowlist evidence, runtime evidence, before artifact, after artifact, and `--execute-approved`. |
+| Category boundary | ok | `$exp-eval` emits `external_runtime_evidence` + `approval_boundary_evidence` in the approval proof, and `wiki_mutation_evidence` in the wiki proof; no side-effect proof is emitted because the route does not declare that category. |
+| Regression tests | ok | `pytest test_autosci_skill_shim.py -k exp_eval`: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `$exp-eval claim-skillgen-write-20260630 --write --execute-approved` generated completed writeback and proof manifests under `codex-exp-eval-writeback-proof-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-exp-eval-writeback-proof.json` marks `$exp-eval.runtime_proof_status=verified`; runtime counts are `{not_required: 3, pending: 0, supplied: 3, verified: 22}`. |
+| Remaining blocker | warn | Non-semantic detailed pending categories remain for `ingest` (`wiki_mutation_evidence`), `paper-plan` (`external_runtime_evidence`), `paper-draft` (`external_runtime_evidence`, `wiki_mutation_evidence`), and `survey` (`external_runtime_evidence`), plus semantic equivalence evidence for all 28 routes. |
+
+### Ingest Wiki Registration Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Emit an ingest wiki-registration proof manifest only when final source registration boundary confirms paper page, log, graph edge, index, and context rebuild are all present. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend ingest final-registration regression coverage with wiki mutation proof assertions. |
+| `harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/` | pending | Persist real CLI smoke output with a registered wiki source for inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-ingest-wiki-proof.json` | pending | Refresh inventory after ingest wiki proof. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining blockers. |
+
+### Ingest Wiki Registration Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Ingest final source registration now emits `ingest_paper_wiki_mutation_runtime_proof.json` only when the boundary confirms paper page, log, graph edge, index, and context brief are present. |
+| Boundary honesty | ok | Missing or partial wiki registration still does not emit the wiki mutation proof; source provider proof remains separate from wiki registration proof. |
+| Regression tests | ok | Ingest final-registration/PDF subset: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `$ingest artifacts/autosci/phase19/ingest-wiki-proof-inputs/registered_source.md` generated source and wiki mutation proof manifests under `codex-ingest-wiki-proof-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-ingest-wiki-proof.json` clears `$ingest.wiki_mutation_evidence`; runtime counts remain `{not_required: 3, pending: 0, supplied: 3, verified: 22}` because ingest is a dry-run route. |
+| Remaining blocker | warn | Non-semantic detailed pending categories remain for `paper-plan` (`external_runtime_evidence`), `paper-draft` (`external_runtime_evidence`, `wiki_mutation_evidence`), and `survey` (`external_runtime_evidence`), plus semantic equivalence evidence for all 28 routes. |
+
+### Publication Source External Runtime Category Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Add `external_runtime_evidence` to completed publication citation/source proof manifests for paper-plan, paper-draft, and survey. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Update paper-plan, paper-draft, and survey source proof category assertions. |
+| `harness/artifacts/autosci/runs/` | pending | Regenerate affected publication smoke artifacts for inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-publication-external-proof.json` | pending | Refresh inventory after publication source proof category fix. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining blockers. |
+
+### Publication Source External Runtime Category Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Publication citation/source proof manifests now include `external_runtime_evidence` with `provider_source_evidence` for paper-plan, paper-draft, and survey. |
+| Scope boundary | ok | Review target source proof was checked and left unchanged; only publication citation/source proof categories changed. |
+| Regression tests | ok | Paper-plan/paper-draft/survey targeted tests: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `$paper-plan`, `$paper-draft`, and `$survey` source-backed smokes generated provider+external source proof manifests under `codex-paper-plan-external-proof-20260630/`, `codex-paper-draft-external-proof-20260630/`, and `codex-survey-external-proof-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-publication-external-proof.json` marks `$paper-plan` and `$survey` runtime proof `verified`; runtime counts are `{not_required: 3, pending: 0, supplied: 1, verified: 24}`. |
+| Remaining blocker | warn | The only remaining non-semantic detailed pending category is `paper-draft.wiki_mutation_evidence`; all routes still require semantic equivalence evidence for full parity. |
+
+### Paper Draft Workspace Wiki Projection Proof Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | After `$paper-draft` workspace projection, emit a wiki mutation proof manifest that references actual updated wiki output/index paths. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add paper-draft projection proof assertion at the skill-run level. |
+| `harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/` | pending | Persist real CLI smoke output for inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-paper-draft-wiki-proof.json` | pending | Refresh inventory after paper-draft wiki projection proof. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining blockers. |
+
+### Paper Draft Workspace Wiki Projection Proof Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | `$paper-draft` workspace projection now emits top-level `paper_draft_workspace_wiki_mutation_runtime_proof.json` only when the projected workspace summary contains actual updated wiki output/index paths. |
+| Manifest validity | ok | The workspace wiki proof uses `collection_mode: manual_review`; the earlier bad `workspace_projection` manifest was overwritten in `codex-paper-draft-wiki-proof-20260630/`. |
+| Regression tests | ok | `pytest test_autosci_skill_shim.py -k paper_draft_includes_verified_compile_pdf_handoff`: 1 passed. |
+| Real CLI smoke | ok | `$paper-draft idea-skillgen --title "SkillGen Wiki Draft"` generated valid workspace wiki proof manifests under `codex-paper-draft-wiki-proof-20260630/` and `codex-paper-draft-wiki-proof-fixed-20260630/`. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-paper-draft-wiki-proof.json` reports runtime counts `{not_required: 3, pending: 0, supplied: 0, verified: 25}`. |
+| Gate result | ok | `autosci_feature_parity_gate.py current-parity-inventory-after-paper-draft-wiki-proof.json` passed with only non-full-route/semantic warnings. |
+| Remaining blocker | warn | All detailed non-semantic proof categories are cleared; every one of the 28 native routes still has pending `semantic_equivalence_evidence`, so `semantic_full_count=0` and `full_count=0`. |
+
+### Semantic Audit Matrix Tooling Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `tools/semantic_parity_audit_matrix.py` | pending | Add a route-level semantic audit matrix generator that references native AutoSci skill docs and Solar wrapper/config evidence without auto-promoting routes to full parity. |
+| `harness/plugins/autosci/tests/test_semantic_parity_audit_matrix.py` | pending | Cover partial audit generation, full-audit guard behavior, and evidence-ref validity. |
+| `harness/artifacts/autosci/phase19/semantic-audits-current/` | pending | Generate the current 28-route semantic audit snapshot for inventory ingestion. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-semantic-audit-matrix.json` | pending | Refresh inventory with generated semantic audits to verify current semantic state remains honest. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining semantic blockers. |
+
+### Semantic Partial Audit Gate Handling Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/evaluators/scientific/autosci_feature_parity_gate.py` | pending | Permit blocked `semantic_audit` proof sources only when they are limited to `semantic_equivalence_evidence`, so partial semantic audits can be attached without failing the ordinary honesty gate. |
+| `harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py` | pending | Add regression coverage that partial semantic audit proof sources pass ordinary gate while non-semantic blocked runtime proof sources still fail. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining semantic blockers. |
+
+### Semantic Audit Matrix Tooling Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Audit generator | ok | Added `tools/semantic_parity_audit_matrix.py generate` to write per-route `autosci_semantic_parity_audit.v1` files from original AutoSci skill docs plus Solar wrapper/config evidence. |
+| No auto-promotion | ok | Default generated audits are `semantic_parity=partial`; full audits require explicit `autosci_semantic_parity_assessment.v1` with passing checks and existing evidence refs. |
+| Full guard | ok | Invalid full assessment requests are downgraded to partial and reported as blocked by `full_semantic_assessment_guard`. |
+| Regression tests | ok | `test_semantic_parity_audit_matrix.py`: 3 passed; semantic proof writer validation still accepts only completed/full audits. |
+| Current audit snapshot | ok | Generated `harness/artifacts/autosci/phase19/semantic-audits-current/` with 28 route audits: `semantic_full_count=0`, `semantic_partial_count=28`. |
+| Inventory recognition | ok | `current-parity-inventory-after-semantic-audit-matrix.json` ingests the audit directory and records 28 inconclusive semantic audits without changing runtime counts `{not_required: 3, pending: 0, supplied: 0, verified: 25}`. |
+
+### Semantic Partial Audit Gate Handling Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Gate boundary | ok | Ordinary parity gate now permits blocked `semantic_audit` sources only when categories are exactly `semantic_equivalence_evidence` and local evidence refs resolve. |
+| Non-semantic safety | ok | Blocked non-semantic runtime proof sources still fail the ordinary parity gate. |
+| Regression tests | ok | `test_autosci_feature_parity_gate.py`: 14 passed; combined semantic matrix + feature parity gate subset: 17 passed; `py_compile` and `git diff --check` passed. |
+| Ordinary gate | ok | `autosci_feature_parity_gate.py current-parity-inventory-after-semantic-audit-matrix.json` passed with non-full/semantic warnings only. |
+| Strict full gate | warn | `--require-full-parity` still fails for all 28 routes because `semantic_parity=full`, required proof level, empty remaining requirements, and final coverage status are not yet satisfied. |
+| Remaining blocker | warn | Runtime proof blockers are clear, but full parity now depends on completed/full per-route semantic assessments and route promotion where strict gate requires `coverage_status=full` or approval-required `coverage_status=gated`. |
+
+### Check Native Lint Semantics Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Replace `$check` simplified local structure checks with evidence-backed execution of `tools/lint.py --wiki-dir <wiki> --json`, while preserving model evidence final-quality boundary. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Update `$check` model-command regression fixture to satisfy native lint semantics and assert lint report artifacts/feed-through. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification, semantic parity impact, and remaining blockers. |
+
+### Check Semantic Full Assessment Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/check-semantic-assessment-20260630.json` | pending | Record completed/full `$check` semantic assessment only from original AutoSci docs, Solar route evidence, native lint smoke, final-quality boundary, and model proof evidence. |
+| `harness/artifacts/autosci/phase19/semantic-audits-check-full/` | pending | Generate the route-specific full semantic audit for `check`. |
+| `harness/artifacts/autosci/phase19/check-route-full-parity-after-semantic-audit.json` | pending | Verify single-route inventory/strict gate behavior after the `check` semantic audit. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining global blockers. |
+
+### Optional External Model Proof Requirement Declaration Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_parity_bridge.py` | pending | Declare `external_runtime_evidence` as supplied when a non-runtime-required route provides that category through model/review proof, without changing runtime policy from `not_required`. |
+| `harness/plugins/autosci/tests/test_phase19_parity_bridge.py` | pending | Add regression coverage for a pure/model route that supplies optional external model proof categories. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and `check` route strict-gate result. |
+
+### Check Native Lint Semantics Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native lint execution | ok | `$check` now executes `tools/lint.py --wiki-root <wiki>` and archives `wiki_lint_report.json` with `autosci_wiki_lint_cli.v1`, return code, and severity counts. |
+| Final-quality boundary | ok | `check_final_quality_boundary` now blocks final readiness on native lint errors as well as missing model/reviewer evidence. |
+| Regression test | ok | `test_autosci_skill_shim_check_uses_model_command_for_quality_review` verifies lint report artifact emission, zero native lint errors, completed model boundary, request/response hashes, and model proof categories. |
+| Real CLI smoke | ok | `$check autosci wiki --wiki-root ... --model-command ...` generated `codex-check-native-lint-proof-20260630/` with native lint `error=0`, final quality ready, and `check_wiki_health_model_runtime_proof.json`. |
+| Scope boundary | ok | This does not enable deterministic `--fix`; the full semantic claim is for report-only `$check` with explicit model/reviewer quality evidence. |
+
+### Optional External Model Proof Requirement Declaration Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Requirement declaration | ok | `autosci_parity_bridge.py` now declares `external_runtime_evidence` as `supplied` when a pure/non-runtime-required route provides that category through model/review proof. |
+| Runtime policy boundary | ok | `check.runtime_proof_status` remains `not_required`; optional model-command external evidence does not make the route provider-required. |
+| Regression test | ok | `test_route_declares_optional_external_model_proof_for_pure_route` passes and ordinary gate accepts the inventory. |
+
+### Check Semantic Full Assessment Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Semantic assessment | ok | Added `check-semantic-assessment-20260630.json` with completed/full checks for native command surface, native lint execution, report-only default, model quality boundary, and regression coverage. |
+| Semantic audit | ok | `semantic-audits-check-full/check.semantic-audit.json` is `semantic_parity=full` with all acceptance checks `ok` and no remaining requirements. |
+| Semantic proof | ok | `semantic-audits-check-full/check.semantic-proof.json` was written by `semantic_parity_runtime_proof.py from-audit`. |
+| Single-route strict gate | ok | `check-route-full-parity-after-semantic-audit.json` passes ordinary gate and `--require-full-parity`; `check` is `coverage_status=full`, `semantic_parity=full`, `proof_level=E3`, `runtime_proof_status=not_required`. |
+| Global inventory | warn | `current-parity-inventory-after-check-semantic-full.json` passes ordinary gate and reports `full_count=1`, `semantic_full_count=1`, `semantic_partial_count=27`; strict global full parity still fails for the other 27 routes. |
+| Verification | ok | Related tests: 21 passed; `py_compile` passed; `git diff --check` passed. |
+
+### Ingest Source External Evidence Category Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Add `external_runtime_evidence` to completed ingest source-preparation proof manifests while keeping dry-run execution policy unchanged. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Update ingest source proof category assertions for PDF and registered-source smokes. |
+| `harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/` | pending | Regenerate real ingest smoke proof manifests for inventory scanning. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-ingest-external-source-proof.json` | pending | Refresh inventory after ingest source proof category fix. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining semantic blockers. |
+
+### Ingest Source External Evidence Category Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Implementation | ok | Completed ingest source-preparation proof manifests now include `provider_source_evidence` and `external_runtime_evidence`. |
+| Scope boundary | ok | `$ingest` remains `dry_run_only`; `runtime_proof_status` remains `not_required`, and no route was promoted to full parity. |
+| Regression tests | ok | Ingest PDF/source-registration subset: 2 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `$ingest artifacts/autosci/phase19/ingest-wiki-proof-inputs/registered_source.md --run-id codex-ingest-wiki-proof-20260630` regenerated `ingest_paper_source_provider_runtime_proof.json` with both categories. |
+| Parity inventory recognition | ok | `current-parity-inventory-after-ingest-external-source-proof.json` records `$ingest.external_runtime_evidence=supplied`; ordinary parity gate passes. |
+| Remaining blocker | warn | `$ingest` is still semantic `partial`; full parity still requires an honest completed semantic assessment of source variants, enrichment, entity/citation/topic writes, optional discover/visualize behavior, and route limitations. |
+
+### Visualize Native CLI Parity Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Accept native `$visualize` flags `--obsidian`, `--canvas`, `--focus`, `--depth`, `--types`, and `--edge-types` without breaking review focus pass-through. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Pass visualize mode/filter options into `tools/visualize.py`, archive recommendations, and keep serve execution approval-gated. |
+| `tools/visualize.py` | pending | Add canvas node-type and edge-type filtering used by original `$visualize` docs. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add/adjust visualize CLI and artifact assertions for focused/filtered canvas generation. |
+| `harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/` | pending | Regenerate real visualize proof smoke for inventory scanning. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and whether semantic full assessment is now defensible. |
+
+### Visualize Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/visualize-semantic-assessment-20260630.json` | pending | Record full semantic assessment for `$visualize` only after native flags, artifacts, recommendations, SPA serve health, approval proof, and wiki log evidence are present. |
+| `harness/artifacts/autosci/phase19/semantic-audits-visualize-full/` | pending | Generate visualize-only full semantic audit and semantic proof manifest. |
+| `harness/artifacts/autosci/phase19/visualize-route-full-parity-after-semantic-audit.json` | pending | Verify single-route strict gate for `$visualize`. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-visualize-semantic-full.json` | pending | Refresh global inventory after adding the visualize semantic audit. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record strict gate outcome and remaining global semantic blockers. |
+
+### Visualize Native CLI Parity Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native CLI surface | ok | `$visualize` now accepts `--obsidian`, `--canvas`, `--focus`, `--depth`, `--types`, `--edge-types`, `--all`, and `--serve`; review focus remains pass-through rather than parser-blocked. |
+| Tool filtering | ok | `tools/visualize.py` JSON-compat and native canvas paths now apply focus/depth, node type filters, and edge type filters. |
+| Artifact semantics | ok | Default visualize still generates Obsidian graph config, `.obsidian/app.json`, Canvas, graph data, recommendations, and approved SPA health evidence. |
+| Wiki log | ok | `$visualize` appends `wiki/log.md` with generated visualization artifacts and includes the log in side-effect runtime proof refs. |
+| Regression tests | ok | Visualize subset: 3 passed; `py_compile` passed. |
+| Real CLI smoke | ok | `codex-visualize-proof-check-20260630` regenerated completed evidence with `wiki_log`, `obsidian_app_config_json`, recommendations, approval proof, and side-effect proof. |
+| Inventory | ok | `current-parity-inventory-after-visualize-native-cli-parity.json` passes ordinary parity gate with runtime counts unchanged `{not_required: 3, pending: 0, supplied: 0, verified: 25}`. |
+
+### Visualize Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Semantic assessment | ok | Added `visualize-semantic-assessment-20260630.json` covering native flags, Obsidian/Canvas artifacts, SPA serve health, recommendations, approval boundary, and wiki log. |
+| Semantic audit/proof | ok | `semantic-audits-visualize-full/visualize.semantic-audit.json` is `semantic_parity=full`; `visualize.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `visualize-route-full-parity-after-semantic-audit.json` passes ordinary and `--require-full-parity`; `$visualize` is `coverage_status=gated`, `semantic_parity=full`, `proof_level=E3`, `runtime_proof_status=verified`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-visualize-semantic-full.json` reports `semantic_full_count=2` (`check`, `visualize`) and `semantic_partial_count=26`; ordinary gate passes, strict global parity still fails for the remaining semantic-partial routes. |
+
+### Reset Native Scope Runtime Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Accept and pass through native `$reset --scope wiki|raw|log|checkpoints|all`. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Replace generic reset proposal with bounded `tools/reset_wiki.py` dry-run/runtime execution evidence while keeping approval gating. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add reset dry-run and approved isolated execution assertions. |
+| `harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/` | pending | Regenerate real reset smoke evidence against an isolated wiki fixture, not the production workspace. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining reset semantic blockers after the fix. |
+
+### Reset Route Proof Requirement Alignment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Add the reset wiki-mutation proof tool/wording so route requirements match the verified `wiki_mutation_evidence` proof emitted by the approved reset smoke. |
+| `harness/artifacts/autosci/phase19/reset-route-full-parity-after-semantic-audit.json` | pending | Regenerate reset route inventory after the route proof requirement alignment. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate result after the alignment. |
+
+### Reset Native Scope Runtime Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native CLI surface | ok | `$reset` now accepts native `--scope` and passes it through `native_options.scope` / `inputs.reset_scope`. |
+| Native dry-run | ok | `$reset --scope wiki` calls `tools/reset_wiki.py --dry-run`, archives `reset_wiki_dry_run_plan.json`, and leaves files unchanged by default. |
+| Approved local execution | ok | `codex-reset-native-proof-20260630` executed `tools/reset_wiki.py --scope wiki --yes --execute-approved` against an isolated phase19 runtime wiki fixture. |
+| Runtime proof | ok | Approved reset smoke produced `reset_wiki_runtime_evidence.json`, `reset_after_snapshot.json`, approval proof, side-effect proof, and wiki-mutation proof manifests. |
+| Scope safety | ok | The wiki-scope smoke removed only runtime-copy wiki markdown/graph files, rebuilt `.gitkeep`, wrote `wiki/log.md`, and preserved `raw/papers/source.txt`. |
+| Regression tests | ok | Reset/control subset: 5 passed; reset-only subset: 3 passed; `py_compile`, `jq empty`, and `git diff --check` passed. |
+
+### Reset Route Proof Requirement Alignment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Route requirement alignment | ok | Reset route now declares `tools/wiki_mutation_runtime_proof.py from-writeback` and `wiki scaffold mutation proof`, matching emitted `wiki_mutation_evidence`. |
+| Semantic assessment | ok | Added `reset-semantic-assessment-20260630.json` with full reset semantic assessment. |
+| Semantic audit/proof | ok | `semantic-audits-reset-full/reset.semantic-audit.json` is `semantic_parity=full`; `reset.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `reset-route-full-parity-after-semantic-audit.json` passes ordinary and `--require-full-parity`; `$reset` is `semantic_parity=full`, `proof_level=E3`, `runtime_proof_status=verified`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-reset-semantic-full.json` passes ordinary gate and reports `semantic_full_count=3` (`check`, `visualize`, `reset`) and `semantic_partial_count=25`; strict global full parity still fails for the remaining semantic-partial routes. |
+
+### Setup Native Status Evidence Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Replace generic `$setup` proposal with read-only setup guide/env-template/env/Python/venv status evidence while preserving approval-gated secret writes. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add assertions that setup status evidence reports set/unset booleans and never records secret values. |
+| `harness/artifacts/autosci/runs/codex-setup-native-status-20260630/` | pending | Regenerate a real setup status smoke for semantic audit input. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and whether setup can be promoted to semantic full. |
+
+### Setup Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/setup-semantic-assessment-20260630.json` | pending | Record setup semantic-full assessment using guide/template/status/redaction evidence plus existing approval-gated runtime proof. |
+| `harness/artifacts/autosci/phase19/semantic-audits-setup-full/` | pending | Generate setup-only semantic audit and semantic proof manifest. |
+| `harness/artifacts/autosci/phase19/setup-route-full-parity-after-semantic-audit.json` | pending | Verify single-route strict gate for `$setup`. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-setup-semantic-full.json` | pending | Refresh global inventory after setup semantic full. |
+
+### Setup Native Status Evidence Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native status evidence | ok | `$setup` now emits `setup_status.json` (`autosci_setup_status.v1`) with setup guide/env-template paths, Python/.venv/.env checks, and provider key readiness booleans. |
+| Secret redaction | ok | `codex-setup-native-status-20260630` used a dummy `OPENAI_API_KEY`; `rg` found no serialized dummy secret in the run directory. |
+| Non-mutating default | ok | Default setup remains proposal/status evidence only and records `protected_core_edits_applied=false`; no `.env` write is performed by the bridge. |
+| Approval compatibility | ok | Existing approved external setup proof path remains valid through `setup_status_approval_runtime_proof.json` and `setup_status_side_effect_execution_runtime_proof.json`. |
+| Regression tests | ok | Setup subset: 3 passed; `py_compile`, `jq empty`, and `git diff --check` passed. |
+
+### Setup Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Semantic assessment | ok | Added `setup-semantic-assessment-20260630.json` covering setup guide/template, env status detection, secret redaction, non-mutating default, and approval-gated secret write boundary. |
+| Semantic audit/proof | ok | `semantic-audits-setup-full/setup.semantic-audit.json` is `semantic_parity=full`; `setup.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `setup-route-full-parity-after-semantic-audit.json` passes ordinary and `--require-full-parity`; `$setup` is `semantic_parity=full`, `proof_level=E3`, `runtime_proof_status=verified`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-setup-semantic-full.json` passes ordinary gate and reports `semantic_full_count=4` (`check`, `visualize`, `reset`, `setup`) and `semantic_partial_count=24`; strict global full parity still fails for the remaining semantic-partial routes. |
+
+### Prefill Foundation Path Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Move approved prefill writes from `wiki/topics/foundation-*.md` to native `wiki/foundations/{slug}.md`, preserve idempotence, and emit wiki mutation proof. |
+| `harness/plugins/autosci/bin/autosci_workspace_projector.py` | pending | Include `wiki/foundations/` in human workspace scaffold/index so prefill pages are not hidden by projection. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Update prefill approved mutation assertions for `wiki/foundations`, terminal frontmatter, and wiki mutation proof. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Align prefill route declaration with approved wiki mutation capability if needed by parity gate. |
+| `harness/artifacts/autosci/runs/codex-prefill-proof-check-20260630/` | pending | Regenerate prefill proof smoke after the foundation path correction. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining prefill semantic blockers after the fix. |
+
+### Prefill Foundation Path Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native path correction | ok | Approved prefill now writes `wiki/foundations/foundation-skillgen-prefill-proof-20260630.md` instead of `wiki/topics/foundation-*.md`. |
+| Idempotent terminal page | ok | New foundation page includes terminal foundation frontmatter/body, `source_url: ""`, LLM-analysis markers, and no outbound `key_papers` or `related_concepts` fields. Existing pages are treated as `no_op` rather than overwritten. |
+| Workspace projection | ok | `autosci_workspace_projector.py` now scaffolds/indexes `wiki/foundations/`; workspace `index.md` includes a Foundations section and the new page. |
+| Proof alignment | ok | Prefill route now declares wiki mutation proof tooling; regenerated smoke emits approval, side-effect, and `wiki_mutation_evidence` manifests. |
+| Regression tests | ok | Prefill subset: 1 passed; `py_compile`, `jq empty`, and `git diff --check` passed. |
+| Inventory | warn | `current-parity-inventory-after-prefill-foundation-path-fix.json` passes ordinary gate and `$prefill.runtime_proof_status=verified`, but `$prefill.semantic_parity` remains `partial`; remaining semantic blockers are catalog/domain selection plus Wikipedia/source-backed foundation expansion. |
+
+### Ask Crystallize Writeback Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Accept native `$ask --crystallize` and map it to write-back intent without changing default read-only ask. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Add approval-gated ask crystallize writeback to `wiki/outputs/{query-slug}.md`, graph edge, wiki log, and rebuilt views. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add ask crystallize parser/writeback assertions and preserve default no-op behavior. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Align ask route proof declaration with approved wiki mutation evidence if gates require it. |
+| `harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/` | pending | Regenerate a real ask crystallize smoke after implementation. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining ask semantic blockers after the fix. |
+
+### Check Edge Alias Compatibility Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Let `$check` local edge validation accept both legacy `source/target/relation` and current lint `from/to/type` edge fields. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Keep ask/check fixture on current lint edge schema and verify local structure readiness remains true. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record regression test result after the compatibility fix. |
+
+### Optional Proof Requirement Declaration Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_parity_bridge.py` | pending | Treat supplied optional approval/side-effect proof categories as declared requirements without changing default route side-effect policy. |
+| `harness/plugins/autosci/tests/test_phase19_parity_bridge.py` | pending | Add/adjust coverage if needed so optional supplied proof categories pass the feature parity gate. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record inventory/gate verification after the declaration fix. |
+
+### Ask Crystallize Writeback Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native CLI surface | ok | `$ask --crystallize` now parses and records `native_options.crystallize=true`; `$ask --write` also requests crystallize write-back. |
+| Default read-only behavior | ok | Default `$ask` remains `operation=no_op` and route `execution_status=partial`; route `side_effect_policy` stays `none` so normal ask is not incorrectly gated. |
+| Approved crystallize writeback | ok | `codex-ask-crystallize-proof-20260630` created `wiki/outputs/what-evidence-supports-skillgen.md`, appended graph edges/log, and rebuilt `index.md` plus `graph/context_brief.md`. |
+| Final answer boundary | ok | Writeback requires `ask_final_answer_boundary.final_answer_ready=true`; missing approval/runtime/model/source evidence blocks crystallize instead of writing incomplete output. |
+| Runtime proofs | ok | Smoke emits provider source, model, approval, side-effect execution, and wiki mutation proof manifests; crystallize no longer overwrites the original retrieval source proof. |
+| Regression tests | ok | Ask subset: 4 passed; check edge subset: 2 passed; `py_compile` and `git diff --check` passed. |
+| Inventory | warn | `ask-route-after-crystallize-proof.json` marks `$ask.runtime_proof_status=verified`, but `$ask.semantic_parity=partial`; remaining blockers include native output format modes and broader crystallize target selection beyond default wiki outputs. |
+
+### Check Edge Alias Compatibility Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Edge schema compatibility | ok | `$check` local edge validation now accepts legacy `source/target/relation` and current lint `from/to/type` records. |
+| Fixture alignment | ok | Ask/check regression fixture now uses current frontmatter and `from/to/type` edge schema while preserving local readiness expectations. |
+| Regression tests | ok | Ask/check subset: 4 passed; dedicated check subset: 2 passed; `py_compile` passed. |
+
+### Optional Proof Requirement Declaration Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Optional proof declaration | ok | `autosci_parity_bridge.py` now declares supplied optional `approval_boundary_evidence` and `side_effect_execution_evidence` requirements without changing default route side-effect policy. |
+| Regression tests | ok | `test_phase19_parity_bridge.py -k 'runtime_proof or approval or side_effect or inventory'`: 10 passed; `py_compile` passed. |
+| Ordinary gates | ok | `autosci_feature_parity_gate.py` passes for `ask-route-after-crystallize-proof.json` and `current-parity-inventory-after-ask-crystallize-proof.json`. |
+| Global inventory | warn | `current-parity-inventory-after-ask-crystallize-proof.json` reports `semantic_full_count=4`, `semantic_partial_count=24`, runtime counts `{not_required: 3, pending: 0, supplied: 0, verified: 25}`; strict global full parity remains incomplete. |
+
+### Ask Native Format Modes Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Pass native `$ask --format table|timeline|bullets` into ask inputs in addition to native options. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Render ask answers/crystallized outputs in requested table, timeline, or bullets format using only retrieved/model evidence. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add ask format mode regression assertions for answer markdown and retrieval sidecar. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Mention native ask output format modes in route capability/limitation text. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record tests and remaining ask semantic blockers after format support. |
+
+### Ask Native Format Modes Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native format mapping | ok | `$ask --format table|timeline|bullets` is now passed into `inputs.format` and `native_options.format`. |
+| Answer rendering | ok | `ask_wiki_answer.md` renders evidence-backed table, timeline, or bullet sections without inventing new analysis. |
+| Retrieval sidecar | ok | `ask_wiki_retrieval.json` records `requested_format`, preserving the native output mode in machine-readable evidence. |
+| Crystallized output | ok | Approved crystallized ask outputs include `output_format` frontmatter and use the same evidence-backed answer section renderer. |
+| Regression tests | ok | Ask subset: 5 passed; `py_compile`, JSON validation, and `git diff --check` passed. |
+| Real CLI smoke | ok | `codex-ask-format-proof-20260630` completed `$ask --format table`; answer markdown contains `## Answer Table` and retrieval sidecar records `requested_format=table`. |
+| Inventory/gate | warn | `ask-route-after-format-modes.json` and `current-parity-inventory-after-ask-format-modes.json` pass ordinary gate; `$ask.semantic_parity` remains `partial` because broader crystallize target selection is still not native-full. |
+
+### Ask Crystallize Target Selection Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Preserve positional ask query while treating `--target` as crystallize destination when write/crystallize is requested. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Resolve crystallize targets for `concept:`, `idea:`, `method:`, `output:`, and explicit wiki markdown paths under the configured wiki root. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for approved ask crystallize into a concept target without query overwrite. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update ask route capability text for typed crystallize target selection. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining ask blockers after target selection. |
+
+### Ask Crystallize Target Selection Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Query/target separation | ok | `$ask "What supports SkillGen?" --target concept:skillgen-support --crystallize` preserves the query in `inputs.query` and records `inputs.crystallize_target=concept:skillgen-support` instead of overwriting the ask prompt. |
+| Typed target writeback | ok | `codex-ask-target-proof-20260630` created `wiki/concepts/skillgen-support.md` with `entity_type=concept`, `entity_id=concept-skillgen-support`, source evidence ids, model evidence id, log entry, graph edge, and rebuilt index/context brief. |
+| Approval/runtime boundary | ok | The writeback required `approval_ref`, allowlist evidence, before/runtime/after artifacts, `--execute-approved`, retrieved source evidence, and completed model-command synthesis before applying the mutation. |
+| Runtime proofs | ok | Smoke emits model, provider-source, approval, side-effect execution, and wiki-mutation proof manifests for the target writeback. |
+| Regression tests | ok | Ask subset: 6 passed; `py_compile`, ordinary feature parity gates for `ask-route-after-target-selection.json` and `current-parity-inventory-after-ask-target-selection.json`, and `git diff --check` passed. |
+| Inventory | warn | `$ask.runtime_proof_status=verified`, but `$ask.semantic_parity=partial`; global inventory remains `semantic_full_count=4`, `semantic_partial_count=24`. Full parity still requires a route-level semantic audit/promotion rather than simply marking the route full. |
+
+### Ask Context Gap Evidence Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Add explicit `$ask` context evidence for `context_brief.md`, `open_questions.md`, `index.md`, and graph edges; surface gap annotations and crystallize recommendation without inventing facts. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add ask regression assertions for context metadata, gap annotations, and crystallize recommendation in answer/retrieval evidence. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update ask route limitation/capability text to include native context/gap/recommendation evidence. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and whether ask is ready for semantic full audit after context/gap evidence is added. |
+
+### Ask Context Gap Evidence Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Context files | ok | `$ask` retrieval sidecar now records `context_brief.md`, `open_questions.md`, `index.md`, and `graph/edges.jsonl` status/path/hash/matches under `wiki_context`. |
+| Gap annotations | ok | Ask evidence records `gap_annotations`; the targeted regression covers a matching open question, and `codex-ask-context-gap-proof-20260630` records `no_matching_open_questions` for the current workspace state. |
+| Crystallize recommendation | ok | Answer markdown, retrieval JSON, model request context, and crystallized pages now carry an evidence-bound crystallize recommendation without applying writes unless approval/finality gates pass. |
+| Wiki citations | ok | Ask answer lines now cite retrieved wiki pages with `[[slug]]` links plus source paths, matching native citation expectations more closely. |
+| Regression tests | ok | Ask subset: 6 passed; `py_compile`, route JSON validation, ordinary feature parity gates for `ask-route-after-context-gap-evidence.json` and `current-parity-inventory-after-ask-context-gap-evidence.json`, and `git diff --check` passed. |
+| Inventory | warn | `$ask.runtime_proof_status=verified`, but `$ask.semantic_parity=partial`; next step is a route-level semantic assessment/audit if no further native ask gaps are found. |
+
+### Ask Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/ask-semantic-assessment-20260630.json` | pending | Record full semantic assessment for native `/ask` context loading, retrieval/citations, model finality, format modes, and crystallize targets. |
+| `harness/artifacts/autosci/phase19/semantic-audits-ask-full/` | pending | Generate ask-only semantic audit and semantic runtime proof from the assessment. |
+| `harness/artifacts/autosci/phase19/ask-route-full-parity-after-semantic-audit.json` | pending | Verify ask single-route parity after semantic audit ingestion. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-ask-semantic-full.json` | pending | Refresh global inventory with ask semantic full audit included. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate outcomes and remaining global parity blockers. |
+
+### Ask Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Full semantic assessment | ok | Added `ask-semantic-assessment-20260630.json` covering native context/gap loading, source-grounded citations, model final answer boundary, format modes, read-only default, approved crystallize writeback, and typed target selection. |
+| Semantic audit/proof | ok | `semantic-audits-ask-full/ask.semantic-audit.json` is `semantic_parity=full`; `ask.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `ask-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$ask` is `coverage_status=full`, `semantic_parity=full`, `proof_level=E3`, `runtime_proof_status=verified`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-ask-semantic-full.json` passes ordinary gate and reports `semantic_full_count=5` (`ask`, `check`, `visualize`, `reset`, `setup`) and `semantic_partial_count=23`; strict global full parity still fails for remaining routes. |
+| Sanity checks | ok | JSON validation and `git diff --check` passed for touched ask code/config/log files and generated ask semantic artifacts. |
+
+### Prefill Native Add/Catalog Evidence Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Add native `$prefill --add` parsing and preserve domain/target inputs in the envelope. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Emit prefill plan evidence for domain/add mode, existing-foundation dedup state, terminal foundation template, and approved writeback metadata. |
+| `.agents/skills/prefill/foundations-catalog.yaml` | pending | Add a small advisory foundation catalog so catalog-mode prefill can read a user-extensible seed list instead of hard-coded fixtures. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add/extend prefill regression coverage for `--add`, domain metadata, dedup, and terminal page constraints. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update prefill required capabilities/limitations to reflect native add/catalog/domain evidence. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining prefill semantic blockers after the fix. |
+
+### Prefill Native Add/Catalog Evidence Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native CLI surface | ok | `$prefill --add` now parses, enters `native_options.add`, and maps to `inputs.add` / `inputs.prefill_mode=add` without relying on positional target overload. |
+| Catalog/domain evidence | ok | Added `.agents/skills/prefill/foundations-catalog.yaml`; `$prefill` now emits `prefill_plan.json` with add/catalog mode, domain resolution, catalog status/path, selected seeds, and existing-foundation dedup state. |
+| Approved terminal writeback | ok | `codex-prefill-add-catalog-proof-20260630` created `wiki/foundations/foundation-skillgen-add-proof-20260630.md` with terminal foundation frontmatter/body, `domain=NLP`, `source_url=""`, no outbound relationship fields, log/index/context rebuild, and approval/side-effect/wiki mutation proofs. |
+| Regression tests | ok | Prefill subset: 2 passed; `py_compile`, route JSON validation, ordinary feature parity gates for `prefill-route-after-add-catalog-evidence.json` and `current-parity-inventory-after-prefill-add-catalog-evidence.json`, and `git diff --check` passed. |
+| Inventory | warn | `$prefill.runtime_proof_status=verified`, but `$prefill.semantic_parity=partial`; remaining semantic gap is source-backed Wikipedia fetch/fallback expansion versus the current approved LLM-analysis scaffold. |
+
+### Prefill Source Evidence Rendering Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Add native-compatible `--source-evidence` input for prefill background evidence without pretending live Wikipedia fetch exists. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Load supplied Wikipedia/source evidence, record source status in `prefill_plan.json`, and render source-backed definition/sections/source_url when available; keep fallback explicit otherwise. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add prefill source evidence regression covering source_url and non-LLM source-backed page content. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update prefill limitation text to distinguish supplied source evidence from live fetch gap. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining prefill blockers. |
+
+### Prefill Source Evidence Rendering Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native source evidence input | ok | `$prefill` now accepts `--source-evidence` and carries it through `native_options.source_evidence` / `inputs.source_evidence`. |
+| Source-backed plan | ok | `prefill_plan.json` records supplied source evidence count/refs, matched source status/path/url per selected seed, and fallback status when no source evidence is supplied. |
+| Source-backed rendering | ok | `codex-prefill-source-proof-20260630` created `wiki/foundations/foundation-lora-source-proof-20260630.md` with `source_url`, `source_status=source_backed`, `source_evidence_path`, source-backed definition, variants, and limitations, while preserving terminal foundation constraints. |
+| Runtime proofs | ok | Source-backed approved run emits provider-source, approval, side-effect, and wiki-mutation proof manifests; route runtime proof status is `verified`. |
+| Regression tests | ok | Prefill subset: 3 passed; `py_compile`, route JSON validation, ordinary feature parity gates for `prefill-route-after-source-evidence-rendering.json` and `current-parity-inventory-after-prefill-source-evidence-rendering.json`, and `git diff --check` passed. |
+| Remaining blocker | warn | Live Wikipedia fetching is still not implemented as a networked tool path in this repo; parity is source-backed through explicit supplied evidence rather than inferred live fetch. |
+
+### Prefill Wikipedia Fetch Tool Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `tools/fetch_wikipedia.py` | pending | Add native-compatible `summary`, `sections`, `section`, and `wikitext` commands with explicit network failure/page-missing statuses. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | When `$prefill --online` has no supplied source evidence, call the fetch tool and record fetch attempts/success/failure in `prefill_plan.json`; do not mark failed fetches as source-backed. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for prefill online fetch failure/fallback boundary without requiring network. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Add fetch tool to prefill route primary tools and adjust limitation text. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and whether prefill can move to semantic audit after live tool boundary exists. |
+
+### Prefill Wikipedia Fetch Tool Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Fetch tool CLI | ok | Added `tools/fetch_wikipedia.py` with `summary`, `sections`, `section`, and `wikitext` JSON commands; fixed the `wikitext`/`section` parser boundary so `wikitext --help` and `section --help` enter cleanly. |
+| Online prefill bridge | ok | `$prefill --online` now reaches `inputs.online`; when no supplied source evidence exists, `prefill_plan.json` records `fetch_attempts` and successful summaries can become source evidence. |
+| Failure boundary | ok | `codex-prefill-fetch-disabled-proof-20260630` ran with `AUTOSCI_WIKIPEDIA_FETCH_DISABLED=1`; plan recorded `fetch_disabled`, `source_evidence_count=0`, and selected seed `source_status=fallback_llm_analysis`, so disabled/failed fetch is not promoted to source-backed rendering. |
+| Route metadata | ok | Prefill route now lists `tools/fetch_wikipedia.py` commands and `Wikipedia fetch attempt evidence`; limitation text reflects explicit failed/disabled fetch status. |
+| Regression tests | ok | Prefill subset: 4 passed; `py_compile`, route JSON validation, fetch CLI help checks, ordinary feature parity gates for `prefill-route-after-wikipedia-fetch-tool.json` and `current-parity-inventory-after-prefill-wikipedia-fetch-tool.json`, and `git diff --check` passed. |
+| Remaining blocker | warn | Live external Wikipedia fetch was not executed under current restricted network; `$prefill.semantic_parity` remains `partial` until a live provider fetch plus semantic audit proves original `/prefill` behavior end to end. |
+
+### Prefill Live Fetch Semantic Audit Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-20260630/` | pending | Run `$prefill --online` against a real Wikipedia page and archive fetch/source-backed prefill evidence. |
+| `harness/artifacts/autosci/phase19/prefill-semantic-assessment-20260630.json` | pending | Record full/blocked semantic assessment depending on live proof outcome, using only existing evidence refs. |
+| `harness/artifacts/autosci/phase19/semantic-audits-prefill-full/` | pending | Generate prefill semantic audit/proof only if the assessment can honestly be full. |
+| `harness/artifacts/autosci/phase19/prefill-route-full-parity-after-semantic-audit.json` | pending | Verify single-route strict gate after semantic audit ingestion if full assessment passes. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-semantic-full.json` | pending | Refresh global inventory with prefill semantic proof if generated. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record live fetch outcome, semantic audit result, and remaining blockers. |
+
+### Prefill Live Fetch Semantic Audit Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Live provider proof | ok | Initial sandboxed run recorded DNS `fetch_failed`; escalated network probe confirmed `Transformer (deep learning architecture)` resolves to a completed Wikipedia summary. |
+| Approval-gated live writeback | ok | `codex-prefill-live-fetch-proof-transformer-20260630` fetched live source evidence, recorded `source_evidence_count=1`, wrote `wiki/foundations/foundation-transformer-deep-learning-architecture.md` with `source_status=source_backed`, and emitted provider/approval/side-effect/wiki-mutation proof manifests. |
+| Semantic assessment | ok | Added `prefill-semantic-assessment-20260630.json` with full acceptance checks for native CLI surface, catalog/domain/dedup planning, live fetch boundary, fallback truthfulness, terminal foundation rendering, and approval-gated wiki writeback. |
+| Semantic audit/proof | ok | `semantic-audits-prefill-full/prefill.semantic-audit.json` is `semantic_parity=full`; `prefill.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `prefill-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$prefill` is `semantic_parity=full`, `proof_level=E3`, `runtime_proof_status=verified`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-prefill-semantic-full.json` passes ordinary gate and reports `semantic_full_count=6`, `semantic_partial_count=22`; full global parity still requires semantic full audits for remaining routes. |
+| Sanity checks | ok | Prefill subset tests, `py_compile`, route JSON validation, fetch CLI help checks, parity gates, and `git diff --check` passed for touched files/artifacts. |
+
+### Edit Raw Source Add/Delete Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Add native-compatible delete/remove intent flag for `$edit` without changing existing wiki edit defaults. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Add approval-gated raw source create/delete handling for `raw/...` targets, preserving existing raw-file read-only protection. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regressions for raw add, raw existing-file block, and raw delete approval path. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update `$edit` required capabilities/limitations to include raw add/delete proof boundaries. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and whether `$edit` is ready for semantic full assessment. |
+
+### Edit Raw Source Add/Delete Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Native raw target routing | ok | `$edit` now recognizes explicit `raw/...` targets plus `--delete` / `delete raw/...` intent without changing existing wiki edit behavior. |
+| Raw add | ok | `codex-edit-raw-add-proof-20260630` created `artifacts/autosci/workspace/raw/papers/edit-raw-add-proof-20260630.md` from approved after_artifact evidence and emitted provider-source, approval, side-effect, and wiki-mutation proof manifests. |
+| Existing raw guard | ok | `codex-edit-raw-existing-block-proof-20260630` was rejected with `operation=blocked`; `edit-raw-existing-proof-20260630.md` remained unchanged, preserving native raw read-only behavior. |
+| Raw delete | ok | `codex-edit-raw-delete-proof-20260630` deleted the approved raw target and emitted approval/source/side-effect/wiki-mutation proof manifests; delete changes now carry `approval_ref` for the research memory gate. |
+| Proof refs | ok | Runtime proof refs now resolve to durable proof inputs or `artifacts/autosci/workspace/raw/...`; deleted raw targets are not used as live runtime refs. |
+| Regression/gates | ok | `$edit` subset: 4 passed; `py_compile`, route JSON validation, proof JSON validation, ordinary feature parity gates for `edit-route-after-raw-add-delete.json` and `current-parity-inventory-after-edit-raw-add-delete.json`, and `git diff --check` passed. |
+| Remaining blocker | warn | `$edit.semantic_parity` remains `partial` until the route-level full semantic assessment/audit is generated and passes strict route gate. |
+
+### Edit Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/edit-semantic-assessment-20260630.json` | pending | Record full semantic assessment for wiki updates, raw add/delete, read-only guard, approval boundary, and navigation/log rebuild. |
+| `harness/artifacts/autosci/phase19/semantic-audits-edit-full/` | pending | Generate edit-only full semantic audit and semantic runtime proof. |
+| `harness/artifacts/autosci/phase19/edit-route-full-parity-after-semantic-audit.json` | pending | Verify `$edit` single-route strict full gate after semantic audit ingestion. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-edit-semantic-full.json` | pending | Refresh global inventory with edit semantic proof included. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate outcomes and remaining global blockers. |
+
+### Edit Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Semantic assessment | ok | Added `edit-semantic-assessment-20260630.json` covering native command surface, wiki page updates, raw source add/delete, existing raw read-only guard, approval boundary, and wiki log/index/context rebuild. |
+| Semantic audit/proof | ok | `semantic-audits-edit-full/edit.semantic-audit.json` is `semantic_parity=full`; `edit.semantic-proof.json` was written from the audit. |
+| Single-route strict gate | ok | `edit-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$edit` is `semantic_parity=full`, `proof_level=E3`, `runtime_proof_status=verified`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-edit-semantic-full.json` passes ordinary gate and reports `semantic_full_count=7`, `semantic_partial_count=21`; full global parity still requires semantic full audits and missing native proof for remaining routes. |
+| Sanity checks | ok | Assessment JSON, audit generation, semantic proof writer, strict/ordinary parity gates, and `git diff --check` passed. |
+
+### Refine Loop Evidence Boundary Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Pass native refine `--difficulty`, `--focus`, and Review LLM evidence/command controls into the refine envelope. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Emit a refine loop report with score trajectory, termination reason, fixed/unresolved issue buckets, and explicit Review LLM evidence status. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for refine loop report and review parameter propagation. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update `$refine` required capabilities/limitations to reflect loop evidence boundary and remaining execution gap. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining refine blockers. |
+
+### Refine Review LLM Runtime Proof Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Emit a `review_model_runtime_proof_manifest_json` from completed `$refine --review-llm-evidence` records so route requirements can verify Review LLM evidence without changing gate rules. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Extend the approved refine regression to assert the Review LLM runtime proof artifact and categories. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record whether `$refine` runtime proof moves from `supplied` to `verified` and list remaining semantic blockers. |
+
+### Refine Review LLM Runtime Proof Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Review evidence provenance | ok | `$refine` now preserves `--review-llm-evidence` source paths in `refine_loop_report.rounds[].source_path`. |
+| Review LLM runtime proof | ok | `codex-refine-loop-proof-20260630/refine_artifact_review_llm_runtime_proof.json` supplies `review_llm_or_model_evidence` plus `external_runtime_evidence` and cites `review-20260630.json` plus `refine_loop_report.json`. |
+| Approved apply proof | ok | The proof run restored `refine-loop-proof.md` to before content, then `$refine --execute-approved` replaced it with approved after content and emitted approval/source/side-effect proof manifests. |
+| Route gate | ok | `refine-route-after-loop-evidence-boundary.json` passes the parity gate with `runtime_proof_status=verified`, `coverage_status=gated`, `semantic_parity=partial`, `proof_level=E2`. |
+| Global inventory | warn | `current-parity-inventory-after-refine-loop-evidence-boundary.json` passes ordinary gate and reports `semantic_full_count=7`, `semantic_partial_count=21`, `runtime_proof_status_counts.verified=25`; full global parity still requires semantic full audits and remaining execution blocks. |
+| Remaining refine blocker | warn | `$refine` still lacks automatic multi-round `/review` dispatch and quality-gate rerun parity, so it is not promoted to semantic full. |
+| Sanity checks | ok | `$refine` targeted test passed; `py_compile`, `git diff --check`, route gate, and inventory gate passed. |
+
+### Refine Automatic Review Loop Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Pass `$refine` Review LLM provider/model/endpoint controls through the native shim. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Reuse the existing `/review` backend to run one post-apply Review LLM command/provider quality-gate round when `$refine` has no sufficient supplied review result. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for `$refine --review-llm-command` producing an automatic review round, score trajectory, and runtime proof. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update `$refine` limitation text after the automatic review loop boundary is proven. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and whether `$refine` is ready for semantic full assessment. |
+
+### Refine Automatic Review Loop Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Shim provider controls | ok | `$refine` now passes Review LLM provider/model/endpoint controls through the native shim, in addition to command/evidence controls. |
+| Post-apply review loop | ok | `$refine` reuses the existing `/review` backend to run a post-apply Review LLM command/provider quality-gate round when supplied review evidence is missing or below target and `max_rounds` allows another round. |
+| Auto review proof | ok | `codex-refine-auto-review-loop-proof-20260630/refine_review_round_01.json` records command-mode Review LLM evidence; `refine_artifact_review_llm_runtime_proof.json` cites the round and loop report. |
+| Route truthfulness | ok | `$refine` limitation now states command/provider Review LLM post-apply quality-gate support and keeps additional autonomous fix-generation cycles approval-gated. |
+| Route gate | ok | `refine-route-after-auto-review-loop.json` passes the parity gate with `runtime_proof_status=verified`, `coverage_status=gated`, `semantic_parity=partial`, `proof_level=E2`. |
+| Global inventory | warn | `current-parity-inventory-after-refine-auto-review-loop.json` passes ordinary gate and still reports `semantic_full_count=7`, `semantic_partial_count=21`; semantic full assessment has not been generated yet. |
+| Sanity checks | ok | `$refine` targeted tests passed: 2 passed; `py_compile`, route JSON validation, route/inventory gates, and `git diff --check` passed. |
+
+### Refine Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/refine-semantic-assessment-20260630.json` | pending | Record full semantic assessment for native refine controls, approval-gated after_artifact apply, Review LLM loop evidence, post-apply quality gate, and proof artifacts. |
+| `harness/artifacts/autosci/phase19/semantic-audits-refine-full/` | pending | Generate refine-only semantic audit and semantic proof manifest from the assessment. |
+| `harness/artifacts/autosci/phase19/refine-route-full-parity-after-semantic-audit.json` | pending | Verify `$refine` single-route strict full semantic gate after audit ingestion. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-refine-semantic-full.json` | pending | Refresh global inventory with refine semantic proof included. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate outcomes and remaining global blockers. |
+
+### Refine Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Semantic assessment | ok | Added `refine-semantic-assessment-20260630.json` covering native refine controls, approval-gated after_artifact apply, loop report, supplied/command Review LLM boundaries, post-apply quality gate, route proof, and regression coverage. |
+| Semantic audit/proof | ok | `semantic-audits-refine-full/refine.semantic-audit.json` is `semantic_parity=full`; `refine.semantic-proof.json` was written by `semantic_parity_runtime_proof.py from-audit`. |
+| Single-route strict gate | ok | `refine-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$refine` is `semantic_parity=full`, `semantic_audit_status=verified`, `runtime_proof_status=verified`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-refine-semantic-full.json` passes ordinary gate and reports `semantic_full_count=8`, `semantic_partial_count=20`; full global parity still requires semantic full audits and remaining execution blocks for other routes. |
+| Sanity checks | ok | Assessment JSON, audit JSON, proof JSON, `py_compile`, strict/ordinary parity gates, and `git diff --check` passed. |
+
+### Review Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/review-semantic-assessment-20260630.json` | pending | Record full semantic assessment for native review controls, artifact resolution, Review LLM evidence/command/provider boundary, final acceptance boundary, and source proof. |
+| `harness/artifacts/autosci/phase19/semantic-audits-review-full/` | pending | Generate review-only semantic audit and semantic proof manifest from the assessment. |
+| `harness/artifacts/autosci/phase19/review-route-full-parity-after-semantic-audit.json` | pending | Verify `$review` single-route strict full semantic gate after audit ingestion. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-review-semantic-full.json` | pending | Refresh global inventory with review semantic proof included. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate outcomes and remaining global blockers. |
+
+### Review Route Limitation Text Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Replace `$review` full-coverage-incompatible downgrade wording with final-acceptance boundary wording while preserving the rule that non-Review-LLM diagnostics are not final. |
+| `harness/artifacts/autosci/phase19/review-semantic-assessment-20260630.json` | pending | Keep assessment wording aligned with the updated route truthfulness language if needed. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record strict gate result after route text refresh. |
+
+### Review Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Semantic assessment | ok | Added and aligned `review-semantic-assessment-20260630.json` covering native command surface, artifact resolution/source proof, Review LLM evidence/command/provider boundary, final acceptance boundary, read-only route boundary, and regression coverage. |
+| Route truthfulness text | ok | `$review` limitation no longer uses full-coverage-incompatible downgrade wording; it states that non-Review-LLM diagnostics are not final and final acceptance requires Review LLM evidence. |
+| Semantic audit/proof | ok | `semantic-audits-review-full/review.semantic-audit.json` is `semantic_parity=full`; `review.semantic-proof.json` was written by `semantic_parity_runtime_proof.py from-audit`. |
+| Single-route strict gate | ok | `review-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$review` is `coverage_status=full`, `semantic_parity=full`, `semantic_audit_status=verified`, `runtime_proof_status=verified`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-review-semantic-full.json` passes ordinary gate and reports `full_count=3`, `semantic_full_count=9`, `semantic_partial_count=19`; full global parity still requires remaining routes. |
+| Sanity checks | ok | Assessment JSON, audit JSON, proof JSON, route config JSON, strict/ordinary parity gates, and `git diff --check` passed. |
+
+### Rebuttal Reviewer Thread And Submission Audit Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Add/forward native `$rebuttal` reviewer-thread, paper-slug, stress-test, and submission audit controls. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Parse reviewer-thread evidence/direct text into RvX-CY concerns, map concerns to wiki evidence, emit formal/rich rebuttal artifacts, stress-test boundary, and submission audit boundary. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for reviewer-thread ingestion, wiki evidence mapping, formal output, stress-test boundary, and submission audit evidence. |
+| `harness/plugins/autosci/config/feature_parity_routes.v1.json` | pending | Update `$rebuttal` route truthfulness only after runtime proof shows reviewer-thread/submission audit coverage. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record verification and remaining `$rebuttal` blockers after the fix. |
+
+### Rebuttal Runtime Proof Artifact Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/rebuttal-proof-inputs/` | pending | Add bounded reviewer-thread, Review LLM, submission-audit, and wiki evidence fixtures for a real `$rebuttal` proof run. |
+| `harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/` | pending | Generate runtime proof artifacts from the native `$rebuttal` shim path. |
+| `harness/artifacts/autosci/phase19/rebuttal-route-after-thread-audit-proof.json` | pending | Capture updated `$rebuttal` route with runtime proof attached. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-rebuttal-thread-audit-proof.json` | pending | Refresh global parity inventory after `$rebuttal` proof ingestion. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record proof/gate outcomes. |
+
+### Rebuttal Reviewer Thread And Submission Audit Fix Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Shim controls | ok | `$rebuttal` now forwards `--reviewer-thread-evidence`, `--paper-slug`, `--stress-test/--no-stress-test`, `--wiki-root`, `--venue`, and `--submission-audit` into native action inputs. |
+| Reviewer-thread ingestion | ok | `draft_rebuttal` loads structured reviewer-thread evidence, atomizes concerns into RvX-CY ids, preserves reviewer/source/evidence ids, and blocks path-like missing inputs from becoming fake review text. |
+| Wiki/source mapping | ok | `rebuttal_response_map.json` records wiki/source entity mapping, evidence status, strategy, response text, and per-concern safety checks. |
+| Rich/formal outputs | ok | Runtime bundle includes `rebuttal.md` and `rebuttal.txt`; the formal text is suitable as a source-backed paste target but does not claim portal submission. |
+| Stress/submission boundaries | ok | `rebuttal_stress_test_boundary.json` is completed from Review LLM evidence; `rebuttal_submission_boundary.json` is `submission_audit_ready` from supplied audit evidence. |
+| Runtime proof | ok | `draft_rebuttal_final_runtime_proof.json` supplies `review_llm_or_model_evidence`, `external_runtime_evidence`, and `provider_source_evidence`; `$rebuttal.runtime_proof_status=verified` in `rebuttal-route-after-thread-audit-proof.json`. |
+| Route truthfulness | ok | `$rebuttal` route is now `coverage_status=gated` and names portal submission as externally audited, not bridge-claimed. |
+| Global inventory | warn | `current-parity-inventory-after-rebuttal-thread-audit-proof.json` passes ordinary gate with runtime counts `{not_required: 3, pending: 0, supplied: 0, verified: 25}`; semantic full count remains 9 because `$rebuttal` semantic full audit is not generated yet. |
+| Sanity checks | ok | `$rebuttal` targeted tests passed: 3 passed; `py_compile`, JSON validation, route/inventory parity gates, and `git diff --check` passed. |
+
+### Rebuttal Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/rebuttal-semantic-assessment-20260630.json` | pending | Record semantic assessment for reviewer-thread parsing, RvX-CY atomization, wiki evidence mapping, rich/formal outputs, Review LLM stress-test, safety checks, and submission audit boundary. |
+| `harness/artifacts/autosci/phase19/semantic-audits-rebuttal-full/` | pending | Generate rebuttal-only semantic audit and semantic proof manifest from the assessment if checks pass. |
+| `harness/artifacts/autosci/phase19/rebuttal-route-full-parity-after-semantic-audit.json` | pending | Verify `$rebuttal` single-route strict full semantic gate after audit ingestion. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-rebuttal-semantic-full.json` | pending | Refresh global inventory with rebuttal semantic proof included. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate outcomes and any remaining global blockers. |
+
+### Rebuttal Semantic Full Assessment Result
+
+| Check | Status | Evidence |
+|---|---|---|
+| Semantic assessment | ok | Added `rebuttal-semantic-assessment-20260630.json` covering reviewer-thread parsing, RvX-CY atomization, wiki evidence mapping, rich/formal outputs, Review LLM stress-test, safety checks, and submission audit boundary. |
+| Semantic audit/proof | ok | `semantic-audits-rebuttal-full/rebuttal.semantic-audit.json` is `semantic_parity=full`; `rebuttal.semantic-proof.json` was written by `semantic_parity_runtime_proof.py from-audit`. |
+| Single-route strict gate | ok | `rebuttal-route-full-parity-after-semantic-audit.json` passes `--require-full-parity`; `$rebuttal` is `semantic_parity=full`, `semantic_audit_status=verified`, `runtime_proof_status=verified`, `proof_level=E3`, `remaining_requirements=[]`. |
+| Global inventory | warn | `current-parity-inventory-after-rebuttal-semantic-full.json` passes ordinary gate and reports `full_count=4`, `partial_count=13`, `semantic_full_count=10`, `semantic_partial_count=18`; full global parity still requires remaining routes. |
+| Sanity checks | ok | Assessment JSON, audit JSON, proof JSON, route/inventory JSON validation, `py_compile`, strict/ordinary parity gates, and `git diff --check` passed. |
+
+### Poster Semantic Full Assessment Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/artifacts/autosci/phase19/poster-semantic-assessment-20260630.json` | pending | Record semantic assessment for PaperX/DAG route, HTML poster output, approved render/export, overflow/PNG validation, and approval boundary truthfulness. |
+| `harness/artifacts/autosci/phase19/semantic-audits-poster-full/` | pending | Generate poster-only semantic audit and semantic proof manifest from the assessment if checks pass. |
+| `harness/artifacts/autosci/phase19/poster-route-full-parity-after-semantic-audit.json` | pending | Verify `$poster` single-route strict full semantic gate after audit ingestion. |
+| `harness/artifacts/autosci/phase19/current-parity-inventory-after-poster-semantic-full.json` | pending | Refresh global inventory with poster semantic proof included. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record gate outcomes and remaining global blockers. |
+
+### Poster Native Content Pipeline Fix Plan
+
+Logged: 2026-06-30 EDT
+
+| File | Status | Planned Scope |
+|---|---|---|
+| `harness/plugins/autosci/bin/autosci_skill_shim.py` | pending | Forward poster paper_dir and format/header controls needed by the native content path without changing unrelated routes. |
+| `harness/plugins/autosci/bin/autosci_bridge.py` | pending | Replace scaffold-only poster content with paper_dir -> `wiki2dag.py build` -> outline -> `poster.py build/inject-title/inject-figures/validate`, keeping render/export approval-gated. |
+| `harness/plugins/autosci/tests/test_autosci_skill_shim.py` | pending | Add regression for `$poster` building DAG/outline/HTML from real LaTeX paper source before approved render. |
+| `harness/artifacts/autosci/phase19/poster-content-proof-inputs/` | pending | Add bounded paper source fixture for runtime proof. |
+| `docs/integrations/autosci/phase19-progress-log.md` | pending | Record proof/gate result before semantic assessment. |

@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-06-30T15:08:47Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/prefill/SKILL.md",
+        ".agents/skills/prefill/foundations-catalog.yaml",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/fetch_wikipedia.py",
+        "harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+        "harness/artifacts/autosci/workspace/wiki/index.md",
+        "harness/artifacts/autosci/workspace/wiki/log.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+      ],
+      "native_skill": "prefill",
+      "production_ready": true,
+      "proof_id": "runtime:prefill:phase19-prefill-semantic-audit:20260630T150847Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-06-30T15:08:47Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json --native-skill prefill --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-proof.json",
+        "source": "phase19-prefill-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

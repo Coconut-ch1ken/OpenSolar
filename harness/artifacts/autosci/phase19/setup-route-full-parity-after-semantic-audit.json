@@ -1,0 +1,1121 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-20260630/ask_wiki_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-fixed-20260630/ask_wiki_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-quoted-20260630/ask_wiki_model_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-quoted-20260630/ask_wiki_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-proof-check/ask_wiki_model_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-source-proof-check/ask_wiki_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-check-model-proof-check/check_wiki_health_model_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/check_wiki_health_model_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-provider-proof-check/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-provider-proof-check/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/discover_literature_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-design-review-proof-check/design_experiment_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-review-proof-check/verify_claim_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-writeback-proof-20260630/verify_claim_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-writeback-proof-20260630/verify_claim_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-writeback-proof-20260630/verify_claim_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_final_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-check/monitor_experiment_remote_status_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-fixed-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-fixed-20260630/generate_ideas_model_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-fixed-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-proof-check/generate_ideas_model_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-source-proof-fixed-check/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-source-proof-check/ingest_paper_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-fanin-proof-check/init_sources_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-fanin-proof-check/init_sources_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-fanin-proof-check/init_sources_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-review-external-proof-20260630/evaluate_ideas_external_novelty_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-review-external-proof-20260630/evaluate_ideas_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-review-external-proof-20260630/evaluate_ideas_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-runtime-proof-check/evaluate_ideas_external_novelty_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-runtime-proof-check/evaluate_ideas_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-wiki-mutation-proof-check/evaluate_ideas_external_novelty_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-wiki-mutation-proof-check/evaluate_ideas_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-wiki-mutation-proof-check/evaluate_ideas_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-compile-final-proof-check/compile_paper_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-external-proof-20260630/write_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-external-proof-20260630/write_report_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-review-proof-check/write_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-source-proof-check/write_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-source-proof-check/write_report_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/write_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/write_report_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-external-proof-20260630/plan_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-external-proof-20260630/plan_report_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-review-proof-check/plan_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-source-proof-check/plan_report_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-source-proof-check/plan_report_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/run_pilot_experiment_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/run_pilot_experiment_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-proof-check-20260630/build_poster_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-proof-check-20260630/build_poster_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-proof-check-20260630/prefill_foundations_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-proof-check-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-review-external-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-review-proof-check/draft_rebuttal_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-refine-proof-check/refine_artifact_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-refine-proof-check/refine_artifact_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-refine-proof-check/refine_artifact_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-research-lifecycle-proof-check/run_research_lifecycle_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-research-lifecycle-proof-check/run_research_lifecycle_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-research-lifecycle-proof-check/run_research_lifecycle_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-proof-check-20260630/reset_plan_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-proof-check-20260630/reset_plan_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_artifact_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-proof-check-quoted/review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-source-proof-check/review_artifact_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-source-proof-check/review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-external-proof-20260630/write_survey_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-source-proof-check/write_survey_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "setup",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [
+      "harness/artifacts/autosci/runs"
+    ],
+    "runtime_proof_manifest_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-20260630/ask_wiki_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-fixed-20260630/ask_wiki_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-quoted-20260630/ask_wiki_model_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-external-proof-quoted-20260630/ask_wiki_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-model-proof-check/ask_wiki_model_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-source-proof-check/ask_wiki_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-check-model-proof-check/check_wiki_health_model_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/check_wiki_health_model_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-fanin-proof-check/daily_arxiv_prepare_finalize_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-provider-proof-check/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-provider-proof-check/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/discover_literature_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-design-review-proof-check/design_experiment_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-review-proof-check/verify_claim_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-writeback-proof-20260630/verify_claim_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-writeback-proof-20260630/verify_claim_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-eval-writeback-proof-20260630/verify_claim_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_final_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-check/monitor_experiment_remote_status_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-fixed-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-fixed-20260630/generate_ideas_model_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-fixed-20260630/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-model-proof-check/generate_ideas_model_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ideate-source-proof-fixed-check/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-source-proof-check/ingest_paper_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-fanin-proof-check/init_sources_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-fanin-proof-check/init_sources_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-fanin-proof-check/init_sources_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-review-external-proof-20260630/evaluate_ideas_external_novelty_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-review-external-proof-20260630/evaluate_ideas_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-review-external-proof-20260630/evaluate_ideas_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-runtime-proof-check/evaluate_ideas_external_novelty_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-runtime-proof-check/evaluate_ideas_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-wiki-mutation-proof-check/evaluate_ideas_external_novelty_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-wiki-mutation-proof-check/evaluate_ideas_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-novelty-wiki-mutation-proof-check/evaluate_ideas_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-compile-final-proof-check/compile_paper_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-external-proof-20260630/write_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-external-proof-20260630/write_report_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-review-proof-check/write_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-source-proof-check/write_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-source-proof-check/write_report_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/write_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-20260630/write_report_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/paper_draft_workspace_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-draft-wiki-proof-fixed-20260630/write_report_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-external-proof-20260630/plan_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-external-proof-20260630/plan_report_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-review-proof-check/plan_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-source-proof-check/plan_report_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-paper-plan-source-proof-check/plan_report_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/run_pilot_experiment_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-pilot-run-proof-check-20260630/run_pilot_experiment_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-proof-check-20260630/build_poster_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-proof-check-20260630/build_poster_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-proof-check-20260630/prefill_foundations_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-proof-check-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-review-external-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-rebuttal-review-proof-check/draft_rebuttal_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-refine-proof-check/refine_artifact_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-refine-proof-check/refine_artifact_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-refine-proof-check/refine_artifact_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-research-lifecycle-proof-check/run_research_lifecycle_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-research-lifecycle-proof-check/run_research_lifecycle_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-research-lifecycle-proof-check/run_research_lifecycle_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-proof-check-20260630/reset_plan_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-proof-check-20260630/reset_plan_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_artifact_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-proof-check-quoted/review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-source-proof-check/review_artifact_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-source-proof-check/review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-external-proof-20260630/write_survey_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-source-proof-check/write_survey_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json"
+    ],
+    "runtime_proof_manifests": [],
+    "semantic_audit_dirs": [],
+    "semantic_audit_paths": [
+      "harness/artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json"
+    ],
+    "semantic_audits": [
+      "harness/artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json"
+    ]
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-setup",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 1,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 0,
+      "gated_count": 1,
+      "items": [
+        {
+          "autosci_command": "/setup",
+          "autosci_feature": "/setup",
+          "backend_mode": "side_effect_gated",
+          "coverage_status": "gated",
+          "evidence_ids": [
+            "route:setup",
+            "native:setup"
+          ],
+          "evidence_schema": "workflow_evolution.v1",
+          "execution_policy": "approval_required",
+          "feature_kind": "skill",
+          "limitations": [
+            "Solar must not write secrets or credentials without explicit user-provided values and approval."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/setup/SKILL.md",
+            "config/setup-guide.md"
+          ],
+          "native_skill": "setup",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/setup-guide.md",
+              "ref": "config/setup-guide.md",
+              "status": "ok",
+              "token": "config/setup-guide.md"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/.env.example",
+              "ref": ".env.example",
+              "status": "ok",
+              "token": ".env.example"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tools/approval_runtime_proof.py",
+              "ref": "tools/approval_runtime_proof.py from-contract",
+              "status": "ok",
+              "token": "tools/approval_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "config/setup-guide.md",
+            ".env.example",
+            "tools/approval_runtime_proof.py from-contract"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:setup",
+            "native:setup"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:setup"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:setup"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "config/setup-guide.md",
+                ".env.example",
+                "tools/approval_runtime_proof.py from-contract"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:setup:approval-contract:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                "runtime:setup:approved-mutation:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+                "runtime:setup:semantic-audit:setup.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/setup/SKILL.md",
+                "plugins/autosci/config/setup-guide.md",
+                "plugins/autosci/config/.env.example",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:setup:approval-contract:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                "runtime:setup:approved-mutation:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+                "runtime:setup:semantic-audit:setup.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/setup/SKILL.md",
+                "plugins/autosci/config/setup-guide.md",
+                "plugins/autosci/config/.env.example",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "approval_boundary_evidence",
+              "description": "Side-effecting route requires durable approval, allowlist, before/after, and result evidence.",
+              "evidence_refs": [
+                "runtime:setup:approval-contract:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                "runtime:setup:approved-mutation:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+                "runtime:setup:semantic-audit:setup.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/setup/SKILL.md",
+                "plugins/autosci/config/setup-guide.md",
+                "plugins/autosci/config/.env.example",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "side_effect_execution_evidence",
+              "description": "Gated side-effect route needs approved execution or provider delivery proof.",
+              "evidence_refs": [
+                "runtime:setup:approval-contract:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                "runtime:setup:approved-mutation:20260630T123026Z",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+                "runtime:setup:semantic-audit:setup.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/setup/SKILL.md",
+                "plugins/autosci/config/setup-guide.md",
+                "plugins/autosci/config/.env.example",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "secret presence check",
+            "configuration guide",
+            "verification checklist"
+          ],
+          "runtime_proof_refs": [
+            "runtime:setup:approval-contract:20260630T123026Z",
+            "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+            "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+            "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+            "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+            "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+            "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+            "runtime:setup:approved-mutation:20260630T123026Z",
+            "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+            "artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+            "runtime:setup:semantic-audit:setup.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/setup/SKILL.md",
+            "plugins/autosci/config/setup-guide.md",
+            "plugins/autosci/config/.env.example",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+            "artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+            "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+            "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "external_runtime_evidence",
+                "approval_boundary_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Verified approval/runtime evidence for AutoSci `setup` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+                  "ref": "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                  "ref": "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+                  "ref": "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                  "ref": "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-allowlist-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-before-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+              "native_skill": "setup",
+              "production_ready": true,
+              "proof_id": "runtime:setup:approval-contract:20260630T123026Z",
+              "provenance": {
+                "artifact_kind": "setup_status_external_runtime",
+                "captured_at": "2026-06-30T12:30:26Z",
+                "command": "setup_status:approved_mutation",
+                "source": "approval_contract"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "side_effect_execution_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Completed approved side-effect execution evidence for AutoSci `setup` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                  "ref": "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                  "ref": "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+                "artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json",
+              "native_skill": "setup",
+              "production_ready": true,
+              "proof_id": "runtime:setup:approved-mutation:20260630T123026Z",
+              "provenance": {
+                "artifact_kind": "setup_status_external_runtime",
+                "captured_at": "2026-06-30T12:30:26Z",
+                "command": "setup_status:approved_mutation",
+                "source": "approved_mutation"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.agents/skills/setup/SKILL.md",
+                  "ref": ".agents/skills/setup/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/setup-guide.md",
+                  "ref": "plugins/autosci/config/setup-guide.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/.env.example",
+                  "ref": "plugins/autosci/config/.env.example",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/setup/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/setup-guide.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/.env.example",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/setup/SKILL.md",
+                "plugins/autosci/config/setup-guide.md",
+                "plugins/autosci/config/.env.example",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-native-status-20260630/setup_status.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_side_effect_execution_runtime_proof.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json",
+              "native_skill": "setup",
+              "production_ready": true,
+              "proof_id": "runtime:setup:semantic-audit:setup.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-06-30T13:59:19Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-setup-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "artifacts/autosci/phase19/semantic-audits-setup-full/setup.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "approval_required",
+          "solar_backend_action": "setup_status",
+          "solar_capability": "cap.research-workflow-evolve",
+          "solar_logical_operator": "ScientificWorkflowEvolver",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "setup"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 4
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-06-30T13:59:36.284216Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

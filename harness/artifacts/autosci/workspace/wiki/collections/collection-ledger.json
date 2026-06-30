@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "accepted_at": "2026-06-30T05:43:12Z",
+      "collection_identity": "cf547e91cc18d25729655fef3408398ec20a1d32",
+      "command_run": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tools/remote.py pull-results --result-dir /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results --approval-ref approval-codex-live-pull-provider --allowlist-evidence /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/provider-allowlist.json --pull-command '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python' '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/fake_live_pull_results_provider.py' --transport ssh --session-id ssh-session-codex-final-proof --execute-approved",
+      "evidence_ids": [
+        "remote-collect:codex-exp-run-final-proof",
+        "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+        "result:codex-exp-run-final-proof"
+      ],
+      "experiment_id": "codex-exp-run-final-proof",
+      "files": [
+        {
+          "bytes": 184,
+          "path": "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+          "sha256": "b794946d64996085871682e1157337813e5f86f9c22d4f0ec89263701ad8fd1c"
+        }
+      ]
+    }
+  ],
+  "schema": "autosci_collection_ledger.v1"
+}

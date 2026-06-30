@@ -1,0 +1,9 @@
+{
+  "allowed": [
+    "prefill_foundations",
+    "wiki_foundation_write",
+    "wiki_navigation_rebuild"
+  ],
+  "approval_scope": "codex-prefill-source-proof-20260630",
+  "schema": "autosci_approval_allowlist.v1"
+}

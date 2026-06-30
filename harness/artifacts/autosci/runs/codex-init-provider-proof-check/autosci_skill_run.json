@@ -1,0 +1,248 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-provider-proof-check/literature_discovery.init.json",
+      "type": "action_evidence"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+      "type": "human_workspace"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+      "type": "human_workspace_index"
+    }
+  ],
+  "inputs": {
+    "anchors": [],
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "discovery_evidence": [],
+    "from_wiki": false,
+    "limit": 0,
+    "native_options": {
+      "after_artifacts": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/after.json"
+      ],
+      "all": false,
+      "allowlist_evidence": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/allowlist.json"
+      ],
+      "anonymous": false,
+      "approval_ref": "approval-codex-init-source-runtime",
+      "auto": false,
+      "before_artifacts": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/before.json"
+      ],
+      "checklist": false,
+      "claims_evidence": [],
+      "code_evidence": [],
+      "collect": false,
+      "collect_ready": false,
+      "compile_after_artifacts": [],
+      "compile_allowlist_evidence": [],
+      "compile_approval_ref": "",
+      "compile_before_artifacts": [],
+      "compile_execute_approved": false,
+      "compile_executor_timeout_seconds": 120,
+      "compile_runtime_evidence": [],
+      "compile_target": "",
+      "difficulty": "",
+      "discover": false,
+      "double_blind": false,
+      "env": "",
+      "execute_approved": false,
+      "experiment_after_artifacts": [],
+      "experiment_allowlist_evidence": [],
+      "experiment_approval_ref": "",
+      "experiment_before_artifacts": [],
+      "experiment_execute_approved": false,
+      "experiment_executor_timeout_seconds": 120,
+      "experiment_result_evidence": [],
+      "experiment_runtime_evidence": [],
+      "fix": false,
+      "focus": "",
+      "format": "",
+      "full": false,
+      "idea_approval_ref": "",
+      "lifecycle_summary": [],
+      "max_ideas": 0,
+      "max_rounds": 0,
+      "min_font_size": null,
+      "model_command": "",
+      "model_evidence": [],
+      "no_introduction": false,
+      "novelty_evidence": [],
+      "online": false,
+      "page_count": null,
+      "page_limit": null,
+      "pdf_inspection": "",
+      "pipeline": "",
+      "quick": false,
+      "remote_check_command": "",
+      "remote_run_dir": "",
+      "render": false,
+      "require_review_llm": false,
+      "results_approval_ref": "",
+      "review": false,
+      "review_llm_command": "",
+      "review_llm_endpoint": "",
+      "review_llm_evidence": [],
+      "review_llm_model": "",
+      "review_llm_provider": "",
+      "runtime_evidence": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/source-runtime.json"
+      ],
+      "scheduler_dispatch_external_evidence": false,
+      "scheduler_include_blocked_external": false,
+      "scheduler_include_human_gates": false,
+      "scheduler_legacy_smoke_runner": false,
+      "scheduler_node_id": [],
+      "scheduler_require_workflow_config_alignment": false,
+      "scheduler_run": false,
+      "scheduler_timeout": 30.0,
+      "serve": false,
+      "skip_paper": false,
+      "skip_pilot": false,
+      "skip_validation": false,
+      "start_from": "",
+      "submission_audit": "",
+      "submission_mode": "",
+      "submission_profile": "",
+      "target_score": 0.0,
+      "title": "",
+      "verbose": false,
+      "verified_min_font_size": null,
+      "verified_page_count": null,
+      "visualize": false,
+      "write": false
+    },
+    "negative_ids": [],
+    "paper_path": "",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "codex-init-provider-proof-check",
+    "skill": "init",
+    "skill_args": [
+      "skill generation"
+    ],
+    "smoke": false,
+    "target": "skill generation",
+    "topic": "",
+    "venue": "",
+    "work_dir": "artifacts/autosci/runs/codex-init-provider-proof-check",
+    "year": ""
+  },
+  "limitations": [
+    "Approved runtime source manifests can complete init evidence only with non-fixture provider channel boundary proof, and --write can fan candidates into wiki papers/log/graph; init_sources_final_fan_in_boundary requires provider candidates, approved wiki fan-in, graph/log/index rebuild evidence, and verified approval/runtime evidence before initialization is final; native network fetch and bulk ingest execution remain approval/provider-gated.",
+    "Approved runtime source manifests can complete init evidence and --write can fan candidates into wiki papers/log/graph; native network fetch and bulk ingest execution remain approval/provider-gated.",
+    "Approval-gated external effects were not executed by the shim.",
+    "Fixture bridge fallback is disabled unless --smoke is passed explicitly."
+  ],
+  "node_id": "autosci-skill-init",
+  "outputs": {
+    "skill_run": {
+      "action_count": 1,
+      "actions": [
+        {
+          "action": "init_sources",
+          "evidence_ids": [
+            "artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_approval_contract.json",
+            "approval_contract_json",
+            "artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_final_fan_in_boundary.json",
+            "init_sources_final_fan_in_boundary_json",
+            "artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_approval_boundary_runtime_proof.json",
+            "approval_runtime_proof_manifest_json",
+            "artifacts/autosci/runs/codex-init-provider-proof-check/init_sources_source_provider_runtime_proof.json",
+            "provider_source_runtime_proof_manifest_json",
+            "artifacts/autosci/runs/codex-init-provider-proof-check/literature_discovery.init.json",
+            "solar_evidence_json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/after.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/allowlist.json",
+            "approval-codex-init-source-runtime",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/before.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/source-runtime.json",
+            "skill generation",
+            "SkillGen verified inference-time agent skill synthesis",
+            "Init source runtime was verified from supplied approval-gated evidence; this bridge did not execute the fetch.",
+            "Init source finality requires approved wiki fan-in writeback.",
+            "Init source finality requires wiki log, graph edge, index, and context rebuild evidence.",
+            "node-init-sources",
+            "runtime-source-001",
+            "new",
+            "fetched",
+            "Approved source runtime returned this source.",
+            "search_s2",
+            "https://arxiv.org/abs/2601.00005",
+            "Runtime Verified Skill Generation Source",
+            "verified",
+            "completed",
+            "autosci_init_sources_final_fan_in_boundary.v1",
+            "init_sources_provider_ready",
+            "init_runtime_verified",
+            "not_requested",
+            "init_sources",
+            "artifacts/autosci/runs/codex-discover-provider-proof-check/source-runtime.json",
+            "autosci_source_provider_boundary.v1",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-30T03:17:13Z",
+            "literature_discovery.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-init_sources"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-provider-proof-check/literature_discovery.init.json",
+          "gate_status": "passed",
+          "reasons": [],
+          "schema": "literature_discovery.v1",
+          "status": "passed",
+          "warnings": []
+        }
+      ],
+      "autosci_command": "/init",
+      "execution_status": "gated",
+      "failed_count": 0,
+      "passed_count": 1,
+      "route": {
+        "backend_mode": "route_plan",
+        "coverage_status": "partial",
+        "evidence_schema": "literature_discovery.v1",
+        "physical_operator": "AutoSciBridgeInitSourceOperator",
+        "solar_backend_action": "init_sources",
+        "solar_capability": "cap.research-literature-discover",
+        "solar_logical_operator": "ScientificLiteratureDiscoverer"
+      },
+      "scheduler_failed": false,
+      "scheduler_lifecycle": {},
+      "schema_only_count": 0,
+      "selected_skill": "init",
+      "side_effect_policy": "approval_required",
+      "workspace": {
+        "index_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+        "policy": "human-facing workspace projection; execution logs remain Solar-managed",
+        "solar_managed_run_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-init-provider-proof-check",
+        "updated_count": 1,
+        "updated_paths": [
+          "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md"
+        ],
+        "wiki_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki",
+        "workspace_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace"
+      }
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-30T03:17:13.697765Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "codex-init-provider-proof-check",
+  "status": "inconclusive",
+  "task_id": "autosci-skill-init"
+}

@@ -1,0 +1,1 @@
+{"schema":"artifact_review.v1","status":"completed","outputs":{"review":{"review_available":true,"review_mode":"review_llm","score":0.64,"recommendation":"revise","evidence_ids":["review:rebuttal-proof-20260630"],"findings":[{"criterion":"evidence","issue":"Clarify generated-skill claim.","suggestion":"Cite runtime evidence."}],"review_llm":{"status":"completed"}}}}

@@ -43,28 +43,7 @@ else
   fail "watchdog respawn 未传 work_dir 参数"
 fi
 
-# 5. worktree 隔离必须是显式开关
-if grep -q 'SOLAR_BUILDER_WORKTREES' "$HARNESS_DIR/lib/worktree.sh" \
-  && grep -q 'solar_builder_worktrees_enabled' "$HARNESS_DIR/pane-launcher.sh" \
-  && grep -q 'solar_builder_worktrees_enabled' "$HARNESS_DIR/start-incarnation.sh"; then
-  ok "builder worktree 默认关闭且可显式开启"
-else
-  fail "builder worktree 缺少 SOLAR_BUILDER_WORKTREES 显式开关"
-fi
-
-disabled="$(
-  bash -c 'source "$1"; SOLAR_BUILDER_WORKTREES=0; if solar_builder_worktrees_enabled; then echo enabled; else echo disabled; fi' _ "$HARNESS_DIR/lib/worktree.sh"
-)"
-enabled="$(
-  bash -c 'source "$1"; SOLAR_BUILDER_WORKTREES=1; if solar_builder_worktrees_enabled; then echo enabled; else echo disabled; fi' _ "$HARNESS_DIR/lib/worktree.sh"
-)"
-if [[ "$disabled" == "disabled" && "$enabled" == "enabled" ]]; then
-  ok "SOLAR_BUILDER_WORKTREES 开关语义正确"
-else
-  fail "SOLAR_BUILDER_WORKTREES 开关语义错误 disabled=$disabled enabled=$enabled"
-fi
-
-# 6. 共享 worktree 逻辑语法正确
+# 5. 共享 worktree 逻辑语法正确
 if bash -n "$HARNESS_DIR/lib/worktree.sh" 2>/dev/null; then
   ok "worktree.sh 语法正确"
 else

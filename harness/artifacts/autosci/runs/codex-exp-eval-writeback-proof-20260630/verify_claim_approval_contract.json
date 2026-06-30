@@ -1,0 +1,53 @@
+{
+  "action": "verify_claim",
+  "after_artifacts": [
+    {
+      "artifact_path": "artifacts/autosci/workspace/wiki/ideas/claim-skillgen-write-20260630.md",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/workspace/wiki/ideas/claim-skillgen-write-20260630.md",
+      "verifiable": true
+    }
+  ],
+  "after_ready": true,
+  "allowlist_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/allowlist.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/allowlist.json",
+      "verifiable": true
+    }
+  ],
+  "allowlist_ready": true,
+  "approval_ref": "approval-exp-eval-proof-20260630",
+  "approval_state": "verified",
+  "approved": true,
+  "before_artifacts": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/before.md",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/before.md",
+      "verifiable": true
+    }
+  ],
+  "before_ready": true,
+  "execution_verified": true,
+  "missing": [],
+  "ready_for_execution": true,
+  "runtime_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/runtime.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/runtime.json",
+      "verifiable": true
+    }
+  ],
+  "runtime_ready": true,
+  "schema": "autosci_approval_contract.v1",
+  "side_effects": [
+    "claim_verdict_wiki_writeback"
+  ]
+}

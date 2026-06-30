@@ -1,0 +1,47 @@
+{
+  "action": "monitor_experiment",
+  "after_artifacts": [],
+  "after_ready": false,
+  "allowlist_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-inputs/allowlist.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-inputs/allowlist.json",
+      "verifiable": true
+    }
+  ],
+  "allowlist_ready": true,
+  "approval_ref": "approval-live-remote-status-check",
+  "approval_state": "approved_pending_runtime",
+  "approved": true,
+  "before_artifacts": [
+    {
+      "artifact_path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-inputs/before.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-inputs/before.json",
+      "verifiable": true
+    }
+  ],
+  "before_ready": true,
+  "execution_verified": false,
+  "missing": [
+    "after_artifacts"
+  ],
+  "ready_for_execution": true,
+  "runtime_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-check/remote_status_runtime_evidence.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-check/remote_status_runtime_evidence.json",
+      "verifiable": true
+    }
+  ],
+  "runtime_ready": true,
+  "schema": "autosci_approval_contract.v1",
+  "side_effects": [
+    "remote_status_poll"
+  ]
+}

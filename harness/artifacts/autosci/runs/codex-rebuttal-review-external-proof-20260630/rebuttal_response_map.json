@@ -1,0 +1,24 @@
+{
+  "evidence_ids": [
+    "review-comments"
+  ],
+  "limitations": [
+    "Rebuttal draft is local and evidence-linked; it is not a submitted response.",
+    "Review LLM stress-test and reviewer-comment atomization require supplied review evidence."
+  ],
+  "mapped_concerns": [
+    {
+      "concern": "Clarify generated-skill claim.",
+      "concern_id": "artifact-review:concern-1",
+      "evidence_ids": [
+        "artifact-review"
+      ],
+      "focus": "evidence",
+      "response": "Acknowledge the concern, attach the cited evidence, and revise the manuscript section before final submission.",
+      "status": "mapped"
+    }
+  ],
+  "target": "review-comments",
+  "title": "SkillGen Rebuttal Proof",
+  "unmapped_concerns": []
+}

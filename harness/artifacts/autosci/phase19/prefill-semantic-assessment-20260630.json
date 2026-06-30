@@ -1,0 +1,131 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "prefill": {
+      "semantic_parity": "full",
+      "auditor": "phase19-prefill-semantic-audit",
+      "summary": "Solar $prefill now preserves native AutoSci /prefill semantics as an approval-gated research-wiki memory route: it accepts add/domain inputs, reads a foundation catalog, records dedup and selected seeds, attempts live Wikipedia fetches for --online, renders source-backed terminal foundation pages when provider evidence is available, keeps failed/disabled fetches explicit fallback evidence, and mutates wiki state only through approval-gated writeback with log/index/graph rebuild proof.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/prefill/SKILL.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/prefill/SKILL.md",
+        ".agents/skills/prefill/foundations-catalog.yaml",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/fetch_wikipedia.py",
+        "harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+        "harness/artifacts/autosci/workspace/wiki/index.md",
+        "harness/artifacts/autosci/workspace/wiki/log.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $prefill accepts the native add/domain/online/source-evidence controls and preserves them in the bridge envelope.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/prefill/SKILL.md",
+            ".agents/skills/prefill/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "catalog_domain_dedup_plan",
+          "status": "ok",
+          "detail": "Prefill emits a source plan with mode, domain resolution, catalog path/status, selected seeds, and existing-foundation dedup state before mutation.",
+          "evidence_refs": [
+            ".agents/skills/prefill/foundations-catalog.yaml",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json"
+          ]
+        },
+        {
+          "check": "live_wikipedia_fetch_boundary",
+          "status": "ok",
+          "detail": "With --online and no supplied source evidence, Solar calls the Wikipedia fetch tool, records fetch_attempts, and archives completed provider summary evidence.",
+          "evidence_refs": [
+            "tools/fetch_wikipedia.py",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json"
+          ]
+        },
+        {
+          "check": "source_backed_terminal_foundation_rendering",
+          "status": "ok",
+          "detail": "A live provider-backed prefill run created a terminal foundation page with source_url, source_status=source_backed, source_evidence_path, and no outbound relationship fields.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+            "harness/artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+            "harness/plugins/autosci/bin/autosci_bridge.py"
+          ]
+        },
+        {
+          "check": "fallback_boundary",
+          "status": "ok",
+          "detail": "Disabled or failed live fetch attempts remain visible as fetch_disabled/fetch_failed/page_not_found evidence and do not become source-backed pages.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+            "harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json"
+          ]
+        },
+        {
+          "check": "approval_gated_wiki_writeback",
+          "status": "ok",
+          "detail": "Wiki mutation remains approval-gated and emits approval, provider-source, side-effect, and wiki-mutation proof manifests plus log/index/context rebuild evidence.",
+          "evidence_refs": [
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+            "harness/artifacts/autosci/workspace/wiki/index.md",
+            "harness/artifacts/autosci/workspace/wiki/log.md",
+            "harness/artifacts/autosci/workspace/wiki/graph/context_brief.md"
+          ]
+        },
+        {
+          "check": "regression_and_route_metadata",
+          "status": "ok",
+          "detail": "Focused prefill regression tests, route metadata, and ordinary parity gates cover add/catalog/source/live-fetch/fallback behavior.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+            "harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The prefill route is semantically full as an approval-gated route: source fetching and page proposal are native, while wiki mutation remains explicitly approval-bound."
+        },
+        {
+          "status": "ok",
+          "finding": "Fallback behavior is now truthful: missing, failed, or disabled Wikipedia fetches remain fallback evidence and cannot satisfy source-backed rendering checks."
+        }
+      ]
+    }
+  }
+}

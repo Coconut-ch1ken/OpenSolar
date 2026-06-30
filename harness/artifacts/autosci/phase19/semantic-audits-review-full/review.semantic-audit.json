@@ -1,0 +1,166 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/review/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/review/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $review preserves native artifact target, difficulty, focus, require-review, Review LLM evidence, command, and provider/model/endpoint controls.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/review/SKILL.md",
+        ".agents/skills/review/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "artifact_resolution_and_source_proof",
+      "detail": "Review resolves explicit artifact paths and wiki targets, writes a review report, and emits provider_source_evidence for the reviewed target artifact.",
+      "evidence_refs": [
+        "harness/plugins/autosci/backends/artifact_review.py",
+        "harness/artifacts/autosci/phase19/model-external-proof-inputs/review-target-20260630.md",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.json",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_artifact_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-review-source-proof-check/review_artifact_source_provider_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_evidence_boundary",
+      "detail": "Final review acceptance requires Review LLM evidence from supplied evidence, command bridge, or provider mode; non-Review-LLM diagnostics remain insufficient when Review LLM evidence is unavailable.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/backends/artifact_review.py",
+        "harness/artifacts/autosci/phase19/model-external-proof-inputs/review-llm-20260630.json",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_final_acceptance_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_runtime_proof",
+      "detail": "Review LLM evidence and command runs emit review_model_runtime_proof_manifest_json with review_llm_or_model_evidence and external runtime evidence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-review-proof-check-quoted/review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-review-source-proof-check/review_llm_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "final_acceptance_boundary",
+      "detail": "The final acceptance boundary records review_mode, review_available, Review LLM status, invocation mode, evidence ids, blocking reasons, score, and recommendation before any caller can treat a review as final.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-review-source-proof-check/review_final_acceptance_boundary.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "read_only_route_boundary",
+      "detail": "$review remains read-only: it writes run evidence and reports but does not mutate wiki state; callers such as $refine decide whether approved changes are applied.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/review/SKILL.md",
+        ".agents/skills/review/SKILL.md",
+        "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "regression_and_inventory",
+      "detail": "Focused review regressions cover supplied Review LLM evidence, command bridge, provider path, source proof, final acceptance boundary, and route runtime proof verification.",
+      "evidence_refs": [
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-refine-semantic-full.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T15:45:25Z",
+  "auditor": "phase19-review-semantic-audit",
+  "findings": [
+    {
+      "finding": "$review is semantically full as a read-only route: final acceptance is available only with Review LLM evidence, while non-Review-LLM diagnostics are explicitly bounded.",
+      "status": "ok"
+    },
+    {
+      "finding": "Wiki mutation is intentionally absent from $review and delegated to caller routes, matching the original AutoSci skill contract.",
+      "status": "ok"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/review/SKILL.md",
+    "../AutoSci/i18n/en/skills/review/SKILL.md"
+  ],
+  "native_skill": "review",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T15:45:25Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/review",
+    "backend_mode": "external_optional",
+    "coverage_status": "partial",
+    "limitations": [
+      "Read-only diagnostic review output is available for every resolved artifact, but final_acceptance_ready requires configured OpenAI-compatible Review LLM provider, command bridge, or supplied Review LLM evidence; --require-review-llm records non-Review-LLM diagnostics as insufficient for final acceptance."
+    ],
+    "required_capabilities": [
+      "independent reviewer prompt",
+      "score rubric",
+      "entity mapping",
+      "actionable suggestions"
+    ],
+    "side_effect_policy": "dry_run_only",
+    "solar_backend_action": "review_artifact"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/review/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/backends/artifact_review.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/artifacts/autosci/phase19/model-external-proof-inputs/review-target-20260630.md",
+    "harness/artifacts/autosci/phase19/model-external-proof-inputs/review-llm-20260630.json",
+    "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.json",
+    "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.md",
+    "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_final_acceptance_boundary.json",
+    "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_artifact_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-review-proof-check-quoted/artifact_review.json",
+    "harness/artifacts/autosci/runs/codex-review-proof-check-quoted/review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-review-source-proof-check/artifact_review.json",
+    "harness/artifacts/autosci/runs/codex-review-source-proof-check/review_final_acceptance_boundary.json",
+    "harness/artifacts/autosci/runs/codex-review-source-proof-check/review_artifact_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/phase19/current-parity-inventory-after-refine-semantic-full.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $review now preserves native AutoSci /review semantics as a read-only artifact review route: it resolves wiki slugs and artifact paths, accepts native difficulty/focus and Review LLM controls, records non-final diagnostic findings without treating them as final acceptance, completes final acceptance only with supplied, command, or provider Review LLM evidence, emits source and Review LLM runtime proof manifests, and leaves wiki mutation to caller approval paths such as /refine."
+}

@@ -1,0 +1,167 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/refine/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/refine/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $refine preserves native controls for difficulty, focus, max rounds, target score, Review LLM evidence, command, and provider/model/endpoint configuration.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/refine/SKILL.md",
+        ".agents/skills/refine/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approval_gated_after_artifact_apply",
+      "detail": "Approved refine runs require approval_ref, allowlist evidence, runtime evidence, before_artifact, and after_artifact before replacing the target artifact, and record before/after hashes plus side-effect proof.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/refine-loop-proof.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "refine_loop_report",
+      "detail": "Refine loop reports capture score history, target score, final verdict, termination reason, Review LLM evidence status, fixed issue buckets, unresolved issue buckets, and applied after_artifact refs.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-refine-loop-proof-20260630/refine_loop_report.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_loop_report.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_evidence_boundary",
+      "detail": "Supplied Review LLM evidence and generated command/provider review rounds both emit review_model_runtime_proof_manifest_json with review_llm_or_model_evidence and external_runtime_evidence categories.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-refine-loop-proof-20260630/refine_artifact_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_review_round_01.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_review_llm_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "post_apply_quality_gate",
+      "detail": "When supplied review evidence is absent or below target and max_rounds allows another round, $refine runs a post-apply Review LLM quality-gate round through the shared /review backend and records target_score_reached or another explicit termination reason.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_loop_report.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_review_round_01.json",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "source_and_route_proofs",
+      "detail": "The auto review loop proof run supplies source, approval, side-effect, and Review LLM runtime manifests, and the refine route passes parity gate with runtime_proof_status=verified.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/refine-route-after-auto-review-loop.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "regression_and_inventory",
+      "detail": "Focused refine regression tests cover approved apply, supplied Review LLM evidence, automatic Review LLM command quality-gate rerun, proof manifests, route metadata, and ordinary parity inventory refresh.",
+      "evidence_refs": [
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/artifacts/autosci/phase19/refine-route-after-auto-review-loop.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-refine-auto-review-loop.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T15:41:41Z",
+  "auditor": "phase19-refine-semantic-audit",
+  "findings": [
+    {
+      "finding": "The refine route is semantically full as an approval-gated route: it can apply approved refined content, then run Review LLM quality-gate evidence and preserve all loop/proof state.",
+      "status": "ok"
+    },
+    {
+      "finding": "Additional autonomous fix-generation remains approval-gated rather than silently mutating artifacts, matching Solar's protected side-effect boundary.",
+      "status": "ok"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/refine/SKILL.md",
+    "../AutoSci/i18n/en/skills/refine/SKILL.md"
+  ],
+  "native_skill": "refine",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T15:41:41Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/refine",
+    "backend_mode": "side_effect_gated",
+    "coverage_status": "gated",
+    "limitations": [
+      "Applying edits requires explicit approval; verified --execute-approved runs can replace a target artifact from after_artifact evidence, while refine_loop_report records supplied or command/provider Review LLM evidence, post-apply quality-gate score trajectory, actionable items, fixed/unresolved issue buckets, and termination reason. Additional autonomous fix-generation cycles remain approval-gated."
+    ],
+    "required_capabilities": [
+      "review loop evidence",
+      "Review LLM evidence boundary",
+      "actionable issue classification",
+      "score trajectory",
+      "termination reason",
+      "bounded fixes",
+      "iteration report"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "refine_artifact"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/refine/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/artifacts/autosci/runs/codex-refine-loop-proof-20260630/refine_loop_report.json",
+    "harness/artifacts/autosci/runs/codex-refine-loop-proof-20260630/refine_artifact_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_loop_report.json",
+    "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_review_round_01.json",
+    "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_approval_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_side_effect_execution_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-refine-auto-review-loop-proof-20260630/refine_artifact_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/workspace/wiki/outputs/refine-loop-proof.md",
+    "harness/artifacts/autosci/phase19/refine-route-after-auto-review-loop.json",
+    "harness/artifacts/autosci/phase19/current-parity-inventory-after-refine-auto-review-loop.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $refine now preserves native AutoSci /refine semantics as an approval-gated artifact refinement route: it accepts native difficulty/focus/max-rounds/target-score and Review LLM controls, applies approved after_artifact contents to a target artifact with before/runtime/allowlist evidence, records refine loop score trajectory and termination reasons, classifies fixed/unresolved issues, runs a post-apply Review LLM command/provider quality-gate round when needed, and emits review/model, source, approval, and side-effect proof manifests."
+}

@@ -1,0 +1,108 @@
+{
+  "action": "evaluate_ideas",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/idea_evaluation.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "allow_network_fetch": false,
+      "claims_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/research_claims.json",
+      "ideas_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_generate/task-autosci-scheduler-smoke-step38-final-idea_generate/idea_candidate.json",
+      "method_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/method_extract/task-autosci-scheduler-smoke-step38-final-method_extract/research_method.json",
+      "paper_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/paper_ingest/task-autosci-scheduler-smoke-step38-final-paper_ingest/research_paper.json",
+      "paper_id": "paper-autosci-scheduler-smoke-step38-final",
+      "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md",
+      "smoke_mode": true
+    },
+    "limitations": [
+      "Fixture evaluation uses local evidence and does not update idea status directly."
+    ],
+    "node_id": "idea_evaluate",
+    "outputs": {
+      "evaluations": [
+        {
+          "closest_prior_work": [],
+          "duplicate_status": "new",
+          "evidence_ids": [
+            "idea-001",
+            "claim-001",
+            "method-001",
+            "task-autosci-scheduler-smoke-step38-final-paper_ingest",
+            "task-autosci-scheduler-smoke-step38-final-claim_extract",
+            "claim-002",
+            "task-autosci-scheduler-smoke-step38-final-method_extract"
+          ],
+          "external_novelty": {
+            "status": "N/A"
+          },
+          "external_source_count": "N/A",
+          "failed_overlap": "",
+          "feasibility": 0.76,
+          "feasibility_rationale": "The required inputs already exist as Solar Evidence ABI artifacts.",
+          "idea_id": "idea-001",
+          "local_source_count": "N/A",
+          "novelty": 0.68,
+          "novelty_label": "fixture",
+          "novelty_rationale": "The idea combines claim, method, and code evidence at a shared artifact grain.",
+          "recommendation": "advance",
+          "review_available": false,
+          "review_llm": {
+            "status": "N/A"
+          },
+          "review_mode": "N/A",
+          "review_score": "N/A",
+          "risks": [
+            "External novelty is unverified because fixture mode does not search live literature."
+          ],
+          "source_count": "N/A",
+          "source_mode": "fixture"
+        },
+        {
+          "duplicate_status": "duplicate",
+          "evidence_ids": [
+            "idea-duplicate-001",
+            "claim-001",
+            "method-001",
+            "task-autosci-scheduler-smoke-step38-final-paper_ingest",
+            "task-autosci-scheduler-smoke-step38-final-claim_extract",
+            "claim-001",
+            "claim-002",
+            "task-autosci-scheduler-smoke-step38-final-method_extract",
+            "method-001"
+          ],
+          "feasibility": 0.8,
+          "feasibility_rationale": "It is easy to run but does not add meaningful evidence.",
+          "idea_id": "idea-duplicate-001",
+          "novelty": 0.15,
+          "novelty_rationale": "The idea duplicates known fixture validation rather than adding a new research question.",
+          "recommendation": "reject",
+          "risks": [
+            "Marked duplicate of an existing fixture smoke path."
+          ],
+          "source_mode": "fixture"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-26T16:03:42Z"
+    },
+    "schema": "idea_evaluation.v1",
+    "sprint_id": "autosci-scheduler-smoke-step38-final",
+    "status": "completed",
+    "task_id": "task-autosci-scheduler-smoke-step38-final-idea_evaluate"
+  },
+  "evidence_jsonl": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/evidence.jsonl",
+  "evidence_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/idea_evaluation.json",
+  "ok": true,
+  "result_path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/evaluate_ideas.result.json",
+  "schema": "idea_evaluation.v1",
+  "sidecar_evidence_paths": [
+    "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/idea_evaluate/task-autosci-scheduler-smoke-step38-final-idea_evaluate/research_memory_update.json"
+  ],
+  "status": "completed"
+}

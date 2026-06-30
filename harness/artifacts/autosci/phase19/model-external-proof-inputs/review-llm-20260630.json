@@ -1,0 +1,1 @@
+{"schema":"artifact_review.v1","status":"completed","outputs":{"review":{"review_available":true,"review_mode":"review_llm","score":0.76,"recommendation":"accept","evidence_ids":["review:review-proof-20260630"],"review_llm":{"status":"completed"}},"findings":[],"artifact":{"artifact_id":"review-target-20260630"}},"artifacts":[]}

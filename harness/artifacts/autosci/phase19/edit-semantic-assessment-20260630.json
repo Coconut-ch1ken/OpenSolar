@@ -1,0 +1,130 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "edit": {
+      "semantic_parity": "full",
+      "auditor": "phase19-edit-semantic-audit",
+      "summary": "Solar $edit now preserves native AutoSci /edit semantics as an approval-gated memory route: it parses bounded edit requests, updates wiki pages from approved after_artifact evidence, can add new raw sources, can delete raw sources with explicit delete intent, blocks overwrites of existing raw sources, rebuilds wiki navigation/log/context views, and emits approval/source/side-effect/wiki-mutation proof for applied mutations.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/edit/SKILL.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/edit/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/runs/codex-edit-proof-check/research_memory_update.edit_plan.json",
+        "harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/research_memory_update.edit_plan.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/edit_wiki_plan_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/edit_wiki_plan_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/edit_wiki_plan_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/edit_wiki_plan_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/research_memory_update.edit_plan.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/edit_wiki_plan_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/edit_wiki_plan_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/edit_wiki_plan_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/edit_wiki_plan_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-edit-raw-existing-block-proof-20260630/research_memory_update.edit_plan.json",
+        "harness/artifacts/autosci/workspace/raw/papers/edit-raw-add-proof-20260630.md",
+        "harness/artifacts/autosci/workspace/raw/papers/edit-raw-existing-proof-20260630.md",
+        "harness/artifacts/autosci/workspace/wiki/index.md",
+        "harness/artifacts/autosci/workspace/wiki/log.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/phase19/edit-route-after-raw-add-delete.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-edit-raw-add-delete.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar edit preserves the native request surface for wiki/raw edits and adds explicit --delete handling for destructive raw source operations.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/edit/SKILL.md",
+            ".agents/skills/edit/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "wiki_page_update",
+          "status": "ok",
+          "detail": "Approved wiki edit writes after_artifact contents to the target wiki page and records before/after hashes, log, rebuild, and mutation proofs.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-edit-proof-check/research_memory_update.edit_plan.json",
+            "harness/artifacts/autosci/runs/codex-edit-proof-check/edit_wiki_plan_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "raw_source_add",
+          "status": "ok",
+          "detail": "Approved raw add materializes a new raw source under the Solar workspace raw root from after_artifact evidence and records source/approval/side-effect/wiki proof.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/research_memory_update.edit_plan.json",
+            "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/edit_wiki_plan_source_provider_runtime_proof.json",
+            "harness/artifacts/autosci/workspace/raw/papers/edit-raw-add-proof-20260630.md"
+          ]
+        },
+        {
+          "check": "raw_source_delete",
+          "status": "ok",
+          "detail": "Approved raw delete requires explicit delete intent, carries approval_ref on the delete change, removes the raw target, and preserves before/after marker evidence in runtime proof refs.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/research_memory_update.edit_plan.json",
+            "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/edit_wiki_plan_side_effect_execution_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/edit_wiki_plan_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "existing_raw_read_only_guard",
+          "status": "ok",
+          "detail": "Attempted approved overwrite of an existing raw source is blocked and leaves the existing raw file unchanged.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-edit-raw-existing-block-proof-20260630/research_memory_update.edit_plan.json",
+            "harness/artifacts/autosci/workspace/raw/papers/edit-raw-existing-proof-20260630.md",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "approval_and_navigation_boundary",
+          "status": "ok",
+          "detail": "All applied wiki/raw mutations require approval_ref, runtime/allowlist evidence, before/after artifacts, side-effect execution proof, and wiki log/index/context rebuild artifacts.",
+          "evidence_refs": [
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/artifacts/autosci/runs/codex-edit-raw-add-proof-20260630/edit_wiki_plan_approval_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-edit-raw-delete-proof-20260630/edit_wiki_plan_approval_runtime_proof.json",
+            "harness/artifacts/autosci/workspace/wiki/index.md",
+            "harness/artifacts/autosci/workspace/wiki/log.md",
+            "harness/artifacts/autosci/workspace/wiki/graph/context_brief.md"
+          ]
+        },
+        {
+          "check": "regression_and_route_metadata",
+          "status": "ok",
+          "detail": "Focused edit regression tests, route metadata, and ordinary parity gates cover wiki update, raw add/delete, read-only guard, and proof ref resolution.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/artifacts/autosci/phase19/edit-route-after-raw-add-delete.json",
+            "harness/artifacts/autosci/phase19/current-parity-inventory-after-edit-raw-add-delete.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The edit route is semantically full as an approval-gated route: raw and wiki mutations are available, but only with explicit approval/runtime evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "Existing raw files remain protected from overwrite; destructive raw delete uses a distinct approval-gated path."
+        }
+      ]
+    }
+  }
+}

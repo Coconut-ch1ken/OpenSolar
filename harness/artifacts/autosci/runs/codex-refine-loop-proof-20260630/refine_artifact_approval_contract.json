@@ -1,0 +1,55 @@
+{
+  "action": "refine_artifact",
+  "after_artifacts": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/refine-loop-proof-inputs/after-20260630.md",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/phase19/refine-loop-proof-inputs/after-20260630.md",
+      "verifiable": true
+    }
+  ],
+  "after_ready": true,
+  "allowlist_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/refine-loop-proof-inputs/allowlist-20260630.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/phase19/refine-loop-proof-inputs/allowlist-20260630.json",
+      "verifiable": true
+    }
+  ],
+  "allowlist_ready": true,
+  "approval_ref": "approval-refine-loop-20260630",
+  "approval_state": "verified",
+  "approved": true,
+  "before_artifacts": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/refine-loop-proof-inputs/before-20260630.md",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/phase19/refine-loop-proof-inputs/before-20260630.md",
+      "verifiable": true
+    }
+  ],
+  "before_ready": true,
+  "execution_verified": true,
+  "missing": [],
+  "ready_for_execution": true,
+  "runtime_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/refine-loop-proof-inputs/runtime-20260630.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/phase19/refine-loop-proof-inputs/runtime-20260630.json",
+      "verifiable": true
+    }
+  ],
+  "runtime_ready": true,
+  "schema": "autosci_approval_contract.v1",
+  "side_effects": [
+    "artifact_mutation",
+    "source_rewrite",
+    "quality_gate_rerun"
+  ]
+}

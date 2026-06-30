@@ -1,0 +1,1 @@
+{"schema": "autosci_runtime_evidence.v1", "status": "completed", "outputs": {"runtime": {"action": "compile_paper", "status": "completed", "exit_code": 0, "pdf_generated": true, "pdf_path": "harness/artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/paper-main.pdf", "evidence_ids": ["runtime:research-compile-proof"]}}}

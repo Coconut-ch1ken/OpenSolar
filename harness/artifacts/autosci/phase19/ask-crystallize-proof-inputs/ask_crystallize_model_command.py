@@ -1,0 +1,20 @@
+import json
+import sys
+
+
+request = json.loads(sys.stdin.read())
+assert request["schema"] == "autosci_model_request.v1"
+assert request["action"] == "ask_wiki"
+assert request["context"]["retrieval_hits"]
+
+print(json.dumps({
+    "schema": "autosci_model_response.v1",
+    "status": "completed",
+    "outputs": {
+        "answer": "SkillGen is supported by retrieved wiki evidence that links generated skills to verifier-gated runtime checks and paper-derived evidence.",
+        "confidence": 0.88,
+        "evidence_ids": ["model:ask-crystallize-skillgen-20260630"],
+        "model": "gpt-5.5",
+        "provider": "codex-model-command"
+    }
+}))

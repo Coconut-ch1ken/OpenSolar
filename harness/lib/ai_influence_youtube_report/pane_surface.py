@@ -14,13 +14,6 @@ def build_pane_surface(run: dict[str, Any]) -> dict[str, Any]:
         "timeline": run.get("step_log", []),
         "handoff": run.get("handoff", {}),
         "eval_sidecars": run.get("eval_sidecars", []),
-        "chapter_state": run.get("chapter_state", {}),
-        "blocked_reasons": run.get("blocked_reasons") or ([run.get("blocked_reason")] if run.get("blocked_reason") else []),
-        "capability_usage": run.get("capability_usage", []),
-        "proof": run.get("proof", {}),
-        "repair": run.get("repair", {}),
-        "quality": run.get("quality") or run.get("quality_score", {}),
-        "sidecar_refs": run.get("sidecar_refs") or run.get("validation_sidecars", []),
     }
 
 

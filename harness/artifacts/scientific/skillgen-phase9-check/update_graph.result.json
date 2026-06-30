@@ -1,0 +1,57 @@
+{
+  "action": "update_graph",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/scientific/skillgen-phase9-check/graph_edges.jsonl",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "paper_id": "paper-skillgen",
+      "paper_path": "artifacts/scientific/skillgen-phase9-check/skillgen_paper.md",
+      "source_pdf_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AI4Research-B/docs/SkillGen.pdf"
+    },
+    "limitations": [
+      "Fixture graph update records explicit proposed edges only."
+    ],
+    "node_id": "node-skillgen-graph-update",
+    "outputs": {
+      "edges": [
+        {
+          "evidence_ids": [
+            "paper-skillgen"
+          ],
+          "operation": "propose",
+          "relation": "describes",
+          "source": "paper-skillgen",
+          "target": "concept.solar_evidence_abi"
+        },
+        {
+          "evidence_ids": [
+            "paper-skillgen"
+          ],
+          "operation": "confirm",
+          "relation": "has_source",
+          "source": "paper-skillgen",
+          "target": "artifacts/scientific/skillgen-phase9-check/skillgen_paper.md"
+        }
+      ]
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-18T14:44:18Z"
+    },
+    "schema": "research_graph_update.v1",
+    "sprint_id": "sprint-autosci-phase9-skillgen-check",
+    "status": "completed",
+    "task_id": "task-skillgen-graph-update"
+  },
+  "evidence_jsonl": "artifacts/scientific/skillgen-phase9-check/evidence.jsonl",
+  "evidence_path": "artifacts/scientific/skillgen-phase9-check/graph_edges.jsonl",
+  "ok": true,
+  "result_path": "artifacts/scientific/skillgen-phase9-check/update_graph.result.json",
+  "schema": "research_graph_update.v1",
+  "status": "completed"
+}

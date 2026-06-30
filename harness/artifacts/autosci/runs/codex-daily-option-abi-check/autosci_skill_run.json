@@ -1,0 +1,268 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-option-abi-check/literature_discovery.daily_arxiv.json",
+      "type": "action_evidence"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+      "type": "human_workspace"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+      "type": "human_workspace"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+      "type": "human_workspace_index"
+    }
+  ],
+  "inputs": {
+    "anchors": [],
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "discovery_evidence": [],
+    "from_wiki": false,
+    "limit": 0,
+    "native_options": {
+      "after_artifacts": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/after.json"
+      ],
+      "all": false,
+      "allowlist_evidence": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/allowlist.json"
+      ],
+      "anonymous": false,
+      "approval_ref": "approval-codex-daily-options",
+      "auto": false,
+      "before_artifacts": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/before.json"
+      ],
+      "checklist": false,
+      "claims_evidence": [],
+      "code_evidence": [],
+      "collect": false,
+      "collect_ready": false,
+      "compile_after_artifacts": [],
+      "compile_allowlist_evidence": [],
+      "compile_approval_ref": "",
+      "compile_before_artifacts": [],
+      "compile_execute_approved": false,
+      "compile_executor_timeout_seconds": 120,
+      "compile_runtime_evidence": [],
+      "compile_target": "",
+      "daily_categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "daily_hours": 48,
+      "daily_max_auto_ingest": 2,
+      "daily_max_recommendations": 7,
+      "daily_mode": "inform",
+      "daily_send_email": "false",
+      "difficulty": "",
+      "discover": false,
+      "double_blind": false,
+      "env": "",
+      "execute_approved": false,
+      "experiment_after_artifacts": [],
+      "experiment_allowlist_evidence": [],
+      "experiment_approval_ref": "",
+      "experiment_before_artifacts": [],
+      "experiment_execute_approved": false,
+      "experiment_executor_timeout_seconds": 120,
+      "experiment_result_evidence": [],
+      "experiment_runtime_evidence": [],
+      "fix": false,
+      "focus": "",
+      "format": "",
+      "full": false,
+      "idea_approval_ref": "",
+      "lifecycle_summary": [],
+      "max_ideas": 0,
+      "max_rounds": 0,
+      "min_font_size": null,
+      "model_command": "",
+      "model_evidence": [],
+      "no_introduction": false,
+      "novelty_evidence": [],
+      "online": false,
+      "page_count": null,
+      "page_limit": null,
+      "pdf_inspection": "",
+      "pipeline": "",
+      "quick": false,
+      "remote_check_command": "",
+      "remote_run_dir": "",
+      "render": false,
+      "require_review_llm": false,
+      "results_approval_ref": "",
+      "review": false,
+      "review_llm_command": "",
+      "review_llm_endpoint": "",
+      "review_llm_evidence": [],
+      "review_llm_model": "",
+      "review_llm_provider": "",
+      "runtime_evidence": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/source-runtime.json"
+      ],
+      "scheduler_dispatch_external_evidence": false,
+      "scheduler_include_blocked_external": false,
+      "scheduler_include_human_gates": false,
+      "scheduler_legacy_smoke_runner": false,
+      "scheduler_node_id": [],
+      "scheduler_require_workflow_config_alignment": false,
+      "scheduler_run": false,
+      "scheduler_timeout": 30.0,
+      "serve": false,
+      "skip_paper": false,
+      "skip_pilot": false,
+      "skip_validation": false,
+      "start_from": "",
+      "submission_audit": "",
+      "submission_mode": "",
+      "submission_profile": "",
+      "target_score": 0.0,
+      "title": "",
+      "verbose": false,
+      "verified_min_font_size": null,
+      "verified_page_count": null,
+      "visualize": false,
+      "write": false
+    },
+    "negative_ids": [],
+    "paper_path": "",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "codex-daily-option-abi-check",
+    "skill": "daily-arxiv",
+    "skill_args": [
+      "skill generation"
+    ],
+    "smoke": false,
+    "target": "skill generation",
+    "topic": "",
+    "venue": "",
+    "work_dir": "artifacts/autosci/runs/codex-daily-option-abi-check",
+    "year": ""
+  },
+  "limitations": [
+    "Approved runtime digest evidence can complete the route and --write can fan runtime candidates into wiki papers/log/graph; daily_arxiv_final_provider_delivery_boundary requires verified provider source-channel candidates, ranking evidence, and explicit delivery or approved wiki ingest/fan-in status before a digest is final; SMTP delivery, live feed fetches, and GitHub Actions scheduling remain approval/provider-gated.",
+    "Approved runtime digest evidence can complete the route and --write can fan runtime candidates into wiki papers/log/graph; SMTP delivery, direct feed fetch, and scheduling remain approval/provider-gated.",
+    "Approval-gated external effects were not executed by the shim.",
+    "Fixture bridge fallback is disabled unless --smoke is passed explicitly."
+  ],
+  "node_id": "autosci-skill-daily-arxiv",
+  "outputs": {
+    "skill_run": {
+      "action_count": 1,
+      "actions": [
+        {
+          "action": "daily_arxiv_prepare_finalize",
+          "evidence_ids": [
+            "artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_prepare_finalize_approval_contract.json",
+            "approval_contract_json",
+            "artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_final_provider_delivery_boundary.json",
+            "daily_arxiv_final_provider_delivery_boundary_json",
+            "artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+            "approval_runtime_proof_manifest_json",
+            "artifacts/autosci/runs/codex-daily-option-abi-check/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+            "provider_source_runtime_proof_manifest_json",
+            "artifacts/autosci/runs/codex-daily-option-abi-check/literature_discovery.daily_arxiv.json",
+            "solar_evidence_json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/after.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/allowlist.json",
+            "approval-codex-daily-options",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/before.json",
+            "cs.AI",
+            "cs.CL",
+            "inform",
+            "false",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/source-runtime.json",
+            "SkillGen verified inference-time agent skill synthesis",
+            "skill generation",
+            "Daily arXiv runtime was verified from supplied approval-gated evidence; this bridge did not execute network/email side effects.",
+            "Daily arXiv finality requires explicit digest delivery or approved wiki ingest/fan-in status.",
+            "node-daily-arxiv-prepare-finalize",
+            "runtime-source-001",
+            "new",
+            "fetched",
+            "Approved source runtime returned this source.",
+            "search_s2",
+            "https://arxiv.org/abs/2601.00005",
+            "Runtime Verified Skill Generation Source",
+            "verified",
+            "completed",
+            "autosci_daily_arxiv_final_provider_delivery_boundary.v1",
+            "daily_provider_ready",
+            "daily_arxiv_runtime_verified",
+            "daily_arxiv_digest_selection",
+            "No Review LLM evidence was supplied.",
+            "unavailable",
+            "not_requested",
+            "daily_arxiv_prepare_finalize",
+            "artifacts/autosci/runs/codex-discover-provider-proof-check/source-runtime.json",
+            "autosci_source_provider_boundary.v1",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-30T03:34:11Z",
+            "literature_discovery.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-daily_arxiv_prepare_finalize"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-option-abi-check/literature_discovery.daily_arxiv.json",
+          "gate_status": "passed",
+          "reasons": [],
+          "schema": "literature_discovery.v1",
+          "status": "passed",
+          "warnings": []
+        }
+      ],
+      "autosci_command": "/daily-arxiv",
+      "execution_status": "gated",
+      "failed_count": 0,
+      "passed_count": 1,
+      "route": {
+        "backend_mode": "side_effect_gated",
+        "coverage_status": "gated",
+        "evidence_schema": "literature_discovery.v1",
+        "physical_operator": "ApprovalGatedDailyArxivOperator",
+        "solar_backend_action": "daily_arxiv_prepare_finalize",
+        "solar_capability": "cap.research-literature-discover",
+        "solar_logical_operator": "ScientificLiteratureDiscoverer"
+      },
+      "scheduler_failed": false,
+      "scheduler_lifecycle": {},
+      "schema_only_count": 0,
+      "selected_skill": "daily-arxiv",
+      "side_effect_policy": "approval_required",
+      "workspace": {
+        "index_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md",
+        "policy": "human-facing workspace projection; execution logs remain Solar-managed",
+        "solar_managed_run_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-daily-option-abi-check",
+        "updated_count": 2,
+        "updated_paths": [
+          "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+          "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/index.md"
+        ],
+        "wiki_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki",
+        "workspace_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace"
+      }
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-30T03:34:11.982543Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "codex-daily-option-abi-check",
+  "status": "inconclusive",
+  "task_id": "autosci-skill-daily-arxiv"
+}

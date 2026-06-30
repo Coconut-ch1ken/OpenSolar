@@ -1,0 +1,9 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "status": "completed",
+  "task_id": "codex-prefill-add-catalog-proof-20260630",
+  "outputs": {
+    "approved_action": "prefill_foundations_add_mode",
+    "expected_output": "wiki/foundations/foundation-skillgen-add-proof-20260630.md"
+  }
+}

@@ -20,8 +20,12 @@ from typing import Any, Callable
 PLUGIN_DIR = Path(__file__).resolve().parents[1]
 HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", Path(__file__).resolve().parents[3])).resolve()
 REPO_HARNESS_DIR = Path(__file__).resolve().parents[3]
+if str(REPO_HARNESS_DIR) not in sys.path:
+    sys.path.insert(0, str(REPO_HARNESS_DIR))
 if str(PLUGIN_DIR) not in sys.path:
     sys.path.insert(0, str(PLUGIN_DIR))
+
+from evaluators.scientific.lifecycle_runtime_gate import evaluate as evaluate_lifecycle_runtime
 
 from adapters.autosci_to_claim_verdict import convert as convert_claim_verdict
 from adapters.autosci_to_experiment_plan import convert as convert_experiment_plan
@@ -658,6 +662,122 @@ def _runtime_candidates(records: list[dict[str, Any]], *, limit: int) -> list[di
     return candidates
 
 
+GENERIC_SOURCE_CHANNELS = {
+    "approved_runtime",
+    "fixture",
+    "local_fixture",
+    "runtime",
+    "unknown",
+}
+
+
+def _source_provider_boundary(
+    records: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
+    *,
+    action: str,
+) -> dict[str, Any]:
+    channels = _unique_strings([
+        str(channel)
+        for candidate in candidates
+        if isinstance(candidate, dict)
+        for channel in (candidate.get("source_channels") if isinstance(candidate.get("source_channels"), list) else [])
+        if str(channel).strip()
+    ])
+    provider_channels = [channel for channel in channels if channel.strip().lower() not in GENERIC_SOURCE_CHANNELS]
+    candidate_ids = _unique_strings([
+        str(candidate.get("candidate_id") or candidate.get("paperId") or candidate.get("title") or "")
+        for candidate in candidates
+        if isinstance(candidate, dict)
+    ])
+    runtime_sources = _unique_strings([
+        str(record.get("source_path") or "")
+        for record in records
+        if isinstance(record, dict) and str(record.get("source_path") or "").strip()
+    ])
+    invalid_reasons: list[str] = []
+    if not candidates:
+        invalid_reasons.append("no source candidates were present")
+    if not provider_channels:
+        invalid_reasons.append("no non-fixture provider source channel was present")
+    completed = bool(candidates and provider_channels)
+    return {
+        "schema": "autosci_source_provider_boundary.v1",
+        "action": action,
+        "status": "completed" if completed else "incomplete",
+        "completed": completed,
+        "candidate_count": len(candidates),
+        "candidate_ids": candidate_ids,
+        "source_channels": channels,
+        "provider_channels": provider_channels,
+        "generic_channels": [channel for channel in channels if channel.strip().lower() in GENERIC_SOURCE_CHANNELS],
+        "runtime_record_sources": runtime_sources,
+        "invalid_reasons": invalid_reasons,
+        "limitations": [] if completed else ["Source runtime evidence did not prove a non-fixture provider channel."],
+    }
+
+
+def _discover_final_shortlist_boundary(
+    source_boundary: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    mode: str,
+) -> dict[str, Any]:
+    provider_channels = list(source_boundary.get("provider_channels") or []) if isinstance(source_boundary, dict) else []
+    invalid_reasons = list(source_boundary.get("invalid_reasons") or []) if isinstance(source_boundary, dict) else []
+    blocking_reasons: list[str] = []
+    if not candidates:
+        blocking_reasons.append("discovery shortlist is empty")
+    if not provider_channels:
+        blocking_reasons.append("provider-backed source channel is missing")
+    if invalid_reasons:
+        blocking_reasons.extend(str(item) for item in invalid_reasons)
+    final_shortlist_ready = not blocking_reasons
+    return {
+        "schema": "autosci_discover_final_shortlist_boundary.v1",
+        "status": "final_shortlist_ready" if final_shortlist_ready else "discover_shortlist_incomplete",
+        "final_shortlist_ready": final_shortlist_ready,
+        "mode": mode,
+        "candidate_count": len(candidates),
+        "candidate_ids": _unique_strings([
+            str(candidate.get("candidate_id") or candidate.get("paperId") or candidate.get("title") or "")
+            for candidate in candidates
+            if isinstance(candidate, dict)
+        ]),
+        "provider_channels": provider_channels,
+        "source_provider_boundary_status": str(source_boundary.get("status") or "missing") if isinstance(source_boundary, dict) else "missing",
+        "blocking_reasons": _unique_strings(blocking_reasons),
+        "limitations": [] if final_shortlist_ready else [
+            "Final discovery shortlist requires non-empty candidates backed by non-fixture provider source channels."
+        ],
+    }
+
+
+def _attach_discover_final_shortlist_boundary(
+    envelope: dict[str, Any],
+    raw: dict[str, Any],
+    *,
+    mode: str,
+) -> dict[str, Any]:
+    candidates = raw.get("candidates") if isinstance(raw.get("candidates"), list) else []
+    source_boundary = raw.get("source_provider_boundary") if isinstance(raw.get("source_provider_boundary"), dict) else {}
+    final_boundary = _discover_final_shortlist_boundary(source_boundary, candidates, mode=mode)
+    source_boundary = dict(source_boundary)
+    source_boundary["final_shortlist_boundary"] = final_boundary
+    raw["source_provider_boundary"] = source_boundary
+    boundary_path = _output_dir(envelope, "discover_literature") / "discover_final_shortlist_boundary.json"
+    boundary_artifact = _write_json_sidecar(boundary_path, final_boundary)
+    artifacts = list(raw.get("artifacts") or [])
+    artifacts.append({"type": "discover_final_shortlist_boundary_json", "path": boundary_artifact})
+    raw["artifacts"] = artifacts
+    if not final_boundary.get("final_shortlist_ready"):
+        raw["limitations"] = [
+            *list(raw.get("limitations") or []),
+            *list(final_boundary.get("limitations") or []),
+        ]
+    return raw
+
+
 def _runtime_metrics(record: dict[str, Any]) -> list[dict[str, Any]]:
     raw_metrics = _field(record, "metrics")
     if not isinstance(raw_metrics, list):
@@ -820,12 +940,22 @@ def _approval_semantic_runtime(contract: dict[str, Any], action: str, *, limit: 
     elif action in {"daily_arxiv_prepare_finalize", "init_sources", "discover_literature"}:
         candidates = _runtime_candidates(records, limit=limit)
         fetch_ok = bool(candidates) and any(_runtime_exit_ok(record) for record in records)
+        provider_boundary = _source_provider_boundary(records, candidates, action=action)
         checks.extend([
             {"check": "source_fetch_ok", "status": "ok" if fetch_ok else "error", "detail": str(fetch_ok)},
             {"check": "candidates_present", "status": "ok" if candidates else "error", "detail": str(len(candidates))},
+            {
+                "check": "source_provider_boundary",
+                "status": "ok" if provider_boundary.get("completed") else "error",
+                "detail": ",".join(provider_boundary.get("invalid_reasons") or []),
+            },
         ])
-        verified = verified and fetch_ok and bool(candidates)
-        detail.update({"candidates": candidates, "source_fetch_ok": fetch_ok})
+        verified = verified and fetch_ok and bool(candidates) and bool(provider_boundary.get("completed"))
+        detail.update({
+            "candidates": candidates,
+            "source_fetch_ok": fetch_ok,
+            "source_provider_boundary": provider_boundary,
+        })
 
     status = "verified" if verified else "incomplete"
     return {
@@ -1039,6 +1169,10 @@ def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _hash_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
 def _local_mutation_requested(envelope: dict[str, Any]) -> bool:
     inputs = dict(envelope.get("inputs") or {})
     approval_ref = str(inputs.get("approval_ref") or "").strip()
@@ -1057,6 +1191,27 @@ def _wiki_page_rel_for_target(target: str, default_dir: str, default_prefix: str
     slug = _slug(target or default_prefix or "page")
     name = f"{default_prefix}-{slug}.md" if default_prefix and not slug.startswith(default_prefix) else f"{slug}.md"
     return Path(default_dir) / name
+
+
+def _edit_raw_target(target: str) -> tuple[Path | None, bool]:
+    text = str(target or "").strip()
+    inferred_delete = False
+    parts = text.split(maxsplit=1)
+    if len(parts) == 2 and parts[0].lower() in {"delete", "remove", "rm"}:
+        inferred_delete = True
+        text = parts[1].strip()
+    normalized = text.replace("\\", "/")
+    path = Path(normalized)
+    if path.is_absolute() or not normalized.startswith("raw/"):
+        return None, inferred_delete
+    rel_parts = path.parts[1:]
+    if not rel_parts or any(part in {"", ".", ".."} for part in rel_parts):
+        return None, inferred_delete
+    return Path(*rel_parts), inferred_delete
+
+
+def _raw_root_for_wiki_root(wiki_root: Path) -> Path:
+    return wiki_root.parent / "raw"
 
 
 def _write_generic_wiki_log(root: Path, event: str, target_path: Path, evidence_ids: list[str], summary: str) -> Path:
@@ -1088,7 +1243,7 @@ def _rebuild_generic_wiki_views(root: Path, run_id: str, target_path: Path, evid
         "Human-facing research memory projected from Solar-managed evidence and approved wiki mutations.\n\n",
         f"Last mutation run: `{run_id}`\n\n",
     ]
-    for subdir in ["papers", "concepts", "methods", "people", "topics", "ideas", "experiments", "outputs"]:
+    for subdir in ["papers", "foundations", "concepts", "methods", "people", "topics", "ideas", "experiments", "outputs"]:
         lines.append(f"## {subdir.title()}\n\n")
         pages = sorted((root / subdir).glob("*.md"))
         if not pages:
@@ -1120,79 +1275,681 @@ def _rebuild_generic_wiki_views(root: Path, run_id: str, target_path: Path, evid
     return updated
 
 
+PREFILL_DOMAIN_ALIASES = {
+    "general": "general",
+    "nlp": "NLP",
+    "natural-language-processing": "NLP",
+    "cv": "CV",
+    "computer-vision": "CV",
+    "ml-systems": "ML Systems",
+    "ml systems": "ML Systems",
+    "robotics": "Robotics",
+}
+
+
+def _prefill_catalog_path() -> Path:
+    return REPO_HARNESS_DIR.parent / ".agents" / "skills" / "prefill" / "foundations-catalog.yaml"
+
+
+def _parse_prefill_catalog(path: Path) -> dict[str, Any]:
+    catalog: dict[str, list[dict[str, str]]] = {}
+    if not path.exists():
+        return {"status": "missing", "path": _rel(path), "domains": catalog}
+    current_domain = ""
+    current_seed: dict[str, str] | None = None
+    for raw_line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or stripped == "domains:":
+            continue
+        if raw_line.startswith("  ") and not raw_line.startswith("    ") and stripped.endswith(":"):
+            current_domain = stripped[:-1].strip().strip("\"'")
+            catalog.setdefault(current_domain, [])
+            current_seed = None
+            continue
+        if raw_line.startswith("    - "):
+            if not current_domain:
+                continue
+            current_seed = {}
+            catalog.setdefault(current_domain, []).append(current_seed)
+            stripped = stripped[2:].strip()
+        if current_seed is not None and ":" in stripped:
+            key, value = stripped.split(":", 1)
+            current_seed[key.strip()] = value.strip().strip("\"'")
+    return {"status": "completed", "path": _rel(path), "domains": catalog}
+
+
+def _prefill_canonical_domain(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    return PREFILL_DOMAIN_ALIASES.get(raw.lower(), raw)
+
+
+def _prefill_infer_domain(wiki_root: Path) -> dict[str, Any]:
+    topics_dir = wiki_root / "topics"
+    candidates: list[str] = []
+    if topics_dir.exists():
+        for path in sorted(topics_dir.glob("*.md")):
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace").lower()
+            except OSError:
+                continue
+            for raw, canonical in PREFILL_DOMAIN_ALIASES.items():
+                if raw in text:
+                    candidates.append(canonical)
+    unique = _unique_strings(candidates)
+    if len(unique) == 1:
+        return {"status": "inferred", "domain": unique[0], "source": _rel(topics_dir)}
+    if not unique:
+        return {"status": "defaulted", "domain": "general", "source": _rel(topics_dir)}
+    return {"status": "ambiguous", "domain": "general", "candidates": unique, "source": _rel(topics_dir)}
+
+
+def _prefill_seed_from_add(raw: str, domain: str) -> dict[str, str]:
+    title = str(raw or "").strip()
+    if title.startswith("foundation:"):
+        title = title.split(":", 1)[1].strip()
+    slug = _slug(title or "foundation")
+    return {"slug": slug, "title": title or slug, "summary": "", "domain": domain or "general", "source": "add"}
+
+
+def _prefill_source_evidence(inputs: dict[str, Any]) -> list[dict[str, Any]]:
+    evidence: list[dict[str, Any]] = []
+    for raw_path in _input_path_values(inputs, "source_evidence", "wikipedia_evidence"):
+        path = _resolve_harness_path(raw_path)
+        payload = _load_optional_evidence(raw_path)
+        if not payload:
+            continue
+        outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+        source = {
+            "schema": str(payload.get("schema") or ""),
+            "status": str(payload.get("status") or outputs.get("status") or "completed"),
+            "path": _rel(path),
+            "title": str(outputs.get("title") or payload.get("title") or ""),
+            "source_url": str(outputs.get("source_url") or outputs.get("url") or payload.get("source_url") or payload.get("url") or ""),
+            "summary": str(outputs.get("summary") or outputs.get("extract") or payload.get("summary") or payload.get("extract") or ""),
+            "sections": outputs.get("sections") if isinstance(outputs.get("sections"), list) else payload.get("sections") if isinstance(payload.get("sections"), list) else [],
+        }
+        evidence.append(source)
+    return evidence
+
+
+def _prefill_match_source(seed: dict[str, Any], sources: list[dict[str, Any]]) -> dict[str, Any]:
+    seed_terms = {_slug(seed.get("title") or ""), _slug(seed.get("seed_slug") or ""), _slug(seed.get("foundation_id") or "")}
+    for source in sources:
+        source_terms = {_slug(source.get("title") or ""), _slug(Path(str(source.get("path") or "")).stem)}
+        if seed_terms & source_terms:
+            return source
+    return sources[0] if sources else {}
+
+
+def _prefill_fetch_wikipedia_sources(envelope: dict[str, Any], seeds: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    output_dir = _output_dir(envelope, "prefill_foundations")
+    tool = REPO_HARNESS_DIR.parent / "tools" / "fetch_wikipedia.py"
+    fetched: list[dict[str, Any]] = []
+    attempts: list[dict[str, Any]] = []
+    disabled = os.environ.get("AUTOSCI_WIKIPEDIA_FETCH_DISABLED") == "1"
+    for seed in seeds[:5]:
+        title = str(seed.get("title") or seed.get("slug") or "").strip()
+        slug = _slug(title or "foundation")
+        sidecar = output_dir / f"prefill_wikipedia_{slug}_summary.json"
+        if disabled:
+            payload = {
+                "schema": "autosci_wikipedia_fetch.v1",
+                "command": "summary",
+                "status": "fetch_disabled",
+                "title": title,
+                "error": "AUTOSCI_WIKIPEDIA_FETCH_DISABLED=1",
+            }
+            _write_json_sidecar(sidecar, payload)
+            attempts.append({"title": title, "status": "fetch_disabled", "path": _rel(sidecar)})
+            continue
+        command = [sys.executable, str(tool), "--timeout", "10", "summary", title]
+        try:
+            proc = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20, check=False)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            payload = {"schema": "autosci_wikipedia_fetch.v1", "command": "summary", "status": "fetch_failed", "title": title, "error": str(exc)}
+            _write_json_sidecar(sidecar, payload)
+            attempts.append({"title": title, "status": "fetch_failed", "path": _rel(sidecar), "error": str(exc)})
+            continue
+        sidecar.parent.mkdir(parents=True, exist_ok=True)
+        sidecar.write_text(proc.stdout or "{}", encoding="utf-8")
+        try:
+            payload = json.loads(proc.stdout or "{}")
+        except json.JSONDecodeError:
+            payload = {"schema": "autosci_wikipedia_fetch.v1", "command": "summary", "status": "invalid_json", "title": title, "stderr": proc.stderr[:500]}
+            _write_json_sidecar(sidecar, payload)
+        status = str(payload.get("status") or "unknown")
+        attempts.append({"title": title, "status": status, "path": _rel(sidecar), "returncode": proc.returncode})
+        if status == "completed":
+            fetched.append(
+                {
+                    "schema": str(payload.get("schema") or ""),
+                    "status": "completed",
+                    "path": _rel(sidecar),
+                    "title": str(payload.get("title") or title),
+                    "source_url": str(payload.get("source_url") or ""),
+                    "summary": str(payload.get("summary") or ""),
+                    "sections": [],
+                }
+            )
+    return fetched, attempts
+
+
+def _prefill_source_section(source: dict[str, Any], names: tuple[str, ...]) -> str:
+    for section in source.get("sections") or []:
+        if not isinstance(section, dict):
+            continue
+        title = str(section.get("title") or section.get("line") or "").strip().lower()
+        if any(name.lower() in title for name in names):
+            return str(section.get("content") or section.get("text") or section.get("summary") or "").strip()
+    return ""
+
+
+def _prefill_plan(envelope: dict[str, Any], wiki_root: Path) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    target = str(inputs.get("target") or "").strip()
+    add_value = str(inputs.get("add") or "").strip()
+    catalog = _parse_prefill_catalog(_prefill_catalog_path())
+    source_evidence = _prefill_source_evidence(inputs)
+    domain_resolution = _prefill_infer_domain(wiki_root)
+    if inputs.get("domain"):
+        domain_resolution = {"status": "explicit", "domain": _prefill_canonical_domain(str(inputs.get("domain"))), "source": "input.domain"}
+    elif target and not add_value and not target.startswith("foundation:"):
+        domain_resolution = {"status": "explicit", "domain": _prefill_canonical_domain(target), "source": "target"}
+    domain = str(domain_resolution.get("domain") or "general")
+    mode = "add" if add_value or target.startswith("foundation:") else "catalog"
+    if mode == "add":
+        seeds = [_prefill_seed_from_add(add_value or target, domain)]
+    else:
+        domains = catalog.get("domains") if isinstance(catalog.get("domains"), dict) else {}
+        seeds = [
+            {**seed, "domain": "general", "source": "catalog"}
+            for seed in domains.get("general", [])
+            if isinstance(seed, dict)
+        ]
+        if domain != "general":
+            seeds.extend(
+                {**seed, "domain": domain, "source": "catalog"}
+                for seed in domains.get(domain, [])
+                if isinstance(seed, dict)
+            )
+    fetch_attempts: list[dict[str, Any]] = []
+    if bool(inputs.get("online_novelty") or inputs.get("online")) and not source_evidence:
+        fetched_sources, fetch_attempts = _prefill_fetch_wikipedia_sources(envelope, seeds)
+        source_evidence.extend(fetched_sources)
+    dedup: list[dict[str, Any]] = []
+    selected: list[dict[str, Any]] = []
+    for seed in seeds:
+        slug = _slug(seed.get("slug") or seed.get("title") or "foundation")
+        foundation_id = slug if slug.startswith("foundation-") else f"foundation-{slug}"
+        page = wiki_root / "foundations" / f"{foundation_id}.md"
+        entry = {
+            "seed_slug": slug,
+            "foundation_id": foundation_id,
+            "title": str(seed.get("title") or slug),
+            "domain": str(seed.get("domain") or domain or "general"),
+            "path": _rel(page),
+            "exists": page.exists(),
+        }
+        matched_source = _prefill_match_source(entry, source_evidence)
+        entry["source_status"] = str(matched_source.get("status") or "fallback_llm_analysis")
+        entry["source_evidence_path"] = str(matched_source.get("path") or "")
+        entry["source_url"] = str(matched_source.get("source_url") or "")
+        dedup.append(entry)
+        if not page.exists():
+            selected.append({**seed, **entry, "source_evidence": matched_source})
+    return {
+        "schema": "autosci_prefill_plan.v1",
+        "status": "completed" if seeds else "incomplete",
+        "mode": mode,
+        "domain": domain,
+        "domain_resolution": domain_resolution,
+        "catalog": {k: v for k, v in catalog.items() if k != "domains"},
+        "catalog_domain_count": len(catalog.get("domains") or {}),
+        "source_evidence_count": len(source_evidence),
+        "source_evidence_refs": [str(item.get("path") or "") for item in source_evidence],
+        "fetch_attempts": fetch_attempts,
+        "seed_count": len(seeds),
+        "selected_count": len(selected),
+        "skipped_existing_count": len([item for item in dedup if item.get("exists")]),
+        "dedup": dedup,
+        "selected_seeds": selected,
+        "limitations": [] if seeds else ["No prefill seeds were selected; supply --add or a catalog domain."],
+    }
+
+
+def _prefill_foundation_body(seed: dict[str, Any], *, approval_ref: str) -> str:
+    title = str(seed.get("title") or seed.get("foundation_id") or "Foundation")
+    foundation_id = str(seed.get("foundation_id") or f"foundation-{_slug(title)}")
+    domain = str(seed.get("domain") or "general")
+    source = seed.get("source_evidence") if isinstance(seed.get("source_evidence"), dict) else {}
+    source_backed = bool(source.get("summary") or source.get("source_url"))
+    source_url = str(source.get("source_url") or "")
+    summary = (
+        str(source.get("summary") or "").strip()
+        or str(seed.get("summary") or "").strip()
+        or "Approved foundation scaffold created for AutoSci research memory."
+    )
+    variants = _prefill_source_section(source, ("variants", "types", "architecture"))
+    limitations = _prefill_source_section(source, ("limitations",))
+    source_suffix = "" if source_backed else " (LLM analysis)"
+    return "\n".join(
+        [
+            "---",
+            'entity_type: "foundation"',
+            f'entity_id: {json.dumps(foundation_id)}',
+            f'title: {json.dumps(title)}',
+            f'slug: {json.dumps(foundation_id)}',
+            f'domain: {json.dumps(domain)}',
+            'status: "mainstream"',
+            "aliases: []",
+            'first_introduced: ""',
+            f'source_url: {json.dumps(source_url)}',
+            f'source_status: {json.dumps("source_backed" if source_backed else "fallback_llm_analysis")}',
+            f'source_evidence_path: {json.dumps(str(source.get("path") or ""))}',
+            f'approval_ref: {json.dumps(approval_ref)}',
+            'managed_by: "solar-autosci-research-wiki"',
+            "---",
+            "",
+            f"# {title}",
+            "",
+            "## Definition",
+            "",
+            f"{summary}{source_suffix}",
+            "",
+            "## Intuition",
+            "",
+            "Pending source-backed expansion. (LLM analysis)",
+            "",
+            "## Formal notation",
+            "",
+            "N/A (LLM analysis)",
+            "",
+            "## Key variants",
+            "",
+            variants or "- N/A (LLM analysis)",
+            "",
+            "## Known limitations",
+            "",
+            limitations or "- N/A (LLM analysis)",
+            "",
+            "## Open problems",
+            "",
+            "- N/A (LLM analysis)",
+            "",
+            "## Relevance to active research",
+            "",
+            "This foundation page is terminal and contains no outbound relationship fields. (LLM analysis)",
+            "",
+        ]
+    )
+
+
 def _action_prefill_foundations(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     target = _memory_target(envelope, "foundation")
-    slug = _slug(target)
+    wiki_root_for_plan = _wiki_roots_for_write(envelope)[0] if _local_mutation_requested(envelope) else _wiki_roots_for_read(envelope)[0]
+    plan = _prefill_plan(envelope, wiki_root_for_plan)
+    plan_path = _write_json_sidecar(_output_dir(envelope, "prefill_foundations") / "prefill_plan.json", plan)
+    selected = list(plan.get("selected_seeds") or [])
+    first_seed = selected[0] if selected else {
+        "foundation_id": f"foundation-{_slug(target)}",
+        "title": target,
+        "path": f"knowledge/research/foundations/{_slug(target)}.md",
+        "domain": str(plan.get("domain") or "general"),
+    }
+    slug = _slug(first_seed.get("foundation_id") or first_seed.get("title") or target)
     evidence_ids = [f"prefill:{slug}"]
     if _local_mutation_requested(envelope):
-        wiki_root = _wiki_roots_for_write(envelope)[0]
-        page = wiki_root / "topics" / f"foundation-{slug}.md"
-        body = "\n".join(
-            [
-                "---",
-                'entity_type: "foundation"',
-                f'entity_id: "foundation-{slug}"',
-                f'title: {json.dumps(target)}',
-                f'approval_ref: {json.dumps(str(inputs.get("approval_ref") or ""))}',
-                'managed_by: "solar-autosci-research-wiki"',
-                "---",
-                "",
-                f"# {target}",
-                "",
-                "## Scope",
-                "",
-                "Approved foundation scaffold created for AutoSci research memory.",
-                "",
-            ]
-        )
-        before = page.read_text(encoding="utf-8", errors="replace") if page.exists() else ""
-        changed = _write_text_if_changed_bridge(page, body)
-        after = page.read_text(encoding="utf-8", errors="replace")
-        log_path = _write_generic_wiki_log(wiki_root, "Prefill Foundation", page, evidence_ids, "Created or refreshed approved foundation scaffold.")
-        rebuilt = _rebuild_generic_wiki_views(wiki_root, str(envelope.get("sprint_id") or "sprint-autosci"), page, evidence_ids)
-        return convert_research_memory_update({
-            "changes": [
+        side_effects = ["wiki_foundation_write", "wiki_navigation_rebuild"]
+        wiki_root = wiki_root_for_plan
+        changes: list[dict[str, Any]] = []
+        page_paths: list[Path] = []
+        changed_paths: list[Path] = []
+        for seed in selected:
+            foundation_id = str(seed.get("foundation_id") or f"foundation-{_slug(seed.get('title') or target)}")
+            page = wiki_root / "foundations" / f"{foundation_id}.md"
+            body = _prefill_foundation_body(seed, approval_ref=str(inputs.get("approval_ref") or ""))
+            before = page.read_text(encoding="utf-8", errors="replace") if page.exists() else ""
+            changed = False if before else _write_text_if_changed_bridge(page, body)
+            after = page.read_text(encoding="utf-8", errors="replace") if page.exists() else ""
+            operation = "no_op" if before else "create"
+            page_paths.append(page)
+            if changed:
+                changed_paths.append(page)
+            changes.append(
                 {
                     "entity_type": "foundation",
-                    "entity_id": f"foundation-{slug}",
-                    "operation": "update" if before else "create",
+                    "entity_id": foundation_id,
+                    "operation": operation,
                     "path": _rel(page),
-                    "evidence_ids": evidence_ids,
+                    "evidence_ids": [f"prefill:{foundation_id}"],
                     "confidence": 0.82,
-                    "summary": "Approved foundation page scaffold was written to the research wiki.",
+                    "summary": "Skipped existing foundation page without overwriting." if before else "Created approved terminal foundation scaffold.",
                     "changed": changed,
                     "before_sha256": _hash_text(before),
                     "after_sha256": _hash_text(after),
                 }
-            ],
+            )
+        if not changes:
+            changes.append(
+                {
+                    "entity_type": "foundation",
+                    "entity_id": str(first_seed.get("foundation_id") or f"foundation-{_slug(target)}"),
+                    "operation": "no_op",
+                    "path": str(first_seed.get("path") or f"knowledge/research/foundations/{_slug(target)}.md"),
+                    "evidence_ids": evidence_ids,
+                    "confidence": 0.45,
+                    "summary": "No new foundation seeds were selected.",
+                    "changed": False,
+                    "before_sha256": "",
+                    "after_sha256": "",
+                }
+            )
+        target_page = page_paths[0] if page_paths else wiki_root / "foundations" / f"{slug}.md"
+        log_summary = f"Prefill selected {len(selected)} seed(s), created {len(changed_paths)} new terminal foundation page(s)."
+        log_path = _write_generic_wiki_log(wiki_root, "Prefill Foundation", target_page, evidence_ids, log_summary)
+        rebuilt = _rebuild_generic_wiki_views(wiki_root, str(envelope.get("sprint_id") or "sprint-autosci"), target_page, evidence_ids)
+        contract = _approval_contract(envelope, "prefill_foundations", side_effects)
+        contract_artifact = _write_approval_contract_sidecar(envelope, "prefill_foundations", contract)
+        raw = {
+            "changes": changes,
             "artifacts": [
-                {"type": "wiki_foundation_page", "path": _rel(page)},
+                {"type": "prefill_plan_json", "path": plan_path},
+                contract_artifact,
+                *[{"type": "wiki_foundation_page", "path": _rel(page)} for page in page_paths],
                 {"type": "wiki_log", "path": _rel(log_path)},
                 *[{"type": "wiki_rebuild", "path": _rel(path)} for path in rebuilt],
             ],
             "status": "completed",
             "limitations": [
                 "Prefill mutation was applied only because approval_ref and execute_approved_side_effect were supplied.",
+                *_approval_contract_limitations(contract),
             ],
-        }, envelope)
+        }
+        evidence = convert_research_memory_update(raw, envelope)
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "prefill_foundations") / "prefill_foundations.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        evidence.setdefault("artifacts", []).extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="prefill_foundations",
+                native_skill="prefill",
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[str(ref) for ref in plan.get("source_evidence_refs") or [] if str(ref).strip()],
+                mutation_refs=[*[_rel(path) for path in page_paths], _rel(log_path), *[_rel(path) for path in rebuilt]],
+                include_wiki_mutation=True,
+                include_provider_source=bool(plan.get("source_evidence_refs")),
+                source_label="approved_prefill_foundation",
+                artifact_kind="wiki_foundation_prefill",
+            )
+        )
+        return evidence
     return convert_research_memory_update({
         "changes": [
             {
                 "entity_type": "foundation",
-                "entity_id": f"foundation-{slug}",
+                "entity_id": str(first_seed.get("foundation_id") or f"foundation-{slug}"),
                 "operation": "propose",
-                "path": f"knowledge/research/foundations/{slug}.md",
-                "evidence_ids": [f"prefill:{slug}"],
+                "path": str(first_seed.get("path") or f"knowledge/research/foundations/{slug}.md"),
+                "evidence_ids": evidence_ids,
                 "confidence": 0.45,
-                "summary": "Propose a foundation page scaffold; no wiki mutation is applied.",
+                "summary": f"Propose {len(selected) or 1} foundation page scaffold(s); no wiki mutation is applied.",
             }
         ],
+        "artifacts": [{"type": "prefill_plan_json", "path": plan_path}],
         "limitations": [
             "Prefill creates proposed memory-update evidence only; it does not create or modify wiki files.",
             "Deduplication is limited to the provided target text unless wiki source evidence is supplied.",
         ],
     }, envelope)
+
+
+def _action_edit_raw_source(envelope: dict[str, Any], *, target: str, raw_rel: Path, delete_requested: bool) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    evidence_ids = [f"edit-raw:{_slug(str(raw_rel))}"]
+    approval_ref = str(inputs.get("approval_ref") or "").strip()
+    wiki_root = _wiki_roots_for_write(envelope)[0]
+    raw_root = _raw_root_for_wiki_root(wiki_root)
+    raw_path = raw_root / raw_rel
+    display_path = Path("raw") / raw_rel
+    if not _path_is_under(raw_path, raw_root):
+        return convert_research_memory_update({
+            "changes": [
+                {
+                    "entity_type": "raw_source",
+                    "entity_id": f"raw-{_slug(str(raw_rel))}",
+                    "operation": "blocked",
+                    "path": str(display_path),
+                    "evidence_ids": evidence_ids,
+                    "confidence": 0.0,
+                    "summary": "Approved raw edit was blocked because the target escapes the raw root.",
+                }
+            ],
+            "status": "inconclusive",
+            "limitations": ["Raw edit targets must resolve under the configured Solar workspace raw root."],
+        }, envelope)
+    after_artifacts = inputs.get("after_artifacts") if isinstance(inputs.get("after_artifacts"), list) else []
+    before_artifacts = inputs.get("before_artifacts") if isinstance(inputs.get("before_artifacts"), list) else []
+    if not _local_mutation_requested(envelope):
+        operation = "delete" if delete_requested else "create"
+        return convert_research_memory_update({
+            "changes": [
+                {
+                    "entity_type": "raw_source",
+                    "entity_id": f"raw-{_slug(str(raw_rel))}",
+                    "operation": "propose",
+                    "path": str(display_path),
+                    "evidence_ids": evidence_ids,
+                    "confidence": 0.35,
+                    "summary": f"Propose approved raw source {operation}; no raw or wiki mutation is applied.",
+                }
+            ],
+            "status": "completed",
+            "limitations": [
+                "Raw add/delete is proposal-only without explicit approval.",
+                "Approved raw add requires after_artifact evidence; approved raw delete requires an existing raw source target.",
+            ],
+        }, envelope)
+    if delete_requested:
+        if not raw_path.exists() or raw_path.is_dir():
+            return convert_research_memory_update({
+                "changes": [
+                    {
+                        "entity_type": "raw_source",
+                        "entity_id": f"raw-{_slug(str(raw_rel))}",
+                        "operation": "blocked",
+                        "path": str(display_path),
+                        "evidence_ids": evidence_ids,
+                        "confidence": 0.0,
+                        "summary": "Approved raw delete was blocked because the raw source target is missing or is a directory.",
+                    }
+                ],
+                "status": "inconclusive",
+                "limitations": ["Approved raw delete requires an existing raw source file target."],
+            }, envelope)
+        before_bytes = raw_path.read_bytes()
+        raw_path.unlink()
+        after_bytes = b""
+        log_path = _write_generic_wiki_log(wiki_root, "Approved Raw Source Delete", raw_path, evidence_ids, "Deleted approved raw source target.")
+        rebuilt = _rebuild_generic_wiki_views(wiki_root, str(envelope.get("sprint_id") or "sprint-autosci"), raw_path, evidence_ids)
+        contract = _approval_contract(envelope, "edit_wiki_plan", ["raw_source_delete", "wiki_log_update", "navigation_rebuild"])
+        contract_artifact = _write_approval_contract_sidecar(envelope, "edit_wiki_plan", contract)
+        raw = {
+            "changes": [
+                {
+                    "entity_type": "raw_source",
+                    "entity_id": f"raw-{_slug(str(raw_rel))}",
+                    "operation": "delete",
+                    "path": str(display_path),
+                    "evidence_ids": evidence_ids,
+                    "confidence": 0.84,
+                    "summary": "Approved raw source delete applied.",
+                    "changed": True,
+                    "approval_ref": approval_ref,
+                    "before_sha256": _hash_bytes(before_bytes),
+                    "after_sha256": _hash_bytes(after_bytes),
+                    "before_artifacts": [_rel(_resolve_harness_path(str(path))) for path in before_artifacts],
+                }
+            ],
+            "artifacts": [
+                contract_artifact,
+                {"type": "wiki_log", "path": _rel(log_path)},
+                *[{"type": "wiki_rebuild", "path": _rel(path)} for path in rebuilt],
+            ],
+            "status": "completed",
+            "limitations": [
+                "Raw source deletion was applied only because approval_ref and execute_approved_side_effect were supplied.",
+                *_approval_contract_limitations(contract),
+            ],
+        }
+        evidence = convert_research_memory_update(raw, envelope)
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "edit_wiki_plan") / "edit_wiki_plan.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        evidence.setdefault("artifacts", []).extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="edit_wiki_plan",
+                native_skill="edit",
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[*[_rel(_resolve_harness_path(str(path))) for path in before_artifacts], *[_rel(_resolve_harness_path(str(path))) for path in after_artifacts]],
+                mutation_refs=[_rel(log_path), *[_rel(path) for path in rebuilt]],
+                include_wiki_mutation=True,
+                source_label="approved_raw_source_delete",
+                artifact_kind="raw_source_delete",
+            )
+        )
+        return evidence
+    if not after_artifacts:
+        return convert_research_memory_update({
+            "changes": [
+                {
+                    "entity_type": "raw_source",
+                    "entity_id": f"raw-{_slug(str(raw_rel))}",
+                    "operation": "blocked",
+                    "path": str(display_path),
+                    "evidence_ids": evidence_ids,
+                    "confidence": 0.0,
+                    "summary": "Approved raw add was blocked because after_artifact evidence is missing.",
+                }
+            ],
+            "status": "inconclusive",
+            "limitations": ["Approved raw add requires an existing after_artifact file containing the desired raw source contents."],
+        }, envelope)
+    if raw_path.exists():
+        return convert_research_memory_update({
+            "changes": [
+                {
+                    "entity_type": "raw_source",
+                    "entity_id": f"raw-{_slug(str(raw_rel))}",
+                    "operation": "blocked",
+                    "path": str(display_path),
+                    "evidence_ids": evidence_ids,
+                    "confidence": 0.0,
+                    "summary": "Approved raw add was blocked because existing raw sources are read-only.",
+                }
+            ],
+            "status": "inconclusive",
+            "limitations": ["Existing raw sources are read-only; use an explicit approved delete or a new raw target path."],
+        }, envelope)
+    after_path = _resolve_harness_path(str(after_artifacts[0]))
+    if not after_path.exists() or after_path.is_dir():
+        return convert_research_memory_update({
+            "changes": [
+                {
+                    "entity_type": "raw_source",
+                    "entity_id": f"raw-{_slug(str(raw_rel))}",
+                    "operation": "blocked",
+                    "path": str(display_path),
+                    "evidence_ids": evidence_ids,
+                    "confidence": 0.0,
+                    "summary": "Approved raw add was blocked because after_artifact evidence is missing.",
+                }
+            ],
+            "status": "inconclusive",
+            "limitations": ["Approved raw add requires an existing after_artifact file containing the desired raw source contents."],
+        }, envelope)
+    raw_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(after_path, raw_path)
+    after_bytes = raw_path.read_bytes()
+    log_path = _write_generic_wiki_log(wiki_root, "Approved Raw Source Add", raw_path, evidence_ids, "Added approved raw source target; run /ingest to register it into the wiki.")
+    rebuilt = _rebuild_generic_wiki_views(wiki_root, str(envelope.get("sprint_id") or "sprint-autosci"), raw_path, evidence_ids)
+    contract = _approval_contract(envelope, "edit_wiki_plan", ["raw_source_add", "source_materialization", "wiki_log_update", "navigation_rebuild"])
+    contract_artifact = _write_approval_contract_sidecar(envelope, "edit_wiki_plan", contract)
+    raw = {
+        "changes": [
+            {
+                "entity_type": "raw_source",
+                "entity_id": f"raw-{_slug(str(raw_rel))}",
+                "operation": "create",
+                "path": str(display_path),
+                "evidence_ids": evidence_ids,
+                "confidence": 0.84,
+                "summary": "Approved raw source add applied from after_artifact evidence.",
+                "changed": True,
+                "approval_ref": approval_ref,
+                "before_sha256": _hash_bytes(b""),
+                "after_sha256": _hash_bytes(after_bytes),
+                "after_artifact": _rel(after_path),
+                "follow_up": "Run /ingest on this raw source to register it in the research wiki.",
+            }
+        ],
+        "artifacts": [
+            contract_artifact,
+            {"type": "raw_source", "path": str(display_path)},
+            {"type": "wiki_log", "path": _rel(log_path)},
+            *[{"type": "wiki_rebuild", "path": _rel(path)} for path in rebuilt],
+        ],
+        "status": "completed",
+        "limitations": [
+            "Raw source add was applied only because approval_ref, execute_approved_side_effect, and after_artifact evidence were supplied.",
+            "New raw sources still require /ingest before becoming registered wiki paper/source nodes.",
+            *_approval_contract_limitations(contract),
+        ],
+    }
+    evidence = convert_research_memory_update(raw, envelope)
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "edit_wiki_plan") / "edit_wiki_plan.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    evidence.setdefault("artifacts", []).extend(
+        _write_approved_mutation_runtime_proof_manifests(
+            envelope,
+            action="edit_wiki_plan",
+            native_skill="edit",
+            evidence_path=evidence_payload_path,
+            applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[_rel(after_path), _rel(raw_path)],
+                mutation_refs=[_rel(raw_path), _rel(log_path), *[_rel(path) for path in rebuilt]],
+                include_wiki_mutation=True,
+                source_label="approved_raw_source_add",
+                artifact_kind="raw_source_add",
+        )
+    )
+    return evidence
 
 
 def _action_edit_wiki_plan(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -1201,6 +1958,9 @@ def _action_edit_wiki_plan(envelope: dict[str, Any]) -> dict[str, Any]:
     slug = _slug(target)
     evidence_ids = [f"edit-plan:{slug}"]
     after_artifacts = inputs.get("after_artifacts") if isinstance(inputs.get("after_artifacts"), list) else []
+    raw_rel, inferred_delete = _edit_raw_target(target)
+    if raw_rel is not None:
+        return _action_edit_raw_source(envelope, target=target, raw_rel=raw_rel, delete_requested=bool(inputs.get("delete") or inferred_delete))
     if _local_mutation_requested(envelope) and after_artifacts:
         wiki_root = _wiki_roots_for_write(envelope)[0]
         rel_page = _wiki_page_rel_for_target(target, "outputs", "edit")
@@ -1244,7 +2004,13 @@ def _action_edit_wiki_plan(envelope: dict[str, Any]) -> dict[str, Any]:
         after = page.read_text(encoding="utf-8", errors="replace")
         log_path = _write_generic_wiki_log(wiki_root, "Approved Wiki Edit", page, evidence_ids, "Applied approved after_artifact contents to wiki page.")
         rebuilt = _rebuild_generic_wiki_views(wiki_root, str(envelope.get("sprint_id") or "sprint-autosci"), page, evidence_ids)
-        return convert_research_memory_update({
+        contract = _approval_contract(
+            envelope,
+            "edit_wiki_plan",
+            ["wiki_page_mutation", "source_rewrite", "navigation_rebuild"],
+        )
+        contract_artifact = _write_approval_contract_sidecar(envelope, "edit_wiki_plan", contract)
+        raw = {
             "changes": [
                 {
                     "entity_type": "wiki_page",
@@ -1261,6 +2027,7 @@ def _action_edit_wiki_plan(envelope: dict[str, Any]) -> dict[str, Any]:
                 }
             ],
             "artifacts": [
+                contract_artifact,
                 {"type": "wiki_page", "path": _rel(page)},
                 {"type": "wiki_log", "path": _rel(log_path)},
                 *[{"type": "wiki_rebuild", "path": _rel(path)} for path in rebuilt],
@@ -1268,8 +2035,34 @@ def _action_edit_wiki_plan(envelope: dict[str, Any]) -> dict[str, Any]:
             "status": "completed",
             "limitations": [
                 "Wiki edit mutation was applied only because approval_ref, execute_approved_side_effect, and after_artifact evidence were supplied.",
+                *_approval_contract_limitations(contract),
             ],
-        }, envelope)
+        }
+        evidence = convert_research_memory_update(raw, envelope)
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "edit_wiki_plan") / "edit_wiki_plan.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        evidence.setdefault("artifacts", []).extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="edit_wiki_plan",
+                native_skill="edit",
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[_rel(after_path), _rel(page)],
+                mutation_refs=[_rel(page), _rel(log_path), *[_rel(path) for path in rebuilt]],
+                include_wiki_mutation=True,
+                source_label="approved_wiki_edit",
+                artifact_kind="wiki_edit_writeback",
+            )
+        )
+        return evidence
     return convert_research_memory_update({
         "changes": [
             {
@@ -1366,6 +2159,214 @@ def _wiki_retrieval_hits(envelope: dict[str, Any], query: str, *, limit: int = 5
             )
     hits.sort(key=lambda item: (-int(item["score"]), str(item["path"])))
     return hits[:limit]
+
+
+def _ask_source_slug(path_value: Any) -> str:
+    return _slug(Path(str(path_value or "source")).stem or "source")
+
+
+def _ask_context_source(root: Path, rel_path: str, terms: list[str], *, line_limit: int = 5) -> dict[str, Any]:
+    path = root / rel_path
+    source: dict[str, Any] = {
+        "path": _rel(path),
+        "status": "missing",
+        "matched_terms": [],
+        "matched_lines": [],
+    }
+    if not path.exists():
+        return source
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        source["status"] = "unreadable"
+        source["error"] = str(exc)
+        return source
+    lowered = text.lower()
+    matched_terms = [term for term in terms if term in lowered]
+    lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and any(term in line.lower() for term in terms)
+    ]
+    source.update(
+        {
+            "status": "present",
+            "sha256": _hash_text(text),
+            "line_count": len(text.splitlines()),
+            "matched_terms": matched_terms,
+            "matched_lines": lines[:line_limit],
+        }
+    )
+    return source
+
+
+def _ask_edge_context(root: Path, terms: list[str], *, line_limit: int = 10) -> dict[str, Any]:
+    path = root / "graph" / "edges.jsonl"
+    source: dict[str, Any] = {
+        "path": _rel(path),
+        "status": "missing",
+        "matched_terms": [],
+        "matched_edges": [],
+        "matched_edge_count": 0,
+    }
+    if not path.exists():
+        return source
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        source["status"] = "unreadable"
+        source["error"] = str(exc)
+        return source
+    matched_edges: list[dict[str, Any]] = []
+    matched_terms: list[str] = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        lowered = line.lower()
+        line_terms = [term for term in terms if term in lowered]
+        if not line_terms:
+            continue
+        matched_terms.extend(line_terms)
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            payload = {"raw": line[:300]}
+        matched_edges.append({"line": line_number, "matched_terms": _unique_strings(line_terms), "edge": payload})
+    source.update(
+        {
+            "status": "present",
+            "sha256": _hash_text(text),
+            "line_count": len(text.splitlines()),
+            "matched_terms": _unique_strings(matched_terms),
+            "matched_edges": matched_edges[:line_limit],
+            "matched_edge_count": len(matched_edges),
+        }
+    )
+    return source
+
+
+def _ask_wiki_context(envelope: dict[str, Any], query: str) -> dict[str, Any]:
+    terms = _query_terms(query)
+    selected_root: Path | None = None
+    for root in _wiki_roots_for_read(envelope):
+        if root.exists():
+            selected_root = root
+            break
+    if selected_root is None:
+        return {
+            "schema": "autosci_ask_wiki_context.v1",
+            "status": "missing",
+            "query_terms": terms,
+            "wiki_root": "",
+            "sources": {},
+            "limitations": ["No readable wiki root was available for ask context evidence."],
+        }
+    sources = {
+        "context_brief": _ask_context_source(selected_root, "graph/context_brief.md", terms),
+        "open_questions": _ask_context_source(selected_root, "graph/open_questions.md", terms),
+        "index": _ask_context_source(selected_root, "index.md", terms),
+        "edges": _ask_edge_context(selected_root, terms),
+    }
+    required_present = all(sources[name]["status"] == "present" for name in ("context_brief", "open_questions", "index"))
+    return {
+        "schema": "autosci_ask_wiki_context.v1",
+        "status": "completed" if required_present else "partial",
+        "query_terms": terms,
+        "wiki_root": _rel(selected_root),
+        "sources": sources,
+        "limitations": [] if required_present else [
+            "Ask context evidence is partial because one or more native context files are missing."
+        ],
+    }
+
+
+def _ask_gap_annotations(wiki_context: dict[str, Any], hits: list[dict[str, Any]]) -> dict[str, Any]:
+    sources = wiki_context.get("sources") if isinstance(wiki_context.get("sources"), dict) else {}
+    open_questions = sources.get("open_questions") if isinstance(sources.get("open_questions"), dict) else {}
+    matched_lines = [str(line) for line in open_questions.get("matched_lines") or [] if str(line).strip()]
+    annotations: list[dict[str, Any]] = []
+    for line in matched_lines:
+        annotations.append(
+            {
+                "status": "matched_open_question",
+                "source": str(open_questions.get("path") or ""),
+                "text": line,
+            }
+        )
+    if not hits:
+        annotations.append(
+            {
+                "status": "insufficient_wiki_evidence",
+                "source": "retrieval",
+                "text": "No matching wiki pages were retrieved for this ask query.",
+            }
+        )
+    if str(open_questions.get("status") or "") == "missing":
+        annotations.append(
+            {
+                "status": "open_questions_missing",
+                "source": str(open_questions.get("path") or ""),
+                "text": "open_questions.md was not available, so gap matching could not run.",
+            }
+        )
+    status = "matched_open_questions" if matched_lines else ("insufficient_wiki_evidence" if not hits else "no_matching_open_questions")
+    return {
+        "schema": "autosci_ask_gap_annotations.v1",
+        "status": status,
+        "annotations": annotations,
+    }
+
+
+def _ask_crystallize_recommendation(
+    *,
+    hits: list[dict[str, Any]],
+    model_output: dict[str, Any],
+    final_boundary: dict[str, Any],
+    requested: bool,
+    gap_annotations: dict[str, Any],
+) -> dict[str, Any]:
+    final_ready = bool(final_boundary.get("final_answer_ready"))
+    model_completed = model_output.get("status") == "completed"
+    gap_matched = str(gap_annotations.get("status") or "") == "matched_open_questions"
+    if not final_ready:
+        recommendation = "blocked"
+        reason = "Crystallize requires retrieved source evidence and completed model synthesis with evidence ids."
+    elif requested:
+        recommendation = "worthwhile"
+        reason = "The user requested crystallize and the final answer boundary is ready."
+    elif len(hits) >= 2 or gap_matched:
+        recommendation = "worthwhile"
+        reason = "The answer draws on multiple wiki sources or touches a recorded open question."
+    elif model_completed and hits:
+        recommendation = "optional"
+        reason = "The answer is source-backed and model-synthesized, but relies on a narrow evidence set."
+    else:
+        recommendation = "not_needed"
+        reason = "The answer is a simple retrieval result without enough evidence for durable wiki writeback."
+    return {
+        "schema": "autosci_ask_crystallize_recommendation.v1",
+        "status": "completed" if final_ready else "blocked",
+        "recommendation": recommendation,
+        "reason": reason,
+        "source": "ask_final_answer_boundary",
+        "retrieval_source_count": len(hits),
+        "model_status": str(model_output.get("status") or "missing"),
+        "gap_status": str(gap_annotations.get("status") or ""),
+    }
+
+
+def _ask_gap_markdown_lines(gap_annotations: dict[str, Any]) -> list[str]:
+    lines = [
+        f"- `{annotation.get('status')}` from `{annotation.get('source')}`: {annotation.get('text')}"
+        for annotation in gap_annotations.get("annotations") or []
+        if isinstance(annotation, dict)
+    ]
+    return lines or [f"- `{gap_annotations.get('status') or 'N/A'}`"]
+
+
+def _ask_recommendation_markdown_line(crystallize_recommendation: dict[str, Any]) -> str:
+    return (
+        f"Crystallize recommendation: `{crystallize_recommendation.get('recommendation') or 'N/A'}` - "
+        f"{crystallize_recommendation.get('reason') or 'N/A'}"
+    )
 
 
 def _wiki_frontmatter_value(raw: str) -> Any:
@@ -1879,11 +2880,13 @@ def _resolved_wiki_experiment_id(resolver: dict[str, Any] | None) -> str:
 
 def _experiment_state_from_wiki_status(raw_status: str) -> str:
     normalized = _slug(raw_status)
-    if normalized in {"completed", "complete", "done", "passed", "success", "succeeded"}:
+    if normalized in {"completed", "complete", "done", "passed", "success", "succeeded", "collected"}:
         return "completed"
-    if normalized in {"failed", "failure", "error", "errored"}:
+    if normalized in {"failed", "failure", "error", "errored", "abandoned", "cancelled", "canceled"}:
         return "failed"
-    if normalized in {"running", "active", "launched", "queued", "in-progress", "in-progress"}:
+    if normalized in {"planned", "plan", "designed", "drafted"}:
+        return "planned"
+    if normalized in {"running", "active", "launched", "queued", "in-progress", "ready", "collect-ready", "collectible"}:
         return "running"
     if normalized in {"blocked", "paused", "gated", "waiting", "needs-approval"}:
         return "blocked"
@@ -1980,6 +2983,11 @@ def _model_output(
             },
         },
     }
+    output_dir = _output_dir(envelope, action)
+    request_path = output_dir / f"{action}_model_request.json"
+    request_rel = _write_json_sidecar(request_path, request)
+    request_sha256 = hashlib.sha256(request_path.read_bytes()).hexdigest()
+    artifacts.append({"type": "model_command_request_json", "path": request_rel, "sha256": request_sha256})
     timeout = int(os.environ.get("AUTOSCI_MODEL_COMMAND_TIMEOUT", "60"))
     try:
         proc = subprocess.run(
@@ -1992,14 +3000,21 @@ def _model_output(
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return {"status": "failed", "reason": f"model command invocation failed: {exc}", "command": command, "checked_paths": checked}, artifacts
-    output_dir = _output_dir(envelope, action)
+        return {
+            "status": "failed",
+            "reason": f"model command invocation failed: {exc}",
+            "command": command,
+            "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+        }, artifacts
     stdout_path = output_dir / f"{action}_model_stdout.json"
     stderr_path = output_dir / f"{action}_model_stderr.txt"
     stdout_rel = _write_text_sidecar(stdout_path, proc.stdout)
     stderr_rel = _write_text_sidecar(stderr_path, proc.stderr)
+    response_sha256 = hashlib.sha256(stdout_path.read_bytes()).hexdigest()
     artifacts.extend([
-        {"type": "model_command_stdout_json", "path": stdout_rel},
+        {"type": "model_command_stdout_json", "path": stdout_rel, "sha256": response_sha256},
         {"type": "model_command_stderr", "path": stderr_rel},
     ])
     if proc.returncode != 0:
@@ -2008,23 +3023,596 @@ def _model_output(
             "reason": f"model command exited {proc.returncode}: {proc.stderr.strip()[:500]}",
             "command": command,
             "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+            "response_path": stdout_rel,
+            "response_sha256": response_sha256,
         }, artifacts
     try:
         payload = json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        return {"status": "invalid", "reason": f"model command returned invalid JSON: {exc}", "command": command, "checked_paths": checked}, artifacts
+        return {
+            "status": "invalid",
+            "reason": f"model command returned invalid JSON: {exc}",
+            "command": command,
+            "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+            "response_path": stdout_rel,
+            "response_sha256": response_sha256,
+        }, artifacts
     if not isinstance(payload, dict):
-        return {"status": "invalid", "reason": "model command must return a JSON object.", "command": command, "checked_paths": checked}, artifacts
+        return {
+            "status": "invalid",
+            "reason": "model command must return a JSON object.",
+            "command": command,
+            "checked_paths": checked,
+            "request_path": request_rel,
+            "request_sha256": request_sha256,
+            "response_path": stdout_rel,
+            "response_sha256": response_sha256,
+        }, artifacts
     normalized = _normalize_model_response(payload, "model-command")
     normalized["invocation_mode"] = "command"
     normalized["command"] = command
     normalized["checked_paths"] = checked
+    normalized["request_path"] = request_rel
+    normalized["request_sha256"] = request_sha256
+    normalized["response_path"] = stdout_rel
+    normalized["response_sha256"] = response_sha256
     return normalized, artifacts
 
 
 def _model_output_requested(envelope: dict[str, Any]) -> bool:
     inputs = dict(envelope.get("inputs") or {})
     return bool(_input_path_values(inputs, "model_evidence", "model_output_evidence") or _model_command(inputs))
+
+
+def _ask_final_answer_boundary(
+    *,
+    query: str,
+    hits: list[dict[str, Any]],
+    model_output: dict[str, Any],
+    answer_status: str,
+) -> dict[str, Any]:
+    retrieval_ready = bool(hits)
+    model_ready = (
+        model_output.get("status") == "completed"
+        and bool(str(model_output.get("answer") or "").strip())
+        and bool(model_output.get("evidence_ids"))
+    )
+    blocking_reasons: list[str] = []
+    if not retrieval_ready:
+        blocking_reasons.append("retrieval sources are missing")
+    if not model_ready:
+        blocking_reasons.append(f"model synthesis status is `{model_output.get('status') or 'missing'}`, not completed with answer and evidence ids")
+    final_answer_ready = retrieval_ready and model_ready
+    return {
+        "schema": "autosci_ask_final_answer_boundary.v1",
+        "status": "final_answer_ready" if final_answer_ready else "ask_final_answer_incomplete",
+        "final_answer_ready": final_answer_ready,
+        "query": query,
+        "retrieval_status": "completed" if retrieval_ready else "missing",
+        "retrieval_source_count": len(hits),
+        "retrieval_paths": [str(hit.get("path") or "") for hit in hits],
+        "answer_status": answer_status,
+        "model_status": str(model_output.get("status") or "missing"),
+        "model_source": str(model_output.get("source") or ""),
+        "model_provider": str(model_output.get("provider") or ""),
+        "model_name": str(model_output.get("model") or ""),
+        "model_confidence": model_output.get("confidence", "N/A"),
+        "model_evidence_ids": _unique_strings([str(item) for item in model_output.get("evidence_ids") or []]),
+        "request_sha256": str(model_output.get("request_sha256") or ""),
+        "response_sha256": str(model_output.get("response_sha256") or ""),
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if final_answer_ready else [
+            "Final ask answer requires retrieved source evidence and completed model-backed synthesis with evidence ids."
+        ],
+    }
+
+
+def _ask_crystallize_requested(envelope: dict[str, Any]) -> bool:
+    inputs = dict(envelope.get("inputs") or {})
+    native_options = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
+    return bool(inputs.get("crystallize") or native_options.get("crystallize") or native_options.get("write"))
+
+
+def _ask_format_mode(envelope: dict[str, Any]) -> str:
+    inputs = dict(envelope.get("inputs") or {})
+    native_options = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
+    raw = str(inputs.get("format") or native_options.get("format") or "bullets").strip().lower()
+    return raw if raw in {"bullets", "markdown", "table", "timeline"} else "bullets"
+
+
+def _ask_markdown_cell(value: Any, limit: int = 180) -> str:
+    text = " ".join(str(value or "N/A").split())
+    if len(text) > limit:
+        text = text[: max(0, limit - 3)].rstrip() + "..."
+    return text.replace("|", "\\|")
+
+
+def _ask_hit_date(hit: dict[str, Any]) -> str:
+    for key in ("date", "published", "year", "timestamp"):
+        value = str(hit.get(key) or "").strip()
+        if value:
+            return value
+    return "Undated"
+
+
+def _ask_answer_section(
+    *,
+    format_mode: str,
+    hits: list[dict[str, Any]],
+    answer_lines: list[str],
+    model_output: dict[str, Any],
+    model_completed: bool,
+) -> list[str]:
+    fallback = "No source-grounded wiki answer could be generated because no matching wiki sources were retrieved."
+    if format_mode == "table":
+        rows = [
+            "| # | Evidence | Source | Score |",
+            "|---:|---|---|---:|",
+        ]
+        for index, hit in enumerate(hits, start=1):
+            rows.append(
+                "| "
+                f"{index} | {_ask_markdown_cell(hit.get('snippet'))} | "
+                f"`{_ask_markdown_cell(hit.get('path'), 120)}` | "
+                f"{float(hit.get('score') or 0.0):.3f} |"
+            )
+        if model_completed:
+            rows.append(
+                "| model | "
+                f"{_ask_markdown_cell(model_output.get('answer'))} | "
+                f"`{_ask_markdown_cell(', '.join(str(item) for item in model_output.get('evidence_ids') or []), 120)}` | "
+                f"{float(model_output.get('confidence') or 0.0):.3f} |"
+            )
+        if len(rows) == 2:
+            rows.append("| N/A | N/A | N/A | 0.000 |")
+        return ["## Answer Table", "", *rows]
+    if format_mode == "timeline":
+        rows = []
+        for index, hit in enumerate(hits, start=1):
+            rows.append(
+                f"- {index}. `{_ask_hit_date(hit)}` - `{hit.get('path')}`: {str(hit.get('snippet') or 'N/A').strip() or 'N/A'}"
+            )
+        if model_completed:
+            rows.append(
+                f"- model - `{model_output.get('model') or model_output.get('provider') or 'model'}`: {model_output.get('answer')}"
+            )
+        return ["## Timeline", "", *(rows or [f"- Undated - N/A: {fallback}"])]
+    heading = "## Answer" if format_mode == "markdown" else "## Bullet Answer"
+    rows = answer_lines or [fallback]
+    if model_completed:
+        rows = [*rows, f"- Model synthesis: {model_output.get('answer')}"]
+    return [heading, "", *rows]
+
+
+def _ask_crystallize_page_body(
+    *,
+    query: str,
+    slug: str,
+    entity_type: str,
+    entity_id: str,
+    hits: list[dict[str, Any]],
+    answer_lines: list[str],
+    model_output: dict[str, Any],
+    model_completed: bool,
+    final_boundary: dict[str, Any],
+    gap_annotations: dict[str, Any],
+    crystallize_recommendation: dict[str, Any],
+    evidence_ids: list[str],
+    approval_ref: str,
+    format_mode: str,
+) -> str:
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source_lines: list[str] = []
+    for hit in hits:
+        rel_path = str(hit.get("path") or "").strip()
+        source_slug = _slug(Path(rel_path).stem if rel_path else "source")
+        snippet = str(hit.get("snippet") or "").strip() or "N/A"
+        source_lines.append(f"- [[{source_slug}]] (`{rel_path}`): {snippet}")
+    if not source_lines:
+        source_lines.append("- N/A")
+    model_answer = str(model_output.get("answer") or "").strip()
+    extractive_lines = answer_lines or [
+        "No source-grounded wiki answer could be generated because no matching wiki sources were retrieved."
+    ]
+    return "\n".join(
+        [
+            "---",
+            f'entity_type: {json.dumps(entity_type)}',
+            f'entity_id: {json.dumps(entity_id)}',
+            f'title: {json.dumps(query)}',
+            f'slug: {json.dumps(slug)}',
+            f'query: {json.dumps(query)}',
+            f'approval_ref: {json.dumps(approval_ref)}',
+            f'output_format: {json.dumps(format_mode)}',
+            f'generated_at: {json.dumps(timestamp)}',
+            f'status: {json.dumps("crystallized" if final_boundary.get("final_answer_ready") else "incomplete")}',
+            f'source_count: {len(hits)}',
+            "evidence_ids:",
+            *[f"  - {json.dumps(evidence_id)}" for evidence_id in (evidence_ids or [f"ask:{slug}"])],
+            "---",
+            "",
+            f"# {query}",
+            "",
+            *_ask_answer_section(
+                format_mode=format_mode,
+                hits=hits,
+                answer_lines=answer_lines,
+                model_output=model_output,
+                model_completed=model_completed,
+            ),
+            "",
+            "## Knowledge Gaps",
+            "",
+            *_ask_gap_markdown_lines(gap_annotations),
+            "",
+            "## Crystallize Recommendation",
+            "",
+            _ask_recommendation_markdown_line(crystallize_recommendation),
+            "",
+            "## Retrieved Evidence",
+            "",
+            *source_lines,
+            "",
+            "## Extractive Notes",
+            "",
+            *[f"- {line}" for line in extractive_lines],
+            "",
+            "## Finality",
+            "",
+            f"- Final answer boundary: `{final_boundary.get('status')}`",
+            f"- Model status: `{model_output.get('status')}`",
+            f"- Retrieval sources: `{len(hits)}`",
+            "",
+        ]
+    )
+
+
+def _append_ask_crystallize_edges(
+    root: Path,
+    page_path: Path,
+    *,
+    slug: str,
+    hits: list[dict[str, Any]],
+    evidence_ids: list[str],
+) -> Path:
+    edges_path = root / "graph" / "edges.jsonl"
+    edges_path.parent.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    existing = set(edges_path.read_text(encoding="utf-8").splitlines()) if edges_path.exists() else set()
+    lines: list[str] = []
+    for hit in hits:
+        source_path = str(hit.get("path") or "").strip()
+        source_id = _slug(Path(source_path).stem if source_path else "retrieved-source")
+        edge = {
+            "edge_type": "derived_from",
+            "source_type": "wiki_page",
+            "source_id": source_id,
+            "source_path": source_path,
+            "relation": "supports_answer",
+            "target_type": "ask_output",
+            "target_id": f"ask-{slug}",
+            "target_path": _rel(page_path),
+            "evidence_ids": evidence_ids,
+            "timestamp": timestamp,
+        }
+        line = json.dumps(edge, sort_keys=True)
+        if line not in existing:
+            lines.append(line)
+            existing.add(line)
+    if lines:
+        edges_path.open("a", encoding="utf-8").write("\n".join(lines) + "\n")
+    return edges_path
+
+
+ASK_CRYSTALLIZE_TARGET_DIRS = {
+    "concept": ("concepts", "concept"),
+    "concepts": ("concepts", "concept"),
+    "idea": ("ideas", "idea"),
+    "ideas": ("ideas", "idea"),
+    "method": ("methods", "method"),
+    "methods": ("methods", "method"),
+    "output": ("outputs", "ask_output"),
+    "outputs": ("outputs", "ask_output"),
+    "topic": ("topics", "topic"),
+    "topics": ("topics", "topic"),
+}
+
+
+def _ask_crystallize_target_page(root: Path, target: str, slug: str) -> tuple[Path, str, str, bool]:
+    raw = str(target or "").strip()
+    if not raw:
+        return root / "outputs" / f"{slug}.md", "ask_output", f"ask-{slug}", False
+    if ":" in raw:
+        prefix, value = raw.split(":", 1)
+        subdir, entity_type = ASK_CRYSTALLIZE_TARGET_DIRS.get(
+            prefix.strip().lower(),
+            ("outputs", "ask_output"),
+        )
+        target_slug = _slug(value or slug)
+        entity_prefix = entity_type if entity_type != "ask_output" else "ask"
+        return root / subdir / f"{target_slug}.md", entity_type, f"{entity_prefix}-{target_slug}", True
+    path = Path(raw)
+    if path.suffix.lower() in {".md", ".markdown"}:
+        if path.is_absolute():
+            page = path
+        elif path.parts and path.parts[0] == "wiki":
+            page = root / Path(*path.parts[1:])
+        else:
+            page = root / path
+        first_part = page.relative_to(root).parts[0] if _path_is_under(page, root) and page.relative_to(root).parts else "outputs"
+        entity_type = ASK_CRYSTALLIZE_TARGET_DIRS.get(first_part, ("outputs", "ask_output"))[1]
+        entity_prefix = entity_type if entity_type != "ask_output" else "ask"
+        return page, entity_type, f"{entity_prefix}-{_slug(page.stem)}", True
+    target_slug = _slug(raw)
+    return root / "outputs" / f"{target_slug}.md", "ask_output", f"ask-{target_slug}", True
+
+
+def _ask_crystallize_append_section(
+    *,
+    query: str,
+    hits: list[dict[str, Any]],
+    answer_lines: list[str],
+    model_output: dict[str, Any],
+    model_completed: bool,
+    final_boundary: dict[str, Any],
+    gap_annotations: dict[str, Any],
+    crystallize_recommendation: dict[str, Any],
+    evidence_ids: list[str],
+    format_mode: str,
+) -> str:
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return "\n".join(
+        [
+            f"## Ask Crystallization: {query}",
+            "",
+            f"- Generated at: `{timestamp}`",
+            f"- Final answer boundary: `{final_boundary.get('status')}`",
+            f"- Evidence ids: {', '.join(evidence_ids) if evidence_ids else 'N/A'}",
+            f"- Output format: `{format_mode}`",
+            "",
+            *_ask_answer_section(
+                format_mode=format_mode,
+                hits=hits,
+                answer_lines=answer_lines,
+                model_output=model_output,
+                model_completed=model_completed,
+            ),
+            "",
+            "### Knowledge Gaps",
+            "",
+            *_ask_gap_markdown_lines(gap_annotations),
+            "",
+            "### Crystallize Recommendation",
+            "",
+            _ask_recommendation_markdown_line(crystallize_recommendation),
+            "",
+        ]
+    )
+
+
+def _ask_crystallize_writeback(
+    envelope: dict[str, Any],
+    *,
+    query: str,
+    slug: str,
+    hits: list[dict[str, Any]],
+    answer_lines: list[str],
+    model_output: dict[str, Any],
+    final_boundary: dict[str, Any],
+    gap_annotations: dict[str, Any],
+    crystallize_recommendation: dict[str, Any],
+    evidence_ids: list[str],
+    answer_artifact: str,
+    retrieval_artifact: str,
+    final_boundary_artifact: str,
+) -> dict[str, Any]:
+    requested = _ask_crystallize_requested(envelope)
+    summary: dict[str, Any] = {
+        "requested": requested,
+        "status": "not_requested",
+        "applied": False,
+        "operation": "no_op",
+        "path": f"knowledge/research/queries/{slug}.md",
+    }
+    if not requested:
+        return {"summary": summary, "artifacts": [], "limitations": [], "status": "not_requested"}
+
+    contract = _approval_contract(
+        envelope,
+        "ask_wiki",
+        ["wiki_output_write", "wiki_graph_edge", "wiki_navigation_rebuild"],
+    )
+    contract_artifact = _write_approval_contract_sidecar(envelope, "ask_wiki", contract)
+    artifacts: list[dict[str, Any]] = [contract_artifact]
+    limitations: list[str] = []
+    status = "inconclusive"
+    write = {
+        **summary,
+        "approval_ref": str(contract.get("approval_ref") or "N/A"),
+        "approval_state": str(contract.get("approval_state") or "unknown"),
+        "final_answer_boundary_status": str(final_boundary.get("status") or "unknown"),
+        "retrieval_source_count": len(hits),
+        "model_status": str(model_output.get("status") or "missing"),
+    }
+    page_path: Path | None = None
+    log_path: Path | None = None
+    edge_path: Path | None = None
+    rebuilt: list[Path] = []
+
+    if contract.get("execution_verified") is not True:
+        limitations.extend(_approval_contract_limitations(contract))
+        limitations.append("Ask crystallize write-back requires verified approval, allowlist, runtime, before, and after artifacts.")
+        write.update({"status": "blocked", "operation": "blocked"})
+    elif final_boundary.get("final_answer_ready") is not True:
+        limitations.append("Ask crystallize write-back requires retrieved wiki evidence plus completed model synthesis with evidence ids.")
+        write.update({"status": "blocked", "operation": "blocked"})
+    else:
+        wiki_root = _wiki_roots_for_write(envelope)[0]
+        inputs = dict(envelope.get("inputs") or {})
+        crystallize_target = str(inputs.get("crystallize_target") or "").strip()
+        page_path, target_entity_type, target_entity_id, explicit_target = _ask_crystallize_target_page(
+            wiki_root,
+            crystallize_target,
+            slug,
+        )
+        if not _path_is_under(page_path, wiki_root):
+            limitations.append("Ask crystallize target escaped the configured wiki root.")
+            write.update({"status": "blocked", "operation": "blocked"})
+        else:
+            before = page_path.read_text(encoding="utf-8", errors="replace") if page_path.exists() else ""
+            format_mode = _ask_format_mode(envelope)
+            model_completed = model_output.get("status") == "completed"
+            if before and explicit_target:
+                body = "\n".join(
+                    [
+                        before.rstrip(),
+                        "",
+                        _ask_crystallize_append_section(
+                            query=query,
+                            hits=hits,
+                            answer_lines=answer_lines,
+                            model_output=model_output,
+                            model_completed=model_completed,
+                            final_boundary=final_boundary,
+                            gap_annotations=gap_annotations,
+                            crystallize_recommendation=crystallize_recommendation,
+                            evidence_ids=evidence_ids,
+                            format_mode=format_mode,
+                        ).rstrip(),
+                        "",
+                    ]
+                )
+            else:
+                body = _ask_crystallize_page_body(
+                    query=query,
+                    slug=slug,
+                    entity_type=target_entity_type,
+                    entity_id=target_entity_id,
+                    hits=hits,
+                    answer_lines=answer_lines,
+                    model_output=model_output,
+                    model_completed=model_completed,
+                    final_boundary=final_boundary,
+                    gap_annotations=gap_annotations,
+                    crystallize_recommendation=crystallize_recommendation,
+                    evidence_ids=evidence_ids,
+                    approval_ref=str(contract.get("approval_ref") or ""),
+                    format_mode=format_mode,
+                )
+            changed = _write_text_if_changed_bridge(page_path, body)
+            after = page_path.read_text(encoding="utf-8", errors="replace")
+            edge_path = _append_ask_crystallize_edges(wiki_root, page_path, slug=slug, hits=hits, evidence_ids=evidence_ids)
+            log_path = _write_generic_wiki_log(
+                wiki_root,
+                "Ask Crystallize",
+                page_path,
+                evidence_ids,
+                "Crystallized approved ask answer into wiki outputs.",
+            )
+            rebuilt = _rebuild_generic_wiki_views(
+                wiki_root,
+                str(envelope.get("run_id") or envelope.get("sprint_id") or "autosci-ask-crystallize"),
+                page_path,
+                evidence_ids,
+            )
+            operation = "create" if not before else ("update" if changed else "no_op")
+            status = "completed"
+            write.update(
+                {
+                    "status": status,
+                    "applied": True,
+                    "operation": operation,
+                    "path": _rel(page_path),
+                    "crystallize_target": crystallize_target,
+                    "target_entity_type": target_entity_type,
+                    "target_entity_id": target_entity_id,
+                    "changed": changed,
+                    "before_sha256": _hash_text(before),
+                    "after_sha256": _hash_text(after),
+                    "log_path": _rel(log_path),
+                    "edge_paths": [_rel(edge_path)],
+                    "rebuilt_paths": [_rel(path) for path in rebuilt],
+                }
+            )
+            artifacts.extend(
+                [
+                    {
+                        "type": "wiki_output" if target_entity_type == "ask_output" else "wiki_page",
+                        "path": _rel(page_path),
+                    },
+                    {"type": "wiki_log", "path": _rel(log_path)},
+                    {"type": "wiki_graph_edges", "path": _rel(edge_path)},
+                    *[{"type": "wiki_rebuild", "path": _rel(path)} for path in rebuilt],
+                ]
+            )
+            limitations.append("Ask crystallize write-back was applied only because approval_ref and execute_approved_side_effect were supplied with runtime evidence.")
+
+    writeback = {
+        "schema": "autosci_ask_crystallize_writeback.v1",
+        "task_id": "task-ask_wiki:crystallize",
+        "sprint_id": str(envelope.get("sprint_id") or "sprint-autosci"),
+        "node_id": "node-ask_wiki:crystallize",
+        "status": status,
+        "inputs": dict(envelope.get("inputs") or {}),
+        "outputs": {
+            "write": write,
+            "query": query,
+            "final_answer_boundary": final_boundary,
+        },
+        "artifacts": artifacts,
+        "provenance": {
+            "operator_id": "autosci-bridge",
+            "implementation_package": "plugins/autosci",
+            "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        },
+        "limitations": limitations,
+    }
+    writeback_path = _output_dir(envelope, "ask_wiki") / "ask_wiki_crystallize_writeback.json"
+    writeback_artifact = {"type": "ask_crystallize_writeback_json", "path": _write_evidence_payload(writeback_path, writeback)}
+    proof_artifacts: list[dict[str, str]] = []
+    if write.get("applied") is True and contract.get("execution_verified") is True:
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "ask_wiki") / "ask_wiki.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        source_refs: list[str | Path] = [answer_artifact, retrieval_artifact, final_boundary_artifact]
+        source_refs.extend(str(hit.get("path") or "") for hit in hits if str(hit.get("path") or "").strip())
+        mutation_refs: list[str | Path] = [writeback_path]
+        if page_path is not None:
+            mutation_refs.append(page_path)
+        if log_path is not None:
+            mutation_refs.append(log_path)
+        if edge_path is not None:
+            mutation_refs.append(edge_path)
+        mutation_refs.extend(rebuilt)
+        proof_artifacts = _write_approved_mutation_runtime_proof_manifests(
+            envelope,
+            action="ask_wiki",
+            native_skill="ask",
+            evidence_path=evidence_payload_path,
+            applied=True,
+            contract=contract,
+            contract_artifact=contract_artifact,
+            source_refs=source_refs,
+            mutation_refs=mutation_refs,
+            include_wiki_mutation=True,
+            source_label="ask_retrieval_and_model_synthesis",
+            artifact_kind="ask_crystallize_writeback",
+            include_provider_source=False,
+        )
+    return {
+        "summary": write,
+        "artifacts": [writeback_artifact, *artifacts, *proof_artifacts],
+        "limitations": limitations,
+        "status": status,
+    }
 
 
 def _idea_candidates_from_model_output(
@@ -2084,27 +3672,423 @@ def _idea_candidates_from_model_output(
     return ideas, skipped
 
 
+def _input_path_references(inputs: dict[str, Any], keys: tuple[str, ...]) -> list[str]:
+    refs: list[str] = []
+    for key in keys:
+        raw = inputs.get(key)
+        values = raw if isinstance(raw, list) else [raw] if raw else []
+        refs.extend(str(item) for item in values if str(item).strip())
+    return _unique_strings(refs)
+
+
+IDEATE_REQUIRED_GENERATION_PATHS = {
+    "A": "landscape-driven",
+    "B": "incremental",
+    "C": "combination",
+    "D": "innovation",
+    "E": "cross-domain-transfer",
+}
+
+
+def _ideate_generation_path_code(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    first = text.split(":", 1)[0].strip().upper()
+    if first in IDEATE_REQUIRED_GENERATION_PATHS:
+        return first
+    lowered = text.lower()
+    for code, label in IDEATE_REQUIRED_GENERATION_PATHS.items():
+        if label in lowered:
+            return code
+    return ""
+
+
+def _ideate_generation_path_coverage(ideas: list[dict[str, Any]]) -> dict[str, Any]:
+    present = sorted(
+        {
+            code
+            for idea in ideas
+            if isinstance(idea, dict)
+            for code in [_ideate_generation_path_code(idea.get("generation_path"))]
+            if code
+        }
+    )
+    missing = [code for code in IDEATE_REQUIRED_GENERATION_PATHS if code not in present]
+    return {
+        "required_paths": dict(IDEATE_REQUIRED_GENERATION_PATHS),
+        "present_paths": present,
+        "missing_paths": missing,
+        "status": "complete" if not missing else "partial" if present else "missing",
+    }
+
+
+def _ideate_max_ideas(inputs: dict[str, Any]) -> int:
+    try:
+        return max(0, int(inputs.get("max_ideas") or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _apply_ideate_max_ideas_selection(ideas: list[dict[str, Any]], inputs: dict[str, Any]) -> None:
+    max_ideas = _ideate_max_ideas(inputs)
+    selected = 0
+    for idea in ideas:
+        if not isinstance(idea, dict):
+            continue
+        if str(idea.get("status") or "") in {"blocked", "filtered"}:
+            idea["selected_for_write"] = False
+            idea["selection_rank"] = "N/A"
+            continue
+        if max_ideas > 0 and selected >= max_ideas:
+            idea["selected_for_write"] = False
+            idea["selection_rank"] = "N/A"
+            idea["selection_reason"] = f"Not selected because max_ideas={max_ideas} was reached."
+            continue
+        selected += 1
+        idea["selected_for_write"] = True
+        idea["selection_rank"] = selected
+
+
+def _ideate_final_promotion_boundary(
+    *,
+    ideas: list[dict[str, Any]],
+    inputs: dict[str, Any],
+    source_summary: dict[str, Any],
+    wiki_state: dict[str, Any] | None,
+    model_output: dict[str, Any] | None,
+) -> dict[str, Any]:
+    model_output = model_output if isinstance(model_output, dict) else {}
+    source_mode = str(source_summary.get("source_mode") or (ideas[0].get("source_mode") if ideas else "") or "missing")
+    wiki_state = wiki_state if isinstance(wiki_state, dict) else {}
+    wiki_resolution = wiki_state.get("resolution") if isinstance(wiki_state.get("resolution"), dict) else {}
+    wiki_maturity_scan_completed = bool(wiki_state) and str(wiki_state.get("status") or "") == "completed"
+    failed_banlist_checked = "failed_idea_count" in source_summary
+    source_ready = source_mode not in {"", "missing", "fixture"} and any(
+        str(idea.get("status") or "") not in {"blocked", "filtered"}
+        and str(idea.get("source_mode") or source_mode) not in {"missing", "fixture"}
+        for idea in ideas
+        if isinstance(idea, dict)
+    )
+    model_completed = (
+        str(model_output.get("status") or "") == "completed"
+        and bool(model_output.get("evidence_ids"))
+        and bool(str(model_output.get("model") or model_output.get("source") or model_output.get("provider") or "").strip())
+    )
+    gate_references = _input_path_references(
+        inputs,
+        ("novelty_evidence", "idea_evaluation_evidence", "review_llm_evidence", "review_evidence"),
+    )
+    novelty_review_refs_present = bool(gate_references)
+    global_blocking: list[str] = []
+    if not wiki_maturity_scan_completed:
+        global_blocking.append("wiki maturity scan was not completed")
+    if not failed_banlist_checked:
+        global_blocking.append("failed-idea banlist was not checked")
+    if not source_ready:
+        global_blocking.append("source-backed idea evidence is missing")
+    if not model_completed:
+        global_blocking.append("model brainstorm provenance is missing or incomplete")
+    if not novelty_review_refs_present:
+        global_blocking.append("novelty/review gate evidence references are missing")
+    idea_boundaries: list[dict[str, Any]] = []
+    for idea in ideas:
+        if not isinstance(idea, dict):
+            continue
+        idea_reasons = list(global_blocking)
+        if not _ideate_generation_path_code(idea.get("generation_path")):
+            idea_reasons.append("structured generation path A/B/C/D/E is missing")
+        if str(idea.get("duplicate_status") or "") == "duplicate":
+            idea_reasons.append("idea overlaps failed or duplicate idea banlist")
+        if str(idea.get("status") or "") in {"blocked", "filtered"}:
+            idea_reasons.append(f"idea status is `{idea.get('status')}`")
+        ready = not idea_reasons
+        idea_boundary = {
+            "schema": "autosci_ideate_idea_promotion_boundary.v1",
+            "idea_id": str(idea.get("idea_id") or "N/A"),
+            "status": "idea_promotion_ready" if ready else "idea_promotion_incomplete",
+            "promotion_ready": ready,
+            "source_mode": str(idea.get("source_mode") or source_mode),
+            "duplicate_status": str(idea.get("duplicate_status") or "unknown"),
+            "generation_path": str(idea.get("generation_path") or "N/A"),
+            "blocking_reasons": idea_reasons,
+        }
+        idea["final_promotion_boundary"] = idea_boundary
+        idea["promotion_ready"] = ready
+        idea_boundaries.append(idea_boundary)
+    final_ready = bool(idea_boundaries) and all(bool(item.get("promotion_ready")) for item in idea_boundaries)
+    return {
+        "schema": "autosci_ideate_final_promotion_boundary.v1",
+        "status": "final_promotion_ready" if final_ready else "ideate_promotion_incomplete",
+        "final_promotion_ready": final_ready,
+        "wiki_maturity_scan_completed": wiki_maturity_scan_completed,
+        "wiki_resolution_status": str(wiki_state.get("status") or "missing"),
+        "wiki_target_type": str(wiki_resolution.get("target_type") or "N/A"),
+        "wiki_fallback_used": bool(wiki_resolution.get("fallback_used")) if wiki_resolution else False,
+        "failed_idea_banlist_checked": failed_banlist_checked,
+        "failed_idea_count": int(source_summary.get("failed_idea_count") or 0),
+        "source_evidence_ready": source_ready,
+        "source_mode": source_mode,
+        "wiki_source_count": int(source_summary.get("wiki_source_count") or 0),
+        "discovery_source_count": int(source_summary.get("discovery_source_count") or 0),
+        "generation_path_coverage": _ideate_generation_path_coverage(ideas),
+        "model_brainstorm_completed": model_completed,
+        "model_status": str(model_output.get("status") or "not_requested"),
+        "model_source": str(model_output.get("source") or ""),
+        "model_provider": str(model_output.get("provider") or ""),
+        "model_name": str(model_output.get("model") or ""),
+        "model_evidence_ids": _unique_strings([str(item) for item in model_output.get("evidence_ids") or []]),
+        "novelty_review_gate_references_present": novelty_review_refs_present,
+        "novelty_review_gate_references": gate_references,
+        "idea_boundaries": idea_boundaries,
+        "blocking_reasons": global_blocking,
+        "limitations": [] if final_ready else [
+            "Final idea promotion requires wiki maturity scan, failed-idea banlist check, source-backed evidence, model brainstorm provenance, and novelty/review gate evidence references."
+        ],
+    }
+
+
+def _phase_record(name: str, *, status: str, completed: bool, evidence_refs: list[str], blockers: list[str]) -> dict[str, Any]:
+    return {
+        "name": name,
+        "status": status,
+        "completed": completed,
+        "evidence_refs": _unique_strings(evidence_refs),
+        "blocking_reasons": _unique_strings(blockers),
+    }
+
+
+def _ideate_pipeline_report(
+    *,
+    inputs: dict[str, Any],
+    source_summary: dict[str, Any],
+    wiki_state: dict[str, Any] | None,
+    model_output: dict[str, Any] | None,
+    boundary: dict[str, Any],
+    ideas: list[dict[str, Any]],
+) -> dict[str, Any]:
+    wiki_state = wiki_state if isinstance(wiki_state, dict) else {}
+    model_output = model_output if isinstance(model_output, dict) else {}
+    source_refs = _input_path_references(inputs, ("discovery_evidence", "latest_discovery_evidence"))
+    novelty_review_refs = _input_path_references(
+        inputs,
+        ("novelty_evidence", "idea_evaluation_evidence", "review_llm_evidence", "review_evidence"),
+    )
+    review_refs = _input_path_references(inputs, ("review_llm_evidence", "review_evidence"))
+    review_payloads = [
+        payload
+        for key in ("review_llm_evidence", "review_evidence")
+        for payload in _load_optional_evidence_many(inputs.get(key))
+    ]
+    review_llm_completed = _review_llm_evidence_completed(review_payloads)
+    write_requested = bool(inputs.get("write") or inputs.get("execute_approved"))
+    skip_validation = bool(inputs.get("skip_validation"))
+    skip_pilot = bool(inputs.get("skip_pilot"))
+    source_ready = bool(boundary.get("source_evidence_ready"))
+    wiki_ready = bool(boundary.get("wiki_maturity_scan_completed"))
+    banlist_ready = bool(boundary.get("failed_idea_banlist_checked"))
+    model_ready = bool(boundary.get("model_brainstorm_completed"))
+    dual_model_ready = model_ready and review_llm_completed
+    validation_ready = bool(boundary.get("novelty_review_gate_references_present"))
+    path_coverage = boundary.get("generation_path_coverage") if isinstance(boundary.get("generation_path_coverage"), dict) else _ideate_generation_path_coverage(ideas)
+    phases = [
+        _phase_record(
+            "phase1_landscape_scan",
+            status="completed" if source_ready and wiki_ready and banlist_ready else "incomplete",
+            completed=source_ready and wiki_ready and banlist_ready,
+            evidence_refs=[*source_refs, str(wiki_state.get("artifact_path") or "")],
+            blockers=[
+                *([] if source_ready else ["source evidence is missing"]),
+                *([] if wiki_ready else ["wiki maturity/state scan is missing"]),
+                *([] if banlist_ready else ["failed idea banlist was not checked"]),
+            ],
+        ),
+        _phase_record(
+            "phase2_dual_model_brainstorm",
+            status="completed" if dual_model_ready else "incomplete",
+            completed=dual_model_ready,
+            evidence_refs=[*review_refs, str(model_output.get("response_path") or ""), *[str(item) for item in model_output.get("evidence_ids") or []]],
+            blockers=[
+                *([] if model_ready else ["Codex/model brainstorm evidence is missing"]),
+                *([] if review_llm_completed else ["independent Review LLM brainstorm evidence is missing or incomplete"]),
+            ],
+        ),
+        _phase_record(
+            "phase3_filter_and_validation",
+            status="skipped" if skip_validation else "completed" if validation_ready else "incomplete",
+            completed=skip_validation or validation_ready,
+            evidence_refs=novelty_review_refs,
+            blockers=[] if skip_validation or validation_ready else ["novelty/review gate evidence is missing"],
+        ),
+        _phase_record(
+            "phase4_wiki_write",
+            status="completed" if write_requested and bool(boundary.get("final_promotion_ready")) else "pending_approval" if write_requested else "not_requested",
+            completed=write_requested and bool(boundary.get("final_promotion_ready")),
+            evidence_refs=_input_path_references(inputs, ("approval_ref", "after_artifact")),
+            blockers=[] if write_requested and bool(boundary.get("final_promotion_ready")) else ["approved writeback evidence is missing"],
+        ),
+        _phase_record(
+            "phase5_pilot_handoff",
+            status="skipped" if skip_pilot else "pending",
+            completed=skip_pilot,
+            evidence_refs=[],
+            blockers=[] if skip_pilot else ["pilot handoff or pilot runtime evidence is missing"],
+        ),
+    ]
+    report_ready = (
+        all(bool(phase.get("completed")) for phase in phases)
+        and str(path_coverage.get("status") or "") == "complete"
+        and bool(boundary.get("final_promotion_ready"))
+    )
+    return {
+        "schema": "autosci_ideate_pipeline_report.v1",
+        "status": "completed" if report_ready else "incomplete",
+        "pipeline_ready": report_ready,
+        "required_generation_paths": dict(IDEATE_REQUIRED_GENERATION_PATHS),
+        "generation_path_coverage": path_coverage,
+        "phase_count": len(phases),
+        "phases": phases,
+        "review_llm_evidence_completed": review_llm_completed,
+        "idea_count": len([idea for idea in ideas if isinstance(idea, dict)]),
+        "max_ideas": _ideate_max_ideas(inputs),
+        "selected_for_write_count": len([idea for idea in ideas if isinstance(idea, dict) and idea.get("selected_for_write") is True]),
+        "promotion_boundary_status": str(boundary.get("status") or "missing"),
+        "blocking_reasons": _unique_strings(
+            [
+                *[reason for phase in phases for reason in phase.get("blocking_reasons", [])],
+                *[f"missing generation path {code}" for code in path_coverage.get("missing_paths", [])],
+                *[str(reason) for reason in boundary.get("blocking_reasons") or []],
+            ]
+        ),
+        "limitations": [] if report_ready else [
+            "Native /ideate full parity requires completed landscape scan, independent dual-model brainstorm, novelty/review validation, approved wiki writeback, pilot handoff or explicit skip, and A/B/C/D/E generation-path coverage."
+        ],
+    }
+
+
+def _attach_ideate_final_promotion_boundary(
+    envelope: dict[str, Any],
+    *,
+    ideas: list[dict[str, Any]],
+    artifacts: list[dict[str, str]],
+    limitations: list[str],
+    source_summary: dict[str, Any],
+    wiki_state: dict[str, Any] | None,
+    model_output: dict[str, Any] | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]], list[str]]:
+    inputs = dict(envelope.get("inputs") or {})
+    _apply_ideate_max_ideas_selection(ideas, inputs)
+    boundary = _ideate_final_promotion_boundary(
+        ideas=ideas,
+        inputs=inputs,
+        source_summary=source_summary,
+        wiki_state=wiki_state,
+        model_output=model_output,
+    )
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "generate_ideas") / "ideate_final_promotion_boundary.json",
+        boundary,
+    )
+    pipeline_report = _ideate_pipeline_report(
+        inputs=inputs,
+        source_summary=source_summary,
+        wiki_state=wiki_state,
+        model_output=model_output,
+        boundary=boundary,
+        ideas=ideas,
+    )
+    pipeline_report_path = _write_json_sidecar(
+        _output_dir(envelope, "generate_ideas") / "ideate_pipeline_report.json",
+        pipeline_report,
+    )
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "generate_ideas") / "generate_ideas.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    source_runtime_proof_artifact = _write_ideate_source_runtime_proof_manifest(
+        envelope,
+        evidence_path=evidence_payload_path,
+        source_summary=source_summary,
+        ideas=ideas,
+        boundary_artifact=boundary_path,
+        pipeline_report_artifact=pipeline_report_path,
+    )
+    out_artifacts = [
+        *artifacts,
+        {"type": "ideate_final_promotion_boundary_json", "path": boundary_path},
+        {"type": "ideate_pipeline_report_json", "path": pipeline_report_path},
+        *([source_runtime_proof_artifact] if source_runtime_proof_artifact is not None else []),
+    ]
+    out_limitations = [
+        *limitations,
+        *[str(item) for item in boundary.get("limitations") or []],
+        *[str(item) for item in pipeline_report.get("limitations") or []],
+    ]
+    return ideas, out_artifacts, out_limitations
+
+
 def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     query = str(inputs.get("query") or inputs.get("target") or inputs.get("topic") or "N/A")
     output_dir = _output_dir(envelope, "ask_wiki")
     answer_path = _configured_output_path(envelope, "answer_markdown_path", output_dir / "ask_wiki_answer.md")
     retrieval_path = _configured_output_path(envelope, "retrieval_json_path", output_dir / "ask_wiki_retrieval.json")
+    final_boundary_path = _configured_output_path(
+        envelope,
+        "ask_final_answer_boundary_path",
+        output_dir / "ask_final_answer_boundary.json",
+    )
     hits = _wiki_retrieval_hits(envelope, query, limit=int(inputs.get("limit") or 5))
-    source_lines = [f"- `{hit['path']}` score={hit['score']}: {hit['snippet']}" for hit in hits] or ["- N/A"]
+    wiki_context = _ask_wiki_context(envelope, query)
+    context_sources = wiki_context.get("sources") if isinstance(wiki_context.get("sources"), dict) else {}
+    context_lines = [
+        f"- `{name}`: `{source.get('status')}` at `{source.get('path')}`"
+        for name, source in context_sources.items()
+        if isinstance(source, dict)
+    ] or ["- N/A"]
+    source_lines = [
+        f"- [[{_ask_source_slug(hit.get('path'))}]] `{hit['path']}` score={hit['score']}: {hit['snippet']}"
+        for hit in hits
+    ] or ["- N/A"]
     answer_lines = [
-        f"- {hit['snippet']} Source: `{hit['path']}`."
+        f"- {hit['snippet']} Source: [[{_ask_source_slug(hit.get('path'))}]] (`{hit['path']}`)."
         for hit in hits
         if str(hit.get("snippet") or "").strip()
     ]
+    gap_annotations = _ask_gap_annotations(wiki_context, hits)
     model_output, model_artifacts = _model_output(
         envelope,
         action="ask_wiki",
         prompt=query,
-        context={"query": query, "retrieval_hits": hits},
+        context={
+            "query": query,
+            "retrieval_hits": hits,
+            "wiki_context": wiki_context,
+            "gap_annotations": gap_annotations,
+        },
     )
     model_completed = model_output.get("status") == "completed"
     answer_status = "completed" if answer_lines or model_completed else "inconclusive"
+    format_mode = _ask_format_mode(envelope)
+    final_boundary = _ask_final_answer_boundary(
+        query=query,
+        hits=hits,
+        model_output=model_output,
+        answer_status=answer_status,
+    )
+    crystallize_requested_for_recommendation = _ask_crystallize_requested(envelope)
+    crystallize_recommendation = _ask_crystallize_recommendation(
+        hits=hits,
+        model_output=model_output,
+        final_boundary=final_boundary,
+        requested=crystallize_requested_for_recommendation,
+        gap_annotations=gap_annotations,
+    )
+    gap_lines = _ask_gap_markdown_lines(gap_annotations)
+    recommendation_line = _ask_recommendation_markdown_line(crystallize_recommendation)
     model_section = [
         "## Model Synthesis",
         "",
@@ -2117,72 +4101,163 @@ def _action_ask_wiki(envelope: dict[str, Any]) -> dict[str, Any]:
             "",
             f"Query: `{query}`",
             "",
+            "## Wiki Context",
+            "",
+            *context_lines,
+            "",
             "## Retrieval Sources",
             "",
             *source_lines,
             "",
-            "## Answer",
-            "",
-            *(answer_lines or [
-                "No source-grounded wiki answer could be generated because no matching wiki sources were retrieved."
-            ]),
+            *_ask_answer_section(
+                format_mode=format_mode,
+                hits=hits,
+                answer_lines=answer_lines,
+                model_output=model_output,
+                model_completed=model_completed,
+            ),
             "",
             *model_section,
+            "## Knowledge Gaps",
+            "",
+            *gap_lines,
+            "",
+            "## Crystallize Recommendation",
+            "",
+            recommendation_line,
+            "",
             "## Confidence",
             "",
             f"- Retrieval-backed extractive answer: `{answer_status}`",
             f"- Source count: `{len(hits)}`",
             f"- Model evidence status: `{model_output.get('status')}`",
+            f"- Final answer boundary: `{final_boundary.get('status')}`",
             "",
         ]
     )
     answer_artifact = _write_text_sidecar(answer_path, body)
+    final_boundary_artifact = _write_json_sidecar(final_boundary_path, final_boundary)
     retrieval_artifact = _write_json_sidecar(
         retrieval_path,
         {
             "query": query,
             "status": "completed" if hits else "missing",
             "hits": hits,
+            "requested_format": format_mode,
             "answer_status": answer_status,
             "answer_lines": answer_lines,
+            "wiki_context": wiki_context,
+            "gap_annotations": gap_annotations,
+            "crystallize_recommendation": crystallize_recommendation,
             "model_output": model_output,
+            "final_answer_boundary": final_boundary,
             "limitations": [
                 "Extractive answer is grounded in retrieved wiki snippets.",
                 "Model synthesis is included only when explicit model evidence or a model command was supplied.",
             ],
         },
     )
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        output_dir / "ask_wiki.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    model_runtime_proof_artifact = _write_model_runtime_proof_manifest(
+        envelope,
+        action="ask_wiki",
+        native_skill="ask",
+        evidence_path=evidence_payload_path,
+        model_output=model_output,
+    )
+    source_runtime_proof_artifact = _write_workspace_retrieval_runtime_proof_manifest(
+        envelope,
+        action="ask_wiki",
+        native_skill="ask",
+        evidence_path=evidence_payload_path,
+        retrieval_artifact=retrieval_artifact,
+        hits=hits,
+    )
     slug = _slug(query)
     evidence_ids = _unique_strings([f"ask:{slug}", *[str(hit["path"]) for hit in hits], *[str(item) for item in model_output.get("evidence_ids") or []]])
+    artifacts = [
+        {"type": "ask_answer_markdown", "path": answer_artifact},
+        {"type": "ask_retrieval_json", "path": retrieval_artifact},
+        {"type": "ask_final_answer_boundary_json", "path": final_boundary_artifact},
+        *model_artifacts,
+    ]
+    if model_runtime_proof_artifact is not None:
+        artifacts.append(model_runtime_proof_artifact)
+    if source_runtime_proof_artifact is not None:
+        artifacts.append(source_runtime_proof_artifact)
+    crystallize = _ask_crystallize_writeback(
+        envelope,
+        query=query,
+        slug=slug,
+        hits=hits,
+        answer_lines=answer_lines,
+        model_output=model_output,
+        final_boundary=final_boundary,
+        gap_annotations=gap_annotations,
+        crystallize_recommendation=crystallize_recommendation,
+        evidence_ids=evidence_ids,
+        answer_artifact=answer_artifact,
+        retrieval_artifact=retrieval_artifact,
+        final_boundary_artifact=final_boundary_artifact,
+    )
+    artifacts.extend(crystallize.get("artifacts") or [])
+    crystallize_summary = crystallize.get("summary") if isinstance(crystallize.get("summary"), dict) else {}
+    crystallize_requested = bool(crystallize_summary.get("requested"))
+    crystallize_applied = bool(crystallize_summary.get("applied"))
+    change_operation = str(crystallize_summary.get("operation") or "no_op")
+    change_path = str(crystallize_summary.get("path") or f"knowledge/research/queries/{slug}.md")
+    change_entity_type = str(
+        crystallize_summary.get("target_entity_type")
+        or ("ask_output" if crystallize_requested else "ask_query")
+    )
+    change_entity_id = str(crystallize_summary.get("target_entity_id") or f"ask-{slug}")
+    evidence_status = "completed" if (hits or crystallize_applied) else "inconclusive"
+    if crystallize_requested and not crystallize_applied:
+        evidence_status = "inconclusive"
     return convert_research_memory_update({
         "changes": [
             {
-                "entity_type": "ask_query",
-                "entity_id": f"ask-{slug}",
-                "operation": "no_op",
-                "path": f"knowledge/research/queries/{slug}.md",
+                "entity_type": change_entity_type,
+                "entity_id": change_entity_id,
+                "operation": change_operation,
+                "path": change_path,
                 "evidence_ids": evidence_ids,
-                "confidence": max(0.75 if hits else 0.0, float(model_output.get("confidence") or 0.0) if model_completed else 0.0),
+                "confidence": (
+                    0.86
+                    if crystallize_applied
+                    else max(0.75 if hits else 0.0, float(model_output.get("confidence") or 0.0) if model_completed else 0.0)
+                ),
                 "summary": (
-                    "Source-grounded answer generated from retrieved wiki snippets and explicit model evidence."
-                    if model_completed
+                    "Approved ask answer crystallized into wiki outputs with source edges and rebuilt views."
+                    if crystallize_applied
                     else (
-                        "Source-grounded extractive answer generated from retrieved wiki snippets."
-                        if hits
-                        else "Ask query captured, but no matching wiki evidence was retrieved."
+                        "Ask crystallize write-back was requested but blocked by missing approval/finality evidence."
+                        if crystallize_requested
+                        else (
+                            "Source-grounded answer generated from retrieved wiki snippets and explicit model evidence."
+                            if model_completed
+                            else (
+                                "Source-grounded extractive answer generated from retrieved wiki snippets."
+                                if hits
+                                else "Ask query captured, but no matching wiki evidence was retrieved."
+                            )
+                        )
                     )
                 ),
             }
         ],
-        "artifacts": [
-            {"type": "ask_answer_markdown", "path": answer_artifact},
-            {"type": "ask_retrieval_json", "path": retrieval_artifact},
-            *model_artifacts,
-        ],
-        "status": "completed" if hits else "inconclusive",
+        "artifacts": artifacts,
+        "status": evidence_status,
         "limitations": [
             "Ask wiki answer is limited to local retrieved wiki snippets plus explicit model evidence when supplied.",
             "Use human review before treating the answer as final for publication.",
+            *[str(item) for item in crystallize.get("limitations") or []],
         ],
     }, envelope)
 
@@ -2420,12 +4495,120 @@ def _source_candidate_wiki_fan_in(
     sidecar_path = _source_fan_in_path(envelope, action)
     write["sidecar_path"] = _rel(sidecar_path)
     artifact = {"type": "source_fan_in_writeback_json", "path": _write_evidence_payload(sidecar_path, evidence)}
+    native_skill = {
+        "daily_arxiv_prepare_finalize": "daily-arxiv",
+        "init_sources": "init",
+    }.get(action, action.replace("_", "-"))
+    runtime_proof_artifact = _write_wiki_mutation_runtime_proof_manifest(
+        envelope,
+        action=action,
+        native_skill=native_skill,
+        writeback_path=sidecar_path,
+        writeback=evidence,
+    )
     return {
         "summary": write,
         "artifact": artifact,
+        "runtime_proof_artifact": runtime_proof_artifact,
         "limitations": limitations,
         "artifacts": artifacts,
     }
+
+
+def _init_sources_final_fan_in_boundary(
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    fan_in_summary = fan_in_summary if isinstance(fan_in_summary, dict) else {}
+    semantic_verified = semantic.get("verified") is True
+    provider_boundary_completed = source_boundary.get("completed") is True
+    provider_candidates_ready = bool(candidates) and provider_boundary_completed
+    fan_in_completed = fan_in_summary.get("applied") is True and str(fan_in_summary.get("status") or "") == "completed"
+    edge_paths = [str(item) for item in fan_in_summary.get("edge_paths") or [] if str(item).strip()]
+    rebuilt_paths = [str(item) for item in fan_in_summary.get("rebuilt_paths") or [] if str(item).strip()]
+    graph_log_rebuild_ready = bool(
+        fan_in_summary.get("log_path")
+        and edge_paths
+        and any(path.endswith("index.md") for path in rebuilt_paths)
+        and any(path.endswith("context_brief.md") for path in rebuilt_paths)
+    )
+    stage_provider_ready = (
+        contract.get("execution_verified") is True
+        and semantic_verified
+        and provider_candidates_ready
+    )
+    final_ready = stage_provider_ready and fan_in_completed and graph_log_rebuild_ready
+    limitations: list[str] = []
+    if contract.get("execution_verified") is not True:
+        limitations.append("Init source finality requires a verified approval contract with runtime and after-artifact evidence.")
+    if not semantic_verified:
+        limitations.append("Init source finality requires semantic runtime verification to pass.")
+    if not provider_boundary_completed:
+        limitations.append("Init source finality requires completed non-fixture provider source-channel evidence.")
+    if not candidates:
+        limitations.append("Init source finality requires provider-backed source candidates.")
+    if not fan_in_completed:
+        limitations.append("Init source finality requires approved wiki fan-in writeback.")
+    if not graph_log_rebuild_ready:
+        limitations.append("Init source finality requires wiki log, graph edge, index, and context rebuild evidence.")
+    if not limitations:
+        limitations.append("Init source final fan-in boundary passed with provider candidates and wiki mutation/rebuild evidence.")
+    return {
+        "schema": "autosci_init_sources_final_fan_in_boundary.v1",
+        "status": "init_sources_final_fan_in_ready" if final_ready else (
+            "init_sources_provider_ready" if stage_provider_ready else "init_sources_fan_in_incomplete"
+        ),
+        "stage_provider_ready": stage_provider_ready,
+        "final_fan_in_ready": final_ready,
+        "approval_contract_verified": contract.get("execution_verified") is True,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "semantic_runtime_verified": semantic_verified,
+        "semantic_runtime_status": str(semantic.get("status") or "missing"),
+        "provider_boundary_completed": provider_boundary_completed,
+        "provider_boundary_status": str(source_boundary.get("status") or "missing"),
+        "candidate_count": len(candidates),
+        "fan_in_completed": fan_in_completed,
+        "written_count": int(fan_in_summary.get("written_count") or 0),
+        "graph_log_rebuild_ready": graph_log_rebuild_ready,
+        "log_path": str(fan_in_summary.get("log_path") or ""),
+        "edge_paths": edge_paths,
+        "rebuilt_paths": rebuilt_paths,
+        "limitations": limitations,
+    }
+
+
+def _attach_init_sources_final_fan_in_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    boundary = _init_sources_final_fan_in_boundary(
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary,
+        fan_in_summary=fan_in_summary,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    outputs["final_fan_in_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "init_sources") / "init_sources_final_fan_in_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "init_sources_final_fan_in_boundary_json", "path": boundary_path}
+    )
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
 
 
 def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -2452,6 +4635,8 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
     artifacts = [contract_artifact]
     if fan_in.get("artifact"):
         artifacts.append(fan_in["artifact"])
+    if fan_in.get("runtime_proof_artifact"):
+        artifacts.append(fan_in["runtime_proof_artifact"])
     limitations = [
         "Init source preparation did not execute network fetch or fan-in ingest inside this bridge.",
         "Provide topic, anchors, approved network fetch, or source manifests before treating initialization as complete.",
@@ -2461,21 +4646,321 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations = [
             "Init source runtime was verified from supplied approval-gated evidence; this bridge did not execute the fetch.",
         ]
+    source_boundary = (semantic.get("detail") or {}).get("source_provider_boundary") if isinstance(semantic.get("detail"), dict) else {}
+    if isinstance(source_boundary, dict):
+        limitations.extend(str(item) for item in source_boundary.get("limitations") or [])
     limitations.extend(str(item) for item in fan_in.get("limitations") or [])
-    return convert_literature_discovery({
+    evidence = convert_literature_discovery({
         "query": query,
         "mode": "init_runtime_verified" if semantic.get("verified") else "init_plan",
         "limit": int(inputs.get("limit") or 10),
         "candidates": candidates,
+        "source_provider_boundary": source_boundary,
         "source_fan_in": fan_in.get("summary"),
         "status": "completed" if semantic.get("verified") else "inconclusive",
         "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
+    evidence = _attach_init_sources_final_fan_in_boundary(
+        envelope,
+        evidence,
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary if isinstance(source_boundary, dict) else {},
+        fan_in_summary=fan_in.get("summary") if isinstance(fan_in, dict) else {},
+    )
+    approval_proof_artifact = _write_approval_boundary_runtime_proof_manifest(
+        envelope,
+        action="init_sources",
+        native_skill="init",
+        contract_path=_resolve_harness_path(contract_artifact["path"]),
+        contract=contract,
+    )
+    if approval_proof_artifact is not None:
+        evidence.setdefault("artifacts", []).append(approval_proof_artifact)
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "init_sources") / "init_sources.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    runtime_proof_artifact = _write_source_provider_runtime_proof_manifest(
+        envelope,
+        action="init_sources",
+        native_skill="init",
+        evidence_path=evidence_payload_path,
+        source_boundary=source_boundary if isinstance(source_boundary, dict) else {},
+        candidates=candidates,
+        artifacts=list(evidence.get("artifacts") or []),
+    )
+    if runtime_proof_artifact is not None:
+        evidence.setdefault("artifacts", []).append(runtime_proof_artifact)
+    return evidence
+
+
+def _daily_arxiv_delivery_completed(contract: dict[str, Any]) -> tuple[bool, list[str]]:
+    records, errors = _runtime_records(contract)
+    delivery_evidence: list[str] = []
+    completed = False
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        sent = (
+            _truthy(_field(record, "email_sent", "digest_sent", "delivery_completed", "sent"))
+            or str(_field(record, "delivery_status", "email_status", "digest_status") or "").strip().lower()
+            in {"sent", "delivered", "completed", "ok", "success"}
+        )
+        if sent:
+            completed = True
+            delivery_evidence.append(str(_field(record, "delivery_id", "message_id", "digest_id") or "runtime-delivery:completed"))
+    if errors:
+        delivery_evidence.extend(f"runtime_error:{error}" for error in errors)
+    return completed, _unique_strings(delivery_evidence)
+
+
+def _daily_arxiv_final_provider_delivery_boundary(
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    fan_in_summary = fan_in_summary if isinstance(fan_in_summary, dict) else {}
+    semantic_verified = semantic.get("verified") is True
+    provider_boundary_completed = source_boundary.get("completed") is True
+    candidate_count = len(candidates)
+    source_channels = _unique_strings(
+        [
+            str(channel)
+            for candidate in candidates
+            if isinstance(candidate, dict)
+            for channel in (candidate.get("source_channels") if isinstance(candidate.get("source_channels"), list) else [])
+            if str(channel).strip()
+        ]
+    )
+    ranking_ready = bool(candidates) and all(
+        isinstance(candidate, dict)
+        and candidate.get("ranking_score") is not None
+        and str(candidate.get("ranking_rationale") or "").strip()
+        for candidate in candidates
+    )
+    fan_in_completed = fan_in_summary.get("applied") is True and str(fan_in_summary.get("status") or "") == "completed"
+    delivery_completed, delivery_evidence = _daily_arxiv_delivery_completed(contract)
+    delivery_or_ingest_completed = fan_in_completed or delivery_completed
+    stage_provider_ready = semantic_verified and provider_boundary_completed and bool(candidates) and ranking_ready
+    final_ready = stage_provider_ready and delivery_or_ingest_completed
+    limitations: list[str] = []
+    if contract.get("execution_verified") is not True:
+        limitations.append("Daily arXiv finality requires a verified approval contract with runtime and after-artifact evidence.")
+    if not semantic_verified:
+        limitations.append("Daily arXiv finality requires semantic runtime verification to pass.")
+    if not provider_boundary_completed:
+        limitations.append("Daily arXiv finality requires completed non-fixture provider source-channel evidence.")
+    if not candidates:
+        limitations.append("Daily arXiv finality requires at least one candidate.")
+    if not ranking_ready:
+        limitations.append("Daily arXiv finality requires ranking score and rationale for every candidate.")
+    if not delivery_or_ingest_completed:
+        limitations.append("Daily arXiv finality requires explicit digest delivery or approved wiki ingest/fan-in status.")
+    if not limitations:
+        limitations.append("Daily arXiv final boundary passed with provider candidates plus delivery or ingest evidence.")
+    return {
+        "schema": "autosci_daily_arxiv_final_provider_delivery_boundary.v1",
+        "status": "daily_final_delivery_ready" if final_ready else (
+            "daily_provider_ready" if stage_provider_ready else "daily_provider_delivery_incomplete"
+        ),
+        "stage_provider_ready": stage_provider_ready,
+        "final_delivery_ready": final_ready,
+        "approval_contract_verified": contract.get("execution_verified") is True,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "semantic_runtime_verified": semantic_verified,
+        "semantic_runtime_status": str(semantic.get("status") or "missing"),
+        "provider_boundary_completed": provider_boundary_completed,
+        "provider_boundary_status": str(source_boundary.get("status") or "missing"),
+        "candidate_count": candidate_count,
+        "source_channels": source_channels,
+        "ranking_ready": ranking_ready,
+        "fan_in_completed": fan_in_completed,
+        "delivery_completed": delivery_completed,
+        "delivery_evidence_ids": delivery_evidence,
+        "limitations": limitations,
+    }
+
+
+def _attach_daily_arxiv_final_provider_delivery_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    source_boundary: dict[str, Any],
+    fan_in_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    boundary = _daily_arxiv_final_provider_delivery_boundary(
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary,
+        fan_in_summary=fan_in_summary,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    outputs["final_provider_delivery_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "daily_arxiv_prepare_finalize") / "daily_arxiv_final_provider_delivery_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "daily_arxiv_final_provider_delivery_boundary_json", "path": boundary_path}
+    )
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
+
+
+def _daily_arxiv_management_raw(envelope: dict[str, Any], command: str) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    approval_ref = str(inputs.get("approval_ref") or "").strip()
+    paths = _control_workflow_paths(envelope, "daily_arxiv_prepare_finalize")
+    paths["patch_candidates"].mkdir(parents=True, exist_ok=True)
+    command_labels = {
+        "setup": "daily arXiv setup",
+        "status": "daily arXiv status",
+        "disable": "daily arXiv disable",
+    }
+    protected_change = command in {"setup", "disable"}
+    proposed_changes = {
+        "setup": [
+            "Resolve or create config/daily-arxiv.yml from config/daily-arxiv.yml.example.",
+            "Verify .github/workflows/daily-arxiv.yml env exposures for S2 and DeepXiv secrets.",
+            "Report missing required secrets without reading secret values.",
+        ],
+        "status": [
+            "Inspect daily-arxiv config, workflow presence, schedule state, and required secret availability.",
+            "Report recent runtime artifact availability when supplied.",
+        ],
+        "disable": [
+            "Set schedule.enabled=false in config/daily-arxiv.yml only after explicit approval.",
+            "Leave manual /daily-arxiv execution available.",
+        ],
+    }[command]
+    evidence_ids = [f"daily-arxiv:{command}", "route:daily-arxiv"]
+    proposed_change_objects = [
+        {
+            "change_id": f"change.manual.daily-arxiv-{command}",
+            "category": "manual",
+            "target": f"/daily-arxiv {command}",
+            "description": proposed_changes[0],
+            "evidence_ids": evidence_ids,
+            "review_required": True,
+            "application_state": "proposed_only",
+        },
+        {
+            "change_id": f"change.gate.daily-arxiv-{command}",
+            "category": "gate",
+            "target": "daily-arxiv management approval gate",
+            "description": (
+                "Require explicit approval/runtime evidence before applying daily-arxiv setup or disable changes."
+                if protected_change
+                else "Keep status inspection read-only and prevent it from being treated as recommendation execution."
+            ),
+            "evidence_ids": evidence_ids,
+            "review_required": True,
+            "application_state": "proposed_only",
+        },
+    ]
+    recommended_lines = [
+        f"# /daily-arxiv {command} Management Boundary",
+        "",
+        "## Proposed Changes",
+        "",
+        *[f"- {item}" for item in proposed_changes],
+        "",
+        "## Execution Boundary",
+        "",
+        "- No protected config, workflow, secret, scheduler, SMTP, or wiki mutation was applied.",
+        "- Apply changes only through a separately approved execution path.",
+        "",
+    ]
+    _write_text_if_changed_bridge(paths["recommended_changes"], "\n".join(recommended_lines))
+    limitations = [
+        f"/daily-arxiv {command} was routed as a management subcommand, not as recommendation query text.",
+        "No config, workflow, secret, scheduler, SMTP, or wiki mutation was executed by this bridge.",
+    ]
+    if protected_change and not approval_ref:
+        limitations.append("Protected setup/disable changes require explicit approval evidence before execution.")
+    return {
+        "proposal_id": f"daily-arxiv-{command}",
+        "scope": command_labels[command],
+        "change_type": "workflow_template",
+        "rationale": f"Native /daily-arxiv {command} compatibility requires a management evidence boundary.",
+        "expected_effect": "Preserve native daily-arxiv management UX while keeping protected changes approval-gated.",
+        "approval_state": "approved" if approval_ref else "proposed",
+        "approval_ref": approval_ref,
+        "status": "completed" if command == "status" else "inconclusive",
+        "evidence_ids": evidence_ids,
+        "collected": {
+            "failed_nodes": [
+                {
+                    "node_id": f"daily-arxiv-{command}-management-boundary",
+                    "logical_operator": "ScientificWorkflowEvolver",
+                    "status": "blocked" if protected_change else "completed",
+                    "gate": "daily_arxiv_management_gate",
+                }
+            ],
+            "gate_rejection_reasons": [
+                {
+                    "gate_id": "daily_arxiv_management_gate",
+                    "status": "blocked" if protected_change and not approval_ref else "passed",
+                    "reasons": limitations,
+                }
+            ],
+            "ambiguous_manuals_or_prompts": [],
+            "insufficient_schemas": [],
+            "poor_operator_bindings": [],
+            "human_intervention_points": [
+                {
+                    "id": "daily-arxiv-approved-management",
+                    "description": "Approve workflow/config mutation before setup or disable applies changes.",
+                },
+                {
+                    "id": "daily-arxiv-secret-management",
+                    "description": "Set required GitHub/SMTP secrets through the provider UI or approved CLI.",
+                },
+            ],
+            "runtime_errors": [],
+        },
+        "proposed_changes": proposed_change_objects,
+        "human_intervention_points": [
+            "Set required GitHub/SMTP secrets through the provider UI or approved CLI.",
+            "Approve workflow/config mutation before setup or disable applies changes.",
+        ],
+        "runtime_errors": [],
+        "review": {
+            "human_accept_reject_required": True,
+            "daily_command": command,
+            "protected_core_edits_required": protected_change,
+            "protected_core_edits_applied": False,
+            "application_state": "proposed_only",
+            "approval_ref": approval_ref or "N/A",
+        },
+        "recommended_changes_path": _rel(paths["recommended_changes"]),
+        "patch_candidates_path": _rel(paths["patch_candidates"]),
+        "artifacts": [
+            _artifact("recommended_changes_markdown", paths["recommended_changes"]),
+            _artifact("patch_candidates_directory", paths["patch_candidates"]),
+        ],
+        "limitations": limitations,
+    }
 
 
 def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
+    daily_command = str(inputs.get("daily_command") or "run").strip().lower()
+    if daily_command in {"setup", "status", "disable"}:
+        return convert_workflow_evolution(_daily_arxiv_management_raw(envelope, daily_command), envelope)
     query = str(inputs.get("query") or inputs.get("topic") or "daily arXiv digest")
     contract = _approval_contract(
         envelope,
@@ -2499,9 +4984,17 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
         semantic=semantic,
         contract=contract,
     )
+    review_llm, review_evidence_ids, review_artifacts = _claim_review_llm_context(
+        envelope,
+        "daily_arxiv_digest_selection",
+        artifact_type="daily_arxiv_review_llm_evidence_json",
+    )
     artifacts = [contract_artifact]
     if fan_in.get("artifact"):
         artifacts.append(fan_in["artifact"])
+    if fan_in.get("runtime_proof_artifact"):
+        artifacts.append(fan_in["runtime_proof_artifact"])
+    artifacts.extend(review_artifacts)
     limitations = [
         "Daily arXiv prepare/finalize is approval-gated; this bridge did not execute network feed fetch, email, or auto-ingest.",
         "Provide approved feed fetch evidence before treating this digest as complete.",
@@ -2511,17 +5004,88 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
         limitations = [
             "Daily arXiv runtime was verified from supplied approval-gated evidence; this bridge did not execute network/email side effects.",
         ]
+    source_boundary = (semantic.get("detail") or {}).get("source_provider_boundary") if isinstance(semantic.get("detail"), dict) else {}
+    if isinstance(source_boundary, dict):
+        limitations.extend(str(item) for item in source_boundary.get("limitations") or [])
     limitations.extend(str(item) for item in fan_in.get("limitations") or [])
-    return convert_literature_discovery({
+    if review_llm.get("status") == "completed":
+        limitations.append(
+            f"Review LLM digest-selection evidence was attached from `{review_llm.get('source_path')}`."
+        )
+    elif inputs.get("require_review_llm") or _input_path_values(inputs, "review_llm_evidence", "review_evidence"):
+        limitations.extend(str(item) for item in review_llm.get("reasons") or ["Review LLM evidence did not complete."])
+    evidence = convert_literature_discovery({
         "query": query,
         "mode": "daily_arxiv_runtime_verified" if semantic.get("verified") else "daily_arxiv_plan",
         "limit": int(inputs.get("limit") or 10),
         "candidates": candidates,
+        "source_provider_boundary": source_boundary,
         "source_fan_in": fan_in.get("summary"),
         "status": "completed" if semantic.get("verified") else "inconclusive",
         "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
+    evidence.setdefault("outputs", {})["review_llm"] = review_llm
+    evidence["outputs"]["review_llm_completed"] = review_llm.get("status") == "completed"
+    evidence["outputs"]["review_evidence_ids"] = review_evidence_ids
+    evidence = _attach_daily_arxiv_final_provider_delivery_boundary(
+        envelope,
+        evidence,
+        contract=contract,
+        semantic=semantic,
+        candidates=candidates,
+        source_boundary=source_boundary if isinstance(source_boundary, dict) else {},
+        fan_in_summary=fan_in.get("summary") if isinstance(fan_in, dict) else {},
+    )
+    approval_proof_artifact = _write_approval_boundary_runtime_proof_manifest(
+        envelope,
+        action="daily_arxiv_prepare_finalize",
+        native_skill="daily-arxiv",
+        contract_path=_resolve_harness_path(contract_artifact["path"]),
+        contract=contract,
+    )
+    if approval_proof_artifact is not None:
+        evidence.setdefault("artifacts", []).append(approval_proof_artifact)
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "daily_arxiv_prepare_finalize") / "daily_arxiv_prepare_finalize.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    runtime_proof_artifact = _write_source_provider_runtime_proof_manifest(
+        envelope,
+        action="daily_arxiv_prepare_finalize",
+        native_skill="daily-arxiv",
+        evidence_path=evidence_payload_path,
+        source_boundary=source_boundary if isinstance(source_boundary, dict) else {},
+        candidates=candidates,
+        artifacts=list(evidence.get("artifacts") or []),
+    )
+    if runtime_proof_artifact is not None:
+        evidence.setdefault("artifacts", []).append(runtime_proof_artifact)
+    review_runtime_proof_artifact = _write_review_context_runtime_proof_manifest(
+        envelope,
+        action="daily_arxiv_prepare_finalize",
+        native_skill="daily-arxiv",
+        evidence_path=evidence_payload_path,
+        review_llm=review_llm,
+    )
+    if review_runtime_proof_artifact is not None:
+        evidence.setdefault("artifacts", []).append(review_runtime_proof_artifact)
+    side_effect_proof_artifact = _write_side_effect_execution_runtime_proof_manifest(
+        envelope,
+        action="daily_arxiv_prepare_finalize",
+        native_skill="daily-arxiv",
+        evidence_path=evidence_payload_path,
+        boundary=(evidence.get("outputs") or {}).get("final_provider_delivery_boundary")
+        if isinstance(evidence.get("outputs"), dict)
+        else {},
+        artifacts=list(evidence.get("artifacts") or []),
+    )
+    if side_effect_proof_artifact is not None:
+        evidence.setdefault("artifacts", []).append(side_effect_proof_artifact)
+    return evidence
 
 
 def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -2560,15 +5124,46 @@ def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
             limitations = [
                 "Literature discovery runtime was verified from supplied approval-gated source evidence; this bridge did not execute the fetch.",
             ]
-        return convert_literature_discovery({
+        source_boundary = (semantic.get("detail") or {}).get("source_provider_boundary") if isinstance(semantic.get("detail"), dict) else {}
+        if isinstance(source_boundary, dict):
+            limitations.extend(str(item) for item in source_boundary.get("limitations") or [])
+        raw = {
             "query": query,
             "mode": "discover_literature_runtime_verified" if semantic.get("verified") else "discover_literature_runtime_pending",
             "limit": limit,
             "candidates": candidates,
+            "source_provider_boundary": source_boundary,
             "status": "completed" if semantic.get("verified") else "inconclusive",
             "artifacts": [contract_artifact, *runtime_artifacts],
             "limitations": limitations,
-        }, envelope)
+        }
+        raw = _attach_discover_final_shortlist_boundary(
+            envelope,
+            raw,
+            mode=str(raw["mode"]),
+        )
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "discover_literature") / "discover_literature.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        runtime_proof_artifact = _write_source_provider_runtime_proof_manifest(
+            envelope,
+            action="discover_literature",
+            native_skill="discover",
+            evidence_path=evidence_payload_path,
+            source_boundary=raw.get("source_provider_boundary") if isinstance(raw.get("source_provider_boundary"), dict) else {},
+            candidates=candidates,
+            artifacts=list(raw.get("artifacts") or []),
+        )
+        if runtime_proof_artifact is not None:
+            raw.setdefault("artifacts", []).append(runtime_proof_artifact)
+        return convert_literature_discovery(
+            raw,
+            envelope,
+        )
 
     allow_network_fetch = str(inputs.get("allow_network_fetch", "true")).lower() not in {"0", "false", "no"}
     if os.environ.get("AUTOSCI_DISABLE_NETWORK_FETCH", "").lower() in {"1", "true", "yes"}:
@@ -2606,7 +5201,38 @@ def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
         no_citation_expand=bool(inputs.get("no_citation_expand")),
         fixture_fallback=fixture_fallback,
     )
-    return convert_literature_discovery(raw, envelope)
+    raw["source_provider_boundary"] = _source_provider_boundary(
+        [],
+        raw.get("candidates") if isinstance(raw.get("candidates"), list) else [],
+        action="discover_literature",
+    )
+    raw = _attach_discover_final_shortlist_boundary(
+        envelope,
+        raw,
+        mode=str(raw.get("mode") or "unknown"),
+    )
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "discover_literature") / "discover_literature.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    runtime_proof_artifact = _write_source_provider_runtime_proof_manifest(
+        envelope,
+        action="discover_literature",
+        native_skill="discover",
+        evidence_path=evidence_payload_path,
+        source_boundary=raw.get("source_provider_boundary") if isinstance(raw.get("source_provider_boundary"), dict) else {},
+        candidates=raw.get("candidates") if isinstance(raw.get("candidates"), list) else [],
+        artifacts=list(raw.get("artifacts") or []),
+    )
+    if runtime_proof_artifact is not None:
+        raw.setdefault("artifacts", []).append(runtime_proof_artifact)
+    return convert_literature_discovery(
+        raw,
+        envelope,
+    )
 
 
 def _phase9_sidecar_paths(envelope: dict[str, Any]) -> tuple[Path, Path]:
@@ -2631,6 +5257,203 @@ def _write_phase9_foundation_sidecars(envelope: dict[str, Any], paper_evidence: 
         _write_evidence_payload(memory_path, memory_evidence),
         _write_evidence_payload(graph_path, graph_evidence),
     ]
+
+
+def _artifact_path_exists(raw_path: Any) -> bool:
+    if not raw_path:
+        return False
+    raw_text = str(raw_path)
+    if raw_text.startswith(("http://", "https://")):
+        return False
+    return _resolve_harness_path(raw_text).exists()
+
+
+def _ingest_wiki_registration_state(envelope: dict[str, Any], paper: dict[str, Any]) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    wiki_root = _resolve_harness_path(str(inputs.get("wiki_root") or "artifacts/autosci/workspace/wiki"))
+    paper_id = str(paper.get("paper_id") or "paper-unresolved")
+    title = str(paper.get("title") or "")
+    paper_page = wiki_root / "papers" / f"{_slug(paper_id)}.md"
+    matched_page = paper_page if paper_page.exists() else None
+    if matched_page is None and (wiki_root / "papers").exists():
+        needles = [item.lower() for item in (paper_id, title) if item]
+        for candidate in sorted((wiki_root / "papers").glob("*.md")):
+            try:
+                text = candidate.read_text(encoding="utf-8").lower()
+            except OSError:
+                continue
+            if any(needle and needle in text for needle in needles):
+                matched_page = candidate
+                break
+
+    log_path = wiki_root / "log.md"
+    edge_path = wiki_root / "graph" / "edges.jsonl"
+    index_path = wiki_root / "index.md"
+    context_path = wiki_root / "graph" / "context_brief.md"
+
+    def _contains(path: Path, values: list[str]) -> bool:
+        if not path.exists():
+            return False
+        try:
+            text = path.read_text(encoding="utf-8").lower()
+        except OSError:
+            return False
+        return any(value and value.lower() in text for value in values)
+
+    page_values = [paper_id, title, matched_page.name if matched_page else ""]
+    return {
+        "wiki_root": _rel(wiki_root),
+        "paper_page": _rel(matched_page) if matched_page else _rel(paper_page),
+        "paper_registered": bool(matched_page and matched_page.exists()),
+        "log_path": _rel(log_path),
+        "log_registered": _contains(log_path, page_values + ["ingest"]),
+        "graph_edges_path": _rel(edge_path),
+        "graph_registered": _contains(edge_path, page_values + ["source_candidate_ingested", "paper_ingested"]),
+        "index_path": _rel(index_path),
+        "index_rebuilt": _contains(index_path, [matched_page.name if matched_page else paper_page.name, paper_id, title, "papers"]),
+        "context_brief_path": _rel(context_path),
+        "context_rebuilt": context_path.exists(),
+    }
+
+
+def _ingest_final_source_registration_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    sidecar_paths: list[str],
+) -> dict[str, Any]:
+    outputs = evidence.get("outputs") if isinstance(evidence.get("outputs"), dict) else {}
+    paper = outputs.get("paper") if isinstance(outputs.get("paper"), dict) else {}
+    preparation = paper.get("preparation") if isinstance(paper.get("preparation"), dict) else {}
+    artifacts = evidence.get("artifacts") if isinstance(evidence.get("artifacts"), list) else []
+    sections = paper.get("sections") if isinstance(paper.get("sections"), list) else []
+    section_text_ready = any(
+        isinstance(section, dict) and str(section.get("text") or section.get("title") or "").strip()
+        for section in sections
+    )
+    prep_paths = [
+        preparation.get("source_path"),
+        preparation.get("canonical_ingest_path"),
+        preparation.get("prepared_path"),
+        preparation.get("extracted_text_path"),
+    ]
+    artifact_paths = [
+        artifact.get("path")
+        for artifact in artifacts
+        if isinstance(artifact, dict) and artifact.get("type") in {
+            "arxiv_source",
+            "extracted_pdf_text",
+            "prepared_archive_source",
+            "synthetic_latex",
+        }
+    ]
+    source_preparation_verified = (
+        str(preparation.get("status") or "").lower() == "completed"
+        and bool(preparation.get("canonical_ingest_path") or preparation.get("source_path"))
+    )
+    parse_quality_ready = (
+        evidence.get("status") == "completed"
+        and str(paper.get("parse_status") or "") in {"parsed", "partial"}
+        and bool(str(paper.get("paper_id") or "").strip())
+        and bool(str(paper.get("title") or "").strip())
+        and section_text_ready
+    )
+    raw_artifact_provenance_ready = any(_artifact_path_exists(path) for path in [*prep_paths, *artifact_paths])
+    memory_sidecar_ready = len(sidecar_paths) >= 1 and _artifact_path_exists(sidecar_paths[0])
+    graph_sidecar_ready = len(sidecar_paths) >= 2 and _artifact_path_exists(sidecar_paths[1])
+    downstream_handoff_ready = memory_sidecar_ready and graph_sidecar_ready
+    wiki_state = _ingest_wiki_registration_state(envelope, paper)
+    wiki_registration_ready = all(
+        bool(wiki_state.get(key))
+        for key in ("paper_registered", "log_registered", "graph_registered", "index_rebuilt", "context_rebuilt")
+    )
+
+    checks = [
+        {"name": "source_preparation_verified", "status": "ok" if source_preparation_verified else "missing"},
+        {"name": "parse_quality_ready", "status": "ok" if parse_quality_ready else "missing"},
+        {"name": "raw_artifact_provenance_ready", "status": "ok" if raw_artifact_provenance_ready else "missing"},
+        {"name": "downstream_handoff_ready", "status": "ok" if downstream_handoff_ready else "missing"},
+        {"name": "wiki_registration_ready", "status": "ok" if wiki_registration_ready else "missing"},
+    ]
+    missing = [check["name"] for check in checks if check["status"] != "ok"]
+    final_ready = not missing
+    return {
+        "schema": "autosci_ingest_final_source_registration_boundary.v1",
+        "status": "ingest_source_registration_ready" if final_ready else "ingest_source_registration_incomplete",
+        "final_registration_ready": final_ready,
+        "paper_id": str(paper.get("paper_id") or ""),
+        "source_preparation_verified": source_preparation_verified,
+        "parse_quality_ready": parse_quality_ready,
+        "raw_artifact_provenance_ready": raw_artifact_provenance_ready,
+        "downstream_handoff_ready": downstream_handoff_ready,
+        "memory_sidecar_ready": memory_sidecar_ready,
+        "graph_sidecar_ready": graph_sidecar_ready,
+        "wiki_registration_ready": wiki_registration_ready,
+        "wiki_registration": wiki_state,
+        "sidecar_evidence_paths": list(sidecar_paths),
+        "checks": checks,
+        "missing": missing,
+    }
+
+
+def _attach_ingest_final_source_registration_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    sidecar_paths: list[str],
+) -> dict[str, Any]:
+    artifacts = evidence.setdefault("artifacts", [])
+    for artifact_type, sidecar_path in zip(
+        ("research_memory_update_json", "research_graph_update_json"),
+        sidecar_paths,
+        strict=False,
+    ):
+        if not any(isinstance(item, dict) and item.get("path") == sidecar_path for item in artifacts):
+            artifacts.append({"type": artifact_type, "path": sidecar_path})
+    boundary = _ingest_final_source_registration_boundary(envelope, evidence, sidecar_paths)
+    output_dir = _output_dir(envelope, "ingest_paper")
+    boundary_path = _configured_output_path(
+        envelope,
+        "ingest_final_source_registration_boundary_path",
+        output_dir / "ingest_final_source_registration_boundary.json",
+    )
+    boundary_artifact = _write_json_sidecar(boundary_path, boundary)
+    artifacts.append({"type": "ingest_final_source_registration_boundary_json", "path": boundary_artifact})
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        output_dir / "ingest_paper.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    source_runtime_proof_artifact = _write_ingest_source_runtime_proof_manifest(
+        envelope,
+        evidence_path=evidence_payload_path,
+        evidence=evidence,
+        boundary=boundary,
+        boundary_artifact=boundary_artifact,
+        sidecar_paths=sidecar_paths,
+    )
+    if source_runtime_proof_artifact is not None:
+        artifacts.append(source_runtime_proof_artifact)
+    wiki_runtime_proof_artifact = _write_ingest_wiki_registration_runtime_proof_manifest(
+        envelope,
+        evidence_path=evidence_payload_path,
+        boundary=boundary,
+        boundary_artifact=boundary_artifact,
+        sidecar_paths=sidecar_paths,
+    )
+    if wiki_runtime_proof_artifact is not None:
+        artifacts.append(wiki_runtime_proof_artifact)
+    outputs = evidence.setdefault("outputs", {})
+    outputs["final_source_registration_boundary"] = boundary
+    paper = outputs.get("paper")
+    if isinstance(paper, dict):
+        paper["final_source_registration_boundary"] = boundary
+    if not boundary["final_registration_ready"]:
+        limitation = "Ingest final source registration incomplete: " + ", ".join(boundary["missing"])
+        limitations = evidence.setdefault("limitations", [])
+        if limitation not in limitations:
+            limitations.append(limitation)
+    return evidence
 
 
 def _load_optional_evidence(raw_path: Any) -> dict[str, Any] | None:
@@ -2857,7 +5680,9 @@ def _action_generate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
                 action="generate_ideas",
                 prompt=(
                     "Brainstorm source-grounded AutoSci research ideas. Return JSON with outputs.ideas; each idea "
-                    "must include title, hypothesis, approach, novelty_hypothesis, and origin_evidence_ids."
+                    "must include title, hypothesis, approach, novelty_hypothesis, origin_evidence_ids, and "
+                    "generation_path using exactly one native path: A:landscape-driven, B:incremental, "
+                    "C:combination, D:innovation, or E:cross-domain-transfer."
                 ),
                 context={
                     "topic": topic,
@@ -2871,43 +5696,85 @@ def _action_generate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
                 source_mode=str(source_summary.get("source_mode") or "external"),
             )
             if model.get("status") == "completed" and model_ideas:
+                evidence_payload_path = _configured_output_path(
+                    envelope,
+                    "evidence_payload_path",
+                    _output_dir(envelope, "generate_ideas") / "generate_ideas.evidence.json",
+                    legacy_key="evidence_path",
+                    legacy_suffix=".json",
+                )
+                model_runtime_proof_artifact = _write_model_runtime_proof_manifest(
+                    envelope,
+                    action="generate_ideas",
+                    native_skill="ideate",
+                    evidence_path=evidence_payload_path,
+                    model_output=model,
+                )
+                if model_runtime_proof_artifact is not None:
+                    model_artifacts = [*model_artifacts, model_runtime_proof_artifact]
+                boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+                    envelope,
+                    ideas=model_ideas,
+                    artifacts=[*wiki_artifacts, *model_artifacts],
+                    limitations=[
+                        "Ideas came from explicit model evidence or a model-command bridge; novelty/review validation remains required.",
+                        *(
+                            [f"Skipped incomplete model ideas: {'; '.join(skipped_model_ideas)}"]
+                            if skipped_model_ideas
+                            else []
+                        ),
+                        *_wiki_state_limitations(wiki_state),
+                    ],
+                    source_summary=source_summary,
+                    wiki_state=wiki_state,
+                    model_output=model,
+                )
                 return convert_idea_candidate(
                     {
-                        "ideas": model_ideas,
-                        "artifacts": [*wiki_artifacts, *model_artifacts],
-                        "limitations": [
-                            "Ideas came from explicit model evidence or a model-command bridge; novelty/review validation remains required.",
-                            *(
-                                [f"Skipped incomplete model ideas: {'; '.join(skipped_model_ideas)}"]
-                                if skipped_model_ideas
-                                else []
-                            ),
-                            *_wiki_state_limitations(wiki_state),
-                        ],
+                        "ideas": boundary_ideas,
+                        "artifacts": boundary_artifacts,
+                        "limitations": boundary_limitations,
                     },
                     envelope,
                     status="completed",
                 )
             if model.get("status") in {"failed", "invalid", "inconclusive"}:
+                boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+                    envelope,
+                    ideas=sourced["ideas"],
+                    artifacts=[*wiki_artifacts, *model_artifacts],
+                    limitations=[
+                        f"Explicit model brainstorm did not complete: {model.get('reason') or model.get('status')}.",
+                        "Returned source-grounded local candidates as inconclusive fallback evidence, not as model brainstorm parity.",
+                        *list(sourced["limitations"]),
+                        *_wiki_state_limitations(wiki_state),
+                    ],
+                    source_summary=source_summary,
+                    wiki_state=wiki_state,
+                    model_output=model,
+                )
                 return convert_idea_candidate(
                     {
-                        "ideas": sourced["ideas"],
-                        "artifacts": [*wiki_artifacts, *model_artifacts],
-                        "limitations": [
-                            f"Explicit model brainstorm did not complete: {model.get('reason') or model.get('status')}.",
-                            "Returned source-grounded local candidates as inconclusive fallback evidence, not as model brainstorm parity.",
-                            *list(sourced["limitations"]),
-                            *_wiki_state_limitations(wiki_state),
-                        ],
+                        "ideas": boundary_ideas,
+                        "artifacts": boundary_artifacts,
+                        "limitations": boundary_limitations,
                     },
                     envelope,
                     status="inconclusive",
                 )
+        boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+            envelope,
+            ideas=sourced["ideas"],
+            artifacts=wiki_artifacts,
+            limitations=[*list(sourced["limitations"]), *_wiki_state_limitations(wiki_state)],
+            source_summary=source_summary,
+            wiki_state=wiki_state,
+        )
         return convert_idea_candidate(
             {
-                "ideas": sourced["ideas"],
-                "artifacts": wiki_artifacts,
-                "limitations": [*list(sourced["limitations"]), *_wiki_state_limitations(wiki_state)],
+                "ideas": boundary_ideas,
+                "artifacts": boundary_artifacts,
+                "limitations": boundary_limitations,
             },
             envelope,
             status=str(sourced.get("status") or "completed"),
@@ -2960,10 +5827,23 @@ def _action_generate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
             "status": "filtered",
         },
     ]
+    boundary_ideas, boundary_artifacts, boundary_limitations = _attach_ideate_final_promotion_boundary(
+        envelope,
+        ideas=ideas,
+        artifacts=wiki_artifacts,
+        limitations=["Fixture ideas are generated from supplied local evidence only; external novelty is not proven."],
+        source_summary={
+            "wiki_source_count": 0,
+            "discovery_source_count": 0,
+            "failed_idea_count": 0,
+            "source_mode": "fixture",
+        },
+        wiki_state=wiki_state,
+    )
     return convert_idea_candidate({
-        "ideas": ideas,
-        "artifacts": wiki_artifacts,
-        "limitations": ["Fixture ideas are generated from supplied local evidence only; external novelty is not proven."],
+        "ideas": boundary_ideas,
+        "artifacts": boundary_artifacts,
+        "limitations": boundary_limitations,
     }, envelope)
 
 
@@ -2994,6 +5874,47 @@ def _novelty_payload_archive_artifacts(evaluations: list[dict[str, Any]]) -> lis
         seen.add(path_text)
         artifacts.append({"type": "external_novelty_payload_json", "path": path_text})
     return artifacts
+
+
+def _novelty_final_acceptance_boundary(evaluation: dict[str, Any]) -> dict[str, Any]:
+    external_status = _external_novelty_status(evaluation)
+    provenance_status = _external_novelty_provenance_status(evaluation)
+    review_status = _review_llm_status(evaluation)
+    score = _novelty_score_from_evaluation(evaluation)
+    blocking_reasons: list[str] = []
+    if external_status != "completed":
+        blocking_reasons.append(f"external_novelty status is `{external_status}`, not `completed`")
+    if provenance_status != "passed":
+        blocking_reasons.append(f"external_novelty provenance status is `{provenance_status}`, not `passed`")
+    if review_status != "completed":
+        blocking_reasons.append(f"review_llm status is `{review_status}`, not `completed`")
+    if score is None:
+        blocking_reasons.append("numeric novelty score is missing")
+    final_acceptance_ready = not blocking_reasons
+    review_llm = evaluation.get("review_llm") if isinstance(evaluation.get("review_llm"), dict) else {}
+    external = evaluation.get("external_novelty") if isinstance(evaluation.get("external_novelty"), dict) else {}
+    return {
+        "schema": "autosci_novelty_final_acceptance_boundary.v1",
+        "status": "final_acceptance_ready" if final_acceptance_ready else "novelty_acceptance_incomplete",
+        "final_acceptance_ready": final_acceptance_ready,
+        "idea_id": str(evaluation.get("idea_id") or "N/A"),
+        "external_novelty_status": external_status,
+        "external_novelty_provenance_status": provenance_status,
+        "external_source_count": evaluation.get("external_source_count", external.get("source_count", "N/A")),
+        "review_llm_status": review_status,
+        "review_mode": str(evaluation.get("review_mode") or "N/A"),
+        "review_available": bool(evaluation.get("review_available")),
+        "review_invocation_mode": str(review_llm.get("invocation_mode") or "N/A"),
+        "recommendation": str(evaluation.get("recommendation") or "N/A"),
+        "novelty": evaluation.get("novelty", "N/A"),
+        "novelty_score": score,
+        "evidence_ids": _unique_strings([str(item) for item in evaluation.get("evidence_ids") or []]),
+        "provider_statuses": list(external.get("provider_statuses") or []) if isinstance(external, dict) else [],
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if final_acceptance_ready else [
+            "Novelty final acceptance requires completed external novelty evidence, passed provider provenance, and completed Review LLM evidence."
+        ],
+    }
 
 
 def _action_evaluate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -3107,22 +6028,115 @@ def _action_evaluate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
                 "external_source_count": validation.get("external_source_count", "N/A") if validation else "N/A",
                 "external_novelty": validation.get("external_novelty", {"status": "N/A"}) if validation else {"status": "N/A"},
             })
+    final_boundaries = []
+    for evaluation in evaluations:
+        if not isinstance(evaluation, dict):
+            continue
+        boundary = _novelty_final_acceptance_boundary(evaluation)
+        evaluation["final_acceptance_boundary"] = boundary
+        final_boundaries.append(boundary)
+    boundary_path = _output_dir(envelope, "evaluate_ideas") / "novelty_final_acceptance_boundary.json"
+    boundary_artifact = _write_json_sidecar(
+        boundary_path,
+        {
+            "schema": "autosci_novelty_final_acceptance_boundary_set.v1",
+            "status": "final_acceptance_ready"
+            if final_boundaries and all(bool(item.get("final_acceptance_ready")) for item in final_boundaries)
+            else "novelty_acceptance_incomplete",
+            "boundaries": final_boundaries,
+        },
+    )
     limitations = ["Fixture evaluation uses local evidence and does not update idea status directly."]
     if mode != "fixture" and not inputs.get("smoke_mode"):
         limitations = [
             "Novelty/review signals are derived from local wiki/discovery evidence.",
             "Independent Review LLM and live external search are still required before promotion.",
         ]
+    if any(not bool(item.get("final_acceptance_ready")) for item in final_boundaries):
+        limitations.append("Novelty final acceptance boundary is incomplete for at least one evaluated idea.")
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "evaluate_ideas") / "evaluate_ideas.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    runtime_proof_artifacts = [
+        artifact
+        for artifact in (
+            _write_external_novelty_runtime_proof_manifest(
+                envelope,
+                action="evaluate_ideas",
+                native_skill="novelty",
+                evidence_path=evidence_payload_path,
+                evaluations=evaluations,
+            ),
+            _write_novelty_review_runtime_proof_manifest(
+                envelope,
+                action="evaluate_ideas",
+                native_skill="novelty",
+                evidence_path=evidence_payload_path,
+                evaluations=evaluations,
+            ),
+        )
+        if artifact is not None
+    ]
     return convert_idea_evaluation({
         "evaluations": evaluations,
-        "artifacts": [*_novelty_payload_archive_artifacts(evaluations), *wiki_artifacts],
+        "artifacts": [
+            {"type": "novelty_final_acceptance_boundary_json", "path": boundary_artifact},
+            *_novelty_payload_archive_artifacts(evaluations),
+            *runtime_proof_artifacts,
+            *wiki_artifacts,
+        ],
         "limitations": [*limitations, *_wiki_state_limitations(wiki_state)],
     }, envelope)
 
 
+def _review_final_acceptance_boundary(inputs: dict[str, Any], raw: dict[str, Any]) -> dict[str, Any]:
+    review = raw.get("review") if isinstance(raw.get("review"), dict) else {}
+    review_llm = review.get("review_llm") if isinstance(review.get("review_llm"), dict) else {}
+    review_mode = str(review.get("review_mode") or "").strip()
+    llm_status = str(review_llm.get("status") or "").strip()
+    evidence_ids = _review_evidence_ids(review, review_llm)
+    invalid_reasons: list[str] = []
+    if review_mode != "review_llm":
+        invalid_reasons.append(f"review_mode is `{review_mode or 'missing'}`, not `review_llm`")
+    if review.get("review_available") is not True:
+        invalid_reasons.append("review_available is not true")
+    if llm_status != "completed":
+        invalid_reasons.append(f"review_llm status is `{llm_status or 'missing'}`, not `completed`")
+    if not evidence_ids:
+        invalid_reasons.append("Review LLM evidence ids are missing")
+    final_acceptance_ready = not invalid_reasons
+    return {
+        "schema": "autosci_review_final_acceptance_boundary.v1",
+        "status": "final_acceptance_ready" if final_acceptance_ready else "review_llm_incomplete",
+        "required": bool(inputs.get("require_review_llm")),
+        "final_acceptance_ready": final_acceptance_ready,
+        "review_mode": review_mode or "missing",
+        "review_available": bool(review.get("review_available")),
+        "review_llm_status": llm_status or "missing",
+        "invocation_mode": str(review_llm.get("invocation_mode") or "local_surrogate"),
+        "provider": str(review_llm.get("provider") or ""),
+        "model": str(review_llm.get("model") or ""),
+        "source_path": str(review_llm.get("source_path") or review_llm.get("archive_path") or ""),
+        "request_sha256": str(review_llm.get("request_sha256") or ""),
+        "response_sha256": str(review_llm.get("response_sha256") or ""),
+        "score": review.get("score", review_llm.get("score")),
+        "recommendation": str(review.get("recommendation") or review_llm.get("recommendation") or "inconclusive"),
+        "evidence_ids": evidence_ids,
+        "blocking_reasons": invalid_reasons,
+        "limitations": [] if final_acceptance_ready else [
+            "Final review acceptance requires Review LLM evidence from supplied evidence, command bridge, or provider mode."
+        ],
+    }
+
+
 def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
     raw = review_artifact(
-        dict(envelope.get("inputs") or {}),
+        inputs,
         workspace_root=HARNESS_DIR,
         repository_root=REPO_HARNESS_DIR,
     )
@@ -3138,6 +6152,38 @@ def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(report_markdown, encoding="utf-8")
         artifacts.append({"type": "artifact_review_markdown", "path": _rel(report_path)})
+    final_boundary = _review_final_acceptance_boundary(inputs, raw)
+    final_boundary_path = output_dir / "review_final_acceptance_boundary.json"
+    final_boundary_artifact_path = _write_json_sidecar(final_boundary_path, final_boundary)
+    artifacts.append({
+        "type": "review_final_acceptance_boundary_json",
+        "path": final_boundary_artifact_path,
+    })
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        output_dir / "review_artifact.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    runtime_proof_artifact = _write_review_runtime_proof_manifest(
+        envelope,
+        evidence_payload_path,
+        final_boundary,
+    )
+    if runtime_proof_artifact is not None:
+        artifacts.append(runtime_proof_artifact)
+    source_runtime_proof_artifact = _write_review_target_runtime_proof_manifest(
+        envelope,
+        evidence_path=evidence_payload_path,
+        artifact_path=artifact_path,
+        report_artifact=_rel(report_path) if report_markdown else "",
+        final_boundary_artifact=final_boundary_artifact_path,
+    )
+    if source_runtime_proof_artifact is not None:
+        artifacts.append(source_runtime_proof_artifact)
+    limitations = list(raw.get("limitations") or ["Review LLM MCP evidence is unavailable."])
+    limitations.extend(str(item) for item in final_boundary.get("limitations") or [])
     timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     return {
         "schema": "artifact_review.v1",
@@ -3145,11 +6191,12 @@ def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
         "sprint_id": str(envelope.get("sprint_id") or "sprint-autosci-review"),
         "node_id": str(envelope.get("node_id") or "node-review-artifact"),
         "status": str(raw.get("status") or "inconclusive"),
-        "inputs": dict(envelope.get("inputs") or {}),
+        "inputs": inputs,
         "outputs": {
             "review": raw.get("review") if isinstance(raw.get("review"), dict) else {},
             "findings": list(raw.get("findings") or []),
             "artifact": artifact,
+            "final_acceptance_boundary": final_boundary,
         },
         "artifacts": artifacts,
         "provenance": {
@@ -3157,7 +6204,7 @@ def _action_review_artifact(envelope: dict[str, Any]) -> dict[str, Any]:
             "implementation_package": "plugins/autosci",
             "timestamp": timestamp,
         },
-        "limitations": list(raw.get("limitations") or ["Review LLM MCP evidence is unavailable."]),
+        "limitations": _unique_strings(limitations),
     }
 
 
@@ -3418,6 +6465,81 @@ def _write_text_if_changed_bridge(path: Path, content: str) -> bool:
     return True
 
 
+WIKI_MUTATION_ARTIFACT_TYPES = {
+    "wiki_claim_verdict_target",
+    "wiki_graph_edges",
+    "wiki_idea",
+    "wiki_log",
+    "wiki_page",
+    "wiki_rebuild",
+}
+
+
+def _write_wiki_mutation_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    writeback_path: Path,
+    writeback: dict[str, Any],
+) -> dict[str, str] | None:
+    outputs = writeback.get("outputs") if isinstance(writeback.get("outputs"), dict) else {}
+    write = outputs.get("write") if isinstance(outputs.get("write"), dict) else {}
+    if str(writeback.get("status") or "") != "completed":
+        return None
+    if write.get("applied") is not True:
+        return None
+    refs: list[str | Path] = [writeback_path]
+    for artifact in writeback.get("artifacts") or []:
+        if not isinstance(artifact, dict):
+            continue
+        if str(artifact.get("type") or "") not in WIKI_MUTATION_ARTIFACT_TYPES:
+            continue
+        path = str(artifact.get("path") or "").strip()
+        if path:
+            refs.append(path)
+    for key in ("target_path", "idea_path", "log_path", "edge_path"):
+        path = str(write.get(key) or "").strip()
+        if path:
+            refs.append(path)
+    for key in ("rebuilt_paths", "edge_paths"):
+        for path in write.get(key) or []:
+            if str(path or "").strip():
+                refs.append(str(path))
+    timestamp = str(
+        writeback.get("generated_at")
+        or writeback.get("captured_at")
+        or (writeback.get("provenance") or {}).get("timestamp")
+        or datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    )
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:wiki-writeback-sidecar:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["wiki_mutation_evidence"],
+                "collection_mode": "approved_side_effect",
+                "production_ready": True,
+                "provenance": {
+                    "source": "wiki_writeback_sidecar",
+                    "captured_at": timestamp,
+                    "artifact_kind": str(writeback.get("schema") or "wiki_writeback"),
+                    "command": f"{action}:wiki_writeback",
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": "Completed wiki mutation writeback sidecar for AutoSci parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_wiki_mutation_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "wiki_mutation_runtime_proof_manifest_json", "path": artifact_path}
+
+
 def _write_novelty_writeback_sidecar(envelope: dict[str, Any], evaluation_evidence: dict[str, Any]) -> str | None:
     inputs = dict(envelope.get("inputs") or {})
     native_options = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
@@ -3438,6 +6560,16 @@ def _write_novelty_writeback_sidecar(envelope: dict[str, Any], evaluation_eviden
         "external_novelty_status": _external_novelty_status(evaluation) if isinstance(evaluation, dict) else "missing",
         "external_novelty_provenance_status": _external_novelty_provenance_status(evaluation) if isinstance(evaluation, dict) else "missing",
         "review_llm_status": _review_llm_status(evaluation) if isinstance(evaluation, dict) else "missing",
+        "final_acceptance_status": (
+            (evaluation.get("final_acceptance_boundary") or {}).get("status")
+            if isinstance(evaluation, dict) and isinstance(evaluation.get("final_acceptance_boundary"), dict)
+            else "missing"
+        ),
+        "final_acceptance_ready": (
+            bool((evaluation.get("final_acceptance_boundary") or {}).get("final_acceptance_ready"))
+            if isinstance(evaluation, dict) and isinstance(evaluation.get("final_acceptance_boundary"), dict)
+            else False
+        ),
     }
     artifacts: list[dict[str, Any]] = []
     limitations: list[str] = []
@@ -3530,7 +6662,17 @@ def _write_novelty_writeback_sidecar(envelope: dict[str, Any], evaluation_eviden
         },
         "limitations": limitations,
     }
-    return _write_evidence_payload(path, evidence)
+    sidecar_path = _write_evidence_payload(path, evidence)
+    runtime_proof_artifact = _write_wiki_mutation_runtime_proof_manifest(
+        envelope,
+        action="evaluate_ideas",
+        native_skill="novelty",
+        writeback_path=path,
+        writeback=evidence,
+    )
+    if runtime_proof_artifact is not None:
+        evaluation_evidence.setdefault("artifacts", []).append(runtime_proof_artifact)
+    return sidecar_path
 
 
 SAFE_EXPERIMENT_EXECUTION_MODES = {
@@ -3671,6 +6813,417 @@ def _write_experiment_state_mutation(
     ]
 
 
+def _existing_experiment_state_artifacts(envelope: dict[str, Any], experiment_id: str) -> list[dict[str, str]]:
+    artifacts: list[dict[str, str]] = []
+    for root in _wiki_roots_for_write(envelope):
+        exp_path = root / "experiments" / f"{_slug(experiment_id)}.md"
+        log_path = root / "log.md"
+        edge_path = root / "graph" / "edges.jsonl"
+        if exp_path.exists():
+            artifacts.append({"type": "wiki_experiment_state", "path": _rel(exp_path)})
+        if log_path.exists():
+            artifacts.append({"type": "wiki_log", "path": _rel(log_path)})
+        if edge_path.exists():
+            artifacts.append({"type": "wiki_graph_edges", "path": _rel(edge_path)})
+        if artifacts:
+            break
+    return artifacts
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _collection_file_digests(paths: list[Path]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in sorted(paths, key=lambda item: _rel(item)):
+        if not path.exists() or not path.is_file():
+            continue
+        rows.append({
+            "path": _rel(path),
+            "sha256": _file_sha256(path),
+            "bytes": path.stat().st_size,
+        })
+    return rows
+
+
+def _record_collection_ledger(
+    envelope: dict[str, Any],
+    *,
+    experiment_id: str,
+    command_run: str,
+    collected_files: list[Path],
+    evidence_ids: list[str],
+) -> dict[str, Any]:
+    root = _wiki_roots_for_write(envelope)[0]
+    ledger_path = root / "collections" / "collection-ledger.json"
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    file_digests = _collection_file_digests(collected_files)
+    identity_seed = json.dumps({"experiment_id": experiment_id, "files": file_digests}, sort_keys=True)
+    identity = hashlib.sha1(identity_seed.encode("utf-8")).hexdigest()
+    try:
+        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        ledger = {"schema": "autosci_collection_ledger.v1", "entries": []}
+    if not isinstance(ledger, dict):
+        ledger = {"schema": "autosci_collection_ledger.v1", "entries": []}
+    entries = ledger.get("entries") if isinstance(ledger.get("entries"), list) else []
+    for entry in entries:
+        if isinstance(entry, dict) and entry.get("collection_identity") == identity:
+            ledger["entries"] = entries
+            ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            return {
+                "duplicate": True,
+                "collection_identity": identity,
+                "ledger_path": _rel(ledger_path),
+                "entry": entry,
+                "file_digests": file_digests,
+            }
+    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    entry = {
+        "collection_identity": identity,
+        "experiment_id": experiment_id,
+        "accepted_at": now,
+        "command_run": command_run,
+        "files": file_digests,
+        "evidence_ids": _unique_strings(evidence_ids),
+    }
+    entries.append(entry)
+    ledger.update({"schema": "autosci_collection_ledger.v1", "entries": entries})
+    ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {
+        "duplicate": False,
+        "collection_identity": identity,
+        "ledger_path": _rel(ledger_path),
+        "entry": entry,
+        "file_digests": file_digests,
+    }
+
+
+def _experiment_run_final_runtime_audit_boundary(
+    *,
+    stage: str,
+    experiment_id: str,
+    contract: dict[str, Any] | None,
+    semantic: dict[str, Any] | None,
+    result_collected: bool,
+    artifacts: list[dict[str, str]],
+    collection_boundary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    contract = contract if isinstance(contract, dict) else {}
+    semantic = semantic if isinstance(semantic, dict) else {}
+    detail = semantic.get("detail") if isinstance(semantic.get("detail"), dict) else {}
+    artifact_types = {str(artifact.get("type") or "") for artifact in artifacts if isinstance(artifact, dict)}
+    runtime_semantic_verified = semantic.get("verified") is True
+    approval_contract_verified = contract.get("execution_verified") is True
+    wiki_state_mutated = {"wiki_experiment_state", "wiki_log", "wiki_graph_edges"}.issubset(artifact_types)
+    collection_ledger_recorded = any(
+        str(artifact.get("type") or "") == "collection_ledger_json" and str(artifact.get("path") or "").strip()
+        for artifact in artifacts
+        if isinstance(artifact, dict)
+    )
+    if not collection_ledger_recorded and str(detail.get("collection_ledger_path") or "").strip():
+        collection_ledger_recorded = True
+    collection_boundary = collection_boundary if isinstance(collection_boundary, dict) else {}
+    live_remote_collection_verified = collection_boundary.get("live_remote_collection_verified") is True
+    stage_audit_ready = all(
+        [
+            approval_contract_verified,
+            runtime_semantic_verified,
+            result_collected,
+            wiki_state_mutated,
+        ]
+    )
+    if stage == "collect":
+        stage_audit_ready = stage_audit_ready and collection_ledger_recorded
+    final_runtime_audit_ready = stage == "collect" and stage_audit_ready and live_remote_collection_verified
+    limitations: list[str] = []
+    if not approval_contract_verified:
+        limitations.append("Final runtime audit requires a fully verified approval contract with runtime and after-artifact evidence.")
+    if not runtime_semantic_verified:
+        limitations.append("Final runtime audit requires semantic runtime verification to pass.")
+    if not result_collected:
+        limitations.append("Final runtime audit requires collected experiment result evidence.")
+    if not wiki_state_mutated:
+        limitations.append("Final runtime audit requires wiki experiment state, log, and graph mutation proof.")
+    if stage == "run":
+        limitations.append("Final lifecycle audit also requires an approved monitor/collect stage with collection ledger evidence.")
+    if stage == "collect" and not collection_ledger_recorded:
+        limitations.append("Final collect audit requires a collection ledger entry.")
+    if stage == "collect" and not live_remote_collection_verified:
+        limitations.append("Final collect audit requires live remote/provider collection boundary proof.")
+    if not limitations:
+        limitations.append("Final runtime audit passed with approved runtime, live collection, collection ledger, and wiki mutation evidence.")
+    status = (
+        "final_runtime_audit_ready"
+        if final_runtime_audit_ready
+        else "stage_runtime_audit_ready"
+        if stage_audit_ready
+        else "runtime_audit_incomplete"
+    )
+    return {
+        "schema": "autosci_experiment_run_final_runtime_audit_boundary.v1",
+        "stage": stage,
+        "experiment_id": experiment_id,
+        "status": status,
+        "stage_audit_ready": stage_audit_ready,
+        "final_runtime_audit_ready": final_runtime_audit_ready,
+        "approval_contract_verified": approval_contract_verified,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "runtime_semantic_verified": runtime_semantic_verified,
+        "runtime_semantic_status": str(semantic.get("status") or "missing"),
+        "result_collected": result_collected,
+        "wiki_state_mutated": wiki_state_mutated,
+        "collection_ledger_recorded": collection_ledger_recorded,
+        "live_remote_collection_verified": live_remote_collection_verified,
+        "remote_collection_boundary_status": str(collection_boundary.get("status") or "N/A"),
+        "artifact_types": sorted(item for item in artifact_types if item),
+        "limitations": limitations,
+    }
+
+
+def _attach_experiment_run_runtime_audit_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    action: str,
+    stage: str,
+    experiment_id: str,
+    contract: dict[str, Any] | None,
+    semantic: dict[str, Any] | None,
+    result_collected: bool,
+    collection_boundary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    artifacts = [artifact for artifact in evidence.get("artifacts") or [] if isinstance(artifact, dict)]
+    boundary = _experiment_run_final_runtime_audit_boundary(
+        stage=stage,
+        experiment_id=experiment_id,
+        contract=contract,
+        semantic=semantic,
+        result_collected=result_collected,
+        artifacts=artifacts,
+        collection_boundary=collection_boundary,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    if isinstance(outputs.get("result"), dict):
+        outputs["result"]["final_runtime_audit_boundary"] = boundary
+        outputs["result"]["final_runtime_audit_ready"] = boundary.get("final_runtime_audit_ready") is True
+    if isinstance(outputs.get("status_report"), dict):
+        outputs["status_report"]["final_runtime_audit_boundary"] = boundary
+        outputs["status_report"]["final_runtime_audit_ready"] = boundary.get("final_runtime_audit_ready") is True
+    outputs["final_runtime_audit_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, action) / "experiment_run_final_runtime_audit_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "experiment_run_final_runtime_audit_boundary_json", "path": boundary_path}
+    )
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, action) / f"{action}.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    runtime_proof_artifact = _write_experiment_run_final_runtime_proof_manifest(
+        envelope,
+        action=action,
+        evidence_path=evidence_payload_path,
+        boundary_path=boundary_path,
+        boundary=boundary,
+        artifacts=[artifact for artifact in evidence.get("artifacts") or [] if isinstance(artifact, dict)],
+    )
+    if runtime_proof_artifact is not None:
+        evidence.setdefault("artifacts", []).append(runtime_proof_artifact)
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
+
+
+def _experiment_session_registry_path(envelope: dict[str, Any]) -> Path:
+    root = _wiki_roots_for_write(envelope)[0]
+    return root / "experiments" / "session-registry.json"
+
+
+def _remote_launch_session_state(record: dict[str, Any], *, remote_runtime_rel: str) -> str:
+    status = str(record.get("status") or "").strip().lower()
+    if status == "failed":
+        return "failed"
+    if status == "completed" and remote_runtime_rel:
+        return "completed"
+    if status in {"completed", "inconclusive", "running", "started", "launched"}:
+        return "running"
+    return "unknown"
+
+
+def _record_experiment_session(
+    envelope: dict[str, Any],
+    *,
+    experiment_id: str,
+    command_run: str,
+    record: dict[str, Any],
+    remote_runtime_rel: str,
+) -> dict[str, Any]:
+    registry_path = _experiment_session_registry_path(envelope)
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        registry = {"schema": "autosci_experiment_session_registry.v1", "sessions": []}
+    if not isinstance(registry, dict):
+        registry = {"schema": "autosci_experiment_session_registry.v1", "sessions": []}
+    sessions = registry.get("sessions") if isinstance(registry.get("sessions"), list) else []
+    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    session = {
+        "experiment_id": experiment_id,
+        "state": _remote_launch_session_state(record, remote_runtime_rel=remote_runtime_rel),
+        "command_run": command_run,
+        "remote_cli_status": str(record.get("status") or ""),
+        "run_dir": str(record.get("run_dir") or ""),
+        "runtime_evidence_path": remote_runtime_rel,
+        "result_collected": bool(record.get("result_collected")),
+        "updated_at": now,
+    }
+    replaced = False
+    for index, existing in enumerate(sessions):
+        if isinstance(existing, dict) and existing.get("experiment_id") == experiment_id:
+            sessions[index] = session
+            replaced = True
+            break
+    if not replaced:
+        sessions.append(session)
+    registry.update({"schema": "autosci_experiment_session_registry.v1", "sessions": sessions})
+    registry_path.write_text(json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {"registry_path": _rel(registry_path), "session": session}
+
+
+def _experiment_session_from_registry(envelope: dict[str, Any], experiment_id: str) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    registry_path = _experiment_session_registry_path(envelope)
+    if not registry_path.exists():
+        return None, None
+    try:
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, {"type": "experiment_session_registry_json", "path": _rel(registry_path)}
+    sessions = registry.get("sessions") if isinstance(registry, dict) and isinstance(registry.get("sessions"), list) else []
+    for session in sessions:
+        if isinstance(session, dict) and str(session.get("experiment_id") or "") == experiment_id:
+            return session, {"type": "experiment_session_registry_json", "path": _rel(registry_path)}
+    return None, {"type": "experiment_session_registry_json", "path": _rel(registry_path)}
+
+
+def _session_status_raw(
+    *,
+    experiment_id: str,
+    session: dict[str, Any],
+    session_artifact: dict[str, str] | None,
+    wiki_artifacts: list[dict[str, str]],
+    wiki_state: dict[str, Any] | None,
+) -> dict[str, Any]:
+    state = str(session.get("state") or "unknown")
+    session_artifacts = [*wiki_artifacts]
+    if session_artifact:
+        session_artifacts.append(session_artifact)
+    observations = [
+        f"Resolved experiment session `{experiment_id}` with state `{state}`.",
+        f"remote_cli_status={session.get('remote_cli_status') or 'N/A'}",
+    ]
+    run_dir = str(session.get("run_dir") or "").strip()
+    if run_dir:
+        observations.append(f"run_dir={run_dir}")
+    next_actions = (
+        ["Run approved collect with runtime evidence before treating results as collected."]
+        if state in {"running", "unknown"}
+        else ["Inspect failed session logs before retry."]
+        if state == "failed"
+        else ["Use collected result evidence for claim verification and reporting."]
+    )
+    evidence_ids = _unique_strings([experiment_id, str(session.get("runtime_evidence_path") or ""), session_artifact["path"] if session_artifact else ""])
+    return {
+        "experiment_id": experiment_id,
+        "state": state,
+        "observations": observations,
+        "next_actions": next_actions,
+        "evidence_ids": evidence_ids or [experiment_id, "experiment-session:registry"],
+        "status": "completed" if state != "unknown" else "inconclusive",
+        "artifacts": session_artifacts,
+        "limitations": [
+            "Experiment status was read from the local session registry; no remote process was polled and no results were collected in this status call.",
+            *_wiki_state_limitations(wiki_state),
+        ],
+    }
+
+
+def _experiment_design_final_execution_boundary(
+    envelope: dict[str, Any],
+    *,
+    target_ref: str,
+    review_llm: dict[str, Any],
+    execution_mode: str,
+    approval_required: bool,
+    command_allowlist: list[str],
+    expected_artifacts: list[str],
+) -> dict[str, Any]:
+    contract = _approval_contract(
+        envelope,
+        "run_experiment",
+        ["local_process_launch", "remote_execution", "result_collection", "artifact_handoff"],
+    )
+    target_resolved = bool(str(target_ref or "").strip())
+    review_completed = str(review_llm.get("status") or "") == "completed"
+    approval_ready = bool(contract.get("ready_for_execution"))
+    command_handoff_declared = bool(command_allowlist)
+    artifact_handoff_declared = bool(expected_artifacts)
+    blocking_reasons: list[str] = []
+    if not target_resolved:
+        blocking_reasons.append("target idea/claim evidence was not resolved")
+    if not review_completed:
+        blocking_reasons.append("completed Review LLM design validation is missing")
+    if not approval_required:
+        blocking_reasons.append("experiment execution approval is not required by this plan")
+    if not approval_ready:
+        blocking_reasons.append("approved runtime preflight contract is incomplete")
+    if not command_handoff_declared:
+        blocking_reasons.append("runtime command handoff is missing")
+    if not artifact_handoff_declared:
+        blocking_reasons.append("expected artifact handoff is missing")
+    execution_ready = not blocking_reasons
+    return {
+        "schema": "autosci_experiment_design_final_execution_boundary.v1",
+        "status": "execution_ready" if execution_ready else "execution_readiness_incomplete",
+        "execution_ready": execution_ready,
+        "target_resolved": target_resolved,
+        "target_ref": target_ref or "N/A",
+        "execution_mode": execution_mode,
+        "approval_required": approval_required,
+        "approval_state": str(contract.get("approval_state") or "N/A"),
+        "approval_ready_for_execution": approval_ready,
+        "review_llm_status": str(review_llm.get("status") or "missing"),
+        "review_llm_completed": review_completed,
+        "review_evidence_ids": _unique_strings([str(item) for item in review_llm.get("evidence_ids") or []]),
+        "command_handoff_declared": command_handoff_declared,
+        "command_allowlist": command_allowlist,
+        "artifact_handoff_declared": artifact_handoff_declared,
+        "expected_artifacts": expected_artifacts,
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if execution_ready else [
+            "Experiment design final execution readiness requires resolved target evidence, completed Review LLM validation, approval preflight, command handoff, and expected artifact handoff."
+        ],
+    }
+
+
+def _write_experiment_design_boundary(
+    envelope: dict[str, Any],
+    boundary: dict[str, Any],
+) -> dict[str, str]:
+    path = _output_dir(envelope, "design_experiment") / "experiment_design_final_execution_boundary.json"
+    return {"type": "experiment_design_final_execution_boundary_json", "path": _write_json_sidecar(path, boundary)}
+
+
 def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     execution_mode = _experiment_execution_mode(envelope)
@@ -3693,6 +7246,16 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         raw_target = raw_target or claim_id or idea_id
     target_ref = raw_target or claim_id or idea_id
     if not target_ref:
+        boundary = _experiment_design_final_execution_boundary(
+            envelope,
+            target_ref="",
+            review_llm={},
+            execution_mode=execution_mode,
+            approval_required=False,
+            command_allowlist=[],
+            expected_artifacts=[],
+        )
+        boundary_artifact = _write_experiment_design_boundary(envelope, boundary)
         return convert_experiment_plan({
             "experiment_id": "experiment-unresolved",
             "objective": "No claim, idea, target, or experiment plan evidence was resolved for experiment design.",
@@ -3708,10 +7271,12 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             "success_criteria": ["target evidence resolved"],
             "command_allowlist": [],
             "resource_limits": {"network": "denied", "write_scope": "none"},
+            "source_context": {"final_execution_boundary": boundary},
             "status": "inconclusive",
-            "artifacts": wiki_artifacts,
+            "artifacts": [*wiki_artifacts, boundary_artifact],
             "limitations": [
                 "Experiment design was skipped because no target evidence was resolved; no default idea-001 fallback was used.",
+                *[str(item) for item in boundary.get("limitations") or []],
                 *_wiki_state_limitations(wiki_state),
             ],
         }, envelope)
@@ -3773,6 +7338,42 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     native_experiment_id = _slug(target_ref)
     if not native_experiment_id.startswith(("exp-", "experiment-")):
         native_experiment_id = f"exp-{native_experiment_id}"
+    expected_artifacts = ["experiment_result.json", "experiment_status.json", "experiment_run.log"]
+    command_allowlist = [
+        "python3 plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
+        "python3 plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment",
+    ]
+    boundary = _experiment_design_final_execution_boundary(
+        envelope,
+        target_ref=target_ref,
+        review_llm=review_llm,
+        execution_mode=execution_mode,
+        approval_required=approval_required,
+        command_allowlist=command_allowlist,
+        expected_artifacts=expected_artifacts,
+    )
+    boundary_artifact = _write_experiment_design_boundary(envelope, boundary)
+    if boundary.get("execution_ready"):
+        success_criteria.append("final_execution_boundary == execution_ready")
+    else:
+        limitations.extend(str(item) for item in boundary.get("limitations") or [])
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "design_experiment") / "design_experiment.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    review_runtime_proof_artifact = _write_review_context_runtime_proof_manifest(
+        envelope,
+        action="design_experiment",
+        native_skill="exp-design",
+        evidence_path=evidence_payload_path,
+        review_llm=review_llm,
+    )
+    artifacts = [*wiki_artifacts, *review_artifacts, boundary_artifact]
+    if review_runtime_proof_artifact is not None:
+        artifacts.append(review_runtime_proof_artifact)
     return convert_experiment_plan({
         "experiment_id": "exp-001" if _fixture_like_envelope(envelope) else native_experiment_id,
         "objective": objective,
@@ -3781,19 +7382,17 @@ def _action_design_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         "metrics": metrics,
         "procedure": procedure,
         "approval_required": approval_required,
-        "expected_artifacts": ["experiment_result.json", "experiment_status.json", "experiment_run.log"],
+        "expected_artifacts": expected_artifacts,
         "execution_mode": execution_mode,
         "baseline": baseline,
         "baseline_absence_reason": baseline_absence_reason,
         "success_criteria": success_criteria,
-        "command_allowlist": [
-            "python3 plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
-            "python3 plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment",
-        ],
+        "command_allowlist": command_allowlist,
         "resource_limits": resource_limits,
         "review_llm": review_llm,
+        "source_context": {"final_execution_boundary": boundary},
         "evidence_ids": _unique_strings([target_ref, *review_evidence_ids]),
-        "artifacts": [*wiki_artifacts, *review_artifacts],
+        "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
 
@@ -3865,7 +7464,8 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             log_lines.append("blocked missing approval for non-fixture execution")
             artifact = _experiment_log_artifact(envelope, experiment_id, log_lines)
             blocked_status = "inconclusive" if execution_mode == "human_approved" else "failed"
-            return convert_experiment_result({
+            semantic = _approval_semantic_runtime(contract, "run_experiment")
+            evidence = convert_experiment_result({
                 "experiment_id": experiment_id,
                 "outcome": blocked_status,
                 "status": blocked_status,
@@ -3880,6 +7480,16 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     *_approval_contract_limitations(contract),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="run_experiment",
+                stage="run",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=False,
+            )
         contract, executor_result = _execute_experiment_if_approved(envelope, contract, plan)
         semantic = _approval_semantic_runtime(contract, "run_experiment")
         contract["semantic_runtime"] = semantic
@@ -3892,7 +7502,7 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                 "blocked missing verified runtime evidence for approval-gated execution",
             ])
             artifact = _experiment_log_artifact(envelope, experiment_id, log_lines)
-            return convert_experiment_result({
+            evidence = convert_experiment_result({
                 "experiment_id": experiment_id,
                 "outcome": "inconclusive",
                 "status": "inconclusive",
@@ -3910,6 +7520,16 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     *_approval_contract_limitations(contract),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="run_experiment",
+                stage="run",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=False,
+            )
         if executor_result.get("executed"):
             log_lines.append(f"experiment_executor_result={executor_result.get('result_collected')}")
             log_lines.append(f"executor_exit_code={executor_result.get('exit_code')}")
@@ -3955,7 +7575,7 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             evidence_ids=completed_evidence_ids,
             metrics=metrics,
         )
-        return convert_experiment_result({
+        evidence = convert_experiment_result({
             "experiment_id": experiment_id,
             "outcome": outcome,
             "status": "completed",
@@ -3969,6 +7589,16 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                 "Experiment result was completed from approved runtime evidence and mutated wiki state.",
             ],
         }, envelope)
+        return _attach_experiment_run_runtime_audit_boundary(
+            envelope,
+            evidence,
+            action="run_experiment",
+            stage="run",
+            experiment_id=experiment_id,
+            contract=contract,
+            semantic=semantic,
+            result_collected=True,
+        )
 
     raw["experiment_id"] = str(raw.get("experiment_id") or experiment_id)
     raw["execution_mode"] = execution_mode
@@ -3978,6 +7608,143 @@ def _action_run_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     raw["artifacts"] = [_experiment_log_artifact(envelope, experiment_id, raw["logs"])]
     raw["limitations"] = list(raw.get("limitations") or ["Fixture result is deterministic and not a real benchmark run."])
     return convert_experiment_result(raw, envelope)
+
+
+def _pilot_run_final_acceptance_boundary(
+    *,
+    experiment_id: str,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    result_collected: bool,
+) -> dict[str, Any]:
+    runtime_ready = (
+        contract.get("execution_verified") is True
+        and semantic.get("verified") is True
+        and result_collected
+    )
+    limitations: list[str] = []
+    if contract.get("execution_verified") is not True:
+        limitations.append("Pilot runtime acceptance requires a verified approval contract with runtime and after-artifact evidence.")
+    if semantic.get("verified") is not True:
+        limitations.append("Pilot runtime acceptance requires semantic runtime verification to pass.")
+    if not result_collected:
+        limitations.append("Pilot runtime acceptance requires collected pilot result evidence.")
+    limitations.append("Final pilot acceptance also requires `/exp-pilot-eval` verdict linkage and approved wiki writeback.")
+    return {
+        "schema": "autosci_pilot_experiment_final_acceptance_boundary.v1",
+        "stage": "pilot_run",
+        "experiment_id": experiment_id,
+        "status": "pilot_runtime_ready" if runtime_ready else "pilot_runtime_incomplete",
+        "pilot_runtime_ready": runtime_ready,
+        "pilot_verdict_ready": False,
+        "writeback_completed": False,
+        "final_pilot_acceptance_ready": False,
+        "approval_contract_verified": contract.get("execution_verified") is True,
+        "approval_state": str(contract.get("approval_state") or "missing"),
+        "runtime_semantic_verified": semantic.get("verified") is True,
+        "runtime_semantic_status": str(semantic.get("status") or "missing"),
+        "result_collected": result_collected,
+        "limitations": limitations,
+    }
+
+
+def _attach_pilot_run_final_acceptance_boundary(
+    envelope: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    experiment_id: str,
+    contract: dict[str, Any],
+    semantic: dict[str, Any],
+    result_collected: bool,
+) -> dict[str, Any]:
+    boundary = _pilot_run_final_acceptance_boundary(
+        experiment_id=experiment_id,
+        contract=contract,
+        semantic=semantic,
+        result_collected=result_collected,
+    )
+    outputs = evidence.setdefault("outputs", {})
+    if isinstance(outputs.get("result"), dict):
+        outputs["result"]["pilot_final_acceptance_boundary"] = boundary
+        outputs["result"]["final_pilot_acceptance_ready"] = False
+    outputs["pilot_final_acceptance_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "run_pilot_experiment") / "pilot_final_acceptance_boundary.json",
+        boundary,
+    )
+    evidence.setdefault("artifacts", []).append(
+        {"type": "pilot_run_final_acceptance_boundary_json", "path": boundary_path}
+    )
+    evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return evidence
+
+
+def _pilot_eval_final_acceptance_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    outputs = verdict_evidence.get("outputs") if isinstance(verdict_evidence.get("outputs"), dict) else {}
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    verdict = dict(verdicts[0]) if verdicts and isinstance(verdicts[0], dict) else {}
+    claim_id = str(verdict.get("claim_id") or "pilot-claim")
+    evidence_ids = [str(item) for item in verdict.get("evidence_ids") or [] if str(item).strip()]
+    runtime_evidence_linked = any(item != claim_id for item in evidence_ids)
+    pilot_verdict_ready = str(verdict.get("verdict") or "inconclusive") != "inconclusive" and verdict_evidence.get("status") == "completed"
+    writeback = _claim_verdict_writeback_status(envelope, writeback_path)
+    writeback_completed = writeback.get("status") == "completed" and writeback.get("applied") is True
+    final_ready = pilot_verdict_ready and runtime_evidence_linked and writeback_completed
+    limitations: list[str] = []
+    if not pilot_verdict_ready:
+        limitations.append("Final pilot acceptance requires a non-inconclusive pilot verdict.")
+    if not runtime_evidence_linked:
+        limitations.append("Final pilot acceptance requires linked pilot result/runtime evidence.")
+    if not writeback_completed:
+        limitations.append("Final pilot acceptance requires completed approved wiki writeback.")
+    if not limitations:
+        limitations.append("Final pilot acceptance passed with runtime evidence, pilot verdict, and approved wiki writeback.")
+    return {
+        "schema": "autosci_pilot_experiment_final_acceptance_boundary.v1",
+        "stage": "pilot_eval",
+        "claim_id": claim_id,
+        "status": "final_pilot_acceptance_ready" if final_ready else "pilot_acceptance_incomplete",
+        "pilot_runtime_ready": runtime_evidence_linked,
+        "pilot_verdict_ready": pilot_verdict_ready,
+        "writeback_completed": writeback_completed,
+        "writeback_status": writeback,
+        "final_pilot_acceptance_ready": final_ready,
+        "evidence_ids": _unique_strings(evidence_ids),
+        "limitations": limitations,
+    }
+
+
+def _attach_pilot_eval_final_acceptance_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    boundary = _pilot_eval_final_acceptance_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
+    outputs = verdict_evidence.setdefault("outputs", {})
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    if verdicts and isinstance(verdicts[0], dict):
+        verdicts[0]["pilot_final_acceptance_boundary"] = boundary
+        verdicts[0]["final_pilot_acceptance_ready"] = boundary.get("final_pilot_acceptance_ready") is True
+    outputs["pilot_final_acceptance_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "evaluate_pilot_result") / "pilot_final_acceptance_boundary.json",
+        boundary,
+    )
+    verdict_evidence.setdefault("artifacts", []).append(
+        {"type": "pilot_eval_final_acceptance_boundary_json", "path": boundary_path}
+    )
+    verdict_evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return verdict_evidence
 
 
 def _action_run_pilot_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -4011,12 +7778,25 @@ def _action_run_pilot_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         ]
     else:
         limitations.extend(_approval_contract_limitations(contract))
-    return convert_experiment_result({
+    runtime_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "pilot_runtime_evidence_json")
+    after_artifacts = _contract_existing_artifacts(contract, "after_artifacts", "pilot_runtime_after_artifact")
+    runtime_evidence_ids = [str(item) for item in semantic_detail.get("evidence_ids") or [] if str(item).strip()]
+    evidence_ids = _unique_strings([f"pilot-run:{_slug(target)}", *runtime_evidence_ids])
+    wiki_artifacts: list[dict[str, str]] = []
+    if semantic.get("verified") and bool(inputs.get("execute_approved_side_effect")):
+        wiki_artifacts = _write_experiment_state_mutation(
+            envelope,
+            experiment_id=experiment_id,
+            outcome=outcome,
+            evidence_ids=evidence_ids,
+            metrics=runtime_metrics,
+        )
+    evidence = convert_experiment_result({
         "experiment_id": experiment_id,
         "outcome": outcome,
         "status": status,
         "metrics": metrics,
-        "evidence_ids": [f"pilot-run:{_slug(target)}"],
+        "evidence_ids": evidence_ids,
         "execution_mode": str(inputs.get("execution_mode") or "approval_gated_pilot"),
         "command_run": "approval-gated:no-external-command",
         "logs": [
@@ -4025,9 +7805,43 @@ def _action_run_pilot_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             f"approval_state={contract.get('approval_state')}",
             f"runtime_semantic_status={semantic.get('status')}",
         ],
-        "artifacts": [contract_artifact],
+        "artifacts": [contract_artifact, *runtime_artifacts, *after_artifacts, *wiki_artifacts],
         "limitations": limitations,
     }, envelope)
+    evidence = _attach_pilot_run_final_acceptance_boundary(
+        envelope,
+        evidence,
+        experiment_id=experiment_id,
+        contract=contract,
+        semantic=semantic,
+        result_collected=bool(semantic_detail.get("result_collected")),
+    )
+    if semantic.get("verified") and bool(wiki_artifacts):
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "run_pilot_experiment") / "run_pilot_experiment.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        evidence.setdefault("artifacts", []).extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="run_pilot_experiment",
+                native_skill="exp-pilot-run",
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[],
+                mutation_refs=[str(artifact.get("path") or "") for artifact in evidence.get("artifacts") or [] if isinstance(artifact, dict)],
+                include_wiki_mutation=True,
+                source_label="approved_pilot_runtime",
+                artifact_kind="pilot_runtime_wiki_writeback",
+                include_provider_source=False,
+            )
+        )
+    return evidence
 
 
 def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -4045,6 +7859,8 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         or ("exp-001" if _fixture_like_envelope(envelope) else "experiment-unresolved")
     )
     collect_requested = bool(inputs.get("collect"))
+    session, session_artifact = _experiment_session_from_registry(envelope, experiment_id)
+    remote_check_requested = bool(inputs.get("remote_check_command") or inputs.get("remote_run_dir")) and bool(inputs.get("execute_approved_side_effect"))
     if result_payload and result_payload.get("schema") == "experiment_result.v1":
         result = ((result_payload.get("outputs") or {}).get("result") or {})
         experiment_id = str(result.get("experiment_id") or experiment_id)
@@ -4073,6 +7889,85 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             "artifacts": wiki_artifacts,
             "limitations": [
                 "Status was derived from a raw fixture result, not a persisted result evidence artifact.",
+                *_wiki_state_limitations(wiki_state),
+            ],
+        }, envelope)
+    if remote_check_requested and not collect_requested and not inputs.get("runtime_evidence"):
+        contract = _approval_contract(
+            envelope,
+            "monitor_experiment",
+            ["remote_status_poll"],
+        )
+        contract, remote_check = _execute_remote_check_if_approved(
+            envelope,
+            contract,
+            experiment_id=experiment_id,
+            session=session,
+        )
+        contract_artifact = _write_approval_contract_sidecar(envelope, "monitor_experiment", contract)
+        remote_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "remote_status_runtime_evidence_json")
+        for key, artifact_type in (
+            ("stdout_path", "executor_stdout"),
+            ("stderr_path", "executor_stderr"),
+        ):
+            raw_path = str(remote_check.get(key) or "").strip()
+            if raw_path:
+                artifact_path = _resolve_harness_path(raw_path)
+                if artifact_path.exists():
+                    remote_artifacts.append({"type": artifact_type, "path": _rel(artifact_path)})
+        remote_artifacts.extend(
+            {"type": "remote_status_file", "path": str(path)}
+            for path in remote_check.get("evidence_paths") or []
+            if str(path).strip()
+        )
+        state = str(remote_check.get("state") or "unknown")
+        status = "completed" if state != "unknown" and remote_check.get("status") == "completed" else "inconclusive"
+        poll_boundary = remote_check.get("remote_poll_boundary") if isinstance(remote_check.get("remote_poll_boundary"), dict) else {}
+        observations = [
+            f"Approved remote status check for `{experiment_id}` returned state `{state}`.",
+            *[str(item) for item in remote_check.get("observations") or [] if str(item).strip()],
+        ]
+        if poll_boundary:
+            observations.append(f"remote_poll_boundary_status={poll_boundary.get('status') or 'unknown'}")
+        if remote_check.get("reason"):
+            observations.append(f"remote_check_reason={remote_check.get('reason')}")
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "monitor_experiment") / "experiment_status.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        runtime_proof_artifact = _write_remote_status_runtime_proof_manifest(
+            envelope,
+            evidence_path=evidence_payload_path,
+            remote_check=remote_check,
+            contract_artifact=contract_artifact,
+        )
+        if runtime_proof_artifact is not None:
+            remote_artifacts.append(runtime_proof_artifact)
+        next_actions = (
+            ["Use linked run/result evidence for claim verification and reporting."]
+            if state == "completed"
+            else ["Continue monitoring or run approved collect when result artifacts are ready."]
+            if state == "running"
+            else ["Inspect remote check diagnostics before treating the experiment as running or complete."]
+        )
+        return convert_experiment_status({
+            "experiment_id": experiment_id,
+            "state": state,
+            "observations": observations,
+            "next_actions": next_actions,
+            "evidence_ids": _unique_strings([experiment_id, *[str(item) for item in remote_check.get("evidence_paths") or []]]),
+            "status": status,
+            "artifacts": [
+                *wiki_artifacts,
+                contract_artifact,
+                *remote_artifacts,
+            ],
+            "limitations": [
+                "Experiment status was read by an approved remote status check command; no result collection was performed.",
+                *[str(item) for item in poll_boundary.get("limitations", []) if str(item).strip()],
                 *_wiki_state_limitations(wiki_state),
             ],
         }, envelope)
@@ -4116,6 +8011,17 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         ]
         if not evidence_ids:
             evidence_ids = [experiment_id or "wiki-experiment:missing-evidence"]
+        if session and state in {"planned", "running", "unknown", "blocked"}:
+            return convert_experiment_status(
+                _session_status_raw(
+                    experiment_id=experiment_id,
+                    session=session,
+                    session_artifact=session_artifact,
+                    wiki_artifacts=experiment_artifacts,
+                    wiki_state=wiki_state,
+                ),
+                envelope,
+            )
         return convert_experiment_status({
             "experiment_id": experiment_id,
             "state": state,
@@ -4126,16 +8032,47 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             "artifacts": experiment_artifacts,
             "limitations": limitations,
         }, envelope)
+    if session and not collect_requested and not inputs.get("runtime_evidence"):
+        return convert_experiment_status(
+            _session_status_raw(
+                experiment_id=experiment_id,
+                session=session,
+                session_artifact=session_artifact,
+                wiki_artifacts=wiki_artifacts,
+                wiki_state=wiki_state,
+            ),
+            envelope,
+        )
     if collect_requested or inputs.get("runtime_evidence"):
         contract = _approval_contract(
             envelope,
             "monitor_experiment",
             ["result_collection", "status_mutation", "wiki_state_mutation"],
         )
+        collector_result: dict[str, Any] = {"executed": False}
+        if collect_requested:
+            contract, collector_result = _execute_monitor_collect_if_approved(envelope, contract, plan, experiment_id)
         semantic = _approval_semantic_runtime(contract, "run_experiment")
         contract["semantic_runtime"] = semantic
         contract_artifact = _write_approval_contract_sidecar(envelope, "monitor_experiment", contract)
         runtime_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "experiment_runtime_evidence_json")
+        if collector_result.get("executed"):
+            for key, artifact_type in (
+                ("stdout_path", "executor_stdout"),
+                ("stderr_path", "executor_stderr"),
+            ):
+                raw_path = str(collector_result.get(key) or "").strip()
+                if raw_path:
+                    artifact_path = _resolve_harness_path(raw_path)
+                    if artifact_path.exists():
+                        runtime_artifacts.append({"type": artifact_type, "path": _rel(artifact_path)})
+            runtime_artifacts.extend(
+                {"type": "remote_collected_file", "path": str(path)}
+                for path in collector_result.get("collected_files") or []
+                if str(path).strip()
+            )
+            if collector_result.get("collection_ledger_path"):
+                runtime_artifacts.append({"type": "collection_ledger_json", "path": str(collector_result["collection_ledger_path"])})
         detail = semantic.get("detail") if isinstance(semantic.get("detail"), dict) else {}
         runtime_evidence_ids = [str(item) for item in detail.get("evidence_ids") or [] if str(item).strip()]
         evidence_ids = _unique_strings([experiment_id, *runtime_evidence_ids])
@@ -4143,31 +8080,70 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
             outcome = str(detail.get("outcome") or "supports")
             state = "failed" if outcome == "failed" else "completed"
             metrics = detail.get("metrics") if isinstance(detail.get("metrics"), list) else []
-            wiki_update_artifacts = _write_experiment_state_mutation(
-                envelope,
-                experiment_id=experiment_id,
-                outcome=outcome,
-                evidence_ids=evidence_ids,
-                metrics=metrics,
-            )
-            return convert_experiment_status({
+            observations = [
+                f"Approved runtime evidence verified experiment outcome: {outcome}.",
+                f"approval_state={contract.get('approval_state')}",
+                f"runtime_semantic_status={semantic.get('status')}",
+            ]
+            if collector_result.get("executed"):
+                observations.extend([
+                    f"collect_executor_result={collector_result.get('result_collected')}",
+                    f"collector_exit_code={collector_result.get('exit_code')}",
+                    f"collection_duplicate={collector_result.get('collection_duplicate')}",
+                ])
+                boundary = collector_result.get("remote_collection_boundary")
+                if isinstance(boundary, dict):
+                    observations.append(f"remote_collection_boundary_status={boundary.get('status') or 'unknown'}")
+            if collector_result.get("collection_duplicate"):
+                wiki_update_artifacts = _existing_experiment_state_artifacts(envelope, experiment_id)
+                if not wiki_update_artifacts:
+                    wiki_update_artifacts = _write_experiment_state_mutation(
+                        envelope,
+                        experiment_id=experiment_id,
+                        outcome=outcome,
+                        evidence_ids=evidence_ids,
+                        metrics=metrics,
+                    )
+            else:
+                wiki_update_artifacts = _write_experiment_state_mutation(
+                    envelope,
+                    experiment_id=experiment_id,
+                    outcome=outcome,
+                    evidence_ids=evidence_ids,
+                    metrics=metrics,
+                )
+            evidence = convert_experiment_status({
                 "experiment_id": experiment_id,
                 "state": state,
-                "observations": [
-                    f"Approved runtime evidence verified experiment outcome: {outcome}.",
-                    f"approval_state={contract.get('approval_state')}",
-                    f"runtime_semantic_status={semantic.get('status')}",
-                ],
+                "observations": observations,
                 "next_actions": ["Use collected result evidence for claim verification and paper reporting."],
                 "evidence_ids": evidence_ids,
                 "artifacts": [*wiki_artifacts, contract_artifact, *runtime_artifacts, *wiki_update_artifacts],
                 "limitations": [
                     "Experiment status was completed from approved runtime evidence; this bridge verified evidence and mutated wiki state but did not pull remote results directly.",
+                    *[
+                        str(item)
+                        for item in (collector_result.get("remote_collection_boundary") or {}).get("limitations", [])
+                        if str(item).strip()
+                    ],
                     *_wiki_state_limitations(wiki_state),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="monitor_experiment",
+                stage="collect",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=bool(detail.get("result_collected") or collector_result.get("result_collected")),
+                collection_boundary=collector_result.get("remote_collection_boundary")
+                if isinstance(collector_result.get("remote_collection_boundary"), dict)
+                else None,
+            )
         if inputs.get("runtime_evidence") or inputs.get("approval_ref"):
-            return convert_experiment_status({
+            evidence = convert_experiment_status({
                 "experiment_id": experiment_id,
                 "state": "unknown",
                 "observations": [
@@ -4185,6 +8161,19 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
                     *_wiki_state_limitations(wiki_state),
                 ],
             }, envelope)
+            return _attach_experiment_run_runtime_audit_boundary(
+                envelope,
+                evidence,
+                action="monitor_experiment",
+                stage="collect",
+                experiment_id=experiment_id,
+                contract=contract,
+                semantic=semantic,
+                result_collected=False,
+                collection_boundary=collector_result.get("remote_collection_boundary")
+                if isinstance(collector_result.get("remote_collection_boundary"), dict)
+                else None,
+            )
     observations = []
     if target_ref:
         observations.append(f"Status target requested: {target_ref}.")
@@ -4199,7 +8188,7 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
     if collect_requested:
         limitations.append("Collect mode is diagnostics-only without approved runtime artifact retrieval.")
     limitations.extend(_wiki_state_limitations(wiki_state))
-    return convert_experiment_status({
+    evidence = convert_experiment_status({
         "experiment_id": experiment_id,
         "state": "unknown",
         "observations": observations,
@@ -4212,6 +8201,18 @@ def _action_monitor_experiment(envelope: dict[str, Any]) -> dict[str, Any]:
         "artifacts": wiki_artifacts,
         "limitations": limitations,
     }, envelope)
+    if collect_requested:
+        return _attach_experiment_run_runtime_audit_boundary(
+            envelope,
+            evidence,
+            action="monitor_experiment",
+            stage="collect",
+            experiment_id=experiment_id,
+            contract=None,
+            semantic=None,
+            result_collected=False,
+        )
+    return evidence
 
 
 def _action_evaluate_pilot_result(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -4292,6 +8293,61 @@ def _action_evaluate_pilot_result(envelope: dict[str, Any]) -> dict[str, Any]:
     writeback_path = _write_claim_verdict_writeback_sidecar(envelope, verdict_evidence, require_review_llm=False)
     if writeback_path:
         verdict_evidence.setdefault("artifacts", []).append({"type": "pilot_verdict_writeback_json", "path": writeback_path})
+    verdict_evidence = _attach_pilot_eval_final_acceptance_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
+    writeback_status = _claim_verdict_writeback_status(envelope, writeback_path)
+    if writeback_status.get("status") == "completed" and writeback_status.get("applied") is True:
+        contract = _approval_contract(
+            envelope,
+            "evaluate_pilot_result",
+            ["pilot_verdict_writeback", "wiki_log", "wiki_graph_edge"],
+        )
+        if contract.get("execution_verified") is True:
+            contract_artifact = _write_approval_contract_sidecar(envelope, "evaluate_pilot_result", contract)
+            verdict_evidence.setdefault("artifacts", []).append(contract_artifact)
+            evidence_payload_path = _configured_output_path(
+                envelope,
+                "evidence_payload_path",
+                _output_dir(envelope, "evaluate_pilot_result") / "evaluate_pilot_result.evidence.json",
+                legacy_key="evidence_path",
+                legacy_suffix=".json",
+            )
+            writeback_refs: list[str] = []
+            if writeback_path:
+                writeback_refs.append(writeback_path)
+                try:
+                    writeback_payload = _load_json(_resolve_harness_path(writeback_path))
+                except (OSError, json.JSONDecodeError):
+                    writeback_payload = {}
+                for artifact in writeback_payload.get("artifacts") or []:
+                    if isinstance(artifact, dict) and str(artifact.get("path") or "").strip():
+                        writeback_refs.append(str(artifact["path"]))
+            writeback_refs.extend(
+                str(artifact.get("path") or "")
+                for artifact in verdict_evidence.get("artifacts") or []
+                if isinstance(artifact, dict)
+            )
+            verdict_evidence.setdefault("artifacts", []).extend(
+                _write_approved_mutation_runtime_proof_manifests(
+                    envelope,
+                    action="evaluate_pilot_result",
+                    native_skill="exp-pilot-eval",
+                    evidence_path=evidence_payload_path,
+                    applied=True,
+                    contract=contract,
+                    contract_artifact=contract_artifact,
+                    source_refs=[],
+                    mutation_refs=writeback_refs,
+                    include_wiki_mutation=True,
+                    source_label="approved_pilot_eval_writeback",
+                    artifact_kind="pilot_eval_wiki_writeback",
+                    include_provider_source=False,
+                    include_side_effect=False,
+                )
+            )
     return verdict_evidence
 
 
@@ -4451,6 +8507,164 @@ def _verdict_confidence(verdict: str, outcome: str) -> float:
     return 0.32
 
 
+def _claim_verdict_writeback_status(envelope: dict[str, Any], writeback_path: str | None) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    native_options = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
+    requested = bool(native_options.get("write"))
+    if not requested:
+        return {
+            "requested": False,
+            "status": "not_requested",
+            "applied": False,
+            "path": "",
+            "approval_ref": str(inputs.get("approval_ref") or native_options.get("approval_ref") or "N/A"),
+            "limitations": ["Claim verdict writeback was not requested."],
+        }
+    if not writeback_path:
+        return {
+            "requested": True,
+            "status": "missing_sidecar",
+            "applied": False,
+            "path": "",
+            "approval_ref": str(inputs.get("approval_ref") or native_options.get("approval_ref") or "N/A"),
+            "limitations": ["Claim verdict writeback was requested but no writeback sidecar was produced."],
+        }
+    path = _resolve_harness_path(writeback_path)
+    summary = {
+        "requested": True,
+        "status": "unreadable",
+        "applied": False,
+        "path": _rel(path),
+        "approval_ref": str(inputs.get("approval_ref") or native_options.get("approval_ref") or "N/A"),
+        "limitations": [],
+    }
+    try:
+        payload = _load_json(path)
+    except (OSError, json.JSONDecodeError) as exc:
+        summary["limitations"] = [f"Claim verdict writeback sidecar could not be read: {exc}"]
+        return summary
+    write = ((payload.get("outputs") or {}).get("write") or {})
+    if not isinstance(write, dict):
+        write = {}
+    summary.update(
+        {
+            "status": str(payload.get("status") or "unknown"),
+            "applied": write.get("applied") is True,
+            "approval_ref": str(write.get("approval_ref") or summary["approval_ref"]),
+            "target_path": str(write.get("target_path") or ""),
+            "edge_path": str(write.get("edge_path") or ""),
+            "log_path": str(write.get("log_path") or ""),
+            "review_llm_status": str(write.get("review_llm_status") or "missing"),
+            "limitations": [str(item) for item in payload.get("limitations") or []],
+        }
+    )
+    return summary
+
+
+def _experiment_evaluation_final_verdict_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    outputs = verdict_evidence.get("outputs") if isinstance(verdict_evidence.get("outputs"), dict) else {}
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    verdict = dict(verdicts[0]) if verdicts and isinstance(verdicts[0], dict) else {}
+    claim_id = str(verdict.get("claim_id") or "claim")
+    experiment_payload = _experiment_result_payload(envelope)
+    experiment_schema = str((experiment_payload or {}).get("schema") or "missing")
+    experiment_status = str((experiment_payload or {}).get("status") or "missing")
+    experiment_evidence_ids = [str(item) for item in verdict.get("experiment_evidence_ids") or [] if str(item).strip()]
+    claim_evidence_ids = [str(item) for item in verdict.get("claim_evidence_ids") or [] if str(item).strip()]
+    code_evidence_ids = [str(item) for item in verdict.get("code_evidence_ids") or [] if str(item).strip()]
+    review_llm = verdict.get("review_llm") if isinstance(verdict.get("review_llm"), dict) else {}
+    writeback = _claim_verdict_writeback_status(envelope, writeback_path)
+    non_inconclusive_verdict = str(verdict.get("verdict") or "inconclusive") != "inconclusive"
+    experiment_result_ready = (
+        experiment_schema == "experiment_result.v1"
+        and experiment_status == "completed"
+        and bool(experiment_evidence_ids)
+    )
+    claim_evidence_linked = any(item != claim_id for item in claim_evidence_ids)
+    code_evidence_linked = bool(code_evidence_ids)
+    review_llm_completed = review_llm.get("status") == "completed"
+    writeback_completed = writeback.get("status") == "completed" and writeback.get("applied") is True
+    final_ready = all(
+        [
+            non_inconclusive_verdict,
+            experiment_result_ready,
+            claim_evidence_linked,
+            code_evidence_linked,
+            review_llm_completed,
+            writeback_completed,
+        ]
+    )
+    limitations: list[str] = []
+    if not non_inconclusive_verdict:
+        limitations.append("Final experiment evaluation requires a non-inconclusive claim verdict.")
+    if not experiment_result_ready:
+        limitations.append("Final experiment evaluation requires completed experiment_result.v1 evidence.")
+    if not claim_evidence_linked:
+        limitations.append("Final experiment evaluation requires linked claim evidence beyond the claim id.")
+    if not code_evidence_linked:
+        limitations.append("Final experiment evaluation requires linked code evidence for the evaluated claim.")
+    if not review_llm_completed:
+        limitations.append("Final experiment evaluation requires completed Review LLM proof.")
+    if not writeback_completed:
+        limitations.append("Final experiment evaluation requires completed approved wiki writeback before treating the verdict as final.")
+    if not limitations:
+        limitations.append("Final experiment evaluation boundary passed with result, claim, code, Review LLM, and wiki writeback evidence.")
+    return {
+        "schema": "autosci_experiment_evaluation_final_verdict_boundary.v1",
+        "status": "final_verdict_ready" if final_ready else "final_verdict_incomplete",
+        "final_verdict_ready": final_ready,
+        "claim_id": claim_id,
+        "verdict": str(verdict.get("verdict") or "inconclusive"),
+        "experiment_result_ready": experiment_result_ready,
+        "experiment_schema": experiment_schema,
+        "experiment_status": experiment_status,
+        "experiment_evidence_ids": experiment_evidence_ids,
+        "claim_evidence_linked": claim_evidence_linked,
+        "claim_evidence_ids": claim_evidence_ids,
+        "code_evidence_linked": code_evidence_linked,
+        "code_evidence_ids": code_evidence_ids,
+        "review_llm_completed": review_llm_completed,
+        "review_llm_status": str(review_llm.get("status") or "missing"),
+        "writeback_completed": writeback_completed,
+        "writeback_status": writeback,
+        "evidence_ids": _unique_strings([str(item) for item in verdict.get("evidence_ids") or []]),
+        "limitations": limitations,
+    }
+
+
+def _attach_experiment_evaluation_final_verdict_boundary(
+    envelope: dict[str, Any],
+    verdict_evidence: dict[str, Any],
+    *,
+    writeback_path: str | None,
+) -> dict[str, Any]:
+    boundary = _experiment_evaluation_final_verdict_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
+    outputs = verdict_evidence.setdefault("outputs", {})
+    verdicts = outputs.get("verdicts") if isinstance(outputs.get("verdicts"), list) else []
+    if verdicts and isinstance(verdicts[0], dict):
+        verdicts[0]["final_verdict_boundary"] = boundary
+        verdicts[0]["final_verdict_ready"] = boundary.get("final_verdict_ready") is True
+    outputs["final_verdict_boundary"] = boundary
+    boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "verify_claim") / "experiment_evaluation_final_verdict_boundary.json",
+        boundary,
+    )
+    verdict_evidence.setdefault("artifacts", []).append(
+        {"type": "experiment_evaluation_final_verdict_boundary_json", "path": boundary_path}
+    )
+    verdict_evidence.setdefault("limitations", []).extend(str(item) for item in boundary.get("limitations") or [])
+    return verdict_evidence
+
+
 def _action_verify_claim(envelope: dict[str, Any]) -> dict[str, Any]:
     claim = _claim_under_verification(envelope)
     claim_id = str(claim.get("claim_id") or "claim-001")
@@ -4503,9 +8717,62 @@ def _action_verify_claim(envelope: dict[str, Any]) -> dict[str, Any]:
         "artifacts": review_artifacts,
         "limitations": limitations,
     }, envelope)
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "verify_claim") / "verify_claim.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    review_runtime_proof_artifact = _write_review_context_runtime_proof_manifest(
+        envelope,
+        action="verify_claim",
+        native_skill="exp-eval",
+        evidence_path=evidence_payload_path,
+        review_llm=review_llm,
+    )
+    if review_runtime_proof_artifact is not None:
+        verdict_evidence.setdefault("artifacts", []).append(review_runtime_proof_artifact)
     writeback_path = _write_claim_verdict_writeback_sidecar(envelope, verdict_evidence)
+    writeback_payload: dict[str, Any] | None = None
     if writeback_path:
         verdict_evidence.setdefault("artifacts", []).append({"type": "claim_verdict_writeback_json", "path": writeback_path})
+        writeback_payload = _load_optional_evidence(writeback_path)
+        if isinstance(writeback_payload, dict) and str(writeback_payload.get("status") or "") == "completed":
+            contract = _approval_contract(
+                envelope,
+                "verify_claim",
+                ["claim_verdict_wiki_writeback"],
+            )
+            contract_artifact = _write_approval_contract_sidecar(envelope, "verify_claim", contract)
+            verdict_evidence.setdefault("artifacts", []).append(contract_artifact)
+            mutation_refs = [writeback_path]
+            for artifact in writeback_payload.get("artifacts") or []:
+                if isinstance(artifact, dict) and str(artifact.get("path") or "").strip():
+                    mutation_refs.append(str(artifact["path"]))
+            verdict_evidence.setdefault("artifacts", []).extend(
+                _write_approved_mutation_runtime_proof_manifests(
+                    envelope,
+                    action="verify_claim",
+                    native_skill="exp-eval",
+                    evidence_path=evidence_payload_path,
+                    applied=True,
+                    contract=contract,
+                    contract_artifact=contract_artifact,
+                    source_refs=[*review_evidence_ids],
+                    mutation_refs=mutation_refs,
+                    include_wiki_mutation=True,
+                    source_label="claim_verdict_writeback",
+                    artifact_kind="claim_verdict_writeback",
+                    include_provider_source=False,
+                    include_side_effect=False,
+                )
+            )
+    verdict_evidence = _attach_experiment_evaluation_final_verdict_boundary(
+        envelope,
+        verdict_evidence,
+        writeback_path=writeback_path,
+    )
     return verdict_evidence
 
 
@@ -4685,6 +8952,16 @@ def _phase14_report_paths(envelope: dict[str, Any]) -> dict[str, Path]:
         "paper_dir": paper_dir,
         "paper_main_tex": _configured_output_path(envelope, "paper_main_tex_path", paper_dir / "main.tex"),
         "paper_sections_dir": _configured_output_path(envelope, "paper_sections_dir_path", paper_dir / "sections"),
+        "paper_draft_citation_map": _configured_output_path(
+            envelope,
+            "paper_draft_citation_map_path",
+            output_dir / "paper_draft_citation_map.json",
+        ),
+        "paper_draft_final_manuscript_boundary": _configured_output_path(
+            envelope,
+            "paper_draft_final_manuscript_boundary_path",
+            output_dir / "paper_draft_final_manuscript_boundary.json",
+        ),
     }
 
 
@@ -4703,30 +8980,47 @@ def _unique_strings(values: list[str]) -> list[str]:
     return unique
 
 
+PHASE14_SOURCE_INPUT_KEYS = (
+    "discovery_evidence",
+    "novelty_evidence",
+    "review_llm_evidence",
+    "review_evidence",
+    "artifact_review_evidence",
+    "reviewer_thread_evidence",
+    "claim_verdict_evidence",
+    "claim_verdict",
+    "verdict_evidence",
+    "claims_evidence",
+    "experiment_result_evidence",
+    "experiment_result",
+    "code_evidence",
+    "code_evidence_map",
+    "ideas_evidence",
+    "idea_evaluation_evidence",
+    "paper_evidence",
+    "method_evidence",
+)
+
+
 def _phase14_source_payloads(envelope: dict[str, Any]) -> list[dict[str, Any]]:
     inputs = dict(envelope.get("inputs") or {})
     payloads: list[dict[str, Any]] = []
-    for key in (
-        "discovery_evidence",
-        "novelty_evidence",
-        "review_llm_evidence",
-        "review_evidence",
-        "artifact_review_evidence",
-        "claim_verdict_evidence",
-        "claim_verdict",
-        "verdict_evidence",
-        "claims_evidence",
-        "experiment_result_evidence",
-        "experiment_result",
-        "code_evidence",
-        "code_evidence_map",
-        "ideas_evidence",
-        "idea_evaluation_evidence",
-        "paper_evidence",
-        "method_evidence",
-    ):
+    for key in PHASE14_SOURCE_INPUT_KEYS:
         payloads.extend(_load_optional_evidence_many(inputs.get(key)))
     return payloads
+
+
+def _phase14_source_evidence_refs(envelope: dict[str, Any]) -> list[str]:
+    inputs = dict(envelope.get("inputs") or {})
+    refs: list[str] = []
+    for key in PHASE14_SOURCE_INPUT_KEYS:
+        raw = inputs.get(key)
+        values = raw if isinstance(raw, list) else [raw] if raw else []
+        for value in values:
+            path = _resolve_harness_path(str(value))
+            if path.exists():
+                refs.append(_rel(path))
+    return _unique_strings(refs)
 
 
 def _phase14_payload_evidence_ids(payload: dict[str, Any]) -> list[str]:
@@ -4824,10 +9118,53 @@ def _phase14_compile_handoff(
         "compile_paper",
         ["tex_executor_execution", "pdf_generation"],
     )
+    executor_result: dict[str, Any] = {}
+    if bool(inputs.get("execute_approved_side_effect")) and contract.get("ready_for_execution"):
+        _target_raw, target_path = _paper_compile_target(envelope)
+        candidates = _compile_source_candidates(target_path)
+        contract, executor_result = _execute_paper_compile_if_approved(
+            envelope,
+            contract,
+            candidates["latex"],
+            _latex_tool_paths(),
+        )
     semantic = _approval_semantic_runtime(contract, "compile_paper")
     contract["semantic_runtime"] = semantic
     pdf_paths = _compile_pdf_paths_from_contract(contract)
     verified = bool(semantic.get("verified")) and bool(pdf_paths)
+    supplied_compile_target = bool(inputs.get("supplied_compile_target_evidence"))
+    if not verified and supplied_compile_target:
+        _target_raw, target_path = _paper_compile_target(envelope)
+        candidates = _compile_source_candidates(target_path)
+        supplied_pdf_paths = candidates["pdf"]
+        if supplied_pdf_paths:
+            pdf_paths = supplied_pdf_paths
+            verified = True
+            semantic = {
+                "status": "verified_supplied_compile_target",
+                "verified": True,
+                "checks": [
+                    {
+                        "check": "supplied_compile_target_evidence",
+                        "status": "ok",
+                        "detail": "Existing supplied compile target contains at least one PDF.",
+                    },
+                    {
+                        "check": "tex_executor_not_run_by_bridge",
+                        "status": "ok",
+                        "detail": "No TeX executor was run by this bridge for the supplied handoff.",
+                    },
+                ],
+                "detail": {
+                    "pdf_paths": [_rel(path) for path in supplied_pdf_paths],
+                    "latex_paths": [_rel(path) for path in candidates["latex"]],
+                    "evidence_ids": _unique_strings(
+                        ["supplied-compile-target-handoff", *[_rel(path) for path in supplied_pdf_paths]]
+                    ),
+                },
+            }
+            contract["semantic_runtime"] = semantic
+            contract["approval_state"] = "supplied_compile_target"
     output_dir = _output_dir(envelope, "write_report")
     handoff_path = output_dir / "paper_draft_compile_handoff.json"
     runtime_artifacts = _contract_existing_artifacts(contract, "runtime_evidence", "paper_compile_runtime_evidence_json")
@@ -4839,6 +9176,7 @@ def _phase14_compile_handoff(
         "verified": verified,
         "approval_state": contract.get("approval_state", "N/A"),
         "semantic_runtime": semantic,
+        "executor_result": executor_result,
         "pdf_paths": [_rel(path) for path in pdf_paths],
         "evidence_ids": _unique_strings(
             [
@@ -4848,7 +9186,12 @@ def _phase14_compile_handoff(
             ]
         ),
         "limitations": (
-            ["Paper draft includes verified compile/PDF handoff evidence."]
+            [
+                "Paper draft includes verified compile/PDF handoff evidence.",
+                "Compile/PDF handoff used an existing supplied PDF target; no TeX executor was run by this bridge.",
+            ]
+            if verified and supplied_compile_target and semantic.get("status") == "verified_supplied_compile_target"
+            else ["Paper draft includes verified compile/PDF handoff evidence."]
             if verified
             else [
                 "Paper draft compile/PDF handoff is incomplete; supply approved compile runtime evidence and compiled PDF artifacts."
@@ -4862,11 +9205,72 @@ def _phase14_compile_handoff(
         *after_artifacts,
         *pdf_artifacts,
     ]
-    limitations = [] if verified else [
-        "Paper draft has no verified compile/PDF handoff evidence.",
-        *_approval_contract_limitations(contract),
-    ]
+    limitations = (
+        ["Compile/PDF handoff used an existing supplied PDF target; no TeX executor was run by this bridge."]
+        if verified and supplied_compile_target and semantic.get("status") == "verified_supplied_compile_target"
+        else []
+        if verified
+        else [
+            "Paper draft has no verified compile/PDF handoff evidence.",
+            *_approval_contract_limitations(contract),
+        ]
+    )
     return handoff, artifacts, limitations
+
+
+def _paper_draft_final_manuscript_boundary(
+    citation_map: dict[str, Any],
+    review_boundary: dict[str, Any],
+    compile_handoff: dict[str, Any],
+    *,
+    has_source_evidence: bool,
+) -> dict[str, Any]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    review_completed = bool(review_boundary.get("completed"))
+    compile_verified = bool(compile_handoff.get("verified")) and str(compile_handoff.get("status") or "") == "completed"
+    pdf_paths = [str(item) for item in compile_handoff.get("pdf_paths") or [] if str(item).strip()]
+    blocking_reasons: list[str] = []
+    if not has_source_evidence:
+        blocking_reasons.append("source evidence was not supplied")
+    if not citations:
+        blocking_reasons.append("source-backed citation map is missing")
+    if not review_completed:
+        blocking_reasons.append("completed Review LLM boundary evidence is missing")
+    if not compile_verified:
+        blocking_reasons.append("verified compile/PDF handoff is missing")
+    if compile_verified and not pdf_paths:
+        blocking_reasons.append("compiled PDF path is missing")
+    final_ready = not blocking_reasons
+    return {
+        "schema": "autosci_paper_draft_final_manuscript_boundary.v1",
+        "status": "final_manuscript_ready" if final_ready else "paper_draft_final_manuscript_incomplete",
+        "final_manuscript_ready": final_ready,
+        "publication_ready_claim_allowed": final_ready,
+        "manuscript_scope": "evidence_linked_local_final_candidate" if final_ready else "draft_scaffold",
+        "source_evidence_supplied": has_source_evidence,
+        "citation_count": len(citations),
+        "citation_ids": _unique_strings([
+            str(item.get("citation_id") or item.get("title") or "")
+            for item in citations
+            if isinstance(item, dict)
+        ]),
+        "review_llm_completed": review_completed,
+        "review_boundary_status": str(review_boundary.get("status") or "missing"),
+        "review_evidence_ids": _unique_strings([str(item) for item in review_boundary.get("evidence_ids") or []]),
+        "compile_handoff_status": str(compile_handoff.get("status") or "not_requested"),
+        "compile_handoff_verified": compile_verified,
+        "compiled_pdf_paths": pdf_paths,
+        "blocking_reasons": blocking_reasons,
+        "limitations": (
+            [
+                "Final manuscript readiness is bounded to supplied source evidence, Review LLM proof, and verified compile/PDF handoff."
+            ]
+            if final_ready
+            else [
+                "Final manuscript readiness requires source evidence, a source-backed citation map, completed Review LLM proof, and verified compile/PDF handoff."
+            ]
+        ),
+    }
 
 
 def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -4952,11 +9356,73 @@ def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         _artifact("optional_rebuttal_markdown", paths["rebuttal_md"]),
         *compile_artifacts,
     ]
+    report_status = "completed"
     if inputs.get("paper_draft"):
+        has_source_evidence = _native_publication_has_source_evidence(envelope)
+        citation_map = _native_publication_citation_map(envelope)
+        review_boundary = _native_publication_review_boundary(envelope)
+        final_manuscript_boundary = _paper_draft_final_manuscript_boundary(
+            citation_map,
+            review_boundary,
+            compile_handoff,
+            has_source_evidence=has_source_evidence,
+        )
+        citation_map_path = _write_json_sidecar(paths["paper_draft_citation_map"], citation_map)
+        final_boundary_path = _write_json_sidecar(
+            paths["paper_draft_final_manuscript_boundary"],
+            final_manuscript_boundary,
+        )
+        evidence_ids = _unique_strings([
+            *evidence_ids,
+            *[str(item) for item in review_boundary.get("evidence_ids") or []],
+            *[str(item) for item in final_manuscript_boundary.get("citation_ids") or []],
+        ])
         artifacts.extend([
             _artifact("latex_source", paths["paper_main_tex"]),
             _artifact("paper_sections_directory", paths["paper_sections_dir"]),
+            {"type": "citation_map_json", "path": citation_map_path},
+            {"type": "paper_draft_final_manuscript_boundary_json", "path": final_boundary_path},
         ])
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "write_report") / "write_report.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        review_runtime_proof_artifact = _write_review_context_runtime_proof_manifest(
+            envelope,
+            action="write_report",
+            native_skill="paper-draft",
+            evidence_path=evidence_payload_path,
+            review_llm=review_boundary,
+        )
+        if review_runtime_proof_artifact is not None:
+            artifacts.append(review_runtime_proof_artifact)
+        source_runtime_proof_artifact = _write_publication_source_runtime_proof_manifest(
+            envelope,
+            action="write_report",
+            native_skill="paper-draft",
+            evidence_path=evidence_payload_path,
+            citation_map=citation_map,
+            artifact_refs=[paths["report_plan"], paths["report_md"], citation_map_path, final_boundary_path],
+        )
+        if source_runtime_proof_artifact is not None:
+            artifacts.append(source_runtime_proof_artifact)
+        sections.insert(
+            -1,
+            {
+                "section_id": "final-manuscript-boundary",
+                "title": "Final Manuscript Boundary",
+                "evidence_ids": evidence_ids,
+                "body": (
+                    f"Final manuscript boundary status: `{final_manuscript_boundary.get('status')}`. "
+                    f"Publication-ready claim allowed: `{final_manuscript_boundary.get('publication_ready_claim_allowed')}`. "
+                    f"Review LLM completed: `{final_manuscript_boundary.get('review_llm_completed')}`. "
+                    f"Compile handoff verified: `{final_manuscript_boundary.get('compile_handoff_verified')}`."
+                ),
+            },
+        )
         if compile_handoff.get("status") == "completed":
             sections.insert(
                 -1,
@@ -4972,6 +9438,11 @@ def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
                 str(sections[-1].get("body") or "")
                 + " Paper draft compile/PDF handoff is incomplete."
             )
+        limitations.extend(str(item) for item in citation_map.get("limitations") or [])
+        limitations.extend(str(item) for item in review_boundary.get("limitations") or [])
+        limitations.extend(str(item) for item in final_manuscript_boundary.get("limitations") or [])
+        if not final_manuscript_boundary.get("final_manuscript_ready"):
+            report_status = "inconclusive"
     limitations.extend(compile_limitations)
     return {
         "report_id": str(inputs.get("report_id") or "report-autosci-phase14"),
@@ -4984,6 +9455,7 @@ def _phase14_report_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "publication_bundle_path": _rel(paths["publication_bundle"]),
         "compile_handoff": compile_handoff,
         "artifacts": artifacts,
+        "status": report_status,
         "limitations": limitations,
     }
 
@@ -5106,6 +9578,1121 @@ def _write_json_sidecar(path: Path, payload: dict[str, Any]) -> str:
     return _rel(path)
 
 
+def _review_runtime_collection_mode(final_boundary: dict[str, Any]) -> str:
+    invocation_mode = str(final_boundary.get("invocation_mode") or "").strip().lower()
+    if invocation_mode == "provider":
+        return "live_provider"
+    return "manual_review"
+
+
+def _review_runtime_source(final_boundary: dict[str, Any]) -> str:
+    for key in ("provider", "model", "source_path", "invocation_mode"):
+        value = str(final_boundary.get(key) or "").strip()
+        if value:
+            return value
+    return "review_llm_evidence"
+
+
+def _review_runtime_categories(final_boundary: dict[str, Any]) -> list[str]:
+    categories = ["review_llm_or_model_evidence", "external_runtime_evidence"]
+    if _review_runtime_collection_mode(final_boundary) == "live_provider":
+        categories.append("provider_source_evidence")
+    return categories
+
+
+def _runtime_evidence_refs(*paths: str | Path) -> list[str]:
+    refs: list[str] = []
+    for raw in paths:
+        text = str(raw or "").strip()
+        if not text:
+            continue
+        path = Path(text)
+        if path.is_absolute():
+            ref = _rel(path)
+        else:
+            ref = text
+        if ref not in refs:
+            refs.append(ref)
+    return refs
+
+
+def _write_review_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    evidence_path: Path,
+    final_boundary: dict[str, Any],
+) -> dict[str, str] | None:
+    if not bool(final_boundary.get("final_acceptance_ready")):
+        return None
+    inputs = envelope.get("inputs") if isinstance(envelope.get("inputs"), dict) else {}
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    native_skill = str(inputs.get("native_skill") or envelope.get("native_skill") or "review")
+    source = _review_runtime_source(final_boundary)
+    source_path = str(final_boundary.get("source_path") or "").strip()
+    evidence_refs = _runtime_evidence_refs(evidence_path, source_path)
+    collection_mode = _review_runtime_collection_mode(final_boundary)
+    command = str(inputs.get("review_llm_command") or "").strip()
+    if not command:
+        command = f"review_llm:{collection_mode}:{source}"
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": _review_runtime_categories(final_boundary),
+                "collection_mode": collection_mode,
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "artifact_review",
+                    "command": command,
+                },
+                "evidence_refs": evidence_refs,
+                "description": "Completed Review LLM evidence for AutoSci parity.",
+            }
+        ],
+    }
+    output_dir = _output_dir(envelope, "review_artifact")
+    artifact_path = _write_json_sidecar(output_dir / "review_llm_runtime_proof.json", manifest)
+    return {"type": "review_model_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_review_target_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    artifact_path: Path,
+    report_artifact: str,
+    final_boundary_artifact: str,
+) -> dict[str, str] | None:
+    if not artifact_path.is_absolute() or not artifact_path.exists():
+        return None
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "review",
+                "proof_id": f"runtime:review:target-artifact:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["provider_source_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": "review_target_artifact",
+                    "captured_at": timestamp,
+                    "artifact_kind": "review_target",
+                    "command": "review_artifact:target_source",
+                },
+                "evidence_refs": _runtime_evidence_refs(
+                    evidence_path,
+                    artifact_path,
+                    report_artifact,
+                    final_boundary_artifact,
+                ),
+                "description": "Completed target artifact source evidence for AutoSci `review` parity.",
+            }
+        ],
+    }
+    artifact = _write_json_sidecar(
+        _output_dir(envelope, "review_artifact") / "review_artifact_source_provider_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact}
+
+
+def _write_model_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    model_output: dict[str, Any],
+) -> dict[str, str] | None:
+    if str(model_output.get("status") or "") != "completed":
+        return None
+    evidence_ids = [str(item) for item in model_output.get("evidence_ids") or [] if str(item).strip()]
+    if not evidence_ids:
+        return None
+    inputs = envelope.get("inputs") if isinstance(envelope.get("inputs"), dict) else {}
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source = (
+        str(model_output.get("provider") or "").strip()
+        or str(model_output.get("model") or "").strip()
+        or str(model_output.get("source") or "").strip()
+        or "model_evidence"
+    )
+    evidence_refs = _runtime_evidence_refs(
+        evidence_path,
+        str(model_output.get("response_path") or "").strip(),
+        *[str(item) for item in model_output.get("checked_paths") or [] if str(item).strip()],
+    )
+    command = str(inputs.get("model_command") or "").strip()
+    if not command:
+        command = f"model_evidence:{source}"
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["review_llm_or_model_evidence", "external_runtime_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "model_response",
+                    "command": command,
+                },
+                "evidence_refs": evidence_refs,
+                "description": f"Completed model response evidence for AutoSci `{native_skill}` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_model_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "model_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_workspace_retrieval_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    retrieval_artifact: str,
+    hits: list[dict[str, Any]],
+) -> dict[str, str] | None:
+    hit_refs = _unique_strings(
+        [str(hit.get("path") or "").strip() for hit in hits if isinstance(hit, dict)]
+    )
+    if not hit_refs:
+        return None
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source = "workspace_wiki"
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{source}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["provider_source_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "workspace_wiki_retrieval",
+                    "command": f"{action}:wiki_retrieval",
+                },
+                "evidence_refs": _runtime_evidence_refs(evidence_path, retrieval_artifact, *hit_refs),
+                "description": (
+                    f"Completed workspace wiki source retrieval evidence for AutoSci `{native_skill}` parity."
+                ),
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_source_provider_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_ideate_source_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    source_summary: dict[str, Any],
+    ideas: list[dict[str, Any]],
+    boundary_artifact: str,
+    pipeline_report_artifact: str,
+) -> dict[str, str] | None:
+    source_refs = _unique_strings(
+        [str(item) for item in source_summary.get("source_refs") or [] if str(item).strip()]
+    )
+    if not source_refs:
+        return None
+    origin_refs: list[str] = []
+    for idea in ideas:
+        if not isinstance(idea, dict):
+            continue
+        origin_refs.extend(str(item) for item in idea.get("origin_evidence_ids") or [] if str(item).strip())
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source_mode = str(source_summary.get("source_mode") or "source_grounded")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "ideate",
+                "proof_id": f"runtime:ideate:{_slug(source_mode)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["provider_source_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": source_mode,
+                    "captured_at": timestamp,
+                    "artifact_kind": "ideate_source_grounding",
+                    "command": "generate_ideas:source_grounding",
+                    "source_ids": _unique_strings(origin_refs),
+                },
+                "evidence_refs": _runtime_evidence_refs(
+                    evidence_path,
+                    boundary_artifact,
+                    pipeline_report_artifact,
+                    *source_refs,
+                ),
+                "description": "Completed source-grounding evidence for AutoSci `ideate` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, "generate_ideas") / "generate_ideas_source_provider_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_publication_source_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    citation_map: dict[str, Any],
+    artifact_refs: list[str],
+) -> dict[str, str] | None:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    if not citations:
+        return None
+    citation_refs: list[str] = []
+    source_channels: list[str] = []
+    for citation in citations:
+        if not isinstance(citation, dict):
+            continue
+        for key in ("path", "source_ref"):
+            value = str(citation.get(key) or "").strip()
+            if value and value != "N/A":
+                citation_refs.append(value)
+        source_channels.extend(str(item) for item in citation.get("source_channels") or [] if str(item).strip())
+    refs = _runtime_evidence_refs(
+        evidence_path,
+        *artifact_refs,
+        *_phase14_source_evidence_refs(envelope),
+        *citation_refs,
+    )
+    if not refs:
+        return None
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source = "+".join(_unique_strings(source_channels)) or "publication_citation_map"
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["provider_source_evidence", "external_runtime_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "publication_citation_map",
+                    "command": f"{action}:citation_source_map",
+                    "citation_count": len(citations),
+                },
+                "evidence_refs": refs,
+                "description": f"Completed citation/source evidence for AutoSci `{native_skill}` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_source_provider_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_ingest_source_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    evidence: dict[str, Any],
+    boundary: dict[str, Any],
+    boundary_artifact: str,
+    sidecar_paths: list[str],
+) -> dict[str, str] | None:
+    if not (
+        boundary.get("source_preparation_verified") is True
+        and boundary.get("parse_quality_ready") is True
+        and boundary.get("raw_artifact_provenance_ready") is True
+    ):
+        return None
+    outputs = evidence.get("outputs") if isinstance(evidence.get("outputs"), dict) else {}
+    paper = outputs.get("paper") if isinstance(outputs.get("paper"), dict) else {}
+    preparation = paper.get("preparation") if isinstance(paper.get("preparation"), dict) else {}
+    refs: list[str | Path] = [evidence_path, boundary_artifact, *sidecar_paths]
+    for key in ("source_path", "canonical_ingest_path", "prepared_path", "extracted_text_path"):
+        value = str(preparation.get(key) or "").strip()
+        if value:
+            refs.append(value)
+    for artifact in evidence.get("artifacts") or []:
+        if not isinstance(artifact, dict):
+            continue
+        if str(artifact.get("type") or "") in {"arxiv_source", "extracted_pdf_text", "prepared_archive_source", "synthetic_latex"}:
+            path = str(artifact.get("path") or "").strip()
+            if path:
+                refs.append(path)
+    source_ref = str(paper.get("source_ref") or "").strip()
+    if source_ref:
+        refs.append(source_ref)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source = str(preparation.get("original_format") or paper.get("source_kind") or "paper_source")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "ingest",
+                "proof_id": f"runtime:ingest:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["provider_source_evidence", "external_runtime_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "paper_source_preparation",
+                    "command": "ingest_paper:source_registration_boundary",
+                    "paper_id": str(paper.get("paper_id") or ""),
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": "Completed paper source preparation evidence for AutoSci `ingest` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, "ingest_paper") / "ingest_paper_source_provider_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_ingest_wiki_registration_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    boundary: dict[str, Any],
+    boundary_artifact: str,
+    sidecar_paths: list[str],
+) -> dict[str, str] | None:
+    if boundary.get("wiki_registration_ready") is not True:
+        return None
+    wiki_state = boundary.get("wiki_registration") if isinstance(boundary.get("wiki_registration"), dict) else {}
+    refs: list[str | Path] = [evidence_path, boundary_artifact, *sidecar_paths]
+    for key in ("paper_page", "log_path", "graph_edges_path", "index_path", "context_brief_path"):
+        value = str(wiki_state.get(key) or "").strip()
+        if value:
+            refs.append(value)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "ingest",
+                "proof_id": f"runtime:ingest:wiki-registration:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["wiki_mutation_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": "ingest_wiki_registration",
+                    "captured_at": timestamp,
+                    "artifact_kind": "ingest_wiki_registration_boundary",
+                    "command": "ingest_paper:wiki_registration_boundary",
+                    "paper_id": str(boundary.get("paper_id") or ""),
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": "Completed wiki registration evidence for AutoSci `ingest` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, "ingest_paper") / "ingest_paper_wiki_mutation_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "wiki_mutation_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_remote_status_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    remote_check: dict[str, Any],
+    contract_artifact: dict[str, str],
+) -> dict[str, str] | None:
+    poll_boundary = remote_check.get("remote_poll_boundary") if isinstance(remote_check.get("remote_poll_boundary"), dict) else {}
+    if remote_check.get("status") != "completed" or poll_boundary.get("live_remote_poll_verified") is not True:
+        return None
+    refs: list[str | Path] = [evidence_path]
+    contract_path = str(contract_artifact.get("path") or "").strip() if isinstance(contract_artifact, dict) else ""
+    if contract_path:
+        refs.append(contract_path)
+    for key in ("runtime_path", "stdout_path", "stderr_path"):
+        value = str(remote_check.get(key) or "").strip()
+        if value:
+            refs.append(value)
+    for path in remote_check.get("evidence_paths") or []:
+        if str(path or "").strip():
+            refs.append(str(path))
+    transport = str(poll_boundary.get("transport") or "remote_provider")
+    provider = str(poll_boundary.get("provider") or transport)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "exp-status",
+                "proof_id": f"runtime:exp-status:{_slug(provider)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["external_runtime_evidence", "provider_source_evidence"],
+                "collection_mode": "live_provider",
+                "production_ready": True,
+                "provenance": {
+                    "source": provider,
+                    "captured_at": timestamp,
+                    "artifact_kind": "remote_status_poll",
+                    "command": "monitor_experiment:remote_status_check",
+                    "transport": transport,
+                    "session_id": str(poll_boundary.get("session_id") or ""),
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": "Completed live remote status poll evidence for AutoSci `exp-status` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, "monitor_experiment") / "monitor_experiment_remote_status_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_experiment_run_final_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    evidence_path: Path,
+    boundary_path: str,
+    boundary: dict[str, Any],
+    artifacts: list[dict[str, Any]],
+) -> dict[str, str] | None:
+    if boundary.get("final_runtime_audit_ready") is not True:
+        return None
+    refs: list[str | Path] = [evidence_path, boundary_path]
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        path = str(artifact.get("path") or "").strip()
+        if path:
+            refs.append(path)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    experiment_id = str(boundary.get("experiment_id") or "experiment")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "exp-run",
+                "proof_id": f"runtime:exp-run:final-collect:{_slug(experiment_id)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": [
+                    "external_runtime_evidence",
+                    "approval_boundary_evidence",
+                    "side_effect_execution_evidence",
+                    "provider_source_evidence",
+                    "wiki_mutation_evidence",
+                ],
+                "collection_mode": "live_provider",
+                "production_ready": True,
+                "provenance": {
+                    "source": "final_runtime_audit_boundary",
+                    "captured_at": timestamp,
+                    "artifact_kind": "experiment_run_final_runtime_audit",
+                    "command": f"{action}:final_runtime_audit",
+                    "experiment_id": experiment_id,
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": "Completed live-provider collect/runtime/wiki mutation evidence for AutoSci `exp-run` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_final_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_review_context_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    review_llm: dict[str, Any],
+) -> dict[str, str] | None:
+    if str(review_llm.get("status") or "") != "completed":
+        return None
+    evidence_ids = [str(item) for item in review_llm.get("evidence_ids") or [] if str(item).strip()]
+    if not evidence_ids:
+        return None
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source = (
+        str(review_llm.get("provider") or "").strip()
+        or str(review_llm.get("model") or "").strip()
+        or str(review_llm.get("source_path") or "").strip()
+        or "review_llm_evidence"
+    )
+    evidence_refs = _runtime_evidence_refs(
+        evidence_path,
+        str(review_llm.get("source_path") or "").strip(),
+        *[str(item) for item in review_llm.get("checked_paths") or [] if str(item).strip()],
+    )
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["review_llm_or_model_evidence", "external_runtime_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "artifact_review",
+                    "command": f"review_llm_evidence:{source}",
+                },
+                "evidence_refs": evidence_refs,
+                "description": f"Completed Review LLM evidence for AutoSci `{native_skill}` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_review_llm_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "review_model_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _runtime_ref_from_external_value(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text or text.startswith("file://"):
+        return ""
+    return text
+
+
+def _external_novelty_runtime_refs(external: dict[str, Any]) -> tuple[list[str], bool]:
+    refs: list[str] = []
+    saw_live_provider_ref = False
+
+    def add_ref(value: Any) -> None:
+        nonlocal saw_live_provider_ref
+        text = _runtime_ref_from_external_value(value)
+        if not text:
+            return
+        if text.startswith(("http://", "https://")):
+            saw_live_provider_ref = True
+        if text not in refs:
+            refs.append(text)
+
+    for value in external.get("checked_paths") or []:
+        add_ref(value)
+    for status in external.get("provider_statuses") or []:
+        if not isinstance(status, dict):
+            continue
+        add_ref(status.get("endpoint"))
+        add_ref(status.get("raw_payload_ref"))
+        add_ref(status.get("raw_payload_archive_path"))
+        for value in status.get("raw_payload_refs") or []:
+            add_ref(value)
+        for value in status.get("raw_payload_archive_paths") or []:
+            add_ref(value)
+    for source in external.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        provenance = source.get("provenance") if isinstance(source.get("provenance"), dict) else {}
+        add_ref(provenance.get("raw_payload_ref"))
+        add_ref(provenance.get("raw_payload_archive_path"))
+    return refs, saw_live_provider_ref
+
+
+def _write_external_novelty_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    evaluations: list[dict[str, Any]],
+) -> dict[str, str] | None:
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    proof_refs: list[str] = []
+    providers: list[str] = []
+    completed_provider_count = 0
+    saw_live_provider_ref = False
+    for evaluation in evaluations:
+        if not isinstance(evaluation, dict):
+            continue
+        external = evaluation.get("external_novelty") if isinstance(evaluation.get("external_novelty"), dict) else {}
+        if _external_novelty_status(evaluation) != "completed":
+            continue
+        if _external_novelty_provenance_status(evaluation) != "passed":
+            continue
+        refs, live_provider_ref = _external_novelty_runtime_refs(external)
+        saw_live_provider_ref = saw_live_provider_ref or live_provider_ref
+        for ref in refs:
+            if ref not in proof_refs:
+                proof_refs.append(ref)
+        for status in external.get("provider_statuses") or []:
+            if not isinstance(status, dict) or status.get("status") != "completed":
+                continue
+            completed_provider_count += 1
+            provider = str(status.get("provider") or "").strip()
+            if provider and provider not in providers:
+                providers.append(provider)
+    if completed_provider_count <= 0:
+        return None
+    source = "+".join(providers) if providers else "external_novelty"
+    collection_mode = "live_provider" if saw_live_provider_ref else "manual_review"
+    categories = ["provider_source_evidence"]
+    if collection_mode == "live_provider":
+        categories.append("external_runtime_evidence")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": categories,
+                "collection_mode": collection_mode,
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "external_novelty",
+                    "command": f"external_novelty_evidence:{source}",
+                },
+                "evidence_refs": _runtime_evidence_refs(evidence_path, *proof_refs),
+                "description": "Completed external novelty provider/source evidence for AutoSci parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_external_novelty_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_novelty_review_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    evaluations: list[dict[str, Any]],
+) -> dict[str, str] | None:
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    proofs: list[dict[str, Any]] = []
+    for evaluation in evaluations:
+        if not isinstance(evaluation, dict):
+            continue
+        review_llm = evaluation.get("review_llm") if isinstance(evaluation.get("review_llm"), dict) else {}
+        if str(review_llm.get("status") or "") != "completed":
+            continue
+        evidence_ids = [str(item) for item in review_llm.get("evidence_ids") or [] if str(item).strip()]
+        if not evidence_ids:
+            continue
+        source = (
+            str(review_llm.get("provider") or "").strip()
+            or str(review_llm.get("model") or "").strip()
+            or str(review_llm.get("source_path") or "").strip()
+            or str(evaluation.get("idea_id") or "").strip()
+            or "review_llm_evidence"
+        )
+        evidence_refs = _runtime_evidence_refs(
+            evidence_path,
+            str(review_llm.get("source_path") or "").strip(),
+            *[str(item) for item in review_llm.get("checked_paths") or [] if str(item).strip()],
+        )
+        proofs.append(
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["review_llm_or_model_evidence", "external_runtime_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "artifact_review",
+                    "command": f"review_llm_evidence:{source}",
+                },
+                "evidence_refs": evidence_refs,
+                "description": "Completed Review LLM evidence for AutoSci novelty parity.",
+            }
+        )
+    if not proofs:
+        return None
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": proofs,
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_review_llm_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "review_model_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_source_provider_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    source_boundary: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    artifacts: list[dict[str, Any]] | None = None,
+) -> dict[str, str] | None:
+    if source_boundary.get("completed") is not True:
+        return None
+    provider_channels = [
+        str(channel)
+        for channel in source_boundary.get("provider_channels") or []
+        if str(channel).strip()
+    ]
+    if not provider_channels:
+        return None
+    refs: list[str | Path] = [evidence_path]
+    for artifact in artifacts or []:
+        if not isinstance(artifact, dict):
+            continue
+        path = str(artifact.get("path") or "").strip()
+        if path:
+            refs.append(path)
+    for source in source_boundary.get("runtime_record_sources") or []:
+        if str(source or "").strip():
+            refs.append(str(source))
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        for key in ("source_ref", "url", "paper_url", "pdf_url"):
+            value = str(candidate.get(key) or "").strip()
+            if value:
+                refs.append(value)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    source = "+".join(provider_channels)
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["provider_source_evidence", "external_runtime_evidence"],
+                "collection_mode": "live_provider",
+                "production_ready": True,
+                "provenance": {
+                    "source": source,
+                    "captured_at": timestamp,
+                    "artifact_kind": "literature_discovery",
+                    "command": f"{action}:source_provider_boundary",
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": f"Completed provider-backed source evidence for AutoSci `{native_skill}` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_source_provider_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _approval_contract_runtime_refs(contract: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for key in ("allowlist_evidence", "runtime_evidence", "before_artifacts", "after_artifacts"):
+        entries = contract.get(key) if isinstance(contract.get(key), list) else []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            path = str(entry.get("artifact_path") or entry.get("path") or "").strip()
+            if path and path not in refs:
+                refs.append(path)
+    return refs
+
+
+def _write_approval_boundary_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    contract_path: Path,
+    contract: dict[str, Any],
+) -> dict[str, str] | None:
+    if contract.get("execution_verified") is not True:
+        return None
+    timestamp = str(
+        contract.get("timestamp")
+        or contract.get("generated_at")
+        or contract.get("captured_at")
+        or datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    )
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:approval-contract:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["approval_boundary_evidence"],
+                "collection_mode": "approved_side_effect",
+                "production_ready": True,
+                "provenance": {
+                    "source": "approval_contract",
+                    "captured_at": timestamp,
+                    "artifact_kind": "approval_runtime_contract",
+                    "command": f"{action}:approval_contract",
+                },
+                "evidence_refs": _runtime_evidence_refs(contract_path, *_approval_contract_runtime_refs(contract)),
+                "description": f"Verified approval boundary evidence for AutoSci `{native_skill}` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_approval_boundary_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "approval_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_side_effect_execution_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    boundary: dict[str, Any],
+    artifacts: list[dict[str, Any]],
+) -> dict[str, str] | None:
+    if boundary.get("final_delivery_ready") is not True:
+        return None
+    refs: list[str | Path] = [evidence_path]
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        path = str(artifact.get("path") or "").strip()
+        if path:
+            refs.append(path)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": native_skill,
+                "proof_id": f"runtime:{_slug(native_skill)}:side-effect-execution:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": ["side_effect_execution_evidence"],
+                "collection_mode": "approved_side_effect",
+                "production_ready": True,
+                "provenance": {
+                    "source": "final_provider_delivery_boundary",
+                    "captured_at": timestamp,
+                    "artifact_kind": str(boundary.get("schema") or "side_effect_boundary"),
+                    "command": f"{action}:side_effect_execution",
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": f"Completed side-effect execution boundary for AutoSci `{native_skill}` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, action) / f"{action}_side_effect_execution_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "side_effect_runtime_proof_manifest_json", "path": artifact_path}
+
+
+def _write_approved_mutation_runtime_proof_manifests(
+    envelope: dict[str, Any],
+    *,
+    action: str,
+    native_skill: str,
+    evidence_path: Path,
+    applied: bool,
+    contract: dict[str, Any],
+    contract_artifact: dict[str, str],
+    source_refs: list[str | Path],
+    mutation_refs: list[str | Path],
+    include_wiki_mutation: bool,
+    source_label: str,
+    artifact_kind: str,
+    include_provider_source: bool = True,
+    include_side_effect: bool = True,
+) -> list[dict[str, str]]:
+    if not applied or contract.get("execution_verified") is not True:
+        return []
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    proof_stamp = timestamp.replace(":", "").replace("-", "")
+    contract_path = str(contract_artifact.get("path") or "").strip() if isinstance(contract_artifact, dict) else ""
+    approval_refs = _runtime_evidence_refs(evidence_path, contract_path, *_approval_contract_runtime_refs(contract))
+    mutation_refs_normalized = _runtime_evidence_refs(evidence_path, *mutation_refs)
+    source_refs_normalized = _runtime_evidence_refs(evidence_path, *source_refs)
+    proof_artifacts: list[dict[str, str]] = []
+
+    def write_proof(
+        *,
+        filename: str,
+        artifact_type: str,
+        categories: list[str],
+        source: str,
+        refs: list[str],
+        description: str,
+    ) -> None:
+        manifest = {
+            "schema": "autosci_runtime_proof_manifest.v1",
+            "generated_at": timestamp,
+            "proofs": [
+                {
+                    "native_skill": native_skill,
+                    "proof_id": f"runtime:{_slug(native_skill)}:{_slug(source)}:{proof_stamp}",
+                    "categories": categories,
+                    "collection_mode": "approved_side_effect",
+                    "production_ready": True,
+                    "provenance": {
+                        "source": source,
+                        "captured_at": timestamp,
+                        "artifact_kind": artifact_kind,
+                        "command": f"{action}:approved_mutation",
+                    },
+                    "evidence_refs": refs,
+                    "description": description,
+                }
+            ],
+        }
+        artifact_path = _write_json_sidecar(_output_dir(envelope, action) / filename, manifest)
+        proof_artifacts.append({"type": artifact_type, "path": artifact_path})
+
+    if include_provider_source and source_refs_normalized:
+        write_proof(
+            filename=f"{action}_source_provider_runtime_proof.json",
+            artifact_type="provider_source_runtime_proof_manifest_json",
+            categories=["provider_source_evidence"],
+            source=source_label,
+            refs=source_refs_normalized,
+            description=f"Completed approved source artifact evidence for AutoSci `{native_skill}` parity.",
+        )
+    write_proof(
+        filename=f"{action}_approval_runtime_proof.json",
+        artifact_type="approval_runtime_proof_manifest_json",
+        categories=["external_runtime_evidence", "approval_boundary_evidence"],
+        source="approval_contract",
+        refs=approval_refs,
+        description=f"Verified approval/runtime evidence for AutoSci `{native_skill}` parity.",
+    )
+    if include_side_effect:
+        write_proof(
+            filename=f"{action}_side_effect_execution_runtime_proof.json",
+            artifact_type="side_effect_runtime_proof_manifest_json",
+            categories=["side_effect_execution_evidence"],
+            source="approved_mutation",
+            refs=mutation_refs_normalized,
+            description=f"Completed approved side-effect execution evidence for AutoSci `{native_skill}` parity.",
+        )
+    if include_wiki_mutation:
+        write_proof(
+            filename=f"{action}_wiki_mutation_runtime_proof.json",
+            artifact_type="wiki_mutation_runtime_proof_manifest_json",
+            categories=["wiki_mutation_evidence"],
+            source="wiki_writeback",
+            refs=mutation_refs_normalized,
+            description=f"Completed approved wiki mutation evidence for AutoSci `{native_skill}` parity.",
+        )
+    return proof_artifacts
+
+
+def _write_paper_compile_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    status: str,
+    semantic: dict[str, Any],
+    contract: dict[str, Any],
+    artifacts: list[dict[str, Any]],
+    latex_files: list[Path],
+    pdf_files: list[Path],
+) -> dict[str, str] | None:
+    if status != "completed" or semantic.get("verified") is not True or contract.get("execution_verified") is not True:
+        return None
+    refs: list[str | Path] = [evidence_path]
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        path = str(artifact.get("path") or "").strip()
+        if path:
+            refs.append(path)
+    refs.extend(latex_files)
+    refs.extend(pdf_files)
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    detail = semantic.get("detail") if isinstance(semantic.get("detail"), dict) else {}
+    executor = str(detail.get("tex_executor") or detail.get("command_run") or "compile_runtime")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "paper-compile",
+                "proof_id": f"runtime:paper-compile:{_slug(executor)}:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": [
+                    "external_runtime_evidence",
+                    "approval_boundary_evidence",
+                    "side_effect_execution_evidence",
+                    "provider_source_evidence",
+                ],
+                "collection_mode": "approved_side_effect",
+                "production_ready": True,
+                "provenance": {
+                    "source": "paper_compile_runtime",
+                    "captured_at": timestamp,
+                    "artifact_kind": "paper_compile_checklist",
+                    "command": "compile_paper:runtime_semantic",
+                    "executor": executor,
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": "Completed approved runtime/source evidence for AutoSci `paper-compile` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, "compile_paper") / "compile_paper_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
 def _write_phase14_publication_sidecars(envelope: dict[str, Any], report_evidence: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     paths = _phase14_report_paths(envelope)
@@ -5128,6 +10715,8 @@ def _write_phase14_publication_sidecars(envelope: dict[str, Any], report_evidenc
         "paper_compile_runtime_evidence_json",
         "compile_runtime_after_artifact",
         "compiled_pdf",
+        "citation_map_json",
+        "paper_draft_final_manuscript_boundary_json",
     }
     seen_file_artifacts = {(artifact["type"], artifact["path"]) for artifact in file_artifacts}
     for artifact in report_evidence.get("artifacts") or []:
@@ -5338,17 +10927,176 @@ def _native_publication_citation_map(envelope: dict[str, Any]) -> dict[str, Any]
     }
 
 
+def _survey_final_coverage_boundary(
+    citation_map: dict[str, Any],
+    *,
+    has_source_evidence: bool,
+) -> dict[str, Any]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    blocking_reasons: list[str] = []
+    if not has_source_evidence:
+        blocking_reasons.append("literature/source evidence was not supplied")
+    if not citations:
+        blocking_reasons.append("source-backed citation entries are missing")
+    final_coverage_ready = not blocking_reasons
+    return {
+        "schema": "autosci_survey_final_coverage_boundary.v1",
+        "status": "final_coverage_ready" if final_coverage_ready else "survey_coverage_incomplete",
+        "final_coverage_ready": final_coverage_ready,
+        "coverage_scope": "bounded_source_backed" if final_coverage_ready else "incomplete",
+        "exhaustive_coverage_verified": False,
+        "source_evidence_supplied": has_source_evidence,
+        "citation_count": len(citations),
+        "citation_ids": _unique_strings([str(item.get("citation_id") or item.get("title") or "") for item in citations if isinstance(item, dict)]),
+        "blocking_reasons": blocking_reasons,
+        "limitations": [
+            "Survey coverage is bounded to supplied source/citation evidence and does not claim exhaustive live literature coverage."
+        ]
+        if final_coverage_ready
+        else [
+            "Final survey coverage requires supplied source evidence and at least one source-backed citation entry."
+        ],
+    }
+
+
+def _paper_plan_final_acceptance_boundary(
+    citation_map: dict[str, Any],
+    review_boundary: dict[str, Any],
+    compile_handoff: dict[str, Any],
+    *,
+    has_source_evidence: bool,
+    section_ids: list[str],
+) -> dict[str, Any]:
+    citations = citation_map.get("citations") if isinstance(citation_map.get("citations"), list) else []
+    review_completed = bool(review_boundary.get("completed"))
+    compile_verified = bool(compile_handoff.get("verified")) and str(compile_handoff.get("status") or "") == "completed"
+    pdf_paths = [str(item) for item in compile_handoff.get("pdf_paths") or [] if str(item).strip()]
+    has_figure_citation_plan = "figure-citation-plan" in set(section_ids)
+    blocking_reasons: list[str] = []
+    if not has_source_evidence:
+        blocking_reasons.append("source evidence was not supplied")
+    if not citations:
+        blocking_reasons.append("source-backed citation plan is missing")
+    if not has_figure_citation_plan:
+        blocking_reasons.append("figure/citation plan section is missing")
+    if not review_completed:
+        blocking_reasons.append("completed Review LLM boundary evidence is missing")
+    if not compile_verified:
+        blocking_reasons.append("verified downstream compile/PDF handoff is missing")
+    final_ready = not blocking_reasons
+    return {
+        "schema": "autosci_paper_plan_final_acceptance_boundary.v1",
+        "status": "final_plan_accepted" if final_ready else "paper_plan_final_acceptance_incomplete",
+        "final_plan_accepted": final_ready,
+        "draft_compile_ready": final_ready,
+        "plan_scope": "source_review_compile_ready" if final_ready else "plan_scaffold",
+        "source_evidence_supplied": has_source_evidence,
+        "citation_count": len(citations),
+        "citation_ids": _unique_strings([
+            str(item.get("citation_id") or item.get("title") or "")
+            for item in citations
+            if isinstance(item, dict)
+        ]),
+        "figure_citation_plan_present": has_figure_citation_plan,
+        "review_llm_completed": review_completed,
+        "review_boundary_status": str(review_boundary.get("status") or "missing"),
+        "review_evidence_ids": _unique_strings([str(item) for item in review_boundary.get("evidence_ids") or []]),
+        "compile_handoff_status": str(compile_handoff.get("status") or "not_requested"),
+        "compile_handoff_verified": compile_verified,
+        "compiled_pdf_paths": pdf_paths,
+        "blocking_reasons": blocking_reasons,
+        "limitations": (
+            [
+                "Paper plan final acceptance is bounded to supplied source evidence, Review LLM proof, and verified compile/PDF handoff."
+            ]
+            if final_ready
+            else [
+                "Paper plan final acceptance requires source evidence, source-backed citation planning, completed Review LLM proof, and verified downstream compile/PDF handoff."
+            ]
+        ),
+    }
+
+
 def _native_publication_review_completed(envelope: dict[str, Any]) -> bool:
+    return bool(_native_publication_review_boundary(envelope).get("completed"))
+
+
+def _review_evidence_ids(review: dict[str, Any], review_llm: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    for source in (review, review_llm):
+        raw = source.get("evidence_ids") if isinstance(source, dict) else []
+        if isinstance(raw, list):
+            values.extend(str(item) for item in raw if str(item).strip())
+    return _unique_strings(values)
+
+
+def _native_publication_review_boundary(envelope: dict[str, Any]) -> dict[str, Any]:
+    checked: list[str] = []
+    invalid_reasons: list[str] = []
     for payload in _phase14_source_payloads(envelope):
         if payload.get("schema") != "artifact_review.v1" or payload.get("status") != "completed":
             continue
+        source_path = str(payload.get("source_path") or payload.get("task_id") or payload.get("node_id") or "artifact_review.v1")
+        checked.append(source_path)
         review = ((payload.get("outputs") or {}).get("review") or {})
         if not isinstance(review, dict):
+            invalid_reasons.append(f"{source_path}: missing outputs.review object")
             continue
         review_llm = review.get("review_llm") if isinstance(review.get("review_llm"), dict) else {}
-        if review.get("review_mode") == "review_llm" or review_llm.get("status") == "completed":
-            return True
-    return False
+        review_mode = str(review.get("review_mode") or "").strip()
+        review_available = review.get("review_available") is True
+        evidence_ids = _review_evidence_ids(review, review_llm)
+        llm_status = str(review_llm.get("status") or "").strip()
+        if review_mode not in {"review_llm", "llm_review", "external_review"}:
+            invalid_reasons.append(f"{source_path}: review_mode is not Review LLM-backed")
+            continue
+        if not review_available:
+            invalid_reasons.append(f"{source_path}: review_available is not true")
+            continue
+        if not evidence_ids:
+            invalid_reasons.append(f"{source_path}: Review LLM evidence ids are missing")
+            continue
+        if review_llm and llm_status != "completed":
+            invalid_reasons.append(f"{source_path}: nested review_llm status is not completed")
+            continue
+        invocation_mode = str(review_llm.get("invocation_mode") or "evidence").strip() or "evidence"
+        boundary = {
+            "schema": "autosci_publication_review_boundary.v1",
+            "status": "completed",
+            "completed": True,
+            "source_path": str(review_llm.get("source_path") or review_llm.get("archive_path") or source_path),
+            "source_task_id": str(payload.get("task_id") or ""),
+            "review_mode": review_mode,
+            "review_available": True,
+            "invocation_mode": invocation_mode,
+            "provider": str(review_llm.get("provider") or ""),
+            "model": str(review_llm.get("model") or ""),
+            "request_sha256": str(review_llm.get("request_sha256") or ""),
+            "response_sha256": str(review_llm.get("response_sha256") or ""),
+            "score": review.get("score", review_llm.get("score")),
+            "recommendation": str(review.get("recommendation") or review_llm.get("recommendation") or "inconclusive"),
+            "evidence_ids": evidence_ids,
+            "checked_reviews": checked,
+            "invalid_reasons": invalid_reasons,
+            "limitations": [],
+        }
+        if invocation_mode == "evidence":
+            boundary["limitations"].append(
+                "Review LLM evidence was supplied externally; hosted provider or command provenance is not claimed."
+            )
+        return boundary
+    return {
+        "schema": "autosci_publication_review_boundary.v1",
+        "status": "inconclusive" if not invalid_reasons else "invalid",
+        "completed": False,
+        "checked_reviews": checked,
+        "invalid_reasons": invalid_reasons,
+        "limitations": [
+            "No completed Review LLM boundary evidence was available for publication planning."
+            if not invalid_reasons
+            else "Supplied Review LLM evidence did not satisfy publication planning boundary checks."
+        ],
+    }
 
 
 def _native_report_paths(envelope: dict[str, Any], action: str) -> dict[str, Path]:
@@ -5385,13 +11133,26 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
     has_source_evidence = _native_publication_has_source_evidence(envelope)
     citation_map = _native_publication_citation_map(envelope)
     has_citations = bool(citation_map.get("citations"))
-    has_review_llm = _native_publication_review_completed(envelope)
+    if has_citations:
+        evidence_ids = _unique_strings([
+            *evidence_ids,
+            *[
+                str(item.get("citation_id") or item.get("title") or "")
+                for item in citation_map.get("citations") or []
+                if isinstance(item, dict)
+            ],
+        ])
+    review_boundary = _native_publication_review_boundary(envelope)
+    has_review_llm = bool(review_boundary.get("completed"))
+    if has_review_llm:
+        evidence_ids = _unique_strings([*evidence_ids, *[str(item) for item in review_boundary.get("evidence_ids") or []]])
     compile_requested = bool(
         inputs.get("approval_ref")
         or inputs.get("runtime_evidence")
         or inputs.get("after_artifacts")
         or inputs.get("allowlist_evidence")
         or inputs.get("before_artifacts")
+        or inputs.get("supplied_compile_target_evidence")
     )
     compile_handoff, compile_artifacts, compile_limitations = _phase14_compile_handoff(
         envelope,
@@ -5408,6 +11169,7 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("No source-backed citation map was available; citation slots remain incomplete.")
     if not has_review_llm:
         limitations.append("No completed Review LLM evidence was supplied; plan remains pre-review.")
+    limitations.extend(str(item) for item in review_boundary.get("limitations") or [])
     limitations.extend(compile_limitations)
     citation_preview = citation_map.get("citations") or []
     citation_body = "\n".join(
@@ -5437,7 +11199,12 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
             "section_id": "review-gates",
             "title": "Review Gates",
             "evidence_ids": evidence_ids,
-            "body": f"Review LLM evidence status: `{'completed' if has_review_llm else 'missing'}`. Novelty/relevance checks remain required before promotion beyond plan status.",
+            "body": (
+                f"Review LLM boundary status: `{review_boundary.get('status', 'missing')}`. "
+                f"Invocation mode: `{review_boundary.get('invocation_mode', 'N/A')}`. "
+                f"Source: `{review_boundary.get('source_path', 'N/A')}`. "
+                "Novelty/relevance checks remain required before promotion beyond plan status."
+            ),
         },
         {
             "section_id": "compile-audit",
@@ -5452,6 +11219,28 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
             "body": "This is a bounded planning artifact, not a compiled manuscript or external-review result.",
         },
     ]
+    final_acceptance_boundary = _paper_plan_final_acceptance_boundary(
+        citation_map,
+        review_boundary,
+        compile_handoff,
+        has_source_evidence=has_source_evidence,
+        section_ids=[str(section.get("section_id") or "") for section in sections if isinstance(section, dict)],
+    )
+    limitations.extend(str(item) for item in final_acceptance_boundary.get("limitations") or [])
+    sections.insert(
+        -1,
+        {
+            "section_id": "final-plan-acceptance-boundary",
+            "title": "Final Plan Acceptance Boundary",
+            "evidence_ids": evidence_ids,
+            "body": (
+                f"Final plan acceptance status: `{final_acceptance_boundary.get('status')}`. "
+                f"Draft/compile ready: `{final_acceptance_boundary.get('draft_compile_ready')}`. "
+                f"Review LLM completed: `{final_acceptance_boundary.get('review_llm_completed')}`. "
+                f"Compile handoff verified: `{final_acceptance_boundary.get('compile_handoff_verified')}`."
+            ),
+        },
+    )
     plan_payload = {
         "title": title,
         "target": target,
@@ -5467,11 +11256,50 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         "limitations": limitations,
         "citation_map": citation_map,
         "review_llm_completed": has_review_llm,
+        "review_boundary": review_boundary,
         "compile_handoff": compile_handoff,
+        "final_acceptance_boundary": final_acceptance_boundary,
     }
     plan_path = _write_json_sidecar(paths["plan_json"], plan_payload)
     citation_map_path = _write_json_sidecar(paths["citation_map"], citation_map)
+    final_boundary_path = _write_json_sidecar(
+        paths["markdown"].parent / "paper_plan_final_acceptance_boundary.json",
+        final_acceptance_boundary,
+    )
     markdown_path = _write_text_sidecar(paths["markdown"], _native_report_markdown(title, sections, limitations))
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "plan_report") / "plan_report.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    review_runtime_proof_artifact = _write_review_context_runtime_proof_manifest(
+        envelope,
+        action="plan_report",
+        native_skill="paper-plan",
+        evidence_path=evidence_payload_path,
+        review_llm=review_boundary,
+    )
+    source_runtime_proof_artifact = _write_publication_source_runtime_proof_manifest(
+        envelope,
+        action="plan_report",
+        native_skill="paper-plan",
+        evidence_path=evidence_payload_path,
+        citation_map=citation_map,
+        artifact_refs=[plan_path, markdown_path, citation_map_path, final_boundary_path],
+    )
+    artifacts = [
+        {"type": "paper_plan_json", "path": plan_path},
+        {"type": "paper_plan_markdown", "path": markdown_path},
+        {"type": "citation_map_json", "path": citation_map_path},
+        {"type": "paper_plan_final_acceptance_boundary_json", "path": final_boundary_path},
+        *compile_artifacts,
+    ]
+    if review_runtime_proof_artifact is not None:
+        artifacts.append(review_runtime_proof_artifact)
+    if source_runtime_proof_artifact is not None:
+        artifacts.append(source_runtime_proof_artifact)
     return convert_scientific_report({
         "report_id": f"paper-plan-{_slug(title)}",
         "title": title,
@@ -5479,13 +11307,8 @@ def _action_plan_report(envelope: dict[str, Any]) -> dict[str, Any]:
         "evidence_ids": evidence_ids,
         "unsupported_claims": [],
         "compile_handoff": compile_handoff,
-        "status": "completed" if has_source_evidence and has_citations and has_review_llm else "inconclusive",
-        "artifacts": [
-            {"type": "paper_plan_json", "path": plan_path},
-            {"type": "paper_plan_markdown", "path": markdown_path},
-            {"type": "citation_map_json", "path": citation_map_path},
-            *compile_artifacts,
-        ],
+        "status": "completed" if final_acceptance_boundary.get("final_plan_accepted") else "inconclusive",
+        "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
 
@@ -5498,8 +11321,10 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
     has_source_evidence = _native_publication_has_source_evidence(envelope)
     citation_map = _native_publication_citation_map(envelope)
     has_citations = bool(citation_map.get("citations"))
+    coverage_boundary = _survey_final_coverage_boundary(citation_map, has_source_evidence=has_source_evidence)
     limitations = [
         "Survey is assembled from local Solar evidence and supplied discovery/paper citation evidence.",
+        *list(coverage_boundary.get("limitations") or []),
     ]
     if not has_source_evidence:
         limitations.append("No literature/source evidence was supplied; survey remains an evidence scaffold.")
@@ -5535,16 +11360,67 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
             "evidence_ids": evidence_ids,
             "body": "This survey scaffold does not claim exhaustive literature coverage.",
         },
+        {
+            "section_id": "coverage-boundary",
+            "title": "Coverage Boundary",
+            "evidence_ids": evidence_ids,
+            "body": (
+                f"Survey final coverage boundary: `{coverage_boundary.get('status')}`. "
+                f"Coverage scope: `{coverage_boundary.get('coverage_scope')}`. "
+                f"Exhaustive coverage verified: `{coverage_boundary.get('exhaustive_coverage_verified')}`."
+            ),
+        },
     ]
     plan_path = _write_json_sidecar(paths["plan_json"], {
         "title": title,
         "target": target,
         "survey_evidence_ids": evidence_ids,
         "citation_map": citation_map,
+        "final_coverage_boundary": coverage_boundary,
         "limitations": limitations,
     })
     citation_map_path = _write_json_sidecar(paths["citation_map"], citation_map)
+    coverage_boundary_path = _write_json_sidecar(
+        paths["markdown"].parent / "survey_final_coverage_boundary.json",
+        coverage_boundary,
+    )
     markdown_path = _write_text_sidecar(paths["markdown"], _native_report_markdown(title, sections, limitations))
+    artifacts = [
+        {"type": "survey_plan_json", "path": plan_path},
+        {"type": "survey_markdown", "path": markdown_path},
+        {"type": "citation_map_json", "path": citation_map_path},
+        {"type": "survey_final_coverage_boundary_json", "path": coverage_boundary_path},
+    ]
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "write_survey") / "scientific_report.survey.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    source_runtime_proof_artifact = _write_publication_source_runtime_proof_manifest(
+        envelope,
+        action="write_survey",
+        native_skill="survey",
+        evidence_path=evidence_payload_path,
+        citation_map=citation_map,
+        artifact_refs=[plan_path, markdown_path, citation_map_path, coverage_boundary_path],
+    )
+    if source_runtime_proof_artifact is not None:
+        artifacts.append(source_runtime_proof_artifact)
+    requested_format = str((envelope.get("inputs") or {}).get("format") or "").strip().lower()
+    if requested_format in {"latex", "tex"}:
+        latex_path = _configured_output_path(envelope, "latex_path", paths["markdown"].with_suffix(".tex"))
+        latex_report = {
+            "title": title,
+            "sections": sections,
+        }
+        artifacts.append(
+            {
+                "type": "survey_latex_source",
+                "path": _write_text_sidecar(latex_path, _render_latex_paper(latex_report, limitations)),
+            }
+        )
     return convert_scientific_report({
         "report_id": f"survey-{_slug(title)}",
         "title": title,
@@ -5552,11 +11428,7 @@ def _action_write_survey(envelope: dict[str, Any]) -> dict[str, Any]:
         "evidence_ids": evidence_ids,
         "unsupported_claims": [],
         "status": "completed" if has_source_evidence and has_citations else "inconclusive",
-        "artifacts": [
-            {"type": "survey_plan_json", "path": plan_path},
-            {"type": "survey_markdown", "path": markdown_path},
-            {"type": "citation_map_json", "path": citation_map_path},
-        ],
+        "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
 
@@ -5565,9 +11437,358 @@ def _publication_action_paths(envelope: dict[str, Any], action: str) -> dict[str
     output_dir = _output_dir(envelope, action)
     return {
         "markdown": _configured_output_path(envelope, "markdown_path", output_dir / f"{action}.md"),
+        "formal_text": _configured_output_path(envelope, "formal_text_path", output_dir / f"{action}.txt"),
         "html": _configured_output_path(envelope, "html_path", output_dir / f"{action}.html"),
         "map_json": _configured_output_path(envelope, "map_json_path", output_dir / f"{action}_map.json"),
     }
+
+
+REBUTTAL_CONCERN_TYPES = {
+    "evidence": ("experiment", "evidence", "result", "ablation", "metric", "baseline", "data"),
+    "method": ("method", "algorithm", "procedure", "mechanism", "implementation", "architecture"),
+    "missing": ("missing", "lack", "lacks", "absent", "no comparison", "not compare", "additional"),
+    "clarity": ("unclear", "clarify", "confusing", "notation", "figure", "explain"),
+    "scope": ("scope", "applicability", "generalize", "contribution", "limited"),
+    "novelty": ("novelty", "novel", "original", "overlap", "prior work", "incremental"),
+    "minor": ("typo", "format", "grammar", "minor"),
+}
+
+REBUTTAL_STOPWORDS = {
+    "about",
+    "after",
+    "also",
+    "and",
+    "are",
+    "because",
+    "but",
+    "can",
+    "from",
+    "has",
+    "have",
+    "into",
+    "its",
+    "lack",
+    "lacks",
+    "method",
+    "more",
+    "not",
+    "our",
+    "paper",
+    "review",
+    "should",
+    "that",
+    "the",
+    "their",
+    "this",
+    "with",
+}
+
+
+def _rebuttal_evidence_values(raw_value: Any) -> list[str]:
+    values = raw_value if isinstance(raw_value, list) else [raw_value] if raw_value else []
+    out: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if not text:
+            continue
+        if "," in text and "\n" not in text and not text.lstrip().startswith(("{", "[")):
+            out.extend(part.strip() for part in text.split(",") if part.strip())
+        else:
+            out.append(text)
+    return out
+
+
+def _looks_like_reviewer_text(text: str) -> bool:
+    normalized = text.strip().lower()
+    return bool(
+        normalized
+        and (
+            "\n" in text
+            or len(normalized) > 80
+            or normalized.startswith(("reviewer", "review ", "meta-review", "meta review"))
+        )
+    )
+
+
+def _looks_like_path_reference(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped or "\n" in stripped:
+        return False
+    return "/" in stripped or "\\" in stripped or bool(Path(stripped).suffix)
+
+
+def _rebuttal_review_sources(envelope: dict[str, Any]) -> list[dict[str, Any]]:
+    inputs = dict(envelope.get("inputs") or {})
+    sources: list[dict[str, Any]] = []
+    for raw in _rebuttal_evidence_values(inputs.get("reviewer_thread_evidence")):
+        path = _resolve_harness_path(raw)
+        if path.exists() and path.is_file():
+            if path.suffix.lower() == ".json":
+                try:
+                    payload = _load_json(path)
+                except Exception:  # noqa: BLE001
+                    continue
+                if isinstance(payload, dict):
+                    source_payload = dict(payload)
+                    source_payload.setdefault("source_path", _rel(path))
+                    sources.append({"kind": "payload", "payload": source_payload, "source_path": _rel(path)})
+            else:
+                sources.append({
+                    "kind": "text",
+                    "text": _read_limited_text(path),
+                    "source_path": _rel(path),
+                    "evidence_id": f"review-thread:{_slug(path.stem)}",
+                })
+        elif _looks_like_reviewer_text(raw) and not _looks_like_path_reference(raw):
+            sources.append({
+                "kind": "text",
+                "text": raw,
+                "source_path": "direct:reviewer-thread",
+                "evidence_id": "review-thread:direct",
+            })
+    target = str(inputs.get("target") or "").strip()
+    if target:
+        target_path = _resolve_harness_path(target)
+        if target_path.exists() and target_path.is_file():
+            if target_path.suffix.lower() == ".json":
+                try:
+                    payload = _load_json(target_path)
+                except Exception:  # noqa: BLE001
+                    payload = None
+                if isinstance(payload, dict):
+                    source_payload = dict(payload)
+                    source_payload.setdefault("source_path", _rel(target_path))
+                    sources.append({"kind": "payload", "payload": source_payload, "source_path": _rel(target_path)})
+            else:
+                sources.append({
+                    "kind": "text",
+                    "text": _read_limited_text(target_path),
+                    "source_path": _rel(target_path),
+                    "evidence_id": f"review-thread:{_slug(target_path.stem)}",
+                })
+        elif not sources and _looks_like_reviewer_text(target) and not _looks_like_path_reference(target):
+            sources.append({
+                "kind": "text",
+                "text": target,
+                "source_path": "direct:target",
+                "evidence_id": "review-thread:target",
+            })
+    return sources
+
+
+def _rebuttal_text_segments(text: str) -> list[str]:
+    bullet_segments: list[str] = []
+    paragraph_segments: list[str] = []
+    current: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if current:
+                paragraph_segments.append(" ".join(current).strip())
+                current = []
+            continue
+        bullet = re.match(r"^(?:[-*•]|\d+[.)])\s+(.*)$", line)
+        if bullet:
+            if current:
+                paragraph_segments.append(" ".join(current).strip())
+                current = []
+            bullet_segments.append(bullet.group(1).strip())
+        else:
+            current.append(line)
+    if current:
+        paragraph_segments.append(" ".join(current).strip())
+    segments = bullet_segments or paragraph_segments
+    if len(segments) <= 1:
+        split = [
+            item.strip()
+            for item in re.split(r"(?<=[.?])\s+(?=[A-Z0-9])", segments[0] if segments else text.strip())
+            if item.strip()
+        ]
+        segments = split or segments
+    return [segment for segment in segments if len(segment) >= 12]
+
+
+def _rebuttal_review_sections_from_text(text: str) -> list[dict[str, Any]]:
+    matches = list(re.finditer(r"(?im)^(reviewer\s*\d+|review\s*\d+|meta[- ]?review)\s*:?\s*$", text))
+    if not matches:
+        return [{"reviewer": "Reviewer 1", "items": _rebuttal_text_segments(text)}]
+    sections: list[dict[str, Any]] = []
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        reviewer = match.group(1).strip().replace("review ", "Reviewer ")
+        body = text[start:end].strip()
+        sections.append({"reviewer": reviewer, "items": _rebuttal_text_segments(body)})
+    return sections
+
+
+def _rebuttal_payload_thread_view(payload: dict[str, Any]) -> Any:
+    outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+    for source in (outputs, payload):
+        for key in (
+            "reviewer_thread",
+            "reviewer_threads",
+            "review_comments",
+            "review_thread",
+            "reviews",
+            "reviewers",
+            "comments",
+            "concerns",
+        ):
+            if key in source:
+                return source.get(key)
+    return None
+
+
+def _rebuttal_review_sections_from_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    view = _rebuttal_payload_thread_view(payload)
+    if isinstance(view, dict):
+        for key in ("reviewers", "reviews", "comments", "concerns"):
+            nested = view.get(key)
+            if isinstance(nested, list):
+                view = nested
+                break
+        else:
+            return [{"reviewer": view.get("reviewer") or view.get("reviewer_id") or "Reviewer 1", "items": [view]}]
+    if isinstance(view, str):
+        return _rebuttal_review_sections_from_text(view)
+    if isinstance(view, list):
+        sections: list[dict[str, Any]] = []
+        for index, item in enumerate(view, start=1):
+            if isinstance(item, dict):
+                reviewer = item.get("reviewer") or item.get("reviewer_id") or item.get("source") or f"Reviewer {index}"
+                values: list[Any] = []
+                for key in ("concerns", "comments", "weaknesses", "questions", "issues", "findings"):
+                    raw = item.get(key)
+                    if isinstance(raw, list):
+                        values.extend(raw)
+                    elif isinstance(raw, str):
+                        values.extend(_rebuttal_text_segments(raw))
+                if not values:
+                    values.append(item)
+                sections.append({"reviewer": reviewer, "items": values})
+            elif isinstance(item, str):
+                sections.append({"reviewer": f"Reviewer {index}", "items": _rebuttal_text_segments(item)})
+        return sections
+    return []
+
+
+def _rebuttal_concern_text(item: Any) -> str:
+    if isinstance(item, dict):
+        for key in ("concern", "issue", "comment", "question", "weakness", "finding", "text", "summary"):
+            value = str(item.get(key) or "").strip()
+            if value:
+                return value
+    return str(item or "").strip()
+
+
+def _rebuttal_concern_type(text: str, item: Any) -> tuple[str, str]:
+    if isinstance(item, dict):
+        raw = str(item.get("type") or item.get("category") or item.get("criterion") or item.get("focus") or "").strip()
+        if raw:
+            return raw, "structured"
+    lower = text.lower()
+    for category, keywords in REBUTTAL_CONCERN_TYPES.items():
+        if any(keyword in lower for keyword in keywords):
+            return category, "local_parser"
+    return "review", "local_parser"
+
+
+def _rebuttal_concern_severity(text: str, item: Any) -> tuple[str, str]:
+    if isinstance(item, dict):
+        raw = str(item.get("severity") or item.get("priority") or "").strip().lower()
+        if raw in {"critical", "major", "minor"}:
+            return raw, "structured"
+    lower = text.lower()
+    if any(word in lower for word in ("fatal", "invalid", "incorrect", "major", "critical")):
+        return "critical", "local_parser"
+    if any(word in lower for word in ("typo", "format", "minor", "grammar")):
+        return "minor", "local_parser"
+    return "major", "local_parser"
+
+
+def _rebuttal_item_evidence_ids(item: Any, fallback: str) -> list[str]:
+    ids = [fallback]
+    if isinstance(item, dict):
+        raw = item.get("evidence_ids")
+        if isinstance(raw, list):
+            ids.extend(str(value) for value in raw if str(value).strip())
+        for key in ("evidence_id", "source_id", "id"):
+            value = str(item.get(key) or "").strip()
+            if value:
+                ids.append(value)
+    return _unique_strings(ids)
+
+
+def _rebuttal_reviewer_number(reviewer: str, fallback: int) -> int:
+    match = re.search(r"(\d+)", reviewer)
+    return int(match.group(1)) if match else fallback
+
+
+def _rebuttal_concerns_from_reviewer_sources(envelope: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    concerns: list[dict[str, Any]] = []
+    sources = _rebuttal_review_sources(envelope)
+    raw_parser_used = False
+    reviewer_count = 0
+    for source_index, source in enumerate(sources, start=1):
+        source_path = str(source.get("source_path") or f"reviewer-thread-{source_index}")
+        evidence_id = str(source.get("evidence_id") or "")
+        sections: list[dict[str, Any]] = []
+        if source.get("kind") == "payload" and isinstance(source.get("payload"), dict):
+            payload = dict(source["payload"])
+            evidence_id = str(payload.get("task_id") or payload.get("evidence_id") or evidence_id or f"reviewer-thread-{source_index}")
+            sections = _rebuttal_review_sections_from_payload(payload)
+        elif source.get("kind") == "text":
+            raw_parser_used = True
+            sections = _rebuttal_review_sections_from_text(str(source.get("text") or ""))
+        for section_index, section in enumerate(sections, start=1):
+            reviewer_count += 1
+            reviewer = str(section.get("reviewer") or f"Reviewer {section_index}").strip()
+            reviewer_number = _rebuttal_reviewer_number(reviewer, reviewer_count)
+            concern_index = 0
+            for item in section.get("items") or []:
+                text = _rebuttal_concern_text(item)
+                if not text:
+                    continue
+                concern_index += 1
+                concern_type, type_source = _rebuttal_concern_type(text, item)
+                severity, severity_source = _rebuttal_concern_severity(text, item)
+                explicit_id = str(item.get("concern_id") or item.get("id") or "").strip() if isinstance(item, dict) else ""
+                concern_id = explicit_id if re.match(r"(?i)^rv\d+-c\d+$", explicit_id) else f"Rv{reviewer_number}-C{concern_index}"
+                concerns.append({
+                    "concern_id": concern_id,
+                    "reviewer": reviewer,
+                    "reviewer_number": reviewer_number,
+                    "type": concern_type,
+                    "focus": concern_type,
+                    "severity": severity,
+                    "concern": text,
+                    "source_path": source_path,
+                    "source_kind": str(source.get("kind") or "payload"),
+                    "evidence_id": evidence_id or f"reviewer-thread-{source_index}",
+                    "evidence_ids": _rebuttal_item_evidence_ids(item, evidence_id or f"reviewer-thread-{source_index}"),
+                    "classification_source": "structured" if type_source == "structured" and severity_source == "structured" else "local_parser",
+                })
+    boundary = {
+        "schema": "autosci_rebuttal_reviewer_thread_boundary.v1",
+        "status": "completed" if concerns else "missing",
+        "thread_loaded": bool(sources),
+        "atomization_completed": bool(concerns),
+        "reviewer_count": reviewer_count,
+        "concern_count": len(concerns),
+        "source_paths": _unique_strings([str(source.get("source_path") or "") for source in sources]),
+        "raw_parser_used": raw_parser_used,
+        "limitations": (
+            ["Non-standard reviewer text was parsed by a bounded local parser; supply structured reviewer-thread evidence for strict auditability."]
+            if raw_parser_used
+            else []
+        ),
+    }
+    if not sources:
+        boundary["limitations"].append("No reviewer-thread evidence was supplied.")
+    if sources and not concerns:
+        boundary["limitations"].append("Reviewer-thread evidence was supplied but no concerns were atomized.")
+    return concerns, boundary
 
 
 def _rebuttal_concerns_from_review_evidence(envelope: dict[str, Any]) -> list[dict[str, Any]]:
@@ -5595,83 +11816,795 @@ def _rebuttal_concerns_from_review_evidence(envelope: dict[str, Any]) -> list[di
                 focus = "review"
             if not concern:
                 continue
+            concern_type, _ = _rebuttal_concern_type(concern, finding)
+            severity, _ = _rebuttal_concern_severity(concern, finding)
             concerns.append(
                 {
-                    "concern_id": f"{evidence_id}:concern-{index}",
+                    "concern_id": f"Rv1-C{index}",
+                    "reviewer": "Review LLM",
+                    "reviewer_number": 1,
+                    "type": concern_type,
                     "focus": focus,
+                    "severity": severity,
                     "concern": concern,
                     "evidence_id": evidence_id,
+                    "evidence_ids": [evidence_id],
+                    "source_kind": "artifact_review",
+                    "source_path": str(payload.get("source_path") or evidence_id),
+                    "classification_source": "artifact_review",
                 }
             )
     return concerns
 
 
+def _rebuttal_tokens(text: str) -> set[str]:
+    return {
+        token
+        for token in re.findall(r"[a-z0-9][a-z0-9_-]{2,}", text.lower())
+        if token not in REBUTTAL_STOPWORDS
+    }
+
+
+def _rebuttal_wiki_entities(envelope: dict[str, Any]) -> list[dict[str, Any]]:
+    entities: list[dict[str, Any]] = []
+    folders = ("ideas", "methods", "experiments", "papers", "concepts", "outputs")
+    for root in _wiki_roots_for_read(envelope):
+        if not root.exists():
+            continue
+        for folder in folders:
+            base = root / folder
+            if not base.exists():
+                continue
+            for index, path in enumerate(sorted(base.glob("**/*.md")), start=1):
+                if index > 80:
+                    break
+                text = _read_limited_text(path, limit=60_000)
+                title = path.stem.replace("-", " ")
+                for line in text.splitlines():
+                    if line.startswith("# "):
+                        title = line[2:].strip()
+                        break
+                entities.append({
+                    "entity_id": path.stem,
+                    "entity_type": folder[:-1] if folder.endswith("s") else folder,
+                    "title": title,
+                    "path": _rel(path),
+                    "text": text,
+                    "tokens": _rebuttal_tokens(f"{title} {path.stem} {text[:4000]}"),
+                })
+    return entities
+
+
+def _rebuttal_evidence_status(entity: dict[str, Any] | None) -> str:
+    if not entity:
+        return "insufficient"
+    text = str(entity.get("text") or "").lower()
+    entity_type = str(entity.get("entity_type") or "")
+    if any(word in text for word in ("invalidated", "contradicted", "failed")):
+        return "contradicted"
+    if entity_type == "experiment":
+        if any(word in text for word in ("succeeded", "success", "completed", "passed")):
+            return "sufficient"
+        if any(word in text for word in ("inconclusive", "mixed", "partial")):
+            return "partial"
+    if entity_type == "idea":
+        if any(word in text for word in ("linked_experiments", "succeeded", "validated", "completed")):
+            return "sufficient"
+        if "novelty_score" in text or "status:" in text:
+            return "partial"
+    if entity_type == "method":
+        if any(word in text for word in ("source_papers", "procedure", "mechanism", "implementation")):
+            return "sufficient"
+        return "partial"
+    if entity_type in {"paper", "concept", "output"}:
+        return "sufficient"
+    return "partial"
+
+
+def _rebuttal_map_concern(concern: dict[str, Any], entities: list[dict[str, Any]]) -> dict[str, Any]:
+    tokens = _rebuttal_tokens(str(concern.get("concern") or ""))
+    best: dict[str, Any] | None = None
+    best_score = 0
+    for entity in entities:
+        entity_tokens = entity.get("tokens") if isinstance(entity.get("tokens"), set) else set()
+        score = len(tokens & entity_tokens)
+        if score > best_score:
+            best = entity
+            best_score = score
+    evidence_status = _rebuttal_evidence_status(best if best_score >= 1 else None)
+    mapped = best is not None and best_score >= 1
+    strategy = _rebuttal_response_strategy(str(concern.get("type") or ""), evidence_status)
+    mapping = {
+        "mapped": mapped,
+        "entity_id": str(best.get("entity_id") or "") if mapped and best else "",
+        "entity_type": str(best.get("entity_type") or "") if mapped and best else "",
+        "entity_title": str(best.get("title") or "") if mapped and best else "",
+        "entity_path": str(best.get("path") or "") if mapped and best else "",
+        "match_score": best_score,
+        "evidence_status": evidence_status,
+        "strategy": strategy,
+    }
+    return mapping
+
+
+def _rebuttal_response_strategy(concern_type: str, evidence_status: str) -> str:
+    normalized = concern_type.lower()
+    if normalized == "clarity":
+        return "C"
+    if normalized in {"scope", "novelty"}:
+        return "D" if evidence_status in {"sufficient", "partial"} else "B"
+    if evidence_status == "sufficient":
+        return "A"
+    return "B"
+
+
+def _rebuttal_response_text(concern: dict[str, Any], mapping: dict[str, Any]) -> str:
+    strategy = str(mapping.get("strategy") or "B")
+    entity_path = str(mapping.get("entity_path") or "").strip()
+    entity_title = str(mapping.get("entity_title") or mapping.get("entity_id") or "the available project evidence").strip()
+    if strategy == "A":
+        return (
+            f"We will answer this directly by citing `{entity_path or entity_title}` as the supporting evidence. "
+            "The response will state only the result recorded in that source and will avoid adding unverified claims."
+        )
+    if strategy == "C":
+        return (
+            "We agree that the presentation can be clearer. The rebuttal will provide the corrected wording and mark the "
+            "corresponding paper edit without claiming new experimental evidence."
+        )
+    if strategy == "D":
+        return (
+            f"We will address the scope/novelty concern by pointing to `{entity_path or entity_title}` and clarifying the "
+            "bounded distinction from prior work. Any unsupported broader claim is left out."
+        )
+    return (
+        "We acknowledge that the current evidence is not sufficient for a direct claim. The response proposes a concrete "
+        "follow-up experiment or paper edit and does not promise unsupported results."
+    )
+
+
+def _rebuttal_safety_checks(concern: dict[str, Any], mapping: dict[str, Any]) -> list[dict[str, Any]]:
+    evidence_status = str(mapping.get("evidence_status") or "insufficient")
+    strategy = str(mapping.get("strategy") or "B")
+    mapped = bool(mapping.get("mapped"))
+    return [
+        _check_row(
+            "no_fabrication",
+            "ok" if strategy != "A" or (mapped and evidence_status == "sufficient") else "warn",
+            "Direct evidence-backed claims are tied to mapped wiki/source evidence."
+            if strategy != "A" or (mapped and evidence_status == "sufficient")
+            else "Direct response needs sufficient mapped evidence before final use.",
+            [str(mapping.get("entity_path") or "")] if mapping.get("entity_path") else [],
+        ),
+        _check_row(
+            "no_overpromise",
+            "ok",
+            "Responses either cite recorded evidence or frame missing evidence as a concrete follow-up.",
+        ),
+        _check_row(
+            "traceability",
+            "ok" if mapped else "warn",
+            "Concern maps to a wiki/source entity." if mapped else "Concern has no direct wiki/source entity mapping.",
+            [str(mapping.get("entity_path") or "")] if mapping.get("entity_path") else [],
+        ),
+        _check_row(
+            "invalidated_guard",
+            "ok" if evidence_status != "contradicted" else "warn",
+            "No contradicted evidence is presented as support."
+            if evidence_status != "contradicted"
+            else "Mapped evidence is contradicted/failed; rebuttal must acknowledge this.",
+        ),
+    ]
+
+
+def _rebuttal_stress_test_boundary(
+    inputs: dict[str, Any],
+    review_boundary: dict[str, Any],
+    *,
+    concern_count: int,
+) -> dict[str, Any]:
+    requested = inputs.get("stress_test") is not False
+    review_completed = bool(review_boundary.get("completed"))
+    raw_score = _optional_number(review_boundary.get("score"))
+    score_1_to_5 = None
+    if raw_score is not None:
+        score_1_to_5 = round(raw_score * 5, 2) if raw_score <= 1 else round(raw_score, 2)
+    ready = (not requested) or (review_completed and concern_count > 0)
+    return {
+        "schema": "autosci_rebuttal_review_llm_stress_test_boundary.v1",
+        "status": "completed" if requested and ready else "not_requested" if not requested else "missing_review_llm_evidence",
+        "stress_test_requested": requested,
+        "stress_test_ready": ready,
+        "review_llm_completed": review_completed,
+        "review_boundary_status": str(review_boundary.get("status") or "missing"),
+        "invocation_mode": str(review_boundary.get("invocation_mode") or ""),
+        "score": score_1_to_5,
+        "follow_up_required": bool(score_1_to_5 is not None and score_1_to_5 <= 3),
+        "concern_count": concern_count,
+        "evidence_ids": _unique_strings([str(item) for item in review_boundary.get("evidence_ids") or []]),
+        "limitations": (
+            []
+            if requested and ready
+            else ["Review LLM stress-test was disabled by CLI; this is not strict native rebuttal parity."]
+            if not requested
+            else ["Completed Review LLM stress-test evidence is required for final rebuttal acceptance."]
+        ),
+    }
+
+
+def _rebuttal_submission_boundary(
+    inputs: dict[str, Any],
+    submission_audit: dict[str, Any],
+    *,
+    formal_text_path: str,
+    concern_count: int,
+    safety_checks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    blocking_checks = [
+        str(row.get("check") or "safety_check")
+        for row in safety_checks
+        if isinstance(row, dict) and str(row.get("status") or "") != "ok"
+    ]
+    if concern_count <= 0:
+        blocking_checks.append("reviewer_thread_atomization")
+    if not formal_text_path:
+        blocking_checks.append("formal_rebuttal_text")
+    audit_ready = bool(submission_audit.get("audit_verified"))
+    if not audit_ready:
+        blocking_checks.append("publication_submission_audit")
+    ready = audit_ready and concern_count > 0 and bool(formal_text_path) and not blocking_checks
+    return {
+        "schema": "autosci_rebuttal_submission_boundary.v1",
+        "status": "submission_audit_ready" if ready else "submission_audit_incomplete",
+        "submission_audit_ready": ready,
+        "portal_submission_completed": bool(submission_audit.get("portal_submission_completed")),
+        "formal_rebuttal_text_path": formal_text_path,
+        "venue": str(inputs.get("venue") or submission_audit.get("venue") or ""),
+        "format": str(inputs.get("format") or "formal"),
+        "concern_count": concern_count,
+        "blocking_checks": _unique_strings(blocking_checks),
+        "submission_audit": submission_audit,
+        "limitations": (
+            ["Portal submission is not claimed by this dry-run bridge unless external audit evidence records completion."]
+            if ready
+            else ["Rebuttal submission readiness requires formal text, full concern coverage, clean safety checks, and valid submission audit evidence."]
+        ),
+    }
+
+
+def _render_rebuttal_markdown_from_map(response_map: dict[str, Any]) -> str:
+    lines = [
+        f"# Rebuttal Analysis: {response_map.get('title') or 'AutoSci Rebuttal'}",
+        "",
+        f"Target: `{response_map.get('target') or 'N/A'}`",
+        "",
+        "## Coverage Summary",
+        "",
+        "| Concern ID | Reviewer | Type | Severity | Entity | Evidence Status | Review LLM | Strategy |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for item in response_map.get("mapped_concerns") or []:
+        mapping = item.get("mapping") if isinstance(item.get("mapping"), dict) else {}
+        stress = response_map.get("stress_test_boundary") if isinstance(response_map.get("stress_test_boundary"), dict) else {}
+        entity = mapping.get("entity_path") or mapping.get("entity_id") or "unmapped"
+        score = stress.get("score") if stress.get("score") is not None else "N/A"
+        lines.append(
+            f"| {item.get('concern_id')} | {item.get('reviewer')} | {item.get('type')} | {item.get('severity')} | "
+            f"{entity} | {mapping.get('evidence_status')} | {score} | {mapping.get('strategy')} |"
+        )
+    lines.extend(["", "## Responses", ""])
+    for item in response_map.get("mapped_concerns") or []:
+        lines.extend([
+            f"### {item.get('reviewer')} - {item.get('concern_id')}",
+            "",
+            f"**Concern.** {item.get('concern')}",
+            "",
+            str(item.get("response") or ""),
+            "",
+        ])
+    if response_map.get("unmapped_concerns"):
+        lines.extend(["## Unmapped Concerns", ""])
+        lines.extend(f"- {item}" for item in response_map.get("unmapped_concerns") or [])
+        lines.append("")
+    lines.extend(["## Safety Checklist", ""])
+    for row in response_map.get("safety_checks") or []:
+        lines.append(f"- [{ 'x' if row.get('status') == 'ok' else ' ' }] {row.get('check')}: {row.get('detail')}")
+    lines.extend(["", "## Limitations", ""])
+    lines.extend(f"- {item}" for item in response_map.get("limitations") or [])
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _render_rebuttal_formal_text(response_map: dict[str, Any]) -> str:
+    lines = [
+        "We thank the reviewers for their constructive feedback. We address each concern below.",
+        "",
+    ]
+    current_reviewer = ""
+    for item in response_map.get("mapped_concerns") or []:
+        reviewer = str(item.get("reviewer") or "Reviewer")
+        if reviewer != current_reviewer:
+            current_reviewer = reviewer
+            lines.extend([f"{reviewer}:", ""])
+        lines.extend([
+            f"[{item.get('concern_id')}] {item.get('concern')}",
+            str(item.get("response") or ""),
+            "",
+        ])
+    lines.extend([
+        "Summary of Revisions:",
+        "- We will make only the paper edits and follow-up experiment commitments supported by the mapped evidence above.",
+        "",
+        "Additional Experiments:",
+        "- Any additional experiment is framed as a planned follow-up unless completed evidence is already cited.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
+def _poster_paper_dir(envelope: dict[str, Any]) -> Path | None:
+    inputs = dict(envelope.get("inputs") or {})
+    for key in ("paper_path", "paper_dir", "target"):
+        raw = str(inputs.get(key) or "").strip()
+        if not raw:
+            continue
+        path = _resolve_harness_path(raw)
+        if path.is_dir() and (path / "main.tex").exists():
+            return path
+    default = _resolve_harness_path("paper")
+    if default.is_dir() and (default / "main.tex").exists():
+        return default
+    return None
+
+
+def _poster_template_html(title: str) -> str:
+    escaped_title = html.escape(title)
+    return (
+        "<!doctype html>\n"
+        "<html><head><meta charset=\"utf-8\"><title>"
+        f"{escaped_title}</title><style>"
+        "body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#111827;}"
+        ".poster{width:1400px;min-height:900px;margin:0 auto;padding:36px;box-sizing:border-box;background:white;}"
+        "header{display:flex;justify-content:space-between;gap:24px;border-bottom:4px solid #111827;padding-bottom:18px;}"
+        ".title-block{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;}"
+        ".logo-affiliation img,.conf img{max-height:70px;max-width:160px;object-fit:contain;}"
+        ".title{font-size:44px;line-height:1.05;margin:0;max-width:980px;}"
+        ".authors{font-size:20px;margin-top:10px;color:#374151;}"
+        ".venue,.conf{font-size:18px;text-align:right;color:#374151;}"
+        ".flow{columns:3 360px;column-gap:26px;margin-top:24px;}"
+        ".section{break-inside:avoid;border:1px solid #d1d5db;padding:14px;margin:0 0 16px;background:#ffffff;}"
+        ".section h2{font-size:24px;margin:0 0 8px;}"
+        ".section p{font-size:15px;line-height:1.35;margin:0 0 8px;}"
+        ".img-section{display:flex;gap:8px;align-items:center;}"
+        ".img-section img{max-width:100%;height:auto;border:1px solid #e5e7eb;}"
+        "table{width:100%;border-collapse:collapse;font-size:12px;}td,th{border:1px solid #d1d5db;padding:3px;}"
+        "</style></head><body><div class=\"poster\"><header><div class=\"title-block\">"
+        "<div class=\"logo-affiliation\"></div><div>"
+        f"<h1 class=\"title\">{escaped_title}</h1><div class=\"authors\">Anonymous</div>"
+        "</div></div><div class=\"conf\"><div class=\"venue\"></div></div></header><main class=\"main\"><div class=\"flow\" id=\"flow\">"
+        "</div></main></div></body></html>\n"
+    )
+
+
+def _poster_sentence_summary(text: str, *, max_sentences: int = 3) -> str:
+    cleaned = re.sub(r"<[^>]+>", " ", text)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if not cleaned:
+        return "No section prose was available in the paper source."
+    sentences = [item.strip() for item in re.split(r"(?<=[.!?])\s+", cleaned) if item.strip()]
+    summary = " ".join(sentences[:max_sentences] or [cleaned])
+    return summary[:900]
+
+
+def _poster_outline_from_dag(dag: dict[str, Any], *, no_figures: bool) -> str:
+    nodes = dag.get("nodes") if isinstance(dag.get("nodes"), list) else []
+    sections = [node for node in nodes if isinstance(node, dict) and node.get("level") == 1]
+    blocks: list[str] = []
+    for section in sections[:6]:
+        title = html.escape(str(section.get("name") or "Section"))
+        content = str(section.get("content") or "")
+        summary = html.escape(_poster_sentence_summary(content))
+        block = [f'<section class="section"><h2>{title}</h2><p>{summary}</p>']
+        if "<table" in content.lower():
+            tables = re.findall(r"(<table.*?</table>)", content, flags=re.IGNORECASE | re.DOTALL)
+            block.extend(tables[:1])
+        if not no_figures:
+            visuals = section.get("visual_node") if isinstance(section.get("visual_node"), list) else []
+            image_tags: list[str] = []
+            for visual in visuals[:2]:
+                visual_text = str(visual if not isinstance(visual, dict) else visual.get("name") or "")
+                match = re.search(r"!\[[^\]]*\]\(([^)]+)\)", visual_text)
+                if match:
+                    src = html.escape(match.group(1))
+                    image_tags.append(f'<img src="{src}" alt="{title} figure">')
+            if image_tags:
+                block.append('<div class="img-section">' + "".join(image_tags) + "</div>")
+        block.append("</section>")
+        blocks.append("\n".join(block))
+    return "\n".join(blocks) + ("\n" if blocks else "")
+
+
+def _poster_run_tool(command: list[str]) -> dict[str, Any]:
+    proc = subprocess.run(
+        command,
+        cwd=REPO_HARNESS_DIR.parent,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    return {
+        "command": command,
+        "exit_code": proc.returncode,
+        "stdout": proc.stdout[-4000:],
+        "stderr": proc.stderr[-4000:],
+        "status": "completed" if proc.returncode == 0 else "failed",
+    }
+
+
+def _poster_native_content_pipeline(
+    envelope: dict[str, Any],
+    *,
+    title: str,
+    paths: dict[str, Path],
+) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    output_dir = _output_dir(envelope, "build_poster")
+    paper_dir = _poster_paper_dir(envelope)
+    dag_path = output_dir / "dag.json"
+    outline_path = output_dir / "outline.html"
+    template_path = output_dir / "poster_template.html"
+    report_path = output_dir / "poster_generation_report.json"
+    validate_path = output_dir / "poster_validate_result.json"
+    report: dict[str, Any] = {
+        "schema": "autosci_poster_generation_report.v1",
+        "status": "paper_source_missing",
+        "paper_dir": _rel(paper_dir) if paper_dir else "",
+        "dag_path": _rel(dag_path),
+        "outline_path": _rel(outline_path),
+        "template_path": _rel(template_path),
+        "html_path": _rel(paths["html"]),
+        "distillation_mode": "extractive_local",
+        "commands": [],
+        "validation": {},
+        "limitations": [],
+    }
+    if paper_dir is None:
+        report["limitations"].append("No paper directory containing main.tex was resolved; scaffold poster mode is used.")
+        report_rel = _write_json_sidecar(report_path, report)
+        return {"ready": False, "report_path": report_rel, "artifacts": [{"type": "poster_generation_report_json", "path": report_rel}], "report": report}
+    wiki2dag = REPO_HARNESS_DIR.parent / "tools" / "wiki2dag.py"
+    poster_tool = REPO_HARNESS_DIR.parent / "tools" / "poster.py"
+    build_cmd = [sys.executable, str(wiki2dag), "build", "--paper-dir", str(paper_dir), "--output", str(dag_path)]
+    if inputs.get("anonymous"):
+        build_cmd.append("--anonymous")
+    build_result = _poster_run_tool(build_cmd)
+    report["commands"].append(build_result)
+    if build_result["exit_code"] != 0 or not dag_path.exists():
+        report["status"] = "dag_build_failed"
+        report["limitations"].append("wiki2dag.py build failed; poster content was not generated from paper source.")
+        report_rel = _write_json_sidecar(report_path, report)
+        return {"ready": False, "report_path": report_rel, "artifacts": [{"type": "poster_generation_report_json", "path": report_rel}], "report": report}
+    dag = _load_json(dag_path)
+    outline = _poster_outline_from_dag(dag, no_figures=bool(inputs.get("no_figures")))
+    _write_text_sidecar(outline_path, outline)
+    _write_text_sidecar(template_path, _poster_template_html(title))
+    build_poster_result = _poster_run_tool([
+        sys.executable,
+        str(poster_tool),
+        "build",
+        "--template",
+        str(template_path),
+        "--outline",
+        str(outline_path),
+        "--output",
+        str(paths["html"]),
+    ])
+    report["commands"].append(build_poster_result)
+    if build_poster_result["exit_code"] == 0:
+        title_cmd = [sys.executable, str(poster_tool), "inject-title", "--dag", str(dag_path), str(paths["html"])]
+        if inputs.get("anonymous"):
+            title_cmd.append("--anonymous")
+        if inputs.get("authors"):
+            title_cmd.extend(["--authors", str(inputs["authors"])])
+        report["commands"].append(_poster_run_tool(title_cmd))
+        header_cmd = [sys.executable, str(poster_tool), "inject-header", str(paths["html"])]
+        if inputs.get("venue"):
+            header_cmd.extend(["--venue", str(inputs["venue"])])
+        if not inputs.get("no_logos"):
+            if inputs.get("affiliation_logo"):
+                header_cmd.extend(["--affiliation-logo", str(inputs["affiliation_logo"])])
+            if inputs.get("conference_logo"):
+                header_cmd.extend(["--conference-logo", str(inputs["conference_logo"])])
+        if inputs.get("layout"):
+            header_cmd.extend(["--layout", str(inputs["layout"])])
+        report["commands"].append(_poster_run_tool(header_cmd))
+        if not inputs.get("no_figures"):
+            report["commands"].append(_poster_run_tool([
+                sys.executable,
+                str(poster_tool),
+                "inject-figures",
+                "--dag",
+                str(dag_path),
+                "--paper-dir",
+                str(paper_dir),
+                "--poster-dir",
+                str(output_dir),
+            ]))
+        validate_result = _poster_run_tool([sys.executable, str(poster_tool), "validate", str(paths["html"])])
+        report["commands"].append(validate_result)
+        try:
+            validation_payload = json.loads(validate_result.get("stdout") or "{}")
+        except json.JSONDecodeError:
+            validation_payload = {"status": "failed", "raw_stdout": validate_result.get("stdout")}
+        _write_json_sidecar(validate_path, validation_payload if isinstance(validation_payload, dict) else {"raw": validation_payload})
+        report["validation"] = validation_payload if isinstance(validation_payload, dict) else {}
+    successful = all(str(item.get("status")) == "completed" for item in report["commands"])
+    validate_ok = str((report.get("validation") or {}).get("status") or "") == "completed"
+    report["status"] = "completed" if successful and validate_ok and paths["html"].exists() else "incomplete"
+    if report["status"] != "completed":
+        report["limitations"].append("Poster source pipeline did not fully complete; inspect command statuses and validation output.")
+    if not inputs.get("review"):
+        report["limitations"].append("Critique/revise Review LLM pass was not requested; content distillation is extractive and source-bound.")
+    report_rel = _write_json_sidecar(report_path, report)
+    artifacts = [
+        {"type": "poster_dag_json", "path": _rel(dag_path)},
+        {"type": "poster_outline_html", "path": _rel(outline_path)},
+        {"type": "poster_template_html", "path": _rel(template_path)},
+        {"type": "poster_validate_result_json", "path": _rel(validate_path)},
+        {"type": "poster_generation_report_json", "path": report_rel},
+    ]
+    return {"ready": report["status"] == "completed", "report_path": report_rel, "artifacts": artifacts, "report": report}
+
+
+def _write_rebuttal_final_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    response_map: dict[str, Any],
+    map_path: str,
+    reviewer_thread_boundary_path: str,
+    stress_test_boundary_path: str,
+    submission_boundary_path: str,
+    formal_text_path: str,
+) -> dict[str, str] | None:
+    coverage = response_map.get("coverage") if isinstance(response_map.get("coverage"), dict) else {}
+    concern_count = int(coverage.get("concern_count") or 0)
+    wiki_mapped_count = int(coverage.get("wiki_mapped_count") or 0)
+    stress_boundary = (
+        response_map.get("stress_test_boundary")
+        if isinstance(response_map.get("stress_test_boundary"), dict)
+        else {}
+    )
+    submission_boundary = (
+        response_map.get("submission_boundary")
+        if isinstance(response_map.get("submission_boundary"), dict)
+        else {}
+    )
+    reviewer_thread = (
+        response_map.get("reviewer_thread")
+        if isinstance(response_map.get("reviewer_thread"), dict)
+        else {}
+    )
+    if (
+        concern_count <= 0
+        or wiki_mapped_count < concern_count
+        or reviewer_thread.get("status") != "completed"
+        or stress_boundary.get("stress_test_ready") is not True
+        or submission_boundary.get("submission_audit_ready") is not True
+    ):
+        return None
+    refs: list[str | Path] = [
+        evidence_path,
+        map_path,
+        reviewer_thread_boundary_path,
+        stress_test_boundary_path,
+        submission_boundary_path,
+        formal_text_path,
+    ]
+    for concern in response_map.get("mapped_concerns") or []:
+        if not isinstance(concern, dict):
+            continue
+        mapping = concern.get("mapping") if isinstance(concern.get("mapping"), dict) else {}
+        if mapping.get("entity_path"):
+            refs.append(str(mapping["entity_path"]))
+        if concern.get("source_path"):
+            refs.append(str(concern["source_path"]))
+    review_boundary = response_map.get("review_boundary") if isinstance(response_map.get("review_boundary"), dict) else {}
+    if review_boundary.get("source_path"):
+        refs.append(str(review_boundary["source_path"]))
+    audit = submission_boundary.get("submission_audit") if isinstance(submission_boundary.get("submission_audit"), dict) else {}
+    if audit.get("path"):
+        refs.append(str(audit["path"]))
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "rebuttal",
+                "proof_id": f"runtime:rebuttal:thread-audit:{timestamp.replace(':', '').replace('-', '')}",
+                "categories": [
+                    "review_llm_or_model_evidence",
+                    "external_runtime_evidence",
+                    "provider_source_evidence",
+                ],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": "rebuttal_thread_stress_submission_boundary",
+                    "captured_at": timestamp,
+                    "artifact_kind": "autosci_rebuttal_response_map",
+                    "command": "draft_rebuttal:thread_stress_submission_audit",
+                },
+                "evidence_refs": _runtime_evidence_refs(*refs),
+                "description": "Completed reviewer-thread, wiki/source mapping, Review LLM stress-test, and submission audit evidence for AutoSci `rebuttal` parity.",
+            }
+        ],
+    }
+    artifact_path = _write_json_sidecar(
+        _output_dir(envelope, "draft_rebuttal") / "draft_rebuttal_final_runtime_proof.json",
+        manifest,
+    )
+    return {"type": "provider_source_runtime_proof_manifest_json", "path": artifact_path}
+
+
 def _action_draft_rebuttal(envelope: dict[str, Any]) -> dict[str, Any]:
     paths = _publication_action_paths(envelope, "draft_rebuttal")
+    inputs = dict(envelope.get("inputs") or {})
     title = _native_publication_title(envelope, "AutoSci Rebuttal Draft")
     target = _native_publication_target(envelope)
     evidence_ids = _native_publication_evidence_ids(envelope, "rebuttal:request")
-    has_source_evidence = _native_publication_has_source_evidence(envelope)
-    concerns = _rebuttal_concerns_from_review_evidence(envelope)
+    reviewer_concerns, reviewer_thread_boundary = _rebuttal_concerns_from_reviewer_sources(envelope)
+    review_llm_concerns = _rebuttal_concerns_from_review_evidence(envelope)
+    concerns = reviewer_concerns or review_llm_concerns
+    has_source_evidence = bool(concerns) or _native_publication_has_source_evidence(envelope)
+    entities = _rebuttal_wiki_entities(envelope)
+    review_boundary = _native_publication_review_boundary(envelope)
+    stress_test_boundary = _rebuttal_stress_test_boundary(
+        inputs,
+        review_boundary,
+        concern_count=len(concerns),
+    )
+    submission_audit = _submission_audit_boundary(inputs)
     limitations = [
         "Rebuttal draft is local and evidence-linked; it is not a submitted response.",
-        "Review LLM stress-test and reviewer-comment atomization require supplied review evidence.",
     ]
+    limitations.extend(str(item) for item in reviewer_thread_boundary.get("limitations") or [])
+    limitations.extend(str(item) for item in stress_test_boundary.get("limitations") or [])
     if not has_source_evidence:
         limitations.append("No review/comment/evidence payload was supplied; all concerns remain unmapped.")
     if has_source_evidence and not concerns:
         limitations.append("Review evidence was supplied but no structured findings/concerns were available to map.")
-    mapped_concerns = [
-        {
+    if not submission_audit.get("audit_verified"):
+        limitations.append("Rebuttal submission audit readiness is not proven; supply valid --submission-audit evidence.")
+    mapped_concerns: list[dict[str, Any]] = []
+    safety_checks: list[dict[str, Any]] = []
+    for concern in concerns:
+        mapping = _rebuttal_map_concern(concern, entities)
+        response = _rebuttal_response_text(concern, mapping)
+        concern_safety = _rebuttal_safety_checks(concern, mapping)
+        safety_checks.extend(concern_safety)
+        mapped_concerns.append({
             "concern_id": concern["concern_id"],
-            "focus": concern["focus"],
+            "reviewer": concern.get("reviewer") or "Reviewer",
+            "type": concern.get("type") or concern.get("focus") or "review",
+            "focus": concern.get("focus") or concern.get("type") or "review",
+            "severity": concern.get("severity") or "major",
             "concern": concern["concern"],
-            "response": "Acknowledge the concern, attach the cited evidence, and revise the manuscript section before final submission.",
+            "response": response,
             "status": "mapped",
-            "evidence_ids": [concern["evidence_id"]],
-        }
-        for concern in concerns
-    ]
-    response_map = {
+            "wiki_mapping_status": "mapped" if mapping.get("mapped") else "unmapped",
+            "evidence_ids": _unique_strings([str(item) for item in concern.get("evidence_ids") or [concern.get("evidence_id")]]),
+            "source_path": str(concern.get("source_path") or ""),
+            "classification_source": str(concern.get("classification_source") or ""),
+            "mapping": mapping,
+            "safety_checks": concern_safety,
+        })
+    formal_text = _render_rebuttal_formal_text({
         "title": title,
         "target": target,
         "mapped_concerns": mapped_concerns,
+    })
+    formal_text_path = _write_text_sidecar(paths["formal_text"], formal_text)
+    submission_boundary = _rebuttal_submission_boundary(
+        inputs,
+        submission_audit,
+        formal_text_path=formal_text_path,
+        concern_count=len(mapped_concerns),
+        safety_checks=safety_checks,
+    )
+    if not submission_boundary.get("submission_audit_ready"):
+        limitations.extend(str(item) for item in submission_boundary.get("limitations") or [])
+    reviewer_thread_boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "draft_rebuttal") / "rebuttal_reviewer_thread_boundary.json",
+        reviewer_thread_boundary,
+    )
+    stress_test_boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "draft_rebuttal") / "rebuttal_stress_test_boundary.json",
+        stress_test_boundary,
+    )
+    submission_boundary_path = _write_json_sidecar(
+        _output_dir(envelope, "draft_rebuttal") / "rebuttal_submission_boundary.json",
+        submission_boundary,
+    )
+    response_map = {
+        "schema": "autosci_rebuttal_response_map.v1",
+        "title": title,
+        "target": target,
+        "paper_slug": str(inputs.get("paper_slug") or ""),
+        "venue": str(inputs.get("venue") or ""),
+        "mapped_concerns": mapped_concerns,
         "unmapped_concerns": [] if mapped_concerns else ["No structured reviewer comments were supplied."],
+        "wiki_unmapped_concerns": [
+            item["concern_id"]
+            for item in mapped_concerns
+            if item.get("wiki_mapping_status") != "mapped"
+        ],
+        "coverage": {
+            "concern_count": len(mapped_concerns),
+            "mapped_count": len(mapped_concerns),
+            "unmapped_count": 0 if mapped_concerns else 1,
+            "wiki_mapped_count": sum(1 for item in mapped_concerns if item.get("wiki_mapping_status") == "mapped"),
+            "wiki_unmapped_count": sum(1 for item in mapped_concerns if item.get("wiki_mapping_status") != "mapped"),
+            "reviewer_thread_status": reviewer_thread_boundary.get("status"),
+            "stress_test_status": stress_test_boundary.get("status"),
+            "submission_status": submission_boundary.get("status"),
+        },
+        "source_types": _unique_strings([str(item.get("source_kind") or "") for item in concerns]),
+        "reviewer_thread": reviewer_thread_boundary,
+        "review_boundary": review_boundary,
+        "stress_test_boundary": stress_test_boundary,
+        "submission_boundary": submission_boundary,
+        "safety_checks": safety_checks,
         "evidence_ids": evidence_ids,
         "limitations": limitations,
     }
     map_path = _write_json_sidecar(paths["map_json"], response_map)
-    body = "\n".join(
-        [
-            f"# {title}",
-            "",
-            f"Target: `{target}`",
-            "",
-            "## Response Map",
-            "",
-            *(
-                [
-                    f"- `{item['concern_id']}` [{item['focus']}]: {item['concern']}\n  Response: {item['response']}"
-                    for item in mapped_concerns
-                ]
-                or ["- No structured reviewer comments were supplied."]
-            ),
-            "",
-            "## Evidence",
-            "",
-            *[f"- {item}" for item in evidence_ids],
-            "",
-            "## Limitations",
-            "",
-            *[f"- {item}" for item in limitations],
-            "",
-        ]
-    )
+    body = _render_rebuttal_markdown_from_map(response_map)
     markdown_path = _write_text_sidecar(paths["markdown"], body)
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "draft_rebuttal") / "draft_rebuttal.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    review_runtime_proof_artifact = _write_review_context_runtime_proof_manifest(
+        envelope,
+        action="draft_rebuttal",
+        native_skill="rebuttal",
+        evidence_path=evidence_payload_path,
+        review_llm=review_boundary,
+    )
+    final_runtime_proof_artifact = _write_rebuttal_final_runtime_proof_manifest(
+        envelope,
+        evidence_path=evidence_payload_path,
+        response_map=response_map,
+        map_path=map_path,
+        reviewer_thread_boundary_path=reviewer_thread_boundary_path,
+        stress_test_boundary_path=stress_test_boundary_path,
+        submission_boundary_path=submission_boundary_path,
+        formal_text_path=formal_text_path,
+    )
     files = [
         {"type": "rebuttal_markdown", "path": markdown_path},
+        {"type": "rebuttal_formal_text", "path": formal_text_path},
         {"type": "rebuttal_response_map_json", "path": map_path},
+        {"type": "rebuttal_reviewer_thread_boundary_json", "path": reviewer_thread_boundary_path},
+        {"type": "rebuttal_stress_test_boundary_json", "path": stress_test_boundary_path},
+        {"type": "rebuttal_submission_audit_boundary_json", "path": submission_boundary_path},
     ]
+    if review_runtime_proof_artifact is not None:
+        files.append(review_runtime_proof_artifact)
+    if final_runtime_proof_artifact is not None:
+        files.append(final_runtime_proof_artifact)
+    if submission_audit.get("audit_loaded"):
+        files.append({
+            "type": "publication_submission_audit_json",
+            "path": str(submission_audit.get("path") or ""),
+            "sha256": str(submission_audit.get("sha256") or ""),
+        })
     return convert_publication_bundle({
         "bundle_id": f"rebuttal-{_slug(title)}",
         "publication_type": "rebuttal",
@@ -5679,7 +12612,9 @@ def _action_draft_rebuttal(envelope: dict[str, Any]) -> dict[str, Any]:
         "files": files,
         "evidence_ids": _unique_strings([f"rebuttal:{_slug(target)}", *evidence_ids]),
         "artifacts": files,
-        "status": "completed" if has_source_evidence and mapped_concerns else "inconclusive",
+        "status": "completed"
+        if has_source_evidence and mapped_concerns and stress_test_boundary.get("stress_test_ready")
+        else "inconclusive",
         "limitations": limitations,
     }, envelope)
 
@@ -5700,23 +12635,27 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
         "Poster output requires human/browser validation before publication use.",
         *_approval_contract_limitations(contract),
     ]
-    if not has_source_evidence:
-        limitations.append("No report/evidence payload was supplied; poster content remains a scaffold.")
-    html_body = (
-        "<!doctype html>\n"
-        "<html><head><meta charset=\"utf-8\"><title>"
-        f"{html.escape(title)}</title></head><body><main>"
-        f"<h1>{html.escape(title)}</h1>"
-        f"<p>Target: {html.escape(target)}</p>"
-        "<section><h2>Evidence</h2><ul>"
-        + "".join(f"<li>{html.escape(str(item))}</li>" for item in evidence_ids)
-        + "</ul></section>"
-        "<section><h2>Limitations</h2><ul>"
-        + "".join(f"<li>{html.escape(str(item))}</li>" for item in limitations)
-        + "</ul></section>"
-        "</main></body></html>\n"
-    )
-    html_path = _write_text_sidecar(paths["html"], html_body)
+    content_pipeline = _poster_native_content_pipeline(envelope, title=title, paths=paths)
+    content_ready = bool(content_pipeline.get("ready"))
+    if content_ready:
+        html_path = _rel(paths["html"])
+        has_source_evidence = True
+    else:
+        html_body = (
+            "<!doctype html>\n"
+            "<html><head><meta charset=\"utf-8\"><title>"
+            f"{html.escape(title)}</title></head><body><main>"
+            f"<h1>{html.escape(title)}</h1>"
+            f"<p>Target: {html.escape(target)}</p>"
+            "<section><h2>Evidence</h2><ul>"
+            + "".join(f"<li>{html.escape(str(item))}</li>" for item in evidence_ids)
+            + "</ul></section>"
+            "<section><h2>Limitations</h2><ul>"
+            + "".join(f"<li>{html.escape(str(item))}</li>" for item in limitations)
+            + "</ul></section>"
+            "</main></body></html>\n"
+        )
+        html_path = _write_text_sidecar(paths["html"], html_body)
     contract, executor_result = _execute_poster_if_approved(envelope, contract, paths["html"])
     semantic = _approval_semantic_runtime(contract, "build_poster")
     contract["semantic_runtime"] = semantic
@@ -5739,9 +12678,13 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
         ]
     if not has_source_evidence:
         limitations.append("No report/evidence payload was supplied; poster content remains a scaffold.")
+    pipeline_report = content_pipeline.get("report") if isinstance(content_pipeline.get("report"), dict) else {}
+    limitations.extend(str(item) for item in pipeline_report.get("limitations") or [] if str(item).strip())
     validation_path = _write_json_sidecar(paths["map_json"], {
         "title": title,
         "target": target,
+        "content_pipeline_status": str(pipeline_report.get("status") or "not_run"),
+        "content_pipeline_report": str(content_pipeline.get("report_path") or ""),
         "browser_rendered": bool(semantic.get("detail", {}).get("browser_rendered")) if isinstance(semantic.get("detail"), dict) else False,
         "png_exported": bool(semantic.get("detail", {}).get("png_exported")) if isinstance(semantic.get("detail"), dict) else False,
         "overflow_probe": "passed" if semantic.get("detail", {}).get("overflow_probe_passed") else "not_run",
@@ -5753,10 +12696,36 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
     files = [
         {"type": "poster_html", "path": html_path},
         {"type": "poster_validation_json", "path": validation_path},
+        *list(content_pipeline.get("artifacts") or []),
         contract_artifact,
         *runtime_evidence_artifacts,
         *_contract_existing_artifacts(contract, "after_artifacts", "poster_runtime_after_artifact"),
     ]
+    if semantic.get("verified"):
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "build_poster") / "build_poster.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        files.extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="build_poster",
+                native_skill="poster",
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[],
+                mutation_refs=[str(item.get("path") or "") for item in files if isinstance(item, dict)],
+                include_wiki_mutation=False,
+                source_label="approved_poster_render",
+                artifact_kind="poster_render_export",
+                include_provider_source=False,
+            )
+        )
     return convert_publication_bundle({
         "bundle_id": f"poster-{_slug(title)}",
         "publication_type": "poster",
@@ -5781,6 +12750,11 @@ def _paper_compile_paths(envelope: dict[str, Any]) -> dict[str, Path]:
             envelope,
             "compile_diagnostics_path",
             output_dir / "paper_compile_diagnostics.md",
+        ),
+        "submission_boundary": _configured_output_path(
+            envelope,
+            "publication_submission_boundary_path",
+            output_dir / "publication_submission_boundary.json",
         ),
         "fix_writeback": _configured_output_path(
             envelope,
@@ -6102,6 +13076,205 @@ def _pick_experiment_command(
     return [], f"{reason}; tried: {candidate_commands}"
 
 
+def _pick_remote_check_command(
+    contract: dict[str, Any],
+    *,
+    experiment_id: str,
+    run_dir: str,
+    explicit_command: str,
+) -> tuple[list[str], str]:
+    values = {"experiment_id": experiment_id, "run_dir": run_dir}
+    candidates: list[tuple[list[str], str]] = []
+    if explicit_command:
+        parsed = _format_command(explicit_command, values)
+        if parsed:
+            candidates.append((parsed, "inputs.remote_check_command"))
+    for payload in _allowlist_payloads(contract):
+        for key in ("remote_check_command", "remote_status_command"):
+            parsed = _format_command(payload.get(key), values)
+            if parsed:
+                candidates.append((parsed, f"allowlist:{key}"))
+    if run_dir:
+        candidates.append((
+            [
+                sys.executable,
+                str(REPO_HARNESS_DIR.parent / "tools" / "remote.py"),
+                "check",
+                "--experiment",
+                experiment_id,
+                "--run-dir",
+                run_dir,
+            ],
+            "default:tools/remote.py check",
+        ))
+    for command, source in candidates:
+        allowed, reason = _command_allowlisted(command, contract)
+        if allowed:
+            return command, f"Remote status command selected from {source}: {reason}"
+    if not candidates:
+        return [], "No remote status check command was supplied"
+    return [], "No remote status check command was allowlisted; tried: " + "; ".join(
+        " ".join(command) for command, _source in candidates
+    )
+
+
+def _remote_state_from_status_value(raw: str) -> str:
+    value = raw.strip().lower()
+    if value in {"completed", "complete", "collected", "succeeded", "success", "done", "passed"}:
+        return "completed"
+    if value in {"failed", "error", "errored", "crashed"}:
+        return "failed"
+    if value in {"running", "started", "launched", "queued", "pending", "in_progress"}:
+        return "running"
+    return "unknown"
+
+
+def _remote_check_state(record: dict[str, Any], evidence_paths: list[Path]) -> tuple[str, list[str]]:
+    observations: list[str] = []
+    raw_record_state = str(_field(record, "remote_state", "state", "job_state", "status_value") or "").strip()
+    if raw_record_state:
+        state = _remote_state_from_status_value(raw_record_state)
+        observations.append(f"Remote check payload reported `{raw_record_state}`.")
+        if state != "unknown":
+            return state, observations
+    for path in evidence_paths:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+        except (OSError, json.JSONDecodeError):
+            observations.append(f"Remote status artifact was present but not JSON: {_rel(path)}")
+            continue
+        if not isinstance(payload, dict):
+            continue
+        raw = str(_field(payload, "state", "status", "outcome") or "").strip()
+        if raw:
+            state = _remote_state_from_status_value(raw)
+            observations.append(f"Remote status artifact `{_rel(path)}` reported `{raw}`.")
+            if state != "unknown":
+                return state, observations
+        if path.name in {"results.json", "result.json", "metrics.json"}:
+            observations.append(f"Remote result artifact exists: `{_rel(path)}`.")
+            return "completed", observations
+    if str(record.get("status") or "").lower() == "completed" and evidence_paths:
+        observations.append("Remote check found status artifacts but no terminal state.")
+        return "running", observations
+    return "unknown", observations
+
+
+LIVE_REMOTE_POLL_TRANSPORTS = {
+    "ssh",
+    "screen",
+    "tmux",
+    "slurm",
+    "pbs",
+    "lsf",
+    "k8s",
+    "kubernetes",
+    "modal",
+    "ray",
+    "remote_provider",
+}
+
+
+def _remote_poll_boundary(
+    record: dict[str, Any],
+    *,
+    run_dir: str,
+    evidence_paths: list[Path],
+    remote_state: str,
+) -> dict[str, Any]:
+    checked_paths = [
+        str(item)
+        for item in record.get("checked_paths", [])
+        if str(item or "").strip()
+    ] if isinstance(record.get("checked_paths"), list) else []
+    transport = str(_field(record, "transport", "remote_transport", "provider", "remote_provider") or "").strip()
+    session_id = str(_field(record, "session_id", "remote_session_id", "provider_session_id", "job_id") or "").strip()
+    poll_scope = str(_field(record, "poll_scope", "poll_mode", "remote_poll_mode") or "").strip().lower()
+    explicit_live = bool(record.get("live_remote_poll")) or poll_scope in {"live", "provider", "ssh", "remote"}
+    transport_key = transport.lower()
+    live_transport = transport_key in LIVE_REMOTE_POLL_TRANSPORTS
+    live_remote_poll_verified = bool(
+        explicit_live
+        and live_transport
+        and session_id
+        and remote_state != "unknown"
+    )
+    local_artifact_check = bool(run_dir or checked_paths or evidence_paths)
+    invalid_reasons: list[str] = []
+    if not live_remote_poll_verified:
+        if not explicit_live:
+            invalid_reasons.append("remote check did not declare live provider polling")
+        if not live_transport:
+            invalid_reasons.append("remote check did not declare a recognized live transport")
+        if not session_id:
+            invalid_reasons.append("remote check did not include a provider/session identifier")
+        if remote_state == "unknown":
+            invalid_reasons.append("remote check did not resolve a concrete remote state")
+        if local_artifact_check:
+            invalid_reasons.append("status was derived from local run-dir artifacts")
+    status = "live_remote_poll" if live_remote_poll_verified else (
+        "local_run_dir_check" if local_artifact_check else "incomplete"
+    )
+    return {
+        "schema": "autosci_remote_poll_boundary.v1",
+        "status": status,
+        "live_remote_poll_verified": live_remote_poll_verified,
+        "local_artifact_check": local_artifact_check,
+        "transport": transport,
+        "session_id": session_id,
+        "poll_scope": poll_scope,
+        "run_dir": run_dir,
+        "checked_paths": checked_paths,
+        "evidence_paths": [_rel(path) for path in evidence_paths],
+        "remote_state": remote_state,
+        "invalid_reasons": _unique_strings(invalid_reasons),
+        "limitations": [] if live_remote_poll_verified else [
+            "Remote status was derived from local run-dir artifacts or unverified transport metadata, not a proven live SSH/provider poll."
+        ],
+    }
+
+
+def _remote_collection_boundary(record: dict[str, Any], *, existing_files: list[Path]) -> dict[str, Any]:
+    result_dir = str(record.get("result_dir") or "").strip()
+    transport = str(_field(record, "transport", "remote_transport", "provider", "remote_provider") or "").strip()
+    session_id = str(_field(record, "session_id", "remote_session_id", "provider_session_id", "job_id") or "").strip()
+    collection_scope = str(_field(record, "collection_scope", "collection_mode", "pull_mode") or "").strip().lower()
+    explicit_live = bool(record.get("live_remote_collection")) or collection_scope in {"live", "provider", "ssh", "remote"}
+    live_transport = transport.lower() in LIVE_REMOTE_POLL_TRANSPORTS
+    live_remote_collection_verified = bool(explicit_live and live_transport and session_id and existing_files)
+    local_result_dir_collection = bool(result_dir or existing_files)
+    invalid_reasons: list[str] = []
+    if not live_remote_collection_verified:
+        if not explicit_live:
+            invalid_reasons.append("pull-results did not declare live provider collection")
+        if not live_transport:
+            invalid_reasons.append("pull-results did not declare a recognized live transport")
+        if not session_id:
+            invalid_reasons.append("pull-results did not include a provider/session identifier")
+        if not existing_files:
+            invalid_reasons.append("pull-results did not produce local result files")
+        if local_result_dir_collection:
+            invalid_reasons.append("results were collected from a local result directory")
+    status = "live_remote_collection" if live_remote_collection_verified else (
+        "local_result_dir_collection" if local_result_dir_collection else "incomplete"
+    )
+    return {
+        "schema": "autosci_remote_collection_boundary.v1",
+        "status": status,
+        "live_remote_collection_verified": live_remote_collection_verified,
+        "local_result_dir_collection": local_result_dir_collection,
+        "transport": transport,
+        "session_id": session_id,
+        "collection_scope": collection_scope,
+        "result_dir": result_dir,
+        "result_paths": [_rel(path) for path in existing_files],
+        "invalid_reasons": _unique_strings(invalid_reasons),
+        "limitations": [] if live_remote_collection_verified else [
+            "Remote results were collected from local files or unverified transport metadata, not a proven live SSH/provider pull-results operation."
+        ],
+    }
+
+
 def _runtime_evidence_payload(
     envelope: dict[str, Any],
     *,
@@ -6290,7 +13463,7 @@ def _execute_paper_compile_if_approved(
         "executed": True,
         "executor": executor_name,
         "exit_code": proc.returncode,
-        "pdf_path": pdf_path,
+        "pdf_path": _rel(pdf_path) if pdf_path.exists() else "",
         "runtime_path": runtime_rel,
     }
 
@@ -6308,6 +13481,8 @@ def _parse_experiment_output_record(stdout_text: str) -> tuple[dict[str, Any] | 
                 continue
             if not isinstance(payload, dict):
                 continue
+            if payload.get("schema") == "autosci_remote_cli.v1":
+                return payload, "remote_cli_runtime_evidence"
             if payload.get("schema") == "experiment_result.v1":
                 result = ((payload.get("outputs") or {}).get("result") or {})
                 return result if isinstance(result, dict) else payload, "experiment_result_payload"
@@ -6320,12 +13495,50 @@ def _parse_experiment_output_record(stdout_text: str) -> tuple[dict[str, Any] | 
         return None, ""
     if not isinstance(payload, dict):
         return None, ""
+    if payload.get("schema") == "autosci_remote_cli.v1":
+        return payload, "remote_cli_runtime_evidence"
     if payload.get("schema") == "experiment_result.v1":
         result = ((payload.get("outputs") or {}).get("result") or {})
         return result if isinstance(result, dict) else payload, "experiment_result_payload"
     if isinstance(payload.get("result"), dict):
         return payload["result"], "result_key"
     return payload, "experiment_result_key_value"
+
+
+def _collected_result_summary(paths: list[Path]) -> dict[str, Any]:
+    metrics: list[dict[str, Any]] = []
+    logs: list[str] = []
+    evidence_ids: list[str] = []
+    outcome = ""
+    for path in paths:
+        if not path.exists() or not path.is_file():
+            continue
+        evidence_ids.append(_rel(path))
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        if not outcome:
+            raw_outcome = _field(payload, "outcome", "experiment_outcome")
+            if str(raw_outcome or "").strip():
+                outcome = str(raw_outcome).strip()
+        raw_metrics = _field(payload, "metrics")
+        if isinstance(raw_metrics, list):
+            metrics.extend(item for item in raw_metrics if isinstance(item, dict) and str(item.get("name") or "").strip())
+        raw_logs = _field(payload, "logs", "log")
+        log_values = raw_logs if isinstance(raw_logs, list) else ([raw_logs] if raw_logs else [])
+        logs.extend(str(item) for item in log_values if str(item).strip())
+        raw_ids = _field(payload, "evidence_ids")
+        id_values = raw_ids if isinstance(raw_ids, list) else ([raw_ids] if raw_ids else [])
+        evidence_ids.extend(str(item) for item in id_values if str(item).strip())
+    return {
+        "metrics": metrics,
+        "logs": logs,
+        "evidence_ids": _unique_strings(evidence_ids),
+        "outcome": outcome,
+    }
 
 
 def _execute_experiment_if_approved(
@@ -6394,7 +13607,35 @@ def _execute_experiment_if_approved(
     ]
     result_record, result_source = _parse_experiment_output_record(proc.stdout)
     result_payload: dict[str, Any] = {}
-    if result_record:
+    remote_runtime_rel = ""
+    session_registry_rel = ""
+    is_remote_cli_record = result_source == "remote_cli_runtime_evidence"
+    if is_remote_cli_record and isinstance(result_record, dict):
+        raw_runtime_path = str(result_record.get("runtime_evidence_path") or "").strip()
+        if raw_runtime_path:
+            runtime_candidate = _resolve_harness_path(raw_runtime_path)
+            if runtime_candidate.exists() and runtime_candidate.is_file():
+                remote_runtime_rel = _rel(runtime_candidate)
+                contract.setdefault("runtime_evidence", []).append({
+                    "path": remote_runtime_rel,
+                    "artifact_path": remote_runtime_rel,
+                    "exists": True,
+                    "kind": "file",
+                    "verifiable": True,
+                })
+                artifacts.append({"type": "remote_runtime_evidence_json", "path": remote_runtime_rel})
+        if str(result_record.get("command") or "") == "launch":
+            session_record = _record_experiment_session(
+                envelope,
+                experiment_id=experiment_id,
+                command_run=" ".join(command),
+                record=result_record,
+                remote_runtime_rel=remote_runtime_rel,
+            )
+            session_registry_rel = str(session_record.get("registry_path") or "")
+            if session_registry_rel:
+                artifacts.append({"type": "experiment_session_registry_json", "path": session_registry_rel})
+    if result_record and not is_remote_cli_record:
         result_payload.update({
             "experiment_id": str(result_record.get("experiment_id") or experiment_id),
             "outcome": str(result_record.get("outcome") or "supports"),
@@ -6406,6 +13647,16 @@ def _execute_experiment_if_approved(
             result_payload["evidence_ids"] = [f"experiment-runtime:{_slug(experiment_id)}"]
         if not result_payload["metrics"]:
             result_payload["metrics"] = [{"name": "experiment_exit_code", "value": int(proc.returncode)}]
+    elif result_record and is_remote_cli_record:
+        result_payload = {
+            "experiment_id": experiment_id,
+            "outcome": "failed" if proc.returncode != 0 else "inconclusive",
+            "metrics": [],
+            "evidence_ids": [],
+            "logs": [
+                "Remote helper stdout parsed; semantic experiment result is delegated to runtime_evidence_path."
+            ],
+        }
     else:
         result_payload = {
             "experiment_id": experiment_id,
@@ -6414,7 +13665,7 @@ def _execute_experiment_if_approved(
             "evidence_ids": [f"experiment-runtime:{_slug(experiment_id)}"],
             "logs": ["Experiment command executed without parseable experiment payload."],
         }
-    result_collected = bool(result_record) or bool(proc.stdout.strip())
+    result_collected = False if is_remote_cli_record else (bool(result_record) or bool(proc.stdout.strip()))
 
     runtime_result_path = _configured_output_path(
         envelope,
@@ -6440,7 +13691,9 @@ def _execute_experiment_if_approved(
     }
     runtime_result_rel = _write_json_sidecar(runtime_result_path, runtime_result_json)
     artifacts.append({"type": "run_experiment_result", "path": runtime_result_rel})
-    result_collected = bool(result_record) or bool(proc.stdout.strip())
+    result_collected = False if is_remote_cli_record else (bool(result_record) or bool(proc.stdout.strip()))
+    semantic_result_path = "" if is_remote_cli_record else runtime_result_rel
+    semantic_result_artifacts = [] if is_remote_cli_record else [runtime_result_rel]
     payload = _runtime_evidence_payload(
         envelope,
         action="run_experiment",
@@ -6457,10 +13710,15 @@ def _execute_experiment_if_approved(
         ],
         runtime_fields={
             "result_collected": result_collected,
-            "result_path": runtime_result_rel,
+            "metrics": list(result_payload.get("metrics") or []),
+            "outcome": str(result_payload.get("outcome") or ("supports" if proc.returncode == 0 else "failed")),
+            "logs": list(result_payload.get("logs") or []),
+            "result_path": semantic_result_path,
             "result": result_payload,
-            "result_artifacts": [runtime_result_rel],
+            "result_artifacts": semantic_result_artifacts,
             "parsed_record_count": 1 if result_record else 0,
+            "remote_runtime_evidence_path": remote_runtime_rel,
+            "session_registry_path": session_registry_rel,
         },
         artifacts=artifacts,
         limitations=["Approved experiment executor ran a real command locally (subject to allowlist and approval contract)."],
@@ -6483,6 +13741,332 @@ def _execute_experiment_if_approved(
         "stdout_path": stdout_rel,
         "stderr_path": stderr_rel,
         "result_collected": result_collected,
+    }
+
+
+def _execute_monitor_collect_if_approved(
+    envelope: dict[str, Any],
+    contract: dict[str, Any],
+    plan: dict[str, Any],
+    experiment_id: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    inputs = envelope.get("inputs") if isinstance(envelope.get("inputs"), dict) else {}
+    output_dir = _output_dir(envelope, "monitor_experiment")
+    runtime_path = _configured_output_path(envelope, "runtime_evidence_path", output_dir / "monitor_experiment_runtime_evidence.json")
+    if not bool(inputs.get("execute_approved_side_effect")):
+        return contract, {"executed": False, "reason": "execute_approved_side_effect=false"}
+    if not contract.get("ready_for_execution"):
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="run_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:collect-approval-contract-incomplete",
+            exit_code=1,
+            evidence_ids=["remote-collect:blocked"],
+            checks=[{"check": "approval_preflight", "status": "error", "detail": "Approval contract was not ready for collect execution."}],
+            runtime_fields={"result_collected": False},
+            artifacts=[],
+            limitations=["Collect executor did not run because approval preflight was incomplete."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "approval_preflight_incomplete", "runtime_path": runtime_rel}
+
+    command, command_reason = _pick_experiment_command(plan, contract, experiment_id)
+    if not command:
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="run_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:collect-command-availability",
+            exit_code=1,
+            evidence_ids=["remote-collect:blocked"],
+            checks=[{"check": "command_allowlisted", "status": "error", "detail": command_reason}],
+            runtime_fields={"result_collected": False},
+            artifacts=[],
+            limitations=["Collect executor did not run because no allowlisted collect command was selected."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "collect_command_missing", "runtime_path": runtime_rel}
+
+    command = _normalize_command(command)
+    proc = subprocess.run(
+        command,
+        cwd=REPO_HARNESS_DIR,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        timeout=int(inputs.get("executor_timeout_seconds") or 120),
+    )
+    stdout_rel = _write_text_sidecar(output_dir / "monitor_experiment_executor_stdout.txt", proc.stdout)
+    stderr_rel = _write_text_sidecar(output_dir / "monitor_experiment_executor_stderr.txt", proc.stderr)
+    artifacts = [
+        {"type": "executor_stdout", "path": stdout_rel},
+        {"type": "executor_stderr", "path": stderr_rel},
+    ]
+    result_record, result_source = _parse_experiment_output_record(proc.stdout)
+    remote_cli_status = str(result_record.get("status") or "") if isinstance(result_record, dict) else ""
+    remote_cli_command = str(result_record.get("command") or "") if isinstance(result_record, dict) else ""
+    files_raw = result_record.get("files") if isinstance(result_record, dict) and isinstance(result_record.get("files"), list) else []
+    collected_files = [
+        _resolve_harness_path(str(item))
+        for item in files_raw
+        if str(item or "").strip()
+    ]
+    existing_files = [path for path in collected_files if path.exists() and path.is_file()]
+    summary = _collected_result_summary(existing_files)
+    metrics = list(summary.get("metrics") or [])
+    if existing_files and not metrics:
+        metrics = [{"name": "collected_file_count", "value": len(existing_files)}]
+    outcome = str(summary.get("outcome") or ("supports" if existing_files else "inconclusive"))
+    evidence_ids = _unique_strings([f"remote-collect:{_slug(experiment_id)}", *[str(item) for item in summary.get("evidence_ids") or []]])
+    result_collected = proc.returncode == 0 and bool(existing_files)
+    collection_boundary = _remote_collection_boundary(
+        result_record if isinstance(result_record, dict) else {},
+        existing_files=existing_files,
+    )
+    runtime_status = "completed" if result_collected else ("failed" if proc.returncode else "inconclusive")
+    ledger_result: dict[str, Any] = {}
+    if result_collected:
+        ledger_result = _record_collection_ledger(
+            envelope,
+            experiment_id=experiment_id,
+            command_run=" ".join(command),
+            collected_files=existing_files,
+            evidence_ids=evidence_ids,
+        )
+        artifacts.append({"type": "collection_ledger_json", "path": str(ledger_result.get("ledger_path") or "")})
+    for path in existing_files:
+        rel = _rel(path)
+        artifacts.append({"type": "remote_collected_file", "path": rel})
+        contract.setdefault("after_artifacts", []).append({
+            "path": rel,
+            "artifact_path": rel,
+            "exists": True,
+            "kind": "file",
+            "verifiable": True,
+        })
+    payload = _runtime_evidence_payload(
+        envelope,
+        action="run_experiment",
+        status=runtime_status,
+        approval_ref=str(contract.get("approval_ref") or ""),
+        command_run=" ".join(command),
+        exit_code=int(proc.returncode),
+        evidence_ids=evidence_ids,
+        checks=[
+            {"check": "command_allowlisted", "status": "ok", "detail": command_reason},
+            {"check": "exit_code", "status": "ok" if proc.returncode == 0 else "error", "detail": f"exit_code={proc.returncode}"},
+            {"check": "remote_cli_output", "status": "ok" if result_source == "remote_cli_runtime_evidence" else "warn", "detail": result_source or "not-structured"},
+            {"check": "collected_files_present", "status": "ok" if existing_files else "error", "detail": str(len(existing_files))},
+            {
+                "check": "remote_collection_boundary",
+                "status": "ok" if collection_boundary.get("live_remote_collection_verified") else "warn",
+                "detail": ",".join(collection_boundary.get("invalid_reasons") or []),
+            },
+        ],
+        runtime_fields={
+            "result_collected": result_collected,
+            "metrics": metrics,
+            "outcome": outcome,
+            "logs": [*list(summary.get("logs") or []), f"remote_cli_status={remote_cli_status or 'N/A'}"],
+            "result_paths": [_rel(path) for path in existing_files],
+            "remote_cli_command": remote_cli_command,
+            "remote_cli_status": remote_cli_status,
+            "collection_identity": str(ledger_result.get("collection_identity") or ""),
+            "collection_duplicate": bool(ledger_result.get("duplicate")),
+            "collection_ledger_path": str(ledger_result.get("ledger_path") or ""),
+            "remote_collection_boundary": collection_boundary,
+            "parsed_record_count": 1 if result_record else 0,
+        },
+        artifacts=artifacts,
+        limitations=[
+            "Approved collect executor ran a real command locally and verified collected result files.",
+            *collection_boundary.get("limitations", []),
+        ],
+    )
+    runtime_rel = _write_json_sidecar(runtime_path, payload)
+    contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+    return _refresh_approval_contract(contract), {
+        "executed": True,
+        "command": command,
+        "exit_code": proc.returncode,
+        "runtime_path": runtime_rel,
+        "stdout_path": stdout_rel,
+        "stderr_path": stderr_rel,
+        "collected_files": [_rel(path) for path in existing_files],
+        "result_collected": result_collected,
+        "collection_identity": str(ledger_result.get("collection_identity") or ""),
+        "collection_duplicate": bool(ledger_result.get("duplicate")),
+        "collection_ledger_path": str(ledger_result.get("ledger_path") or ""),
+        "remote_collection_boundary": collection_boundary,
+    }
+
+
+def _execute_remote_check_if_approved(
+    envelope: dict[str, Any],
+    contract: dict[str, Any],
+    *,
+    experiment_id: str,
+    session: dict[str, Any] | None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    inputs = envelope.get("inputs") if isinstance(envelope.get("inputs"), dict) else {}
+    output_dir = _output_dir(envelope, "monitor_experiment")
+    runtime_path = _configured_output_path(envelope, "runtime_evidence_path", output_dir / "remote_status_runtime_evidence.json")
+    explicit_command = str(inputs.get("remote_check_command") or "").strip()
+    run_dir = str(inputs.get("remote_run_dir") or (session or {}).get("run_dir") or "").strip()
+    if not bool(inputs.get("execute_approved_side_effect")):
+        return contract, {"executed": False, "reason": "execute_approved_side_effect=false"}
+    if not contract.get("ready_for_execution"):
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="monitor_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:remote-status-approval-contract-incomplete",
+            exit_code=1,
+            evidence_ids=[f"remote-status:{_slug(experiment_id)}"],
+            checks=[{"check": "approval_preflight", "status": "error", "detail": "Approval contract was not ready for remote status check."}],
+            runtime_fields={"remote_status_state": "unknown", "result_collected": False},
+            artifacts=[],
+            limitations=["Remote status check did not run because approval preflight was incomplete."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "approval_preflight_incomplete", "runtime_path": runtime_rel}
+
+    command, command_reason = _pick_remote_check_command(
+        contract,
+        experiment_id=experiment_id,
+        run_dir=run_dir,
+        explicit_command=explicit_command,
+    )
+    if not command:
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="monitor_experiment",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:remote-status-command-availability",
+            exit_code=1,
+            evidence_ids=[f"remote-status:{_slug(experiment_id)}"],
+            checks=[{"check": "command_allowlisted", "status": "error", "detail": command_reason}],
+            runtime_fields={"remote_status_state": "unknown", "result_collected": False},
+            artifacts=[],
+            limitations=["Remote status check did not run because no allowlisted status command was selected."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "remote_status_command_missing", "runtime_path": runtime_rel}
+
+    command = _normalize_command(command)
+    proc = subprocess.run(
+        command,
+        cwd=REPO_HARNESS_DIR,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        timeout=int(inputs.get("executor_timeout_seconds") or 120),
+    )
+    stdout_rel = _write_text_sidecar(output_dir / "remote_status_executor_stdout.txt", proc.stdout)
+    stderr_rel = _write_text_sidecar(output_dir / "remote_status_executor_stderr.txt", proc.stderr)
+    record, source = _parse_experiment_output_record(proc.stdout)
+    record = record if isinstance(record, dict) else {}
+    is_check_record = (
+        source == "remote_cli_runtime_evidence"
+        and record.get("schema") == "autosci_remote_cli.v1"
+        and record.get("command") == "check"
+    )
+    evidence_paths = [
+        _resolve_harness_path(str(item))
+        for item in record.get("evidence_paths", [])
+        if str(item or "").strip()
+    ] if is_check_record and isinstance(record.get("evidence_paths"), list) else []
+    evidence_paths = [path for path in evidence_paths if path.exists() and path.is_file()]
+    remote_state, state_observations = _remote_check_state(record, evidence_paths)
+    poll_boundary = _remote_poll_boundary(
+        record,
+        run_dir=run_dir,
+        evidence_paths=evidence_paths,
+        remote_state=remote_state,
+    )
+    live_poll_verified = bool(poll_boundary.get("live_remote_poll_verified"))
+    state_resolved = remote_state != "unknown"
+    runtime_status = "completed" if proc.returncode == 0 and is_check_record and (
+        bool(evidence_paths) or live_poll_verified
+    ) and state_resolved else (
+        "failed" if proc.returncode else "inconclusive"
+    )
+    artifacts = [
+        {"type": "executor_stdout", "path": stdout_rel},
+        {"type": "executor_stderr", "path": stderr_rel},
+        *[{"type": "remote_status_file", "path": _rel(path)} for path in evidence_paths],
+    ]
+    evidence_ids = _unique_strings([
+        f"remote-status:{_slug(experiment_id)}",
+        *[_rel(path) for path in evidence_paths],
+    ])
+    payload = _runtime_evidence_payload(
+        envelope,
+        action="monitor_experiment",
+        status=runtime_status,
+        approval_ref=str(contract.get("approval_ref") or ""),
+        command_run=" ".join(command),
+        exit_code=int(proc.returncode),
+        evidence_ids=evidence_ids,
+        checks=[
+            {"check": "command_allowlisted", "status": "ok", "detail": command_reason},
+            {"check": "exit_code", "status": "ok" if proc.returncode == 0 else "error", "detail": f"exit_code={proc.returncode}"},
+            {"check": "remote_cli_check_output", "status": "ok" if is_check_record else "error", "detail": source or "not-structured"},
+            {
+                "check": "remote_status_artifacts_present",
+                "status": "ok" if evidence_paths or live_poll_verified else "error",
+                "detail": str(len(evidence_paths)) if evidence_paths else "live_provider_payload",
+            },
+            {
+                "check": "remote_poll_boundary",
+                "status": "ok" if poll_boundary.get("live_remote_poll_verified") else "warn",
+                "detail": ",".join(poll_boundary.get("invalid_reasons") or []),
+            },
+        ],
+        runtime_fields={
+            "remote_status_state": remote_state,
+            "remote_cli_command": str(record.get("command") or ""),
+            "remote_cli_status": str(record.get("status") or ""),
+            "checked_paths": [str(item) for item in record.get("checked_paths", []) if str(item).strip()]
+            if isinstance(record.get("checked_paths"), list)
+            else [],
+            "evidence_paths": [_rel(path) for path in evidence_paths],
+            "run_dir": run_dir,
+            "result_collected": False,
+            "logs": state_observations,
+            "remote_poll_boundary": poll_boundary,
+        },
+        artifacts=artifacts,
+        limitations=[
+            "Approved remote status check ran an allowlisted command and verified status artifacts; no results were collected.",
+            *poll_boundary.get("limitations", []),
+        ],
+    )
+    runtime_rel = _write_json_sidecar(runtime_path, payload)
+    contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+    return _refresh_approval_contract(contract), {
+        "executed": True,
+        "command": command,
+        "exit_code": proc.returncode,
+        "runtime_path": runtime_rel,
+        "stdout_path": stdout_rel,
+        "stderr_path": stderr_rel,
+        "state": remote_state,
+        "status": runtime_status,
+        "evidence_paths": [_rel(path) for path in evidence_paths],
+        "observations": state_observations,
+        "remote_poll_boundary": poll_boundary,
     }
 
 
@@ -6628,6 +14212,501 @@ def _check_row(check: str, status: str, detail: str, evidence: list[str] | None 
     }
 
 
+def _read_limited_text(path: Path, *, limit: int = 200_000) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")[:limit]
+    except OSError:
+        return ""
+
+
+def _optional_number(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if value is None or value == "":
+        return None
+    normalized = str(value).strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    return None
+
+
+def _submission_profile_first(payload: dict[str, Any], *keys: str) -> Any:
+    requirements = payload.get("requirements") if isinstance(payload.get("requirements"), dict) else {}
+    for source in (requirements, payload):
+        for key in keys:
+            if key in source and source.get(key) not in (None, ""):
+                return source.get(key)
+    return None
+
+
+def _submission_profile_requirements(payload: dict[str, Any]) -> dict[str, Any]:
+    mode = _submission_profile_first(payload, "submission_mode", "mode", "anonymity")
+    anonymous = _optional_bool(_submission_profile_first(payload, "anonymous", "anonymized", "anonymous_required"))
+    double_blind = _optional_bool(_submission_profile_first(payload, "double_blind", "double-blind", "double_blind_required"))
+    page_limit = _optional_number(_submission_profile_first(payload, "page_limit", "max_pages", "maximum_pages"))
+    min_font_size = _optional_number(
+        _submission_profile_first(payload, "min_font_size", "minimum_font_size", "minimum_font_pt")
+    )
+    venue = str(_submission_profile_first(payload, "venue", "venue_slug") or payload.get("venue") or "").strip()
+    return {
+        "venue": venue,
+        "submission_mode": str(mode or "").strip(),
+        "anonymous": anonymous,
+        "double_blind": double_blind,
+        "page_limit": page_limit,
+        "min_font_size": min_font_size,
+    }
+
+
+def _submission_profile_conflicts(inputs: dict[str, Any], requirements: dict[str, Any]) -> list[str]:
+    conflicts: list[str] = []
+    input_mode = str(inputs.get("submission_mode") or "").strip().lower()
+    requirement_mode = str(requirements.get("submission_mode") or "").strip().lower()
+    if input_mode and requirement_mode and input_mode != requirement_mode:
+        conflicts.append(f"submission_mode input `{input_mode}` conflicts with profile `{requirement_mode}`")
+    for key in ("anonymous", "double_blind"):
+        requirement_bool = requirements.get(key)
+        input_bool = _optional_bool(inputs.get(key))
+        if requirement_bool is not None and input_bool is not None and input_bool != requirement_bool:
+            conflicts.append(f"{key} input `{input_bool}` conflicts with profile `{requirement_bool}`")
+    for key in ("page_limit", "min_font_size"):
+        requirement_number = _optional_number(requirements.get(key))
+        input_number = _optional_number(inputs.get(key))
+        if requirement_number is not None and input_number is not None and abs(input_number - requirement_number) > 1e-9:
+            conflicts.append(f"{key} input `{input_number}` conflicts with profile `{requirement_number}`")
+    return conflicts
+
+
+def _submission_profile_boundary(inputs: dict[str, Any]) -> dict[str, Any]:
+    raw_path = str(inputs.get("submission_profile") or inputs.get("submission_profile_path") or "").strip()
+    boundary: dict[str, Any] = {
+        "schema": "autosci_submission_profile_boundary.v1",
+        "status": "missing",
+        "profile_loaded": False,
+        "profile_valid": False,
+        "path": raw_path,
+        "sha256": "",
+        "venue": str(inputs.get("venue") or ""),
+        "requirements": {},
+        "evidence_ids": [],
+        "applied_fields": [],
+        "conflicts": [],
+        "invalid_reasons": [],
+    }
+    if not raw_path:
+        boundary["invalid_reasons"] = ["No submission_profile evidence path was supplied."]
+        return boundary
+    path = _resolve_harness_path(raw_path)
+    boundary["path"] = _rel(path)
+    if not path.exists() or not path.is_file():
+        boundary["status"] = "invalid"
+        boundary["invalid_reasons"] = [f"Submission profile was not found: {_rel(path)}"]
+        return boundary
+    try:
+        payload = _load_json(path)
+    except Exception as exc:  # noqa: BLE001
+        boundary["status"] = "invalid"
+        boundary["sha256"] = _file_sha256(path)
+        boundary["invalid_reasons"] = [f"Submission profile JSON could not be loaded: {exc}"]
+        return boundary
+    requirements = _submission_profile_requirements(payload)
+    raw_evidence_ids = payload.get("evidence_ids")
+    raw_source_evidence_ids = payload.get("source_evidence_ids")
+    evidence_ids = _unique_strings([
+        *(list(raw_evidence_ids) if isinstance(raw_evidence_ids, list) else []),
+        *(list(raw_source_evidence_ids) if isinstance(raw_source_evidence_ids, list) else []),
+    ])
+    conflicts = _submission_profile_conflicts(inputs, requirements)
+    boundary.update({
+        "status": "conflict" if conflicts else "loaded",
+        "profile_loaded": True,
+        "profile_valid": not conflicts,
+        "sha256": _file_sha256(path),
+        "venue": requirements.get("venue") or str(inputs.get("venue") or ""),
+        "requirements": requirements,
+        "evidence_ids": evidence_ids,
+        "conflicts": conflicts,
+        "invalid_reasons": [],
+    })
+    return boundary
+
+
+def _apply_submission_profile_inputs(inputs: dict[str, Any], profile_boundary: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(inputs)
+    if not profile_boundary.get("profile_loaded"):
+        return merged
+    requirements = profile_boundary.get("requirements") if isinstance(profile_boundary.get("requirements"), dict) else {}
+    applied: list[str] = []
+    if requirements.get("venue") and not merged.get("venue"):
+        merged["venue"] = requirements["venue"]
+        applied.append("venue")
+    if requirements.get("submission_mode") and not merged.get("submission_mode"):
+        merged["submission_mode"] = requirements["submission_mode"]
+        applied.append("submission_mode")
+    for key in ("anonymous", "double_blind"):
+        if requirements.get(key) is not None and merged.get(key) in (None, ""):
+            merged[key] = bool(requirements[key])
+            applied.append(key)
+    for key in ("page_limit", "min_font_size"):
+        if requirements.get(key) is not None and merged.get(key) in (None, ""):
+            merged[key] = float(requirements[key])
+            applied.append(key)
+    profile_boundary["applied_fields"] = applied
+    return merged
+
+
+def _pdf_inspection_view(payload: dict[str, Any]) -> dict[str, Any]:
+    outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+    inspection = outputs.get("inspection") if isinstance(outputs.get("inspection"), dict) else {}
+    return inspection or payload
+
+
+def _pdf_inspection_first(payload: dict[str, Any], *keys: str) -> Any:
+    view = _pdf_inspection_view(payload)
+    for source in (view, payload):
+        for key in keys:
+            if key in source and source.get(key) not in (None, ""):
+                return source.get(key)
+    return None
+
+
+def _pdf_inspection_boundary(inputs: dict[str, Any], *, pdf_files: list[Path]) -> dict[str, Any]:
+    raw_path = str(inputs.get("pdf_inspection") or inputs.get("pdf_inspection_path") or "").strip()
+    boundary: dict[str, Any] = {
+        "schema": "autosci_pdf_inspection_boundary.v1",
+        "status": "missing",
+        "inspection_loaded": False,
+        "inspection_valid": False,
+        "path": raw_path,
+        "sha256": "",
+        "pdf_path": "",
+        "pdf_sha256": "",
+        "page_count": None,
+        "min_font_size": None,
+        "evidence_ids": [],
+        "applied_fields": [],
+        "invalid_reasons": [],
+    }
+    if not raw_path:
+        boundary["invalid_reasons"] = ["No pdf_inspection evidence path was supplied."]
+        return boundary
+    path = _resolve_harness_path(raw_path)
+    boundary["path"] = _rel(path)
+    if not path.exists() or not path.is_file():
+        boundary["status"] = "invalid"
+        boundary["invalid_reasons"] = [f"PDF inspection evidence was not found: {_rel(path)}"]
+        return boundary
+    try:
+        payload = _load_json(path)
+    except Exception as exc:  # noqa: BLE001
+        boundary["status"] = "invalid"
+        boundary["sha256"] = _file_sha256(path)
+        boundary["invalid_reasons"] = [f"PDF inspection JSON could not be loaded: {exc}"]
+        return boundary
+    raw_evidence_ids = payload.get("evidence_ids")
+    view = _pdf_inspection_view(payload)
+    raw_view_evidence_ids = view.get("evidence_ids") if isinstance(view.get("evidence_ids"), list) else []
+    page_count = _optional_number(_pdf_inspection_first(payload, "verified_page_count", "page_count", "pages"))
+    min_font_size = _optional_number(_pdf_inspection_first(payload, "verified_min_font_size", "min_font_size", "minimum_font_size"))
+    pdf_ref = str(_pdf_inspection_first(payload, "pdf_path", "path") or "").strip()
+    pdf_sha256 = str(_pdf_inspection_first(payload, "pdf_sha256", "sha256") or "").strip()
+    invalid_reasons: list[str] = []
+    matched_pdf = False
+    if pdf_ref:
+        resolved_pdf = _resolve_harness_path(pdf_ref)
+        boundary["pdf_path"] = _rel(resolved_pdf)
+        matched_pdf = any(existing.resolve() == resolved_pdf.resolve() for existing in pdf_files if existing.exists())
+        if not matched_pdf:
+            invalid_reasons.append(f"Inspection pdf_path does not match discovered compiled PDFs: {_rel(resolved_pdf)}")
+        if pdf_sha256 and resolved_pdf.exists() and _file_sha256(resolved_pdf) != pdf_sha256:
+            invalid_reasons.append("Inspection pdf_sha256 does not match the referenced PDF.")
+    elif pdf_sha256:
+        matched_pdf = any(existing.exists() and _file_sha256(existing) == pdf_sha256 for existing in pdf_files)
+        if not matched_pdf:
+            invalid_reasons.append("Inspection pdf_sha256 does not match any discovered compiled PDF.")
+    else:
+        invalid_reasons.append("PDF inspection evidence must include pdf_path or pdf_sha256.")
+    if page_count is None:
+        invalid_reasons.append("PDF inspection evidence is missing page_count.")
+    if min_font_size is None:
+        invalid_reasons.append("PDF inspection evidence is missing min_font_size.")
+    boundary.update({
+        "status": "invalid" if invalid_reasons else "loaded",
+        "inspection_loaded": True,
+        "inspection_valid": not invalid_reasons,
+        "sha256": _file_sha256(path),
+        "pdf_sha256": pdf_sha256,
+        "page_count": page_count,
+        "min_font_size": min_font_size,
+        "evidence_ids": _unique_strings([
+            *(list(raw_evidence_ids) if isinstance(raw_evidence_ids, list) else []),
+            *list(raw_view_evidence_ids),
+        ]),
+        "invalid_reasons": invalid_reasons,
+    })
+    return boundary
+
+
+def _apply_pdf_inspection_inputs(inputs: dict[str, Any], inspection_boundary: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(inputs)
+    if inspection_boundary.get("status") != "loaded":
+        return merged
+    applied: list[str] = []
+    if inspection_boundary.get("page_count") is not None and merged.get("verified_page_count") in (None, ""):
+        merged["verified_page_count"] = float(inspection_boundary["page_count"])
+        applied.append("verified_page_count")
+    if inspection_boundary.get("min_font_size") is not None and merged.get("verified_min_font_size") in (None, ""):
+        merged["verified_min_font_size"] = float(inspection_boundary["min_font_size"])
+        applied.append("verified_min_font_size")
+    inspection_boundary["applied_fields"] = applied
+    return merged
+
+
+def _submission_audit_view(payload: dict[str, Any]) -> dict[str, Any]:
+    outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+    audit = outputs.get("audit") if isinstance(outputs.get("audit"), dict) else {}
+    return audit or payload
+
+
+def _submission_audit_boundary(inputs: dict[str, Any]) -> dict[str, Any]:
+    raw_path = str(inputs.get("submission_audit") or inputs.get("submission_audit_path") or "").strip()
+    boundary: dict[str, Any] = {
+        "schema": "autosci_publication_submission_audit_boundary.v1",
+        "status": "missing",
+        "audit_loaded": False,
+        "audit_verified": False,
+        "path": raw_path,
+        "sha256": "",
+        "venue": str(inputs.get("venue") or ""),
+        "checks": [],
+        "blocking_checks": [],
+        "portal_submission_completed": False,
+        "evidence_ids": [],
+        "invalid_reasons": [],
+    }
+    if not raw_path:
+        boundary["invalid_reasons"] = ["No submission_audit evidence path was supplied."]
+        return boundary
+    path = _resolve_harness_path(raw_path)
+    boundary["path"] = _rel(path)
+    if not path.exists() or not path.is_file():
+        boundary["status"] = "invalid"
+        boundary["invalid_reasons"] = [f"Submission audit evidence was not found: {_rel(path)}"]
+        return boundary
+    try:
+        payload = _load_json(path)
+    except Exception as exc:  # noqa: BLE001
+        boundary["status"] = "invalid"
+        boundary["sha256"] = _file_sha256(path)
+        boundary["invalid_reasons"] = [f"Submission audit JSON could not be loaded: {exc}"]
+        return boundary
+    view = _submission_audit_view(payload)
+    raw_checks = view.get("checks") if isinstance(view.get("checks"), list) else payload.get("checks")
+    checks = [dict(item) for item in raw_checks or [] if isinstance(item, dict)]
+    explicit_blocking = view.get("blocking_checks") if isinstance(view.get("blocking_checks"), list) else []
+    blocking_checks = _unique_strings([
+        *[str(item) for item in explicit_blocking],
+        *[
+            str(check.get("check") or check.get("name") or "submission_audit_check")
+            for check in checks
+            if str(check.get("status") or "").lower() not in {"ok", "passed", "pass", "completed"}
+        ],
+    ])
+    audit_status = str(view.get("status") or payload.get("status") or "").strip().lower()
+    submission_ready_flag = _optional_bool(view.get("submission_ready"))
+    portal_submission_completed = bool(_optional_bool(view.get("portal_submission_completed")) or False)
+    raw_evidence_ids = payload.get("evidence_ids")
+    raw_view_evidence_ids = view.get("evidence_ids") if isinstance(view.get("evidence_ids"), list) else []
+    invalid_reasons: list[str] = []
+    if not checks:
+        invalid_reasons.append("Submission audit evidence must include at least one check row.")
+    audit_verified = (
+        not invalid_reasons
+        and not blocking_checks
+        and audit_status in {"completed", "passed", "pass", "ok"}
+        and submission_ready_flag is not False
+    )
+    boundary.update({
+        "status": "loaded" if not invalid_reasons else "invalid",
+        "audit_loaded": True,
+        "audit_verified": audit_verified,
+        "sha256": _file_sha256(path),
+        "venue": str(view.get("venue") or payload.get("venue") or inputs.get("venue") or ""),
+        "checks": checks,
+        "blocking_checks": blocking_checks,
+        "portal_submission_completed": portal_submission_completed,
+        "evidence_ids": _unique_strings([
+            *(list(raw_evidence_ids) if isinstance(raw_evidence_ids, list) else []),
+            *list(raw_view_evidence_ids),
+        ]),
+        "invalid_reasons": invalid_reasons,
+    })
+    return boundary
+
+
+def _submission_check_rows(
+    inputs: dict[str, Any],
+    *,
+    latex_files: list[Path],
+    markdown_files: list[Path],
+) -> list[dict[str, Any]]:
+    text_by_path = {
+        _rel(path): _read_limited_text(path)
+        for path in [*latex_files, *markdown_files]
+    }
+    unconfirmed_paths = [
+        path
+        for path, text in text_by_path.items()
+        if "[UNCONFIRMED]" in text
+    ]
+    anonymous_requested = bool(
+        inputs.get("anonymous")
+        or inputs.get("anonymized")
+        or inputs.get("double_blind")
+        or str(inputs.get("submission_mode") or "").strip().lower() in {"anonymous", "double_blind", "double-blind"}
+    )
+    author_disclosures: list[str] = []
+    for path, text in text_by_path.items():
+        for match in re.finditer(r"\\author\s*\{([^{}]+)\}", text):
+            author_text = match.group(1).strip()
+            if author_text and "anonymous" not in author_text.lower():
+                author_disclosures.append(path)
+                break
+    page_limit = _optional_number(inputs.get("page_limit"))
+    page_count = _optional_number(inputs.get("page_count") or inputs.get("verified_page_count"))
+    min_font_size = _optional_number(inputs.get("min_font_size") or inputs.get("minimum_font_size"))
+    verified_min_font_size = _optional_number(inputs.get("verified_min_font_size"))
+    rows = [
+        _check_row(
+            "unconfirmed_marker_scan",
+            "warn" if unconfirmed_paths else "ok",
+            f"[UNCONFIRMED] markers found in {len(unconfirmed_paths)} source file(s)."
+            if unconfirmed_paths
+            else "No [UNCONFIRMED] markers were found in scanned source files.",
+            unconfirmed_paths,
+        ),
+        _check_row(
+            "anonymity_check",
+            "warn" if anonymous_requested and author_disclosures else "ok" if anonymous_requested else "warn",
+            "Anonymous mode requested and no explicit non-anonymous author blocks were found."
+            if anonymous_requested and not author_disclosures
+            else f"Anonymous mode requested but author blocks may disclose identity in {len(author_disclosures)} file(s)."
+            if anonymous_requested
+            else "Anonymous/double-blind submission mode was not requested, so anonymity is not claimed.",
+            author_disclosures,
+        ),
+        _check_row(
+            "page_limit_check",
+            "ok"
+            if page_limit is not None and page_count is not None and page_count <= page_limit
+            else "warn",
+            f"Verified page count {page_count} is within limit {page_limit}."
+            if page_limit is not None and page_count is not None and page_count <= page_limit
+            else "Page limit compliance is unconfirmed; supply page_limit and verified_page_count evidence.",
+        ),
+        _check_row(
+            "font_size_check",
+            "ok"
+            if min_font_size is not None and verified_min_font_size is not None and verified_min_font_size >= min_font_size
+            else "warn",
+            f"Verified minimum font size {verified_min_font_size} is >= required {min_font_size}."
+            if min_font_size is not None and verified_min_font_size is not None and verified_min_font_size >= min_font_size
+            else "Font-size compliance is unconfirmed; supply minimum font-size evidence from a PDF checker.",
+        ),
+    ]
+    return rows
+
+
+def _publication_submission_boundary(
+    *,
+    submission_checks: list[dict[str, Any]],
+    pdf_files: list[Path],
+    semantic: dict[str, Any],
+    submission_profile: dict[str, Any],
+    pdf_inspection: dict[str, Any],
+    submission_audit: dict[str, Any],
+) -> dict[str, Any]:
+    check_statuses = {
+        str(row.get("check") or ""): str(row.get("status") or "")
+        for row in submission_checks
+        if isinstance(row, dict) and str(row.get("check") or "").strip()
+    }
+    blocking_checks = [
+        check
+        for check, status in sorted(check_statuses.items())
+        if status != "ok"
+    ]
+    compiled_pdf_verified = bool(pdf_files) or bool(semantic.get("verified"))
+    if not compiled_pdf_verified:
+        blocking_checks.append("compiled_pdf_verified")
+    submission_ready = compiled_pdf_verified and not blocking_checks
+    profile_status = str(submission_profile.get("status") or "missing")
+    inspection_status = str(pdf_inspection.get("status") or "missing")
+    venue_blocking_checks = []
+    if profile_status != "loaded":
+        venue_blocking_checks.append("venue_submission_profile")
+    if inspection_status != "loaded":
+        venue_blocking_checks.append("pdf_inspection")
+    venue_submission_ready = submission_ready and profile_status == "loaded" and inspection_status == "loaded"
+    audit_ready = bool(submission_audit.get("audit_verified"))
+    submission_audit_blocking_checks = []
+    if not venue_submission_ready:
+        submission_audit_blocking_checks.append("venue_submission_ready")
+    if not audit_ready:
+        submission_audit_blocking_checks.append("publication_submission_audit")
+    submission_audit_ready = venue_submission_ready and audit_ready
+    return {
+        "schema": "autosci_publication_submission_boundary.v1",
+        "status": "submission_ready" if submission_ready else "submission_incomplete",
+        "submission_ready": submission_ready,
+        "venue_status": "venue_submission_ready"
+        if venue_submission_ready
+        else "venue_submission_incomplete"
+        if profile_status != "missing"
+        else "venue_profile_missing",
+        "venue_submission_ready": venue_submission_ready,
+        "venue_blocking_checks": venue_blocking_checks,
+        "submission_audit_status": "submission_audit_ready"
+        if submission_audit_ready
+        else "submission_audit_incomplete"
+        if str(submission_audit.get("status") or "missing") != "missing"
+        else "submission_audit_missing",
+        "submission_audit_ready": submission_audit_ready,
+        "submission_audit_blocking_checks": submission_audit_blocking_checks,
+        "portal_submission_completed": bool(submission_audit.get("portal_submission_completed")),
+        "compiled_pdf_verified": compiled_pdf_verified,
+        "runtime_semantic_verified": bool(semantic.get("verified")),
+        "pdf_files": [_rel(path) for path in pdf_files],
+        "check_statuses": check_statuses,
+        "blocking_checks": _unique_strings(blocking_checks),
+        "submission_profile": submission_profile,
+        "pdf_inspection": pdf_inspection,
+        "submission_audit": submission_audit,
+        "limitations": [
+            *([] if submission_ready else [
+                "Publication compile evidence does not prove submission readiness; review blocking_checks and submission_checks."
+            ]),
+            *([] if venue_submission_ready else [
+                "Venue submission readiness is not proven; supply a valid submission_profile and pdf_inspection evidence."
+            ]),
+            *([] if submission_audit_ready else [
+                "Publication submission audit readiness is not proven; supply valid submission_audit evidence."
+            ]),
+        ],
+    }
+
+
 def _render_compile_diagnostics(checklist: dict[str, Any]) -> str:
     lines = [
         "# Paper Compile Checklist Diagnostics",
@@ -6644,6 +14723,61 @@ def _render_compile_diagnostics(checklist: dict[str, Any]) -> str:
             continue
         detail = str(row.get("detail") or "N/A").replace("|", "\\|")
         lines.append(f"| {row.get('check', 'N/A')} | {row.get('status', 'N/A')} | {detail} |")
+    submission_checks = checklist.get("submission_checks") if isinstance(checklist.get("submission_checks"), list) else []
+    if submission_checks:
+        lines.extend(["", "## Submission Checks", "", "| Check | Status | Detail |", "| --- | --- | --- |"])
+        for row in submission_checks:
+            if not isinstance(row, dict):
+                continue
+            detail = str(row.get("detail") or "N/A").replace("|", "\\|")
+            lines.append(f"| {row.get('check', 'N/A')} | {row.get('status', 'N/A')} | {detail} |")
+    submission_boundary = checklist.get("submission_boundary") if isinstance(checklist.get("submission_boundary"), dict) else {}
+    if submission_boundary:
+        lines.extend([
+            "",
+            "## Submission Boundary",
+            "",
+            f"- status: {submission_boundary.get('status') or 'N/A'}",
+            f"- submission_ready: {submission_boundary.get('submission_ready')}",
+            f"- blocking_checks: {', '.join(submission_boundary.get('blocking_checks') or []) or 'N/A'}",
+            f"- venue_status: {submission_boundary.get('venue_status') or 'N/A'}",
+            f"- venue_submission_ready: {submission_boundary.get('venue_submission_ready')}",
+            f"- venue_blocking_checks: {', '.join(submission_boundary.get('venue_blocking_checks') or []) or 'N/A'}",
+            f"- submission_audit_status: {submission_boundary.get('submission_audit_status') or 'N/A'}",
+            f"- submission_audit_ready: {submission_boundary.get('submission_audit_ready')}",
+            f"- submission_audit_blocking_checks: {', '.join(submission_boundary.get('submission_audit_blocking_checks') or []) or 'N/A'}",
+            f"- portal_submission_completed: {submission_boundary.get('portal_submission_completed')}",
+        ])
+        submission_profile = (
+            submission_boundary.get("submission_profile")
+            if isinstance(submission_boundary.get("submission_profile"), dict)
+            else {}
+        )
+        if submission_profile:
+            lines.extend([
+                f"- submission_profile_status: {submission_profile.get('status') or 'N/A'}",
+                f"- submission_profile_path: {submission_profile.get('path') or 'N/A'}",
+            ])
+        pdf_inspection = (
+            submission_boundary.get("pdf_inspection")
+            if isinstance(submission_boundary.get("pdf_inspection"), dict)
+            else {}
+        )
+        if pdf_inspection:
+            lines.extend([
+                f"- pdf_inspection_status: {pdf_inspection.get('status') or 'N/A'}",
+                f"- pdf_inspection_path: {pdf_inspection.get('path') or 'N/A'}",
+            ])
+        submission_audit = (
+            submission_boundary.get("submission_audit")
+            if isinstance(submission_boundary.get("submission_audit"), dict)
+            else {}
+        )
+        if submission_audit:
+            lines.extend([
+                f"- submission_audit_evidence_status: {submission_audit.get('status') or 'N/A'}",
+                f"- submission_audit_path: {submission_audit.get('path') or 'N/A'}",
+            ])
     lines.extend(["", "## Files", ""])
     for key in ("latex_files", "pdf_files", "markdown_files", "bibliography_files"):
         values = checklist.get(key) if isinstance(checklist.get(key), list) else []
@@ -6780,6 +14914,53 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             [contract_artifact["path"]],
         ),
     ]
+    submission_profile = _submission_profile_boundary(inputs)
+    submission_inputs = _apply_submission_profile_inputs(inputs, submission_profile)
+    pdf_inspection = _pdf_inspection_boundary(inputs, pdf_files=pdf_files)
+    submission_inputs = _apply_pdf_inspection_inputs(submission_inputs, pdf_inspection)
+    submission_audit = _submission_audit_boundary(inputs)
+    submission_checks = _submission_check_rows(submission_inputs, latex_files=latex_files, markdown_files=markdown_files)
+    submission_boundary = _publication_submission_boundary(
+        submission_checks=submission_checks,
+        pdf_files=pdf_files,
+        semantic=semantic,
+        submission_profile=submission_profile,
+        pdf_inspection=pdf_inspection,
+        submission_audit=submission_audit,
+    )
+    checks.extend(submission_checks)
+    checks.append(_check_row(
+        "venue_submission_profile",
+        "ok" if submission_profile.get("status") == "loaded" else "warn",
+        "Venue submission profile loaded with source-backed requirements."
+        if submission_profile.get("status") == "loaded"
+        else "Venue submission profile is missing, invalid, or conflicts with CLI evidence.",
+        [str(submission_profile.get("path") or "")] if submission_profile.get("path") else [],
+    ))
+    checks.append(_check_row(
+        "pdf_inspection",
+        "ok" if pdf_inspection.get("status") == "loaded" else "warn",
+        "PDF inspection evidence loaded with verified page and font measurements."
+        if pdf_inspection.get("status") == "loaded"
+        else "PDF inspection evidence is missing or invalid; page/font proof may be CLI-only.",
+        [str(pdf_inspection.get("path") or "")] if pdf_inspection.get("path") else [],
+    ))
+    checks.append(_check_row(
+        "publication_submission_audit",
+        "ok" if submission_audit.get("audit_verified") else "warn",
+        "Publication submission audit evidence verified checklist readiness."
+        if submission_audit.get("audit_verified")
+        else "Publication submission audit evidence is missing, invalid, or has blocking checks.",
+        [str(submission_audit.get("path") or "")] if submission_audit.get("path") else [],
+    ))
+    checks.append(_check_row(
+        "publication_submission_boundary",
+        "ok" if submission_boundary["submission_ready"] else "warn",
+        "Submission readiness boundary passed."
+        if submission_boundary["submission_ready"]
+        else "Submission readiness boundary is incomplete; see publication_submission_boundary.json.",
+        [str(paths["submission_boundary"])],
+    ))
     limitations = [
         "Paper compile currently performs a bounded checklist and diagnostics pass only.",
         "The bridge does not run a TeX executor, mutate source files, or claim PDF compilation without explicit approved execution.",
@@ -6800,6 +14981,9 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("No compiled PDF was found in the target path.")
     if fix_requested:
         limitations.extend(str(item) for item in fix_result.get("limitations") or [])
+    if any(row.get("status") != "ok" for row in submission_checks):
+        limitations.append("Submission readiness includes warnings or unconfirmed checks; see submission_checks in the compile checklist.")
+    limitations.extend(str(item) for item in submission_boundary.get("limitations") or [])
     status = (
         "completed"
         if target_exists and latex_files and (pdf_files or semantic.get("verified")) and (not fix_requested or bool(fix_result.get("applied")))
@@ -6825,17 +15009,51 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "runtime_semantic": semantic,
         "fix_writeback": fix_result.get("write"),
         "checks": checks,
+        "submission_checks": submission_checks,
+        "submission_profile": submission_profile,
+        "pdf_inspection": pdf_inspection,
+        "submission_audit": submission_audit,
+        "submission_boundary": submission_boundary,
         "latex_files": [_rel(path) for path in latex_files],
         "pdf_files": [_rel(path) for path in pdf_files],
         "markdown_files": [_rel(path) for path in markdown_files],
         "bibliography_files": [_rel(path) for path in bibliography_files],
         "limitations": limitations,
     }
+    submission_boundary_path = _write_json_sidecar(paths["submission_boundary"], submission_boundary)
     checklist_path = _write_json_sidecar(paths["checklist"], checklist_payload)
     diagnostics_path = _write_text_sidecar(paths["diagnostics"], _render_compile_diagnostics(checklist_payload))
     file_artifacts = [
+        {"type": "publication_submission_boundary_json", "path": submission_boundary_path},
         {"type": "paper_compile_checklist_json", "path": checklist_path},
         {"type": "paper_compile_diagnostics_markdown", "path": diagnostics_path},
+        *(
+            [{
+                "type": "venue_submission_profile_json",
+                "path": str(submission_profile.get("path")),
+                "sha256": str(submission_profile.get("sha256") or ""),
+            }]
+            if submission_profile.get("profile_loaded")
+            else []
+        ),
+        *(
+            [{
+                "type": "pdf_inspection_json",
+                "path": str(pdf_inspection.get("path")),
+                "sha256": str(pdf_inspection.get("sha256") or ""),
+            }]
+            if pdf_inspection.get("inspection_loaded")
+            else []
+        ),
+        *(
+            [{
+                "type": "publication_submission_audit_json",
+                "path": str(submission_audit.get("path")),
+                "sha256": str(submission_audit.get("sha256") or ""),
+            }]
+            if submission_audit.get("audit_loaded")
+            else []
+        ),
         contract_artifact,
         *([fix_result["artifact"]] if fix_result.get("artifact") else []),
         *[artifact for artifact in fix_result.get("artifacts") or [] if isinstance(artifact, dict)],
@@ -6846,6 +15064,25 @@ def _paper_compile_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         *[_artifact("paper_markdown_source", path) for path in markdown_files[:5]],
         *[_artifact("bibliography_source", path) for path in bibliography_files[:5]],
     ]
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "compile_paper") / "compile_paper.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    runtime_proof_artifact = _write_paper_compile_runtime_proof_manifest(
+        envelope,
+        evidence_path=evidence_payload_path,
+        status=status,
+        semantic=semantic,
+        contract=contract,
+        artifacts=file_artifacts,
+        latex_files=latex_files,
+        pdf_files=pdf_files,
+    )
+    if runtime_proof_artifact is not None:
+        file_artifacts.append(runtime_proof_artifact)
     source_report_id = f"paper-compile:{_slug(target_raw or 'target')}"
     return {
         "bundle_id": f"bundle-{_slug(source_report_id)}",
@@ -7163,6 +15400,779 @@ def _control_workflow_paths(envelope: dict[str, Any], action: str) -> dict[str, 
     }
 
 
+def _reset_scope(envelope: dict[str, Any]) -> str:
+    inputs = dict(envelope.get("inputs") or {})
+    native = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
+    return str(native.get("scope") or inputs.get("reset_scope") or "wiki").strip() or "wiki"
+
+
+def _reset_scopes_from_payload(scope: str, payload: dict[str, Any]) -> list[str]:
+    raw = payload.get("scopes")
+    if isinstance(raw, list) and raw:
+        return [str(item) for item in raw if str(item).strip()]
+    if not scope or scope == "all":
+        return ["wiki", "raw", "log", "checkpoints"]
+    return [item.strip() for item in scope.split(",") if item.strip()]
+
+
+def _append_contract_path(contract: dict[str, Any], key: str, path: Path) -> None:
+    entries = contract.setdefault(key, [])
+    if not isinstance(entries, list):
+        entries = []
+        contract[key] = entries
+    existing = {str(item.get("artifact_path") or item.get("path") or "") for item in entries if isinstance(item, dict)}
+    for entry in _approval_path_entries([str(path)]):
+        ref = str(entry.get("artifact_path") or entry.get("path") or "")
+        if ref and ref not in existing:
+            entries.append(entry)
+
+
+def _reset_state_snapshot(wiki_root: Path, project_root: Path, scopes: list[str], tool_payload: dict[str, Any]) -> dict[str, Any]:
+    wiki_dirs: dict[str, Any] = {}
+    if wiki_root.exists():
+        for child in sorted(path for path in wiki_root.iterdir() if path.is_dir()):
+            wiki_dirs[child.name] = {
+                "markdown_count": len(list(child.glob("*.md"))),
+                "gitkeep_exists": (child / ".gitkeep").exists(),
+            }
+    raw_dirs: dict[str, Any] = {}
+    raw_root = project_root / "raw"
+    if raw_root.exists():
+        for child in sorted(path for path in raw_root.iterdir() if path.is_dir()):
+            raw_dirs[child.name] = {
+                "item_count": len([path for path in child.iterdir() if path.name != ".gitkeep"]),
+                "gitkeep_exists": (child / ".gitkeep").exists(),
+            }
+    return {
+        "schema": "autosci_reset_after_snapshot.v1",
+        "status": "completed" if str(tool_payload.get("status") or "") == "completed" else "snapshot",
+        "scopes": scopes,
+        "wiki_root": str(wiki_root),
+        "project_root": str(project_root),
+        "wiki_log_exists": (wiki_root / "log.md").exists(),
+        "wiki_index_exists": (wiki_root / "index.md").exists(),
+        "wiki_directories": wiki_dirs,
+        "raw_directories": raw_dirs,
+        "tool_status": str(tool_payload.get("status") or ""),
+        "tool_counts": {
+            "deleted_files": int(tool_payload.get("deleted_files") or 0),
+            "reset_files": int(tool_payload.get("reset_files") or 0),
+        },
+        "captured_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    }
+
+
+def _run_reset_wiki_tool(
+    envelope: dict[str, Any],
+    *,
+    scope: str,
+    execute: bool,
+    approval_ref: str,
+) -> dict[str, Any]:
+    output_dir = _output_dir(envelope, "reset_plan")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    wiki_root = _wiki_roots_for_write(envelope)[0]
+    project_root = wiki_root.parent
+    tool_path = REPO_HARNESS_DIR.parent / "tools" / "reset_wiki.py"
+    artifact_prefix = "reset_wiki_execute" if execute else "reset_wiki_dry_run"
+    runtime_evidence_path = output_dir / "reset_wiki_runtime_evidence.json"
+    command = [
+        sys.executable,
+        str(tool_path),
+        "--scope",
+        scope,
+        "--wiki-root",
+        str(wiki_root),
+        "--project-root",
+        str(project_root),
+    ]
+    if execute:
+        command.extend([
+            "--yes",
+            "--execute-approved",
+            "--approval-ref",
+            approval_ref,
+            "--runtime-evidence-out",
+            str(runtime_evidence_path),
+        ])
+    else:
+        command.append("--dry-run")
+
+    env = dict(os.environ)
+    env["HARNESS_DIR"] = str(HARNESS_DIR)
+    timeout = int(os.environ.get("AUTOSCI_RESET_TIMEOUT_SECONDS", "20"))
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=REPO_HARNESS_DIR.parent,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=timeout,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        stdout_path = _write_text_sidecar(
+            output_dir / f"{artifact_prefix}_stdout.json",
+            json.dumps({"status": "failed", "message": str(exc)}, sort_keys=True),
+        )
+        stderr_path = _write_text_sidecar(output_dir / f"{artifact_prefix}_stderr.txt", str(exc))
+        return {
+            "returncode": 1,
+            "payload": {"status": "failed", "message": str(exc)},
+            "artifacts": [
+                {"type": f"{artifact_prefix}_stdout_json", "path": stdout_path},
+                {"type": f"{artifact_prefix}_stderr", "path": stderr_path},
+            ],
+            "command": command,
+            "wiki_root": wiki_root,
+            "project_root": project_root,
+        }
+
+    stdout_path = _write_text_sidecar(output_dir / f"{artifact_prefix}_stdout.json", proc.stdout)
+    stderr_path = _write_text_sidecar(output_dir / f"{artifact_prefix}_stderr.txt", proc.stderr)
+    payload: dict[str, Any]
+    try:
+        payload = json.loads(proc.stdout) if proc.stdout.strip() else {}
+    except json.JSONDecodeError:
+        payload = {"status": "non_json_stdout", "raw": proc.stdout[:512]}
+    if not isinstance(payload, dict):
+        payload = {}
+
+    artifacts: list[dict[str, str]] = [
+        {"type": f"{artifact_prefix}_stdout_json", "path": stdout_path},
+        {"type": f"{artifact_prefix}_stderr", "path": stderr_path},
+    ]
+    plan_artifact = output_dir / "reset_wiki_dry_run_plan.json"
+    if not execute:
+        artifacts.append({"type": "reset_plan_json", "path": _write_json_sidecar(plan_artifact, payload)})
+    if execute and runtime_evidence_path.exists():
+        artifacts.append({"type": "reset_runtime_evidence_json", "path": _rel(runtime_evidence_path)})
+        plan_path = Path(str(runtime_evidence_path) + ".plan.json")
+        if plan_path.exists():
+            artifacts.append({"type": "reset_plan_json", "path": _rel(plan_path)})
+    return {
+        "returncode": proc.returncode,
+        "payload": payload,
+        "artifacts": artifacts,
+        "command": command,
+        "wiki_root": wiki_root,
+        "project_root": project_root,
+        "runtime_evidence_path": runtime_evidence_path if runtime_evidence_path.exists() else None,
+    }
+
+
+def _reset_plan_markdown(
+    *,
+    target: str,
+    scope: str,
+    dry_run: dict[str, Any],
+    executed: bool,
+    contract: dict[str, Any],
+) -> str:
+    payload = dry_run.get("payload") if isinstance(dry_run.get("payload"), dict) else {}
+    delete_count = len(payload.get("delete_files") or [])
+    reset_count = len(payload.get("reset_files") or [])
+    return "\n".join(
+        [
+            "# Reset Plan Proposal",
+            "",
+            f"Target: `{target}`",
+            f"Scope: `{scope}`",
+            "",
+            "## Dry Run",
+            "",
+            f"- Planned delete files: `{delete_count}`",
+            f"- Planned reset files: `{reset_count}`",
+            f"- Tool status: `{payload.get('status', 'N/A')}`",
+            "",
+            "## Controls",
+            "",
+            f"- Approval state: `{contract.get('approval_state')}`",
+            f"- Side effects executed locally: `{str(executed).lower()}`",
+            f"- Approval ref: `{contract.get('approval_ref') or 'N/A'}`",
+            "",
+        ]
+    )
+
+
+def _reset_plan_raw(envelope: dict[str, Any]) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    target = str(inputs.get("target") or inputs.get("topic") or "reset plan")
+    scope = _reset_scope(envelope)
+    evidence_ids = [f"reset:{_slug(target)}", f"reset-scope:{_slug(scope)}"]
+    paths = _control_workflow_paths(envelope, "reset_plan")
+    paths["patch_candidates"].mkdir(parents=True, exist_ok=True)
+    dry_run = _run_reset_wiki_tool(envelope, scope=scope, execute=False, approval_ref="")
+    dry_payload = dry_run.get("payload") if isinstance(dry_run.get("payload"), dict) else {}
+    scopes = _reset_scopes_from_payload(scope, dry_payload)
+    contract = _approval_contract(envelope, "reset_plan", ["destructive_reset", "state_archive", "workspace_rebuild"])
+    external_runtime_supplied = bool(_input_path_values(inputs, "runtime_evidence"))
+    execute_requested = bool(inputs.get("execute_approved_side_effect"))
+    local_execution: dict[str, Any] = {
+        "requested": execute_requested,
+        "attempted": False,
+        "executed": False,
+        "mode": "external_runtime_evidence" if external_runtime_supplied else "local_reset_wiki",
+        "scope": scope,
+    }
+    execution_artifacts: list[dict[str, str]] = []
+    execution_refs: list[str | Path] = [str(artifact.get("path") or "") for artifact in dry_run.get("artifacts") or []]
+    log_artifact: dict[str, str] | None = None
+    after_snapshot_artifact: dict[str, str] | None = None
+
+    if execute_requested and not external_runtime_supplied:
+        if contract.get("ready_for_execution"):
+            local_execution["attempted"] = True
+            execution = _run_reset_wiki_tool(
+                envelope,
+                scope=scope,
+                execute=True,
+                approval_ref=str(contract.get("approval_ref") or ""),
+            )
+            execution_artifacts.extend(execution.get("artifacts") or [])
+            execution_refs.extend(str(artifact.get("path") or "") for artifact in execution.get("artifacts") or [])
+            execution_payload = execution.get("payload") if isinstance(execution.get("payload"), dict) else {}
+            local_execution.update({
+                "returncode": int(execution.get("returncode") or 0),
+                "tool_status": str(execution_payload.get("status") or "unknown"),
+                "deleted_files": int(execution_payload.get("deleted_files") or 0),
+                "reset_files": int(execution_payload.get("reset_files") or 0),
+            })
+            executed = int(execution.get("returncode") or 0) == 0 and str(execution_payload.get("status") or "") == "completed"
+            if executed:
+                wiki_root = execution.get("wiki_root") if isinstance(execution.get("wiki_root"), Path) else _wiki_roots_for_write(envelope)[0]
+                project_root = execution.get("project_root") if isinstance(execution.get("project_root"), Path) else wiki_root.parent
+                if "log" not in scopes:
+                    log_path = _write_generic_wiki_log(
+                        wiki_root,
+                        "AutoSci Reset",
+                        wiki_root,
+                        evidence_ids,
+                        f"Applied approved reset scope `{scope}`.",
+                    )
+                    log_artifact = {"type": "wiki_log", "path": _rel(log_path)}
+                    execution_artifacts.append(log_artifact)
+                    execution_refs.append(log_artifact["path"])
+                after_snapshot_path = _output_dir(envelope, "reset_plan") / "reset_after_snapshot.json"
+                after_snapshot = _reset_state_snapshot(wiki_root, project_root, scopes, execution_payload)
+                after_snapshot_artifact = {
+                    "type": "reset_after_snapshot_json",
+                    "path": _write_json_sidecar(after_snapshot_path, after_snapshot),
+                }
+                execution_artifacts.append(after_snapshot_artifact)
+                execution_refs.append(after_snapshot_artifact["path"])
+                runtime_evidence_path = execution.get("runtime_evidence_path")
+                if isinstance(runtime_evidence_path, Path) and runtime_evidence_path.exists():
+                    _append_contract_path(contract, "runtime_evidence", runtime_evidence_path)
+                _append_contract_path(contract, "after_artifacts", after_snapshot_path)
+                _refresh_approval_contract(contract)
+            local_execution["executed"] = executed
+        else:
+            local_execution["blocked_reason"] = "Approval, allowlist, and before_artifact evidence are required before local reset execution."
+
+    control_runtime_semantic: dict[str, Any] = {}
+    external_control_runtime_verified = False
+    if execute_requested and external_runtime_supplied:
+        control_runtime_semantic = _approval_semantic_runtime(contract, "reset_plan")
+        external_control_runtime_verified = bool(control_runtime_semantic.get("verified"))
+        contract["semantic_runtime"] = control_runtime_semantic
+    elif local_execution.get("executed"):
+        control_runtime_semantic = _approval_semantic_runtime(contract, "reset_plan")
+        contract["semantic_runtime"] = control_runtime_semantic
+
+    contract_artifact = _write_approval_contract_sidecar(envelope, "reset_plan", contract)
+    local_reset_executed = bool(local_execution.get("executed")) and bool(contract.get("execution_verified"))
+    approval_state = "proposed"
+    application_state = "proposed_only"
+    gate_status = "blocked"
+    gate_reason = (
+        "Approved local reset executed through tools/reset_wiki.py."
+        if local_reset_executed
+        else (
+            "Approved external reset runtime evidence was verified separately; local protected reset was not executed by the bridge."
+            if external_control_runtime_verified
+            else "Reset dry-run completed, but destructive execution is approval-gated."
+        )
+    )
+
+    _write_text_sidecar(
+        paths["recommended_changes"],
+        _reset_plan_markdown(
+            target=target,
+            scope=scope,
+            dry_run=dry_run,
+            executed=local_reset_executed,
+            contract=contract,
+        ),
+    )
+    artifacts: list[dict[str, str]] = [
+        _artifact("recommended_changes_markdown", paths["recommended_changes"]),
+        _artifact("patch_candidates_directory", paths["patch_candidates"]),
+        *(dry_run.get("artifacts") or []),
+        *execution_artifacts,
+        contract_artifact,
+    ]
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "reset_plan") / "reset_plan.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    if local_reset_executed or external_control_runtime_verified:
+        native_skill = "reset"
+        mutation_refs = execution_refs if local_reset_executed else [
+            str(artifact.get("path") or "")
+            for artifact in [
+                *_contract_existing_artifacts(contract, "runtime_evidence", "control_runtime_evidence_json"),
+                *_contract_existing_artifacts(contract, "after_artifacts", "control_runtime_after_artifact"),
+                *artifacts,
+            ]
+            if isinstance(artifact, dict)
+        ]
+        artifacts.extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="reset_plan",
+                native_skill=native_skill,
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[],
+                mutation_refs=mutation_refs,
+                include_wiki_mutation=local_reset_executed and any(item in scopes for item in {"wiki", "log", "checkpoints"}),
+                source_label="approved_reset_runtime",
+                artifact_kind="reset_wiki_runtime",
+                include_provider_source=False,
+            )
+        )
+
+    limitations = [
+        (
+            "Approved local reset executed through tools/reset_wiki.py with refreshed runtime evidence and after snapshot."
+            if local_reset_executed
+            else (
+                "Approved external reset runtime was verified from supplied evidence; local protected reset was not executed by the bridge."
+                if external_control_runtime_verified
+                else "Reset route produced a native dry-run plan only; no destructive mutation was applied."
+            )
+        ),
+        *_approval_contract_limitations(contract),
+    ]
+    if int(dry_run.get("returncode") or 0) != 0:
+        limitations.append("Reset dry-run tool returned a non-zero exit code.")
+    if execute_requested and not external_runtime_supplied and not local_execution.get("attempted"):
+        limitations.append(str(local_execution.get("blocked_reason") or "Local reset execution was blocked by the approval gate."))
+
+    proposed_changes = [
+        {
+            "change_id": "change.reset.scope_plan",
+            "category": "manual",
+            "target": "tools/reset_wiki.py",
+            "description": f"Use native reset scope `{scope}` and preserve the dry-run plan before any destructive execution.",
+            "evidence_ids": evidence_ids,
+            "review_required": True,
+            "application_state": application_state,
+        },
+        {
+            "change_id": "change.reset.approval_gate",
+            "category": "gate",
+            "target": "approval gate",
+            "description": "Execute reset only after explicit approval, allowlist evidence, and before-state evidence.",
+            "evidence_ids": evidence_ids,
+            "review_required": True,
+            "application_state": application_state,
+        },
+    ]
+    return {
+        "proposal_id": f"reset-plan-{_slug(target)}",
+        "scope": "reset plan",
+        "change_type": "workflow_template",
+        "rationale": "Native AutoSci reset requires scoped dry-run planning and approval-gated execution evidence.",
+        "expected_effect": "Make reset destructive behavior auditable while preserving original scope semantics.",
+        "approval_state": approval_state,
+        "evidence_ids": evidence_ids,
+        "collected": {
+            "failed_nodes": [
+                {
+                    "node_id": "node-reset-plan",
+                    "logical_operator": "ScientificWorkflowEvolver",
+                    "status": "blocked",
+                    "gate": "approval_gate",
+                }
+            ],
+            "gate_rejection_reasons": [
+                {
+                    "gate_id": "approval_gate",
+                    "status": gate_status,
+                    "reasons": [
+                        gate_reason,
+                        f"Approval contract missing: {', '.join(str(item) for item in contract.get('missing', [])) if contract.get('missing') else 'N/A'}",
+                    ],
+                }
+            ],
+            "ambiguous_manuals_or_prompts": [],
+            "insufficient_schemas": [],
+            "poor_operator_bindings": [],
+            "human_intervention_points": [
+                {
+                    "id": "reset_plan.approval",
+                    "description": "Human approval is required before destructive reset execution.",
+                }
+            ],
+            "runtime_errors": []
+            if int(dry_run.get("returncode") or 0) == 0
+            else [{"id": "reset_wiki.dry_run", "description": "Reset dry-run command failed."}],
+        },
+        "proposed_changes": proposed_changes,
+        "review": {
+            "human_accept_reject_required": True,
+            "protected_core_edits_applied": False,
+            "application_state": application_state,
+            "approval_ref": str(contract.get("approval_ref") or "N/A"),
+            "approval_contract_path": contract_artifact["path"],
+            "approval_contract_verified": bool(contract.get("execution_verified")),
+            "external_control_runtime_verified": external_control_runtime_verified,
+            "control_runtime_semantic": control_runtime_semantic or None,
+            "reset_scope": scope,
+            "reset_scopes": scopes,
+            "reset_dry_run": {
+                "status": str(dry_payload.get("status") or ""),
+                "delete_count": len(dry_payload.get("delete_files") or []),
+                "reset_count": len(dry_payload.get("reset_files") or []),
+            },
+            "local_reset_execution": local_execution,
+        },
+        "recommended_changes_path": _rel(paths["recommended_changes"]),
+        "patch_candidates_path": _rel(paths["patch_candidates"]),
+        "artifacts": artifacts,
+        "limitations": limitations,
+    }
+
+
+SETUP_STATUS_KEYS = [
+    ("SEMANTIC_SCHOLAR_API_KEY", "Semantic Scholar", "recommended"),
+    ("DEEPXIV_TOKEN", "DeepXiv token", "optional"),
+    ("DEEPXIV_API_URL", "DeepXiv endpoint", "optional"),
+    ("LLM_API_KEY", "Review LLM API key", "optional"),
+    ("LLM_BASE_URL", "Review LLM base URL", "optional"),
+    ("LLM_MODEL", "Review LLM model", "optional"),
+    ("OPENAI_API_KEY", "OpenAI-compatible API key", "optional"),
+    ("AUTOSCI_REVIEW_LLM_PROVIDER", "Solar Review LLM provider", "optional"),
+    ("AUTOSCI_REVIEW_LLM_MODEL", "Solar Review LLM model", "optional"),
+    ("AUTOSCI_REVIEW_LLM_ENDPOINT", "Solar Review LLM endpoint", "optional"),
+    ("ARXIV_CATEGORIES", "arXiv categories", "optional"),
+    ("AUTOSCI_DISABLE_NETWORK_FETCH", "Offline source-fetch switch", "safety"),
+]
+
+
+def _dotenv_configured_keys(path: Path) -> dict[str, bool]:
+    configured: dict[str, bool] = {}
+    if not path.exists() or not path.is_file():
+        return configured
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return configured
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        configured[key.strip()] = bool(value.strip().strip('"').strip("'"))
+    return configured
+
+
+def _setup_status_paths() -> dict[str, Path]:
+    return {
+        "setup_guide": PLUGIN_DIR / "config" / "setup-guide.md",
+        "env_example": PLUGIN_DIR / "config" / ".env.example",
+        "dotenv": REPO_HARNESS_DIR.parent / ".env",
+        "venv": REPO_HARNESS_DIR.parent / ".venv",
+    }
+
+
+def _setup_status_payload(envelope: dict[str, Any]) -> dict[str, Any]:
+    paths = _setup_status_paths()
+    dotenv_keys = _dotenv_configured_keys(paths["dotenv"])
+    env_example_keys = _dotenv_configured_keys(paths["env_example"])
+    key_statuses: list[dict[str, Any]] = []
+    for key, label, priority in SETUP_STATUS_KEYS:
+        process_configured = bool(os.environ.get(key, "").strip())
+        dotenv_configured = bool(dotenv_keys.get(key))
+        example_declared = key in env_example_keys or key in _dotenv_configured_keys(paths["env_example"])
+        key_statuses.append({
+            "key": key,
+            "label": label,
+            "priority": priority,
+            "configured": process_configured or dotenv_configured,
+            "process_env_set": process_configured,
+            "dotenv_set": dotenv_configured,
+            "env_example_declared": example_declared,
+            "value_recorded": False,
+        })
+    configured_count = sum(1 for item in key_statuses if item["configured"])
+    review_llm_ready = any(
+        item["configured"]
+        for item in key_statuses
+        if item["key"] in {"LLM_API_KEY", "OPENAI_API_KEY"}
+    ) and any(
+        item["configured"]
+        for item in key_statuses
+        if item["key"] in {"LLM_BASE_URL", "LLM_MODEL", "AUTOSCI_REVIEW_LLM_MODEL", "AUTOSCI_REVIEW_LLM_ENDPOINT"}
+    )
+    setup_guide_sections = 0
+    if paths["setup_guide"].exists():
+        setup_guide_sections = sum(
+            1
+            for line in paths["setup_guide"].read_text(encoding="utf-8", errors="replace").splitlines()
+            if line.startswith("## ")
+        )
+    return {
+        "schema": "autosci_setup_status.v1",
+        "status": "completed",
+        "paths": {
+            "setup_guide": _rel(paths["setup_guide"]),
+            "env_example": _rel(paths["env_example"]),
+            "dotenv": _rel(paths["dotenv"]),
+            "venv": _rel(paths["venv"]),
+        },
+        "checks": [
+            {
+                "check": "setup_guide_present",
+                "status": "ok" if paths["setup_guide"].exists() else "error",
+                "detail": _rel(paths["setup_guide"]),
+            },
+            {
+                "check": "env_template_present",
+                "status": "ok" if paths["env_example"].exists() else "error",
+                "detail": _rel(paths["env_example"]),
+            },
+            {
+                "check": "dotenv_present",
+                "status": "ok" if paths["dotenv"].exists() else "warn",
+                "detail": "present" if paths["dotenv"].exists() else "not found",
+            },
+            {
+                "check": "venv_present",
+                "status": "ok" if paths["venv"].exists() else "warn",
+                "detail": "present" if paths["venv"].exists() else "not found",
+            },
+            {
+                "check": "python_version",
+                "status": "ok",
+                "detail": sys.version.split()[0],
+            },
+            {
+                "check": "secrets_redacted",
+                "status": "ok",
+                "detail": "Only booleans and key names are recorded; secret values are never serialized.",
+            },
+        ],
+        "summary": {
+            "configured_count": configured_count,
+            "known_key_count": len(key_statuses),
+            "review_llm_ready": review_llm_ready,
+            "setup_guide_section_count": setup_guide_sections,
+            "python_executable": sys.executable,
+        },
+        "keys": key_statuses,
+        "captured_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    }
+
+
+def _setup_status_markdown(status: dict[str, Any], *, contract: dict[str, Any]) -> str:
+    summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
+    lines = [
+        "# Setup Status",
+        "",
+        "## Configuration",
+        "",
+        f"- Configured keys: `{summary.get('configured_count', 0)}` / `{summary.get('known_key_count', 0)}`",
+        f"- Review LLM ready: `{str(bool(summary.get('review_llm_ready'))).lower()}`",
+        f"- Python: `{summary.get('python_executable', 'N/A')}`",
+        "",
+        "## Key Status",
+        "",
+        "| Key | Status |",
+        "| --- | --- |",
+    ]
+    for item in status.get("keys") or []:
+        if not isinstance(item, dict):
+            continue
+        state = "set" if item.get("configured") else "unset"
+        lines.append(f"| `{item.get('key')}` | `{state}` |")
+    lines.extend([
+        "",
+        "## Controls",
+        "",
+        f"- Approval state: `{contract.get('approval_state')}`",
+        "- Secret values recorded: `false`",
+        "- Local `.env` mutation by bridge: `false`",
+        "",
+    ])
+    return "\n".join(lines)
+
+
+def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    target = str(inputs.get("target") or inputs.get("topic") or "setup status")
+    evidence_ids = [f"setup:{_slug(target)}"]
+    paths = _control_workflow_paths(envelope, "setup_status")
+    paths["patch_candidates"].mkdir(parents=True, exist_ok=True)
+    status = _setup_status_payload(envelope)
+    status_path = _output_dir(envelope, "setup_status") / "setup_status.json"
+    status_artifact = {"type": "setup_status_json", "path": _write_json_sidecar(status_path, status)}
+    contract = _approval_contract(envelope, "setup_status", ["credential_probe", "persistent_config_write", "workspace_bootstrap"])
+    control_runtime_semantic: dict[str, Any] = {}
+    control_runtime_verified = False
+    if bool(inputs.get("execute_approved_side_effect")):
+        control_runtime_semantic = _approval_semantic_runtime(contract, "setup_status")
+        contract["semantic_runtime"] = control_runtime_semantic
+        control_runtime_verified = bool(control_runtime_semantic.get("verified"))
+    contract_artifact = _write_approval_contract_sidecar(envelope, "setup_status", contract)
+    _write_text_sidecar(paths["recommended_changes"], _setup_status_markdown(status, contract=contract))
+    artifacts: list[dict[str, str]] = [
+        _artifact("recommended_changes_markdown", paths["recommended_changes"]),
+        _artifact("patch_candidates_directory", paths["patch_candidates"]),
+        status_artifact,
+        {"type": "setup_guide_markdown", "path": _rel(_setup_status_paths()["setup_guide"])},
+        {"type": "env_example", "path": _rel(_setup_status_paths()["env_example"])},
+        contract_artifact,
+    ]
+    if control_runtime_verified:
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "setup_status") / "setup_status.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        runtime_refs = [
+            str(artifact.get("path") or "")
+            for artifact in [
+                *_contract_existing_artifacts(contract, "runtime_evidence", "control_runtime_evidence_json"),
+                *_contract_existing_artifacts(contract, "after_artifacts", "control_runtime_after_artifact"),
+                *artifacts,
+            ]
+            if isinstance(artifact, dict)
+        ]
+        artifacts.extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="setup_status",
+                native_skill="setup",
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[],
+                mutation_refs=runtime_refs,
+                include_wiki_mutation=False,
+                source_label="approved_setup_external_runtime",
+                artifact_kind="setup_status_external_runtime",
+                include_provider_source=False,
+            )
+        )
+    limitations = [
+        (
+            "Approved external setup runtime was verified from supplied evidence; local secret/config mutation was not executed by the bridge."
+            if control_runtime_verified
+            else "Setup route reports configuration status only; it does not write secrets or credentials."
+        ),
+        *_approval_contract_limitations(contract),
+    ]
+    proposed_changes = [
+        {
+            "change_id": "change.setup.status",
+            "category": "manual",
+            "target": "setup status",
+            "description": "Review current provider key status and choose which optional keys to configure.",
+            "evidence_ids": evidence_ids,
+            "review_required": True,
+            "application_state": "proposed_only",
+        },
+        {
+            "change_id": "change.setup.approval_gate",
+            "category": "gate",
+            "target": "approval gate",
+            "description": "Keep .env writes blocked unless explicit approved runtime evidence supplies user-selected secret values.",
+            "evidence_ids": evidence_ids,
+            "review_required": True,
+            "application_state": "proposed_only",
+        },
+    ]
+    status_summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
+    return {
+        "proposal_id": f"setup-status-{_slug(target)}",
+        "scope": "setup status",
+        "change_type": "workflow_template",
+        "rationale": "Native AutoSci setup requires configuration guide review, environment status detection, and approval-gated credential writes.",
+        "expected_effect": "Make setup readiness auditable without serializing secrets or mutating .env automatically.",
+        "approval_state": "proposed",
+        "evidence_ids": evidence_ids,
+        "collected": {
+            "failed_nodes": [
+                {
+                    "node_id": "node-setup-status",
+                    "logical_operator": "ScientificWorkflowEvolver",
+                    "status": "blocked",
+                    "gate": "approval_gate",
+                }
+            ],
+            "gate_rejection_reasons": [
+                {
+                    "gate_id": "approval_gate",
+                    "status": "blocked",
+                    "reasons": [
+                        "Setup writes are approval-gated; status detection completed without writing secrets.",
+                        f"Approval contract missing: {', '.join(str(item) for item in contract.get('missing', [])) if contract.get('missing') else 'N/A'}",
+                    ],
+                }
+            ],
+            "ambiguous_manuals_or_prompts": [],
+            "insufficient_schemas": [],
+            "poor_operator_bindings": [],
+            "human_intervention_points": [
+                {
+                    "id": "setup_status.configure_keys",
+                    "description": "User chooses which optional provider keys to configure before any .env write.",
+                }
+            ],
+            "runtime_errors": [
+                {"id": item["check"], "description": item["detail"]}
+                for item in status.get("checks", [])
+                if isinstance(item, dict) and item.get("status") == "error"
+            ],
+        },
+        "proposed_changes": proposed_changes,
+        "review": {
+            "human_accept_reject_required": True,
+            "protected_core_edits_applied": False,
+            "application_state": "proposed_only",
+            "approval_ref": str(contract.get("approval_ref") or "N/A"),
+            "approval_contract_path": contract_artifact["path"],
+            "approval_contract_verified": bool(contract.get("execution_verified")),
+            "external_control_runtime_verified": control_runtime_verified,
+            "control_runtime_semantic": control_runtime_semantic or None,
+            "setup_status": {
+                "configured_count": int(status_summary.get("configured_count") or 0),
+                "known_key_count": int(status_summary.get("known_key_count") or 0),
+                "review_llm_ready": bool(status_summary.get("review_llm_ready")),
+                "setup_status_path": status_artifact["path"],
+                "secrets_redacted": True,
+            },
+        },
+        "recommended_changes_path": _rel(paths["recommended_changes"]),
+        "patch_candidates_path": _rel(paths["patch_candidates"]),
+        "artifacts": artifacts,
+        "limitations": limitations,
+    }
+
+
 def _refine_apply_path(envelope: dict[str, Any]) -> Path:
     return _output_dir(envelope, "refine_artifact") / "refine_apply_writeback.json"
 
@@ -7177,6 +16187,253 @@ def _refine_target_path_for_write(envelope: dict[str, Any], target: str) -> tupl
     if not target_path.exists() or target_path.is_dir():
         return None, [f"Refine target does not resolve to an existing file: {target}"]
     return target_path, []
+
+
+def _refine_loop_report_path(envelope: dict[str, Any]) -> Path:
+    return _output_dir(envelope, "refine_artifact") / "refine_loop_report.json"
+
+
+def _refine_review_payloads(envelope: dict[str, Any], *, target: str) -> list[dict[str, Any]]:
+    inputs = dict(envelope.get("inputs") or {})
+    payloads: list[dict[str, Any]] = []
+    for key in ("review_llm_evidence", "review_evidence", "artifact_review_evidence"):
+        raw_value = inputs.get(key)
+        raw_items = raw_value if isinstance(raw_value, list) else [raw_value]
+        for raw_item in raw_items:
+            if isinstance(raw_item, dict):
+                payloads.append(dict(raw_item))
+                continue
+            payload = _load_optional_evidence(raw_item)
+            if not payload:
+                continue
+            enriched = dict(payload)
+            path = _resolve_harness_path(str(raw_item))
+            if path.exists():
+                enriched.setdefault("source_path", _rel(path))
+            payloads.append(enriched)
+    max_rounds = int(inputs.get("max_rounds") or 4)
+    target_score = float(inputs.get("target_score") or 8.0)
+    scores = _numeric_scores(_refine_review_records(payloads))
+    latest_score = scores[-1] if scores else None
+    review_auto_requested = bool(
+        inputs.get("review_llm_command")
+        or inputs.get("review_llm_provider")
+        or inputs.get("review_llm_endpoint")
+        or inputs.get("review_llm_requested")
+    )
+    if review_auto_requested and len(payloads) < max_rounds and (latest_score is None or latest_score < target_score):
+        review_inputs = dict(inputs)
+        review_inputs["target"] = target
+        review_inputs["artifact_path"] = target
+        review_inputs["review_llm_requested"] = True
+        raw_review = review_artifact(
+            review_inputs,
+            workspace_root=HARNESS_DIR,
+            repository_root=REPO_HARNESS_DIR,
+        )
+        review = raw_review.get("review") if isinstance(raw_review.get("review"), dict) else {}
+        review_completed = (
+            str(raw_review.get("status") or "") == "completed"
+            and str(review.get("review_mode") or "") == "review_llm"
+            and review.get("review_available") is True
+        )
+        payload = {
+            "schema": "artifact_review.v1",
+            "status": "completed" if review_completed else "inconclusive",
+            "outputs": {
+                "artifact": raw_review.get("artifact") if isinstance(raw_review.get("artifact"), dict) else {},
+                "review": review,
+                "findings": raw_review.get("findings") if isinstance(raw_review.get("findings"), list) else [],
+            },
+            "provenance": {
+                "operator_id": "autosci-bridge",
+                "implementation_package": "plugins/autosci/backends/artifact_review.py",
+                "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                "source": "refine_auto_review_loop",
+            },
+            "limitations": list(raw_review.get("limitations") or []),
+        }
+        round_path = _output_dir(envelope, "refine_artifact") / f"refine_review_round_{len(payloads) + 1:02d}.json"
+        payload["source_path"] = _write_json_sidecar(round_path, payload)
+        payloads.append(payload)
+    return payloads
+
+
+def _refine_review_records(payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for index, payload in enumerate(payloads, start=1):
+        outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+        review = outputs.get("review") if isinstance(outputs.get("review"), dict) else payload.get("review") if isinstance(payload.get("review"), dict) else {}
+        review_llm = review.get("review_llm") if isinstance(review.get("review_llm"), dict) else {}
+        actionable = review.get("actionable_items") or review.get("issues") or []
+        weaknesses = review.get("weaknesses") or []
+        records.append(
+            {
+                "round": index,
+                "status": str(payload.get("status") or "unknown"),
+                "source_path": str(payload.get("source_path") or payload.get("task_id") or payload.get("node_id") or ""),
+                "review_mode": str(review.get("review_mode") or ""),
+                "review_available": review.get("review_available") is True,
+                "score": review.get("score", review_llm.get("score")),
+                "verdict": str(review.get("verdict") or review.get("recommendation") or review_llm.get("recommendation") or "inconclusive"),
+                "actionable_items": actionable if isinstance(actionable, list) else [],
+                "weaknesses": weaknesses if isinstance(weaknesses, list) else [],
+                "review_llm": {
+                    "status": str(review_llm.get("status") or ""),
+                    "provider": str(review_llm.get("provider") or ""),
+                    "model": str(review_llm.get("model") or ""),
+                    "evidence_ids": _unique_strings([str(item) for item in review_llm.get("evidence_ids") or []]),
+                },
+            }
+        )
+    return records
+
+
+def _numeric_scores(records: list[dict[str, Any]]) -> list[float]:
+    scores: list[float] = []
+    for record in records:
+        try:
+            scores.append(float(record.get("score")))
+        except (TypeError, ValueError):
+            continue
+    return scores
+
+
+def _refine_loop_report(
+    envelope: dict[str, Any],
+    *,
+    target: str,
+    refine_application: dict[str, Any] | None,
+    refine_applied: bool,
+) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    payloads = _refine_review_payloads(envelope, target=target)
+    records = _refine_review_records(payloads)
+    scores = _numeric_scores(records)
+    target_score = float(inputs.get("target_score") or 8.0)
+    max_rounds = int(inputs.get("max_rounds") or 4)
+    final_score = scores[-1] if scores else None
+    target_reached = final_score is not None and final_score >= target_score
+    if not records:
+        termination_reason = "review_evidence_missing"
+        status = "incomplete"
+    elif target_reached:
+        termination_reason = "target_score_reached"
+        status = "completed"
+    elif refine_applied:
+        termination_reason = "approved_after_artifact_applied"
+        status = "completed"
+    elif len(records) >= max_rounds:
+        termination_reason = "max_rounds_reached"
+        status = "completed"
+    else:
+        termination_reason = "needs_more_rounds_or_approval"
+        status = "incomplete"
+    write = (refine_application or {}).get("write") if isinstance((refine_application or {}).get("write"), dict) else {}
+    action_items: list[dict[str, Any]] = []
+    for record in records:
+        for item in record.get("actionable_items") or []:
+            if isinstance(item, dict):
+                action_items.append({**item, "round": record.get("round")})
+            else:
+                action_items.append({"round": record.get("round"), "issue": str(item)})
+    fixed_issues = [
+        {
+            "round": item.get("round"),
+            "issue": str(item.get("issue") or item.get("description") or item.get("item") or "review action item"),
+            "fix_applied": "approved_after_artifact",
+            "evidence_refs": _unique_strings([str(write.get("after_artifact") or ""), str(write.get("target_path") or "")]),
+        }
+        for item in action_items
+    ] if refine_applied else []
+    unresolved_issues = [] if refine_applied else action_items
+    report = {
+        "schema": "autosci_refine_loop_report.v1",
+        "status": status,
+        "target": target,
+        "max_rounds": max_rounds,
+        "target_score": target_score,
+        "difficulty": str(inputs.get("difficulty") or ""),
+        "focus": str(inputs.get("focus") or ""),
+        "review_llm_requested": bool(
+            inputs.get("review_llm_requested")
+            or inputs.get("review_llm_evidence")
+            or inputs.get("review_llm_command")
+            or inputs.get("review_llm_provider")
+            or inputs.get("review_llm_endpoint")
+        ),
+        "review_evidence_count": len(records),
+        "review_evidence_completed": _review_llm_evidence_completed(payloads),
+        "score_history": scores,
+        "final_score": final_score,
+        "final_verdict": records[-1].get("verdict") if records else "missing_review",
+        "auto_review_rounds": [
+            {
+                "type": "refine_review_round_json",
+                "path": str(payload.get("source_path") or ""),
+            }
+            for payload in payloads
+            if isinstance(payload.get("provenance"), dict)
+            and payload["provenance"].get("source") == "refine_auto_review_loop"
+            and str(payload.get("source_path") or "").strip()
+        ],
+        "termination_reason": termination_reason,
+        "approved_after_artifact_applied": refine_applied,
+        "rounds": records,
+        "fixed_issues": fixed_issues,
+        "unresolved_issues": unresolved_issues,
+        "limitations": [] if status == "completed" else ["Refine loop requires completed Review LLM evidence and approved after_artifact application before final completion."],
+    }
+    path = _write_json_sidecar(_refine_loop_report_path(envelope), report)
+    return {"type": "refine_loop_report_json", "path": path, "report": report}
+
+
+def _write_refine_review_runtime_proof_manifest(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    refine_loop_artifact: dict[str, Any] | None,
+) -> dict[str, str] | None:
+    report = (refine_loop_artifact or {}).get("report") if isinstance(refine_loop_artifact, dict) else {}
+    if not isinstance(report, dict):
+        return None
+    rounds = report.get("rounds") if isinstance(report.get("rounds"), list) else []
+    completed_rounds = [
+        record
+        for record in rounds
+        if isinstance(record, dict)
+        if str((record.get("review_llm") or {}).get("status") or "") == "completed"
+    ]
+    if not completed_rounds:
+        return None
+    latest = completed_rounds[-1]
+    latest_review = latest.get("review_llm") if isinstance(latest.get("review_llm"), dict) else {}
+    evidence_ids = _unique_strings([
+        str(item)
+        for record in completed_rounds
+        for item in ((record.get("review_llm") or {}).get("evidence_ids") or [])
+        if str(item).strip()
+    ])
+    if not evidence_ids:
+        return None
+    checked_paths = _unique_strings([
+        str((refine_loop_artifact or {}).get("path") or ""),
+        *[str(record.get("source_path") or "") for record in completed_rounds],
+    ])
+    review_llm = {
+        **latest_review,
+        "status": "completed",
+        "source_path": str(latest_review.get("source_path") or latest.get("source_path") or ""),
+        "checked_paths": checked_paths,
+        "evidence_ids": evidence_ids,
+    }
+    return _write_review_context_runtime_proof_manifest(
+        envelope,
+        action="refine_artifact",
+        native_skill="refine",
+        evidence_path=evidence_path,
+        review_llm=review_llm,
+    )
 
 
 def _approved_refine_application(
@@ -7299,7 +16556,6 @@ def _control_workflow_raw(envelope: dict[str, Any], action: str, scope: str) -> 
         action,
         side_effects_by_action.get(action, ["protected_runtime_change"]),
     )
-    contract_artifact = _write_approval_contract_sidecar(envelope, action, contract)
     contract_missing = contract.get("missing") if isinstance(contract.get("missing"), list) else []
     refine_application = (
         _approved_refine_application(envelope, target=target, contract=contract, evidence_ids=evidence_ids)
@@ -7307,6 +16563,18 @@ def _control_workflow_raw(envelope: dict[str, Any], action: str, scope: str) -> 
         else None
     )
     refine_applied = bool((refine_application or {}).get("write", {}).get("applied"))
+    refine_loop_artifact = (
+        _refine_loop_report(envelope, target=target, refine_application=refine_application, refine_applied=refine_applied)
+        if action == "refine_artifact"
+        else None
+    )
+    control_runtime_semantic: dict[str, Any] = {}
+    control_runtime_verified = False
+    if action in {"setup_status", "reset_plan"} and bool(inputs.get("execute_approved_side_effect")):
+        control_runtime_semantic = _approval_semantic_runtime(contract, action)
+        contract["semantic_runtime"] = control_runtime_semantic
+        control_runtime_verified = bool(control_runtime_semantic.get("verified"))
+    contract_artifact = _write_approval_contract_sidecar(envelope, action, contract)
     approval_state = "applied" if refine_applied else "proposed"
     application_state = "applied" if refine_applied else "proposed_only"
     collected = {
@@ -7328,7 +16596,11 @@ def _control_workflow_raw(envelope: dict[str, Any], action: str, scope: str) -> 
                     (
                         "Approved refine side effect was applied from verified after_artifact evidence."
                         if refine_applied
-                        else "Approval-gated control side effects were not executed."
+                        else (
+                            "Approved external control runtime evidence was verified separately; local protected control side effects were not executed by the bridge."
+                            if control_runtime_verified
+                            else "Approval-gated control side effects were not executed."
+                        )
                     ),
                     f"Approval contract missing: {', '.join(str(item) for item in contract_missing) if contract_missing else 'N/A'}",
                 ],
@@ -7403,18 +16675,31 @@ def _control_workflow_raw(envelope: dict[str, Any], action: str, scope: str) -> 
     if refine_application:
         artifacts.append(refine_application["artifact"])
         artifacts.extend(refine_application.get("artifacts") or [])
+    if refine_loop_artifact:
+        artifacts.append({k: v for k, v in refine_loop_artifact.items() if k != "report"})
+        report = refine_loop_artifact.get("report") if isinstance(refine_loop_artifact.get("report"), dict) else {}
+        for artifact in report.get("auto_review_rounds") or []:
+            if isinstance(artifact, dict) and str(artifact.get("path") or "").strip():
+                artifacts.append({"type": str(artifact.get("type") or "refine_review_round_json"), "path": str(artifact["path"])})
     limitations = [
         (
             "Approved refine side effect was applied from verified before/runtime/after artifact evidence."
             if refine_applied
-            else "This action produces proposal evidence only; no secrets, configuration, wiki files, or run artifacts were changed."
+            else (
+                "Approved external setup/reset runtime was verified from supplied evidence; this bridge did not execute local protected mutations."
+                if control_runtime_verified
+                else "This action produces proposal evidence only; no secrets, configuration, wiki files, or run artifacts were changed."
+            )
         ),
         "Approval and before/after evidence are required before applying setup or reset side effects.",
         *_approval_contract_limitations(contract),
     ]
     if refine_application:
         limitations.extend(str(item) for item in refine_application.get("limitations") or [])
-    return {
+    if refine_loop_artifact:
+        report = refine_loop_artifact.get("report") if isinstance(refine_loop_artifact.get("report"), dict) else {}
+        limitations.extend(str(item) for item in report.get("limitations") or [])
+    raw = {
         "proposal_id": f"{action}-{_slug(target)}",
         "scope": scope,
         "change_type": "workflow_template",
@@ -7431,13 +16716,97 @@ def _control_workflow_raw(envelope: dict[str, Any], action: str, scope: str) -> 
             "approval_ref": str(contract.get("approval_ref") or "N/A"),
             "approval_contract_path": contract_artifact["path"],
             "approval_contract_verified": bool(contract.get("execution_verified")),
+            "external_control_runtime_verified": control_runtime_verified,
+            "control_runtime_semantic": control_runtime_semantic or None,
             "refine_apply": (refine_application or {}).get("write"),
+            "refine_loop_report": (refine_loop_artifact or {}).get("report"),
         },
         "recommended_changes_path": _rel(paths["recommended_changes"]),
         "patch_candidates_path": _rel(paths["patch_candidates"]),
         "artifacts": artifacts,
         "limitations": limitations,
     }
+    if action == "refine_artifact" and refine_application:
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, action) / f"{action}.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        review_runtime_proof_artifact = _write_refine_review_runtime_proof_manifest(
+            envelope,
+            evidence_path=evidence_payload_path,
+            refine_loop_artifact=refine_loop_artifact,
+        )
+        if review_runtime_proof_artifact is not None:
+            raw["artifacts"].append(review_runtime_proof_artifact)
+        write = refine_application.get("write") if isinstance(refine_application.get("write"), dict) else {}
+        refine_artifacts = refine_application.get("artifacts") if isinstance(refine_application.get("artifacts"), list) else []
+        raw["artifacts"].extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action=action,
+                native_skill="refine",
+                evidence_path=evidence_payload_path,
+                applied=refine_applied,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[
+                    str(write.get("after_artifact") or ""),
+                    str(write.get("target_path") or ""),
+                    str((refine_application.get("artifact") or {}).get("path") or ""),
+                ],
+                mutation_refs=[
+                    str(write.get("sidecar_path") or ""),
+                    str(write.get("target_path") or ""),
+                    *[
+                        str(artifact.get("path") or "")
+                        for artifact in refine_artifacts
+                        if isinstance(artifact, dict)
+                    ],
+                ],
+                include_wiki_mutation=False,
+                source_label="approved_refine_apply",
+                artifact_kind="refine_apply_writeback",
+            )
+        )
+    if action in {"setup_status", "reset_plan"} and control_runtime_verified:
+        native_skill = "setup" if action == "setup_status" else "reset"
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, action) / f"{action}.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        runtime_refs = [
+            str(artifact.get("path") or "")
+            for artifact in [
+                *_contract_existing_artifacts(contract, "runtime_evidence", "control_runtime_evidence_json"),
+                *_contract_existing_artifacts(contract, "after_artifacts", "control_runtime_after_artifact"),
+                *raw["artifacts"],
+            ]
+            if isinstance(artifact, dict)
+        ]
+        raw["artifacts"].extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action=action,
+                native_skill=native_skill,
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[],
+                mutation_refs=runtime_refs,
+                include_wiki_mutation=False,
+                source_label=f"approved_{native_skill}_external_runtime",
+                artifact_kind=f"{action}_external_runtime",
+                include_provider_source=False,
+            )
+        )
+    return raw
 
 
 RESEARCH_LIFECYCLE_STAGES = (
@@ -7644,8 +17013,20 @@ def _scheduler_lifecycle_summary(payloads: list[dict[str, Any]]) -> dict[str, An
             continue
         if str(payload.get("lifecycle_status") or "").lower() != "passed":
             continue
-        gate = payload.get("lifecycle_gate_result") if isinstance(payload.get("lifecycle_gate_result"), dict) else {}
-        if gate.get("ok") is not True:
+        source_path_raw = str(payload.get("source_path") or "").strip()
+        source_path = _resolve_harness_path(source_path_raw) if source_path_raw else None
+        runtime_gate = evaluate_lifecycle_runtime(
+            payload,
+            path=source_path if source_path and source_path.exists() else None,
+        ).to_dict()
+        if runtime_gate.get("ok") is not True:
+            continue
+        alignment = (
+            payload.get("workflow_config_alignment")
+            if isinstance(payload.get("workflow_config_alignment"), dict)
+            else {}
+        )
+        if alignment.get("ok") is not True or str(alignment.get("status") or "") != "aligned":
             continue
         blocked = payload.get("blocked_nodes")
         if isinstance(blocked, dict) and blocked:
@@ -7668,6 +17049,8 @@ def _scheduler_lifecycle_summary(payloads: list[dict[str, Any]]) -> dict[str, An
             "source_path": str(payload.get("source_path") or ""),
             "node_count": len(node_results),
             "required_node_count": len(SCHEDULER_FULL_LIFECYCLE_NODE_IDS),
+            "lifecycle_runtime_gate_status": str(runtime_gate.get("status") or ""),
+            "workflow_config_alignment_status": str(alignment.get("status") or ""),
         }
     return {}
 
@@ -7782,6 +17165,13 @@ def _research_lifecycle_evidence_report(envelope: dict[str, Any], contract: dict
             *([integrated_pdf["artifact"]] if isinstance(integrated_pdf.get("artifact"), dict) else []),
         ],
     }
+    report["discovery_evidence_refs"] = _artifact_ref_paths(discovery_artifacts)
+    report["novelty_evidence_refs"] = _artifact_ref_paths(novelty_artifacts)
+    report["review_llm_evidence_refs"] = _artifact_ref_paths(review_artifacts)
+    report["runtime_evidence_refs"] = _artifact_ref_paths(
+        _contract_existing_artifacts(contract, "runtime_evidence", "research_lifecycle_runtime_evidence_json")
+    )
+    report["approval_evidence_refs"] = _unique_strings(_approval_contract_runtime_refs(contract))
     report["has_stage_evidence"] = any(
         [
             paper_exists,
@@ -7898,6 +17288,170 @@ def _research_lifecycle_markdown(raw: dict[str, Any], *, report: bool = False) -
             "",
         ])
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _artifact_ref_paths(artifacts: list[dict[str, Any]]) -> list[str]:
+    return _unique_strings(
+        [str(artifact.get("path") or "").strip() for artifact in artifacts if isinstance(artifact, dict)]
+    )
+
+
+def _artifact_refs_by_type(artifacts: list[dict[str, Any]], types: set[str]) -> list[str]:
+    return _unique_strings(
+        [
+            str(artifact.get("path") or "").strip()
+            for artifact in artifacts
+            if isinstance(artifact, dict) and str(artifact.get("type") or "") in types
+        ]
+    )
+
+
+def _research_lifecycle_write_runtime_proof(
+    envelope: dict[str, Any],
+    *,
+    filename: str,
+    artifact_type: str,
+    proof: dict[str, Any],
+) -> dict[str, str]:
+    timestamp = str(proof.get("generated_at") or datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"))
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [proof],
+    }
+    artifact_path = _write_json_sidecar(_output_dir(envelope, "run_research_lifecycle") / filename, manifest)
+    return {"type": artifact_type, "path": artifact_path}
+
+
+def _write_research_lifecycle_runtime_proof_manifests(
+    envelope: dict[str, Any],
+    *,
+    evidence_path: Path,
+    raw: dict[str, Any],
+    contract: dict[str, Any],
+    contract_artifact: dict[str, str],
+) -> list[dict[str, str]]:
+    evidence_report = raw.get("evidence_report") if isinstance(raw.get("evidence_report"), dict) else {}
+    artifacts = raw.get("artifacts") if isinstance(raw.get("artifacts"), list) else []
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    proof_stamp = timestamp.replace(":", "").replace("-", "")
+    pipeline_refs = _artifact_refs_by_type(
+        artifacts,
+        {
+            "pipeline_progress_markdown",
+            "pipeline_report_markdown",
+            "pipeline_state_json",
+            "recommended_changes_markdown",
+        },
+    )
+    proof_artifacts: list[dict[str, str]] = []
+
+    source_refs: list[str | Path] = [evidence_path, *pipeline_refs]
+    source_kinds: list[str] = []
+    if evidence_report.get("discovery_completed"):
+        source_refs.extend(str(item) for item in evidence_report.get("discovery_evidence_refs") or [])
+        source_kinds.append("literature_discovery")
+    if evidence_report.get("external_novelty_completed"):
+        source_refs.extend(str(item) for item in evidence_report.get("novelty_evidence_refs") or [])
+        source_kinds.append("external_novelty")
+    paper_path = str(evidence_report.get("paper_path") or "").strip()
+    if evidence_report.get("paper_exists") and paper_path:
+        source_refs.append(paper_path)
+        source_kinds.append("paper_source")
+    source_refs_normalized = _runtime_evidence_refs(*source_refs)
+    if len(source_refs_normalized) > len(_runtime_evidence_refs(evidence_path, *pipeline_refs)):
+        source = "+".join(_unique_strings(source_kinds)) or "research_lifecycle_sources"
+        proof_artifacts.append(
+            _research_lifecycle_write_runtime_proof(
+                envelope,
+                filename="run_research_lifecycle_source_provider_runtime_proof.json",
+                artifact_type="provider_source_runtime_proof_manifest_json",
+                proof={
+                    "native_skill": "research",
+                    "proof_id": f"runtime:research:{_slug(source)}:{proof_stamp}",
+                    "categories": ["provider_source_evidence"],
+                    "collection_mode": "manual_review",
+                    "production_ready": True,
+                    "generated_at": timestamp,
+                    "provenance": {
+                        "source": source,
+                        "captured_at": timestamp,
+                        "artifact_kind": "research_lifecycle_source_evidence",
+                        "command": "run_research_lifecycle:source_evidence_report",
+                    },
+                    "evidence_refs": source_refs_normalized,
+                    "description": "Completed source evidence for AutoSci `research` lifecycle parity.",
+                },
+            )
+        )
+
+    review_refs = _runtime_evidence_refs(
+        evidence_path,
+        *pipeline_refs,
+        *[str(item) for item in evidence_report.get("review_llm_evidence_refs") or []],
+    )
+    if evidence_report.get("review_llm_completed") and len(review_refs) > len(_runtime_evidence_refs(evidence_path, *pipeline_refs)):
+        proof_artifacts.append(
+            _research_lifecycle_write_runtime_proof(
+                envelope,
+                filename="run_research_lifecycle_review_llm_runtime_proof.json",
+                artifact_type="review_model_runtime_proof_manifest_json",
+                proof={
+                    "native_skill": "research",
+                    "proof_id": f"runtime:research:review-llm:{proof_stamp}",
+                    "categories": ["review_llm_or_model_evidence", "external_runtime_evidence"],
+                    "collection_mode": "manual_review",
+                    "production_ready": True,
+                    "generated_at": timestamp,
+                    "provenance": {
+                        "source": "review_llm",
+                        "captured_at": timestamp,
+                        "artifact_kind": "research_lifecycle_review_evidence",
+                        "command": "run_research_lifecycle:review_llm_evidence_report",
+                    },
+                    "evidence_refs": review_refs,
+                    "description": "Completed Review LLM evidence for AutoSci `research` lifecycle parity.",
+                },
+            )
+        )
+
+    experiment_runtime = evidence_report.get("experiment_runtime") if isinstance(evidence_report.get("experiment_runtime"), dict) else {}
+    compile_runtime = evidence_report.get("compile_runtime") if isinstance(evidence_report.get("compile_runtime"), dict) else {}
+    runtime_verified = bool(experiment_runtime.get("verified") or compile_runtime.get("verified"))
+    contract_path = str(contract_artifact.get("path") or "").strip() if isinstance(contract_artifact, dict) else ""
+    runtime_refs = _runtime_evidence_refs(
+        evidence_path,
+        *pipeline_refs,
+        contract_path,
+        *[str(item) for item in evidence_report.get("runtime_evidence_refs") or []],
+        *[str(item) for item in evidence_report.get("approval_evidence_refs") or []],
+    )
+    if contract.get("execution_verified") is True and runtime_verified and contract_path:
+        proof_artifacts.append(
+            _research_lifecycle_write_runtime_proof(
+                envelope,
+                filename="run_research_lifecycle_approval_runtime_proof.json",
+                artifact_type="approval_runtime_proof_manifest_json",
+                proof={
+                    "native_skill": "research",
+                    "proof_id": f"runtime:research:approved-runtime:{proof_stamp}",
+                    "categories": ["external_runtime_evidence", "approval_boundary_evidence"],
+                    "collection_mode": "approved_side_effect",
+                    "production_ready": True,
+                    "generated_at": timestamp,
+                    "provenance": {
+                        "source": "approval_contract",
+                        "captured_at": timestamp,
+                        "artifact_kind": "research_lifecycle_approved_runtime",
+                        "command": "run_research_lifecycle:approval_runtime_evidence_report",
+                    },
+                    "evidence_refs": runtime_refs,
+                    "description": "Verified approval/runtime evidence for AutoSci `research` lifecycle parity.",
+                },
+            )
+        )
+
+    return proof_artifacts
 
 
 def _research_lifecycle_raw(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -8130,15 +17684,154 @@ def _research_lifecycle_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     _write_text_sidecar(paths["pipeline_progress"], _research_lifecycle_markdown(raw))
     _write_text_sidecar(paths["pipeline_report"], _research_lifecycle_markdown(raw, report=True))
     _write_json_sidecar(paths["pipeline_state"], state)
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "run_research_lifecycle") / "run_research_lifecycle.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    raw["artifacts"].extend(
+        _write_research_lifecycle_runtime_proof_manifests(
+            envelope,
+            evidence_path=evidence_payload_path,
+            raw=raw,
+            contract=contract,
+            contract_artifact=contract_artifact,
+        )
+    )
     return raw
 
 
 def _action_setup_status(envelope: dict[str, Any]) -> dict[str, Any]:
-    return convert_workflow_evolution(_control_workflow_raw(envelope, "setup_status", "setup status"), envelope)
+    return convert_workflow_evolution(_setup_status_raw(envelope), envelope)
 
 
 def _action_reset_plan(envelope: dict[str, Any]) -> dict[str, Any]:
-    return convert_workflow_evolution(_control_workflow_raw(envelope, "reset_plan", "reset plan"), envelope)
+    return convert_workflow_evolution(_reset_plan_raw(envelope), envelope)
+
+
+def _run_wiki_lint_report(wiki_root: Path, output_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    lint_tool = REPO_HARNESS_DIR.parent / "tools" / "lint.py"
+    command = [sys.executable, str(lint_tool), "--wiki-root", str(wiki_root)]
+    artifacts: list[dict[str, Any]] = []
+    payload: dict[str, Any]
+    stdout = ""
+    stderr = ""
+    returncode = 127
+    if not lint_tool.exists():
+        payload = {
+            "schema": "autosci_wiki_lint_cli.v1",
+            "ok": False,
+            "status": "failed",
+            "wiki_root": str(wiki_root),
+            "page_count": 0,
+            "edge_count": 0,
+            "issues": [{"severity": "error", "message": f"lint tool not found: {lint_tool}"}],
+        }
+    else:
+        proc = subprocess.run(
+            command,
+            cwd=REPO_HARNESS_DIR.parent,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        returncode = proc.returncode
+        stdout = proc.stdout
+        stderr = proc.stderr
+        try:
+            parsed = json.loads(stdout)
+            payload = parsed if isinstance(parsed, dict) else {
+                "schema": "autosci_wiki_lint_cli.v1",
+                "ok": False,
+                "status": "failed",
+                "wiki_root": str(wiki_root),
+                "page_count": 0,
+                "edge_count": 0,
+                "issues": [{"severity": "error", "message": "lint JSON output was not an object"}],
+            }
+        except json.JSONDecodeError as exc:
+            payload = {
+                "schema": "autosci_wiki_lint_cli.v1",
+                "ok": False,
+                "status": "failed",
+                "wiki_root": str(wiki_root),
+                "page_count": 0,
+                "edge_count": 0,
+                "issues": [{"severity": "error", "message": f"lint JSON parse failed: {exc}"}],
+                "stdout_preview": stdout[:1000],
+            }
+    issues = payload.get("issues") if isinstance(payload.get("issues"), list) else []
+    issue_counts = {
+        "error": sum(1 for issue in issues if isinstance(issue, dict) and str(issue.get("severity") or "") == "error"),
+        "warn": sum(1 for issue in issues if isinstance(issue, dict) and str(issue.get("severity") or "") == "warn"),
+        "info": sum(1 for issue in issues if isinstance(issue, dict) and str(issue.get("severity") or "") == "info"),
+    }
+    payload.update(
+        {
+            "command": command,
+            "returncode": returncode,
+            "issue_counts": issue_counts,
+        }
+    )
+    lint_report_path = output_dir / "wiki_lint_report.json"
+    lint_report_ref = _write_json_sidecar(lint_report_path, payload)
+    artifacts.append({"type": "wiki_lint_report_json", "path": lint_report_ref})
+    if stderr.strip():
+        stderr_ref = _write_text_sidecar(output_dir / "wiki_lint_stderr.log", stderr)
+        artifacts.append({"type": "wiki_lint_stderr", "path": stderr_ref})
+    return payload, artifacts
+
+
+def _check_final_quality_boundary(findings: dict[str, Any], model_output: dict[str, Any]) -> dict[str, Any]:
+    local_blocking: list[str] = []
+    if not findings.get("root_exists"):
+        local_blocking.append("wiki root is missing")
+    if int(findings.get("markdown_page_count") or 0) <= 0:
+        local_blocking.append("wiki markdown pages are missing")
+    missing_dirs = list(findings.get("missing_dirs") or [])
+    if missing_dirs:
+        local_blocking.append(f"wiki directories are missing: {', '.join(str(item) for item in missing_dirs)}")
+    edge_errors = list(findings.get("edge_errors") or [])
+    if edge_errors:
+        local_blocking.append("wiki graph edges are missing or invalid")
+    lint_report = findings.get("lint_report") if isinstance(findings.get("lint_report"), dict) else {}
+    lint_counts = lint_report.get("issue_counts") if isinstance(lint_report.get("issue_counts"), dict) else {}
+    lint_error_count = int(lint_counts.get("error") or 0)
+    if lint_error_count:
+        local_blocking.append(f"native wiki lint reported {lint_error_count} error issue(s)")
+    model_ready = (
+        model_output.get("status") == "completed"
+        and bool(str(model_output.get("answer") or "").strip())
+        and bool(model_output.get("evidence_ids"))
+    )
+    blocking_reasons = [*local_blocking]
+    if not model_ready:
+        blocking_reasons.append(
+            f"model quality review status is `{model_output.get('status') or 'missing'}`, not completed with answer and evidence ids"
+        )
+    final_quality_ready = not blocking_reasons
+    return {
+        "schema": "autosci_check_final_quality_boundary.v1",
+        "status": "final_quality_ready" if final_quality_ready else "check_final_quality_incomplete",
+        "final_quality_ready": final_quality_ready,
+        "local_structure_ready": not local_blocking,
+        "local_blocking_reasons": local_blocking,
+        "model_status": str(model_output.get("status") or "missing"),
+        "model_source": str(model_output.get("source") or ""),
+        "model_provider": str(model_output.get("provider") or ""),
+        "model_name": str(model_output.get("model") or ""),
+        "model_confidence": model_output.get("confidence", "N/A"),
+        "model_evidence_ids": _unique_strings([str(item) for item in model_output.get("evidence_ids") or []]),
+        "request_sha256": str(model_output.get("request_sha256") or ""),
+        "response_sha256": str(model_output.get("response_sha256") or ""),
+        "blocking_reasons": blocking_reasons,
+        "limitations": [] if final_quality_ready else [
+            "Final wiki quality readiness requires passing local wiki checks plus completed model-backed recommendation evidence."
+        ],
+    }
 
 
 def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
@@ -8163,9 +17856,10 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             except json.JSONDecodeError as exc:
                 edge_errors.append({"line": index, "error": str(exc)})
                 continue
-            for field in ("source", "target", "relation"):
-                if not str(payload.get(field) or "").strip():
-                    edge_errors.append({"line": index, "error": f"missing {field}"})
+            legacy_ready = all(str(payload.get(field) or "").strip() for field in ("source", "target", "relation"))
+            lint_ready = all(str(payload.get(field) or "").strip() for field in ("from", "to", "type"))
+            if not (legacy_ready or lint_ready):
+                edge_errors.append({"line": index, "error": "missing source/target/relation or from/to/type"})
     elif primary.exists():
         edge_errors.append({"line": 0, "error": "graph/edges.jsonl is missing"})
     evidence_ids = [f"check-wiki:{_slug(target)}", _rel(primary)]
@@ -8177,6 +17871,18 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "markdown_page_count": len(markdown_pages),
         "missing_dirs": missing_dirs,
         "edge_errors": edge_errors,
+    }
+    lint_report, lint_artifacts = _run_wiki_lint_report(primary, paths["recommended_changes"].parent)
+    lint_counts = lint_report.get("issue_counts") if isinstance(lint_report.get("issue_counts"), dict) else {}
+    findings["lint_report"] = {
+        "schema": str(lint_report.get("schema") or ""),
+        "status": str(lint_report.get("status") or ""),
+        "ok": bool(lint_report.get("ok")),
+        "returncode": lint_report.get("returncode"),
+        "wiki_root": str(lint_report.get("wiki_root") or ""),
+        "page_count": int(lint_report.get("page_count") or 0),
+        "edge_count": int(lint_report.get("edge_count") or 0),
+        "issue_counts": lint_counts,
     }
     model_output, model_artifacts = _model_output(
         envelope,
@@ -8199,8 +17905,14 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         runtime_errors.append({"id": "wiki-dirs-missing", "description": f"Missing wiki directories: {', '.join(missing_dirs)}"})
     if edge_errors:
         runtime_errors.append({"id": "wiki-edges-invalid", "description": "Graph edge file is missing or contains invalid rows."})
+    lint_error_count = int(lint_counts.get("error") or 0)
+    if lint_error_count:
+        runtime_errors.append({"id": "wiki-lint-errors", "description": f"Native wiki lint reported {lint_error_count} error issue(s)."})
     if not runtime_errors and not model_completed:
         runtime_errors.append({"id": "wiki-health-review", "description": "Structural checks passed; content quality still requires model/reviewer evidence."})
+    final_boundary = _check_final_quality_boundary(findings, model_output)
+    final_boundary_path = paths["recommended_changes"].parent / "check_final_quality_boundary.json"
+    final_boundary_artifact = _write_json_sidecar(final_boundary_path, final_boundary)
     quality_reasons = [item["description"] for item in runtime_errors]
     if not quality_reasons:
         quality_reasons = [f"Model/reviewer evidence completed via `{model_output.get('source') or model_output.get('provider') or 'explicit evidence'}`."]
@@ -8261,12 +17973,20 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             f"Markdown pages: `{len(markdown_pages)}`",
             f"Missing dirs: `{', '.join(missing_dirs) if missing_dirs else 'N/A'}`",
             f"Edge errors: `{len(edge_errors)}`",
+            f"Native lint errors: `{int(lint_counts.get('error') or 0)}`",
+            f"Native lint warnings: `{int(lint_counts.get('warn') or 0)}`",
+            f"Native lint info: `{int(lint_counts.get('info') or 0)}`",
             "",
             "## Model Evidence",
             "",
             f"Status: `{model_output.get('status')}`",
             f"Source: `{model_output.get('source', 'N/A')}`",
             f"Answer: {model_output.get('answer', 'N/A') if model_completed else 'N/A'}",
+            "",
+            "## Final Quality Boundary",
+            "",
+            f"Status: `{final_boundary.get('status')}`",
+            f"Final quality ready: `{final_boundary.get('final_quality_ready')}`",
             "",
             "## Findings JSON",
             "",
@@ -8277,6 +17997,29 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         ]
     )
     _write_text_sidecar(paths["recommended_changes"], markdown)
+    evidence_payload_path = _configured_output_path(
+        envelope,
+        "evidence_payload_path",
+        _output_dir(envelope, "check_wiki_health") / "check_wiki_health.evidence.json",
+        legacy_key="evidence_path",
+        legacy_suffix=".json",
+    )
+    model_runtime_proof_artifact = _write_model_runtime_proof_manifest(
+        envelope,
+        action="check_wiki_health",
+        native_skill="check",
+        evidence_path=evidence_payload_path,
+        model_output=model_output,
+    )
+    artifacts = [
+        _artifact("recommended_changes_markdown", paths["recommended_changes"]),
+        _artifact("patch_candidates_directory", paths["patch_candidates"]),
+        {"type": "check_final_quality_boundary_json", "path": final_boundary_artifact},
+        *lint_artifacts,
+        *model_artifacts,
+    ]
+    if model_runtime_proof_artifact is not None:
+        artifacts.append(model_runtime_proof_artifact)
     return {
         "proposal_id": f"check-wiki-health-{_slug(target)}",
         "scope": "wiki health check",
@@ -8292,16 +18035,14 @@ def _wiki_health_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             "protected_core_edits_applied": False,
             "application_state": "proposed_only",
             "approval_ref": "N/A",
+            "final_quality_boundary": final_boundary,
         },
         "recommended_changes_path": _rel(paths["recommended_changes"]),
         "patch_candidates_path": _rel(paths["patch_candidates"]),
-        "artifacts": [
-            _artifact("recommended_changes_markdown", paths["recommended_changes"]),
-            _artifact("patch_candidates_directory", paths["patch_candidates"]),
-            *model_artifacts,
-        ],
+        "artifacts": artifacts,
         "limitations": [
             "Wiki health check is structural and local only.",
+            *list(final_boundary.get("limitations") or []),
             (
                 "LLM-assisted content quality evidence was supplied and archived."
                 if model_completed
@@ -8410,30 +18151,50 @@ def _normalize_visualization_edges(raw_edges: list[dict[str, Any]], fallback: li
     return edges
 
 
-def _visualize_graph_artifacts(envelope: dict[str, Any], target: str, slug: str) -> tuple[dict[str, Any], list[dict[str, str]], list[str], str]:
+def _visualize_graph_artifacts(
+    envelope: dict[str, Any],
+    target: str,
+    slug: str,
+) -> tuple[dict[str, Any], list[dict[str, str]], list[str], dict[str, Any]]:
     inputs = dict(envelope.get("inputs") or {})
     wiki_root = _resolve_harness_path(inputs.get("wiki_root") or "artifacts/autosci/workspace/wiki")
     output_dir = _output_dir(envelope, "visualize_graph")
     output_dir.mkdir(parents=True, exist_ok=True)
     slug_tag = f"visualize-{slug}"
     obsidian_out = wiki_root / ".obsidian" / "graph.json"
-    canvas_out = wiki_root / "graph" / "autosci.canvas"
+    focus = str(inputs.get("focus") or "").strip()
+    depth = int(inputs.get("depth") or 2)
+    node_types = str(inputs.get("types") or "").strip()
+    edge_types = str(inputs.get("edge_types") or "").strip()
+    mode_all = bool(inputs.get("all"))
+    obsidian_requested = bool(inputs.get("obsidian"))
+    canvas_requested = bool(inputs.get("canvas"))
+    canvas_filter_requested = bool(focus or node_types or edge_types)
+    no_explicit_mode = not any([mode_all, obsidian_requested, canvas_requested, canvas_filter_requested])
+    generate_obsidian = mode_all or obsidian_requested or no_explicit_mode
+    generate_canvas = mode_all or canvas_requested or canvas_filter_requested or no_explicit_mode
+    canvas_name = f"focus-{focus.replace('/', '-')}.canvas" if focus else "knowledge-map.canvas"
+    obsidian_app_out = wiki_root / ".obsidian" / "app.json"
+    canvas_out = wiki_root / "canvases" / canvas_name
     graph_out = output_dir / "autosci_web_graph.json"
     status_reasons: list[str] = []
+    evidence_ids = [f"visualize:{slug}", slug_tag, target]
 
-    return_code, payload, artifacts = _run_visualize_tool(
-        REPO_HARNESS_DIR.parent / "tools" / "visualize.py",
-        ["generate-obsidian-config", "--wiki-root", str(wiki_root), "--out", str(obsidian_out)],
-        output_dir=output_dir,
-        artifact_prefix="visualize_obsidian_config",
-    )
-    if return_code != 0:
-        status_reasons.append("Obsidian graph config generation failed.")
+    artifacts: list[dict[str, str]] = []
+    if generate_obsidian:
+        return_code, _payload, obsidian_artifacts = _run_visualize_tool(
+            REPO_HARNESS_DIR.parent / "tools" / "visualize.py",
+            ["generate-obsidian-config", "--wiki-root", str(wiki_root), "--out", str(obsidian_out)],
+            output_dir=output_dir,
+            artifact_prefix="visualize_obsidian_config",
+        )
+        artifacts.extend(obsidian_artifacts)
+        if return_code != 0:
+            status_reasons.append("Obsidian graph config generation failed.")
 
     canvas_payload: dict[str, Any] = {}
-    _, canvas_payload, canvas_artifacts = _run_visualize_tool(
-        REPO_HARNESS_DIR.parent / "tools" / "visualize.py",
-        [
+    if generate_canvas:
+        canvas_args = [
             "generate-canvas",
             "--wiki-root",
             str(wiki_root),
@@ -8441,18 +18202,38 @@ def _visualize_graph_artifacts(envelope: dict[str, Any], target: str, slug: str)
             str(graph_out),
             "--out",
             str(canvas_out),
-        ],
-        output_dir=output_dir,
-        artifact_prefix="visualize_canvas",
-    )
-    artifacts.extend(canvas_artifacts)
-    if not canvas_payload:
-        status_reasons.append("AutoSci canvas generation produced no structured output.")
+        ]
+        if focus:
+            canvas_args.extend(["--focus", focus])
+        if depth:
+            canvas_args.extend(["--depth", str(depth)])
+        if node_types:
+            canvas_args.extend(["--types", node_types])
+        if edge_types:
+            canvas_args.extend(["--edge-types", edge_types])
+        _, canvas_payload, canvas_artifacts = _run_visualize_tool(
+            REPO_HARNESS_DIR.parent / "tools" / "visualize.py",
+            canvas_args,
+            output_dir=output_dir,
+            artifact_prefix="visualize_canvas",
+        )
+        artifacts.extend(canvas_artifacts)
+        if not canvas_payload:
+            status_reasons.append("AutoSci canvas generation produced no structured output.")
 
     graph_payload: dict[str, Any] = {}
+    graph_args = ["graph-data", "--wiki-root", str(wiki_root), "--out", str(graph_out)]
+    if focus:
+        graph_args.extend(["--focus", focus])
+    if depth:
+        graph_args.extend(["--depth", str(depth)])
+    if node_types:
+        graph_args.extend(["--types", node_types])
+    if edge_types:
+        graph_args.extend(["--edge-types", edge_types])
     code, graph_payload, graph_artifacts = _run_visualize_tool(
         REPO_HARNESS_DIR.parent / "tools" / "visualize.py",
-        ["graph-data", "--wiki-root", str(wiki_root), "--out", str(graph_out)],
+        graph_args,
         output_dir=output_dir,
         artifact_prefix="visualize_graph_data",
     )
@@ -8466,15 +18247,27 @@ def _visualize_graph_artifacts(envelope: dict[str, Any], target: str, slug: str)
         [f"visualize:{slug}", slug_tag, target],
     )
 
-    if not obsidian_out.exists():
+    rec_code, _rec_payload, rec_artifacts = _run_visualize_tool(
+        REPO_HARNESS_DIR.parent / "tools" / "visualize.py",
+        ["list-recommendations"],
+        output_dir=output_dir,
+        artifact_prefix="visualize_recommendations",
+    )
+    artifacts.extend(rec_artifacts)
+    if rec_code != 0:
+        status_reasons.append("Visualization recommendations command failed.")
+
+    if generate_obsidian and not obsidian_out.exists():
         status_reasons.append("Obsidian config artifact was not created.")
-    if not canvas_out.exists():
+    if generate_canvas and not canvas_out.exists():
         status_reasons.append("Canvas artifact was not created.")
     if not graph_out.exists():
         status_reasons.append("Graph data artifact was not created.")
 
     serve_payload: dict[str, Any] = {}
-    contract = _approval_contract(envelope, "visualize_graph", ["obsidian_canvas_write", "local_web_server", "graph_read" ])
+    side_effects = ["obsidian_canvas_write", "local_web_server", "graph_read"]
+    contract = _approval_contract(envelope, "visualize_graph", side_effects)
+    serve_success = False
     if bool(inputs.get("execute_approved_side_effect")) and contract.get("ready_for_execution"):
         code, serve_payload, serve_artifacts = _run_visualize_tool(
             REPO_HARNESS_DIR.parent / "tools" / "serve.py",
@@ -8483,32 +18276,131 @@ def _visualize_graph_artifacts(envelope: dict[str, Any], target: str, slug: str)
             artifact_prefix="visualize_web_health",
         )
         artifacts.extend(serve_artifacts)
-        if code != 0:
+        serve_success = (
+            code == 0
+            and serve_payload.get("ok") is True
+            and str(serve_payload.get("status") or "") == "completed"
+        )
+        if not serve_success:
             status_reasons.append("Local web health check execution failed.")
-        else:
-            status_reasons.append("Local web graph health artifact generated from serve health-check.")
-    contract_artifact = _write_approval_contract_sidecar(envelope, "visualize_graph", contract)
-    artifacts.append(contract_artifact)
+    elif bool(inputs.get("execute_approved_side_effect")):
+        status_reasons.append("Local web health check was not executed because approval preflight was incomplete.")
+    if serve_payload:
+        serve_health_rel = _write_json_sidecar(output_dir / "visualize_web_health.json", serve_payload)
+        serve_health_artifact = {"type": "visualize_web_health_json", "path": serve_health_rel}
+        artifacts.append(serve_health_artifact)
+        if serve_success:
+            contract.setdefault("runtime_evidence", []).append({
+                "path": serve_health_rel,
+                "artifact_path": serve_health_rel,
+                "exists": True,
+                "kind": "file",
+                "verifiable": True,
+            })
+            contract.setdefault("after_artifacts", []).append({
+                "path": serve_health_rel,
+                "artifact_path": serve_health_rel,
+                "exists": True,
+                "kind": "file",
+                "verifiable": True,
+            })
+            for path in (graph_out, obsidian_out, canvas_out):
+                if path.exists():
+                    contract.setdefault("after_artifacts", []).append({
+                        "path": _rel(path),
+                        "artifact_path": _rel(path),
+                        "exists": True,
+                        "kind": "file",
+                        "verifiable": True,
+                    })
+            contract = _refresh_approval_contract(contract)
+    else:
+        contract = _refresh_approval_contract(contract)
     if graph_out.exists():
         artifacts.append(_artifact("autosci_web_graph_json", graph_out))
-    if obsidian_out.exists():
+    if generate_obsidian and obsidian_out.exists():
         artifacts.append(_artifact("obsidian_graph_config_json", obsidian_out))
-    if canvas_out.exists():
+    if generate_obsidian and obsidian_app_out.exists():
+        artifacts.append(_artifact("obsidian_app_config_json", obsidian_app_out))
+    if generate_canvas and canvas_out.exists():
         artifacts.append(_artifact("autosci_canvas_json", canvas_out))
-    if serve_payload:
-        artifacts.append(_artifact("visualize_web_health_json", _write_json_sidecar(output_dir / "visualize_web_health.json", serve_payload)))
+    generated = [
+        artifact["type"]
+        for artifact in artifacts
+        if artifact.get("type") in {
+            "autosci_web_graph_json",
+            "obsidian_graph_config_json",
+            "obsidian_app_config_json",
+            "autosci_canvas_json",
+            "visualize_web_health_json",
+        }
+    ]
+    if generated:
+        log_path = _write_generic_wiki_log(
+            wiki_root,
+            "AutoSci Visualize",
+            graph_out,
+            evidence_ids,
+            "Generated visualization artifacts: " + ", ".join(generated),
+        )
+        artifacts.append({"type": "wiki_log", "path": _rel(log_path)})
+        if serve_success:
+            contract.setdefault("after_artifacts", []).append({
+                "path": _rel(log_path),
+                "artifact_path": _rel(log_path),
+                "exists": True,
+                "kind": "file",
+                "verifiable": True,
+            })
+            contract = _refresh_approval_contract(contract)
+    contract_artifact = _write_approval_contract_sidecar(envelope, "visualize_graph", contract)
+    artifacts.append(contract_artifact)
+    if serve_success:
+        evidence_payload_path = _configured_output_path(
+            envelope,
+            "evidence_payload_path",
+            _output_dir(envelope, "visualize_graph") / "visualize_graph.evidence.json",
+            legacy_key="evidence_path",
+            legacy_suffix=".json",
+        )
+        artifacts.extend(
+            _write_approved_mutation_runtime_proof_manifests(
+                envelope,
+                action="visualize_graph",
+                native_skill="visualize",
+                evidence_path=evidence_payload_path,
+                applied=True,
+                contract=contract,
+                contract_artifact=contract_artifact,
+                source_refs=[],
+                mutation_refs=[str(artifact.get("path") or "") for artifact in artifacts if isinstance(artifact, dict)],
+                include_wiki_mutation=False,
+                source_label="approved_visualize_web_health",
+                artifact_kind="visualize_web_health",
+                include_provider_source=False,
+            )
+        )
 
     status = "completed" if not status_reasons else "inconclusive"
     output = {
         "edges": edges,
-        "evidence_ids": [f"visualize:{slug}", slug_tag, target],
+        "evidence_ids": evidence_ids,
         "artifacts": artifacts,
         "status": status,
         "reason_count": len(status_reasons),
         "status_reasons": status_reasons,
-        "obsidian_config": _rel(obsidian_out),
-        "canvas": _rel(canvas_out),
+        "obsidian_config": _rel(obsidian_out) if generate_obsidian else "",
+        "canvas": _rel(canvas_out) if generate_canvas else "",
         "graph_data": _rel(graph_out),
+        "visualize_options": {
+            "all": mode_all or no_explicit_mode,
+            "obsidian": generate_obsidian,
+            "canvas": generate_canvas,
+            "focus": focus,
+            "depth": depth,
+            "types": node_types,
+            "edge_types": edge_types,
+        },
     }
     return output, artifacts, status_reasons, contract
 
@@ -8622,8 +18514,10 @@ def cmd_run(args: argparse.Namespace) -> int:
     envelope = load_envelope(args.envelope)
     evidence = ACTIONS[args.action](envelope)
     extra: dict[str, Any] = {}
-    if args.action == "ingest_paper":
-        extra["sidecar_evidence_paths"] = _write_phase9_foundation_sidecars(envelope, evidence)
+    if args.action in {"ingest_paper", "prepare_paper_source"}:
+        sidecar_evidence_paths = _write_phase9_foundation_sidecars(envelope, evidence)
+        extra["sidecar_evidence_paths"] = sidecar_evidence_paths
+        evidence = _attach_ingest_final_source_registration_boundary(envelope, evidence, sidecar_evidence_paths)
     if args.action == "evaluate_ideas":
         sidecar_paths = [_write_phase11_idea_memory_sidecar(envelope, evidence)]
         novelty_writeback_path = _write_novelty_writeback_sidecar(envelope, evidence)

@@ -1,0 +1,105 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "reset": {
+      "semantic_parity": "full",
+      "auditor": "phase19-reset-semantic-audit",
+      "summary": "Solar $reset now preserves native AutoSci scoped reset semantics: required --scope routing, dry-run plan generation through tools/reset_wiki.py, approval-gated destructive execution, runtime/after-snapshot proof, wiki log emission, and raw artifact preservation for wiki-only resets.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/reset/SKILL.md",
+        "../AutoSci/tools/reset_wiki.py",
+        "../AutoSci/tools/research_wiki.py"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/reset/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/reset_wiki.py",
+        "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/workflow_evolution.reset.json",
+        "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_wiki_dry_run_plan.json",
+        "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_wiki_runtime_evidence.json",
+        "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_after_snapshot.json",
+        "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/wiki/log.md",
+        "harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/raw/papers/source.txt"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $reset accepts native --scope and passes it through native_options/reset_scope to the backend route.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/reset/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "dry_run_plan",
+          "status": "ok",
+          "detail": "Default reset behavior calls tools/reset_wiki.py --dry-run and archives the structured delete/reset plan without mutating files.",
+          "evidence_refs": [
+            "tools/reset_wiki.py",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_wiki_dry_run_plan.json"
+          ]
+        },
+        {
+          "check": "approval_gate",
+          "status": "ok",
+          "detail": "Destructive reset execution requires approval_ref, allowlist evidence, before-state evidence, and --execute-approved; external runtime proof compatibility is preserved.",
+          "evidence_refs": [
+            ".agents/skills/reset/SKILL.md",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_approval_contract.json"
+          ]
+        },
+        {
+          "check": "approved_local_execution",
+          "status": "ok",
+          "detail": "The approved smoke executed tools/reset_wiki.py on an isolated wiki fixture and produced completed runtime evidence plus an after-state snapshot.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/workflow_evolution.reset.json",
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_wiki_runtime_evidence.json",
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_after_snapshot.json"
+          ]
+        },
+        {
+          "check": "side_effect_and_wiki_mutation_proofs",
+          "status": "ok",
+          "detail": "The approved reset smoke emitted approval, side-effect execution, and wiki mutation runtime proof manifests with concrete artifact references.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_approval_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_side_effect_execution_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_plan_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "wiki_log_and_scope_preservation",
+          "status": "ok",
+          "detail": "The wiki-scope smoke removed wiki markdown/graph files, rebuilt .gitkeep scaffold, wrote a reset log entry, and preserved raw/papers/source.txt.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/wiki/log.md",
+            "harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/raw/papers/source.txt",
+            "harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_after_snapshot.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The reset route is semantically full as an approval-gated route: dry-run is the default, and destructive mutation occurs only with explicit approval evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "The verified smoke executed against an isolated phase19 runtime fixture, not the production Solar AutoSci workspace."
+        }
+      ]
+    }
+  }
+}

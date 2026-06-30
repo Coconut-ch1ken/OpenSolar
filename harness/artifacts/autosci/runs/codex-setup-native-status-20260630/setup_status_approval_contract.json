@@ -1,0 +1,29 @@
+{
+  "action": "setup_status",
+  "after_artifacts": [],
+  "after_ready": false,
+  "allowlist_evidence": [],
+  "allowlist_ready": false,
+  "approval_ref": "",
+  "approval_state": "approval_required",
+  "approved": false,
+  "before_artifacts": [],
+  "before_ready": false,
+  "execution_verified": false,
+  "missing": [
+    "approval_ref",
+    "allowlist_evidence",
+    "before_artifacts",
+    "runtime_evidence",
+    "after_artifacts"
+  ],
+  "ready_for_execution": false,
+  "runtime_evidence": [],
+  "runtime_ready": false,
+  "schema": "autosci_approval_contract.v1",
+  "side_effects": [
+    "credential_probe",
+    "persistent_config_write",
+    "workspace_bootstrap"
+  ]
+}

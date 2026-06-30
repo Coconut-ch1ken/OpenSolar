@@ -1,0 +1,176 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/rebuttal/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/rebuttal/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $rebuttal preserves the native review input, paper slug, venue, stress-test, and formal/rich format controls through reviewer-thread evidence, paper-slug, venue, format, stress-test, and Review LLM/submission audit inputs.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+        ".agents/skills/rebuttal/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "reviewer_thread_atomization",
+      "detail": "Structured reviewer-thread evidence is loaded without fixture fallback, atomized into RvX-CY concerns with reviewer/source/evidence ids, and path-like missing inputs are not treated as fake review text.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "wiki_evidence_mapping",
+      "detail": "Each atomized concern is mapped to wiki/source evidence with entity id/type/path, evidence status, response strategy, and traceability checks.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/experiments/exp-skillgen.md",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "rich_and_formal_rebuttal_outputs",
+      "detail": "The publication bundle includes rich Markdown analysis plus formal plain-text rebuttal output with reviewer-grouped RvX-CY responses.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.md",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_stress_test_boundary",
+      "detail": "Review LLM stress-test readiness is explicit and completed only when supplied Review LLM evidence is completed; the runtime proof records review_llm_or_model_evidence and external_runtime_evidence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_final_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "submission_audit_boundary",
+      "detail": "Formal rebuttal paste readiness and submission audit readiness are source-backed by supplied audit evidence; portal submission remains unclaimed unless that external audit records completion.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_final_runtime_proof.json",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "safety_and_truthfulness",
+      "detail": "Per-concern safety checks prevent fabricated direct claims, unsupported overpromise, missing traceability, and contradicted evidence from being treated as accepted support; route limitations keep portal submission external.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "regression_and_gate_coverage",
+      "detail": "Regression tests cover Review LLM findings, structured reviewer-thread ingestion, wiki mapping, formal output, stress-test boundary, and submission audit; route and global inventory gates pass with runtime_proof_status verified.",
+      "evidence_refs": [
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/rebuttal-route-after-thread-audit-proof.json",
+        "harness/artifacts/autosci/phase19/current-parity-inventory-after-rebuttal-thread-audit-proof.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-06-30T16:02:46Z",
+  "auditor": "phase19-rebuttal-semantic-audit",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/rebuttal/SKILL.md",
+    "../AutoSci/i18n/en/skills/rebuttal/SKILL.md"
+  ],
+  "native_skill": "rebuttal",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T16:02:46Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/rebuttal",
+    "backend_mode": "external_optional",
+    "coverage_status": "partial",
+    "limitations": [
+      "Reviewer-thread evidence is atomized into RvX-CY concerns, mapped to wiki/source evidence, rendered as rich/formal rebuttal artifacts, and gated by Review LLM stress-test plus supplied submission audit evidence; portal submission itself is not claimed unless external audit evidence records it."
+    ],
+    "required_capabilities": [
+      "review comment atomization",
+      "evidence mapping",
+      "response drafting",
+      "stress-test",
+      "reviewer-thread ingestion",
+      "formal rebuttal export",
+      "submission audit boundary"
+    ],
+    "side_effect_policy": "dry_run_only",
+    "solar_backend_action": "draft_rebuttal"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/rebuttal/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/reviewer-thread-20260630.json",
+    "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json",
+    "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-submission-audit-20260630.json",
+    "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/ideas/skillgen.md",
+    "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/experiments/exp-skillgen.md",
+    "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/wiki/methods/verifier-gated-skill-selection.md",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_response_map.json",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_reviewer_thread_boundary.json",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_stress_test_boundary.json",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal_submission_boundary.json",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.md",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/rebuttal.txt",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/draft_rebuttal_final_runtime_proof.json",
+    "harness/artifacts/autosci/phase19/rebuttal-route-after-thread-audit-proof.json",
+    "harness/artifacts/autosci/phase19/current-parity-inventory-after-rebuttal-thread-audit-proof.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $rebuttal now preserves native AutoSci /rebuttal semantics as a source-backed, dry-run publication route: it accepts reviewer-thread evidence and paper-slug/venue/format/stress-test controls, atomizes reviewer comments into RvX-CY concerns, maps each concern to wiki/source evidence, drafts rich and formal rebuttal artifacts, records per-concern safety checks, gates final acceptance with Review LLM stress-test evidence, and separates paste-ready/submission-audit readiness from any external portal submission claim."
+}

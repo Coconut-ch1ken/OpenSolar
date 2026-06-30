@@ -1,0 +1,18 @@
+{
+  "inputs": {
+    "claims_evidence": "artifacts/autosci/runs/ideate-b4632dc219/research_claims.json",
+    "memory_evidence": "artifacts/autosci/runs/ideate-b4632dc219/research_memory_update.json",
+    "method_evidence": "artifacts/autosci/runs/ideate-b4632dc219/research_method.json",
+    "paper_evidence": "artifacts/autosci/runs/ideate-b4632dc219/research_paper.json"
+  },
+  "mode": "fixture",
+  "node_id": "node-generate-ideas",
+  "output_dir": "artifacts/autosci/runs/ideate-b4632dc219",
+  "outputs": {
+    "evidence_jsonl": "artifacts/autosci/runs/ideate-b4632dc219/evidence.jsonl",
+    "evidence_payload_path": "artifacts/autosci/runs/ideate-b4632dc219/idea_candidate.json",
+    "result_path": "artifacts/autosci/runs/ideate-b4632dc219/generate_ideas.result.json"
+  },
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "task_id": "task-autosci-skillgen-generate_ideas"
+}

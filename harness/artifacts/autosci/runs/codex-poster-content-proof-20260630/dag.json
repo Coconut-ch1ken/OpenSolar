@@ -1,0 +1,40 @@
+{
+  "nodes": [
+    {
+      "name": "SkillGen Poster Paper",
+      "content": "Research Team",
+      "edge": [
+        "Introduction",
+        "Method",
+        "Results"
+      ],
+      "level": 0,
+      "visual_node": [],
+      "resolution": ""
+    },
+    {
+      "name": "Introduction",
+      "content": "Skill generation needs source-grounded validation. This poster summarizes the motivation for verifier-gated generated skills.",
+      "edge": [],
+      "level": 1,
+      "visual_node": [],
+      "resolution": ""
+    },
+    {
+      "name": "Method",
+      "content": "We build a verifier-gated skill selection pipeline. The method keeps evidence identifiers attached to generated skills.",
+      "edge": [],
+      "level": 1,
+      "visual_node": [],
+      "resolution": ""
+    },
+    {
+      "name": "Results",
+      "content": "The baseline ablation completed successfully. The result section records the main evidence for the generated skill claim.",
+      "edge": [],
+      "level": 1,
+      "visual_node": [],
+      "resolution": ""
+    }
+  ]
+}

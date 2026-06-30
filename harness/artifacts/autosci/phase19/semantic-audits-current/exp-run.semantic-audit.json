@@ -1,0 +1,74 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/exp-run/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md"
+  ],
+  "native_skill": "exp-run",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "SSH, rsync, screen sessions, and long-running code execution require approval; tools/remote.py launch/pull-results style commands can produce or feed autosci_runtime_evidence.v1 only when explicitly approved and allowlisted; approved live/provider pull-results commands now emit a remote collection boundary, while local result-dir reads remain local collection only; local collection identity/hash ledger is wired, and experiment_run_final_runtime_audit_boundary requires verified approval/runtime evidence, collection ledger, live remote/provider collection proof, and wiki mutation evidence before a run/collect lifecycle is treated as final; distributed remote/session exactly-once collection and real external connectivity smoke are still partial.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/exp-run",
+    "backend_mode": "side_effect_gated",
+    "coverage_status": "gated",
+    "limitations": [
+      "SSH, rsync, screen sessions, and long-running code execution require approval; tools/remote.py launch/pull-results style commands can produce or feed autosci_runtime_evidence.v1 only when explicitly approved and allowlisted; approved live/provider pull-results commands now emit a remote collection boundary, while local result-dir reads remain local collection only; local collection identity/hash ledger is wired, and experiment_run_final_runtime_audit_boundary requires verified approval/runtime evidence, collection ledger, live remote/provider collection proof, and wiki mutation evidence before a run/collect lifecycle is treated as final; distributed remote/session exactly-once collection and real external connectivity smoke are still partial."
+    ],
+    "required_capabilities": [
+      "deploy",
+      "monitor",
+      "collect",
+      "local mode",
+      "remote mode"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "run_experiment"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/exp-run/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}

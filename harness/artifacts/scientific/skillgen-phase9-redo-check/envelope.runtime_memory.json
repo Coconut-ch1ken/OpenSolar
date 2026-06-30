@@ -1,0 +1,21 @@
+{
+  "capability_capsule_id": "cap.research-memory-update",
+  "inputs": {
+    "paper_id": "paper-skillgen-redo",
+    "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md"
+  },
+  "lease_ttl_seconds": 120,
+  "mode": "fixture",
+  "node_id": "node-phase9-redo-memory-update",
+  "objective": "Phase 9 redo dispatch for autosci-memory-update-worker on SkillGen sample fixture.",
+  "operator_id": "autosci-memory-update-worker",
+  "output_dir": "artifacts/scientific/skillgen-phase9-redo-check",
+  "outputs": {
+    "evidence_jsonl": "artifacts/scientific/skillgen-phase9-redo-check/evidence.jsonl",
+    "evidence_payload_path": "artifacts/scientific/skillgen-phase9-redo-check/memory_update.json",
+    "result_path": "artifacts/scientific/skillgen-phase9-redo-check/runtime_memory.result.json"
+  },
+  "sprint_id": "sprint-autosci-phase9-redo-check",
+  "task_id": "task-phase9-redo-memory-update",
+  "task_type": "SCIENCE_MEMORY_UPDATE"
+}

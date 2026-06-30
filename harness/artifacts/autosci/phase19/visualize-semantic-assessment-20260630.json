@@ -1,0 +1,112 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "visualize": {
+      "semantic_parity": "full",
+      "auditor": "phase19-visualize-semantic-audit",
+      "summary": "Solar $visualize now preserves the native command surface for Obsidian, Canvas, focus/depth, type filters, edge filters, recommendations, SPA serve health, and wiki logging while keeping web serving approval-gated.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/visualize/SKILL.md",
+        "../AutoSci/tools/visualize.py",
+        "../AutoSci/tools/serve.py"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/visualize/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/visualize.py",
+        "tools/serve.py",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/research_graph_update.visualize.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_obsidian_config_stdout.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_canvas_stdout.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_data_stdout.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_recommendations_stdout.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/.obsidian/graph.json",
+        "harness/artifacts/autosci/workspace/wiki/.obsidian/app.json",
+        "harness/artifacts/autosci/workspace/wiki/canvases/knowledge-map.canvas",
+        "harness/artifacts/autosci/workspace/wiki/log.md"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $visualize accepts the native mode and filter flags for all/obsidian/canvas/focus/depth/types/edge-types plus serve.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/visualize/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "obsidian_artifacts",
+          "status": "ok",
+          "detail": "The approved smoke generated Obsidian graph config and preserves app.json creation semantics through the Solar-managed tool path.",
+          "evidence_refs": [
+            "tools/visualize.py",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_obsidian_config_stdout.json",
+            "harness/artifacts/autosci/workspace/wiki/.obsidian/graph.json",
+            "harness/artifacts/autosci/workspace/wiki/.obsidian/app.json"
+          ]
+        },
+        {
+          "check": "canvas_focus_and_filter_artifacts",
+          "status": "ok",
+          "detail": "Canvas generation supports native focus/depth, node type filters, and edge type filters; regression coverage verifies filtered focused output.",
+          "evidence_refs": [
+            "tools/visualize.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_canvas_stdout.json",
+            "harness/artifacts/autosci/workspace/wiki/canvases/knowledge-map.canvas"
+          ]
+        },
+        {
+          "check": "spa_graph_and_recommendations",
+          "status": "ok",
+          "detail": "Solar archives graph data, SPA serve health output, and list-recommendations output for the native interactive graph workflow.",
+          "evidence_refs": [
+            "tools/serve.py",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_data_stdout.json",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_recommendations_stdout.json"
+          ]
+        },
+        {
+          "check": "approval_and_side_effect_boundary",
+          "status": "ok",
+          "detail": "Local web serving remains approval-gated and produces explicit approval plus side-effect runtime proof when executed.",
+          "evidence_refs": [
+            ".agents/skills/visualize/SKILL.md",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_approval_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "wiki_log",
+          "status": "ok",
+          "detail": "Solar $visualize appends a wiki log entry listing generated visualization artifacts, matching the native Step 5 logging requirement.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/workspace/wiki/log.md",
+            "harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_side_effect_execution_runtime_proof.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The visualize route is semantically full as an approval-gated route: local artifact generation is explicit, and local web serve health is executed only with approval evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "No original AutoSci wiki/raw paths are mutated; all generated artifacts are under the Solar-managed workspace and evidence directories."
+        }
+      ]
+    }
+  }
+}

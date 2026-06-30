@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-06-30T02:58:48Z",
+  "proofs": [
+    {
+      "categories": [
+        "provider_source_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed external novelty provider/source evidence for AutoSci parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-novelty-runtime-proof-check/idea_evaluation.json",
+        "artifacts/autosci/runs/codex-novelty-runtime-proof-check/external_novelty_sources.json",
+        "artifacts/autosci/runs/codex-novelty-runtime-proof-check/external_novelty_payloads/supplied_evidence-af5cabf602b518da.json"
+      ],
+      "native_skill": "novelty",
+      "production_ready": true,
+      "proof_id": "runtime:novelty:supplied-evidence:20260630T025848Z",
+      "provenance": {
+        "artifact_kind": "external_novelty",
+        "captured_at": "2026-06-30T02:58:48Z",
+        "command": "external_novelty_evidence:supplied_evidence",
+        "source": "supplied_evidence"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

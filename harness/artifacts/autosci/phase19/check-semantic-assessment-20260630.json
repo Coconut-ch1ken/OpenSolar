@@ -1,0 +1,81 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "check": {
+      "semantic_parity": "full",
+      "auditor": "phase19-check-semantic-audit",
+      "summary": "Solar $check now executes native wiki lint semantics through tools/lint.py --wiki-root, preserves the report-only default, records lint issues as explicit gate evidence, and requires completed model/reviewer evidence before final quality readiness.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/check/SKILL.md",
+        "../AutoSci/tools/lint.py",
+        "../AutoSci/tools/research_wiki.py"
+      ],
+      "additional_solar_evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/lint.py",
+        "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/workflow_evolution.check.json",
+        "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/wiki_lint_report.json",
+        "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/check_final_quality_boundary.json",
+        "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/check_wiki_health_model_runtime_proof.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Original /check inputs and report-only default are represented by Solar $check with --wiki-root and model evidence routing.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/check/SKILL.md",
+            ".agents/skills/check/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "native_lint_execution",
+          "status": "ok",
+          "detail": "Solar check_wiki_health executes tools/lint.py --wiki-root and archives autosci_wiki_lint_cli.v1 output.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/wiki_lint_report.json"
+          ]
+        },
+        {
+          "check": "report_only_default",
+          "status": "ok",
+          "detail": "The smoke run produced workflow evidence and recommendations without mutating raw/native AutoSci paths.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/workflow_evolution.check.json"
+          ]
+        },
+        {
+          "check": "model_quality_boundary",
+          "status": "ok",
+          "detail": "Final quality readiness requires and received completed model-command evidence with evidence ids.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/check_final_quality_boundary.json",
+            "harness/artifacts/autosci/runs/codex-check-native-lint-proof-20260630/check_wiki_health_model_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "regression_coverage",
+          "status": "ok",
+          "detail": "Targeted $check regression covers native lint artifact emission, final quality readiness, model provenance hashes, and runtime proof category boundaries.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The check route is semantically full for report-only wiki health checks with explicit model/reviewer quality evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "Side-effecting --fix behavior remains outside this semantic-full claim because the route is report-only by default and side_effect_policy is none."
+        }
+      ]
+    }
+  }
+}

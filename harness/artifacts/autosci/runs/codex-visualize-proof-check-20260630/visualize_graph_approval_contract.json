@@ -1,0 +1,83 @@
+{
+  "action": "visualize_graph",
+  "after_artifacts": [
+    {
+      "artifact_path": "artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+      "verifiable": true
+    },
+    {
+      "artifact_path": "artifacts/autosci/runs/codex-visualize-proof-check-20260630/autosci_web_graph.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/runs/codex-visualize-proof-check-20260630/autosci_web_graph.json",
+      "verifiable": true
+    },
+    {
+      "artifact_path": "artifacts/autosci/workspace/wiki/.obsidian/graph.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/workspace/wiki/.obsidian/graph.json",
+      "verifiable": true
+    },
+    {
+      "artifact_path": "artifacts/autosci/workspace/wiki/canvases/knowledge-map.canvas",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/workspace/wiki/canvases/knowledge-map.canvas",
+      "verifiable": true
+    },
+    {
+      "artifact_path": "artifacts/autosci/workspace/wiki/log.md",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/workspace/wiki/log.md",
+      "verifiable": true
+    }
+  ],
+  "after_ready": true,
+  "allowlist_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/visualize-proof-inputs/visualize-allowlist-20260630.json",
+      "exists": true,
+      "kind": "file",
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/visualize-proof-inputs/visualize-allowlist-20260630.json",
+      "verifiable": true
+    }
+  ],
+  "allowlist_ready": true,
+  "approval_ref": "approval-visualize-proof-20260630",
+  "approval_state": "verified",
+  "approved": true,
+  "before_artifacts": [
+    {
+      "artifact_path": "artifacts/autosci/phase19/visualize-proof-inputs/visualize-before-20260630.json",
+      "exists": true,
+      "kind": "file",
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/visualize-proof-inputs/visualize-before-20260630.json",
+      "verifiable": true
+    }
+  ],
+  "before_ready": true,
+  "execution_verified": true,
+  "missing": [],
+  "ready_for_execution": true,
+  "runtime_evidence": [
+    {
+      "artifact_path": "artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+      "exists": true,
+      "kind": "file",
+      "path": "artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+      "verifiable": true
+    }
+  ],
+  "runtime_ready": true,
+  "schema": "autosci_approval_contract.v1",
+  "side_effects": [
+    "obsidian_canvas_write",
+    "local_web_server",
+    "graph_read"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "catalog": {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.agents/skills/prefill/foundations-catalog.yaml",
+    "status": "completed"
+  },
+  "catalog_domain_count": 5,
+  "dedup": [
+    {
+      "domain": "NLP",
+      "exists": false,
+      "foundation_id": "foundation-skillgen-add-proof-20260630",
+      "path": "artifacts/autosci/workspace/wiki/foundations/foundation-skillgen-add-proof-20260630.md",
+      "seed_slug": "skillgen-add-proof-20260630",
+      "title": "SkillGen Add Proof 20260630"
+    }
+  ],
+  "domain": "NLP",
+  "domain_resolution": {
+    "domain": "NLP",
+    "source": "input.domain",
+    "status": "explicit"
+  },
+  "limitations": [],
+  "mode": "add",
+  "schema": "autosci_prefill_plan.v1",
+  "seed_count": 1,
+  "selected_count": 1,
+  "selected_seeds": [
+    {
+      "domain": "NLP",
+      "exists": false,
+      "foundation_id": "foundation-skillgen-add-proof-20260630",
+      "path": "artifacts/autosci/workspace/wiki/foundations/foundation-skillgen-add-proof-20260630.md",
+      "seed_slug": "skillgen-add-proof-20260630",
+      "slug": "skillgen-add-proof-20260630",
+      "source": "add",
+      "summary": "",
+      "title": "SkillGen Add Proof 20260630"
+    }
+  ],
+  "skipped_existing_count": 0,
+  "status": "completed"
+}

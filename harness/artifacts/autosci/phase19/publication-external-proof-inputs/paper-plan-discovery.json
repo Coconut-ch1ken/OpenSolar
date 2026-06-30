@@ -1,0 +1,17 @@
+{
+  "schema": "literature_discovery.v1",
+  "task_id": "lit-paper-plan-external-20260630",
+  "status": "completed",
+  "outputs": {
+    "query": "skill generation",
+    "candidates": [
+      {
+        "candidate_id": "arxiv:2601.01001",
+        "title": "SkillGen Plan Evidence",
+        "arxiv_id": "2601.01001",
+        "source_ref": "https://arxiv.org/abs/2601.01001",
+        "source_channels": ["search_s2"]
+      }
+    ]
+  }
+}

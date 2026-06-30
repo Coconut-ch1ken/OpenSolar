@@ -1,0 +1,20 @@
+{
+  "inputs": {
+    "paper_id": "paper-skillgen",
+    "paper_path": "artifacts/scientific/skillgen-phase9-check/skillgen_paper.md",
+    "source_pdf_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AI4Research-B/docs/SkillGen.pdf"
+  },
+  "mode": "fixture",
+  "node_id": "node-skillgen-paper-ingest",
+  "operator_action": "ingest_paper",
+  "output_dir": "artifacts/scientific/skillgen-phase9-check",
+  "outputs": {
+    "evidence_jsonl": "artifacts/scientific/skillgen-phase9-check/evidence.jsonl",
+    "evidence_payload_path": "artifacts/scientific/skillgen-phase9-check/research_paper.json",
+    "graph_update_path": "artifacts/scientific/skillgen-phase9-check/research_graph_update.from_ingest.json",
+    "memory_update_path": "artifacts/scientific/skillgen-phase9-check/memory_update.from_ingest.json",
+    "result_path": "artifacts/scientific/skillgen-phase9-check/ingest_paper.result.json"
+  },
+  "sprint_id": "sprint-autosci-phase9-skillgen-check",
+  "task_id": "task-skillgen-paper-ingest"
+}

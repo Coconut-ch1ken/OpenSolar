@@ -1,0 +1,17 @@
+{
+  "inputs": {
+    "paper_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+  },
+  "mode": "fixture",
+  "node_id": "node-ingest-paper",
+  "output_dir": "artifacts/autosci/runs/exp-design-0f52a1d9b5",
+  "outputs": {
+    "evidence_jsonl": "artifacts/autosci/runs/exp-design-0f52a1d9b5/evidence.jsonl",
+    "evidence_payload_path": "artifacts/autosci/runs/exp-design-0f52a1d9b5/research_paper.json",
+    "graph_update_path": "artifacts/autosci/runs/exp-design-0f52a1d9b5/research_graph_update.json",
+    "memory_update_path": "artifacts/autosci/runs/exp-design-0f52a1d9b5/research_memory_update.json",
+    "result_path": "artifacts/autosci/runs/exp-design-0f52a1d9b5/ingest_paper.result.json"
+  },
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "task_id": "task-autosci-skillgen-ingest_paper"
+}

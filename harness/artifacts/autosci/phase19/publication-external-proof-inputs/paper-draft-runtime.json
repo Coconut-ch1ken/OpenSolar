@@ -1,0 +1,17 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "task_id": "paper-draft-runtime-external-20260630",
+  "status": "completed",
+  "outputs": {
+    "runtime": {
+      "action": "compile_paper",
+      "status": "completed",
+      "approval_ref": "approval-paper-draft-external-20260630",
+      "exit_code": 0,
+      "command_run": "pdflatex main.tex",
+      "pdf_generated": true,
+      "pdf_path": "artifacts/autosci/phase19/publication-external-proof-inputs/compiled/main.pdf",
+      "evidence_ids": ["runtime:paper-draft-external-20260630"]
+    }
+  }
+}

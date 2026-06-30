@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-06-30T12:44:49Z",
+  "proofs": [
+    {
+      "categories": [
+        "review_llm_or_model_evidence",
+        "external_runtime_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed model response evidence for AutoSci `ideate` parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-fixed-20260630/idea_candidate.json",
+        "artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-fixed-20260630/generate_ideas_model_stdout.json"
+      ],
+      "native_skill": "ideate",
+      "production_ready": true,
+      "proof_id": "runtime:ideate:command:20260630T124449Z",
+      "provenance": {
+        "artifact_kind": "model_response",
+        "captured_at": "2026-06-30T12:44:49Z",
+        "command": "'/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python' '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/model-external-proof-inputs/bin/ideate-model-command-20260630.py'",
+        "source": "command"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

@@ -1,0 +1,79 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38/idea_generate/task-autosci-scheduler-smoke-step38-idea_generate/idea_candidate.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "allow_network_fetch": false,
+    "claims_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38/claim_extract/task-autosci-scheduler-smoke-step38-claim_extract/research_claims.json",
+    "method_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38/method_extract/task-autosci-scheduler-smoke-step38-method_extract/research_method.json",
+    "paper_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38/paper_ingest/task-autosci-scheduler-smoke-step38-paper_ingest/research_paper.json",
+    "paper_id": "paper-autosci-scheduler-smoke-step38",
+    "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md",
+    "smoke_mode": true
+  },
+  "limitations": [
+    "Fixture ideas are generated from supplied local evidence only; external novelty is not proven."
+  ],
+  "node_id": "idea_generate",
+  "outputs": {
+    "ideas": [
+      {
+        "approach": "Use claim `claim-001` and method `method-001` to compare source-only evidence against source-plus-code evidence coverage.",
+        "duplicate_status": "new",
+        "generation_path": "fixture-smoke",
+        "grounding_summary": "Seeded from claim: The fixture path should produce a `result.json` file and an `evidence.jsonl` ledger entry without invoking a monolithic AutoSci workflow owner.",
+        "hypothesis": "Pairing source-grounded claims with method and code evidence will expose verification gaps before claim verdict generation.",
+        "idea_id": "idea-001",
+        "novelty_hypothesis": "Combines claim, method, and code evidence at the same Solar Evidence ABI grain.",
+        "origin_evidence_ids": [
+          "claim-001",
+          "method-001",
+          "task-autosci-scheduler-smoke-step38-paper_ingest",
+          "task-autosci-scheduler-smoke-step38-claim_extract",
+          "claim-001",
+          "claim-002",
+          "task-autosci-scheduler-smoke-step38-method_extract",
+          "method-001"
+        ],
+        "source_mode": "fixture",
+        "status": "candidate",
+        "title": "Evidence-linked verification coverage experiment"
+      },
+      {
+        "approach": "Run the existing Method protocol without adding new evidence dimensions.",
+        "duplicate_of": "task-autosci-smoke",
+        "duplicate_status": "duplicate",
+        "generation_path": "fixture-smoke",
+        "grounding_summary": "Included to prove duplicate ideas are marked rather than silently promoted.",
+        "hypothesis": "Repeating the bridge smoke test alone will improve scientific verification.",
+        "idea_id": "idea-duplicate-001",
+        "novelty_hypothesis": "Low novelty because it duplicates the fixture smoke path.",
+        "origin_evidence_ids": [
+          "claim-001",
+          "method-001",
+          "task-autosci-scheduler-smoke-step38-paper_ingest",
+          "task-autosci-scheduler-smoke-step38-claim_extract",
+          "claim-001",
+          "claim-002",
+          "task-autosci-scheduler-smoke-step38-method_extract",
+          "method-001"
+        ],
+        "source_mode": "fixture",
+        "status": "filtered",
+        "title": "Repeat existing fixture bridge smoke"
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-26T15:50:43Z"
+  },
+  "schema": "idea_candidate.v1",
+  "sprint_id": "autosci-scheduler-smoke-step38",
+  "status": "completed",
+  "task_id": "task-autosci-scheduler-smoke-step38-idea_generate"
+}

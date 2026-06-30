@@ -305,6 +305,11 @@ def _build_envelope(args: argparse.Namespace, harness_dir: Path) -> tuple[dict[s
     action = _action_for(args)
     logical_operator = _logical_operator_for(args)
     node_id = _node_id_for(args)
+    runtime_mode = str(getattr(args, "runtime_mode", "") or "bounded_runtime_smoke")
+    runner_contract = str(getattr(args, "runner_contract", "") or "bounded_node_smoke")
+    objective = str(
+        getattr(args, "objective", "") or f"Scheduler-dispatched bounded smoke for {logical_operator}."
+    )
     expected_schema = str(args.expected_schema or EXPECTED_SCHEMA_BY_ACTION.get(action) or DEFAULT_EXPECTED_SCHEMA)
     evidence_name = str(args.evidence_name or EVIDENCE_NAME_BY_ACTION.get(action, f"{action}.evidence.json"))
     output_rel = Path(args.output_dir or "artifacts/scientific/scheduler-node-smoke") / task_id
@@ -336,8 +341,9 @@ def _build_envelope(args: argparse.Namespace, harness_dir: Path) -> tuple[dict[s
         "node_id": node_id,
         "operator_id": args.operator_id,
         "task_type": TASK_TYPE_BY_ACTION.get(action, "scientific-node-smoke"),
-        "objective": f"Scheduler-dispatched bounded smoke for {logical_operator}.",
-        "mode": "bounded_runtime_smoke",
+        "objective": objective,
+        "mode": runtime_mode,
+        "runner_contract": runner_contract,
         "output_dir": str(output_rel),
         "inputs": inputs,
         "outputs": {
@@ -454,6 +460,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
         "logical_operator": logical_operator,
         "operator_id": envelope["operator_id"],
         "action": action,
+        "runtime_mode": envelope["mode"],
+        "runner_contract": envelope["runner_contract"],
         "harness_dir": str(harness_dir),
         "submission": submission,
         "operator_result_path": _rel(operator_result_path, harness_dir),
@@ -497,6 +505,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--lease-ttl-seconds", type=int, default=120)
     parser.add_argument("--allow-existing-result", action="store_true")
+    parser.add_argument("--runtime-mode", default="bounded_runtime_smoke")
+    parser.add_argument("--runner-contract", default="bounded_node_smoke")
+    parser.add_argument("--objective")
     return parser
 
 

@@ -1,0 +1,53 @@
+{
+  "action": "run_experiment",
+  "evidence": {
+    "artifacts": [
+      {
+        "path": "artifacts/autosci/run_experiment/run_experiment.evidence.json",
+        "type": "solar_evidence_json"
+      }
+    ],
+    "inputs": {
+      "experiment_result": "plugins/autosci/tests/fixtures/sample_autosci_raw_experiment_result.json"
+    },
+    "limitations": [
+      "fixture-mode adapter output; not a production AutoSci run"
+    ],
+    "node_id": "node-run-experiment",
+    "outputs": {
+      "result": {
+        "evidence_ids": [
+          "evidence:autosci-fixture-result",
+          "evidence:autosci-fixture-ledger"
+        ],
+        "experiment_id": "exp-001",
+        "metrics": [
+          {
+            "name": "result_json_written",
+            "value": true
+          },
+          {
+            "name": "evidence_jsonl_written",
+            "value": true
+          }
+        ],
+        "outcome": "supports"
+      }
+    },
+    "provenance": {
+      "implementation_package": "plugins/autosci",
+      "operator_id": "autosci-bridge",
+      "timestamp": "2026-06-17T16:13:41Z"
+    },
+    "schema": "experiment_result.v1",
+    "sprint_id": "sprint-autosci-phase4",
+    "status": "completed",
+    "task_id": "task-autosci-experiment-run-fixture"
+  },
+  "evidence_jsonl": "artifacts/autosci/run_experiment/evidence.jsonl",
+  "evidence_path": "artifacts/autosci/run_experiment/run_experiment.evidence.json",
+  "ok": true,
+  "result_path": "artifacts/autosci/run_experiment/result.json",
+  "schema": "experiment_result.v1",
+  "status": "completed"
+}

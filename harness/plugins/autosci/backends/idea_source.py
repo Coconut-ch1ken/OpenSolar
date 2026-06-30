@@ -76,6 +76,15 @@ def _tokens(value: str) -> set[str]:
     }
 
 
+def _unique_strings(values: list[str]) -> list[str]:
+    out: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if text and text not in out:
+            out.append(text)
+    return out
+
+
 def _is_markdown(path: Path) -> bool:
     return path.is_file() and path.suffix.lower() in {".md", ".markdown"}
 
@@ -232,9 +241,39 @@ def _overlaps_failed(candidate_title: str, failed_ideas: list[dict[str, Any]]) -
     return False, ""
 
 
+def _sources_of_kind(sources: list[dict[str, Any]], kind: str) -> list[dict[str, Any]]:
+    return [source for source in sources if str(source.get("kind") or "") == kind]
+
+
+def _candidate_status(title: str, failed_ideas: list[dict[str, Any]]) -> tuple[str, str, str]:
+    duplicate, duplicate_of = _overlaps_failed(title, failed_ideas)
+    return ("filtered" if duplicate else "candidate", "duplicate" if duplicate else "new", duplicate_of)
+
+
+def _apply_max_ideas_selection(ideas: list[dict[str, Any]], max_ideas: int) -> None:
+    selected = 0
+    for idea in ideas:
+        if str(idea.get("status") or "") in {"blocked", "filtered"}:
+            idea["selected_for_write"] = False
+            idea["selection_rank"] = "N/A"
+            continue
+        if max_ideas > 0 and selected >= max_ideas:
+            idea["selected_for_write"] = False
+            idea["selection_rank"] = "N/A"
+            idea["selection_reason"] = f"Not selected because max_ideas={max_ideas} was reached."
+            continue
+        selected += 1
+        idea["selected_for_write"] = True
+        idea["selection_rank"] = selected
+
+
 def build_idea_candidates(envelope: dict[str, Any], *, workspace_root: Path, repository_root: Path) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     topic = str(inputs.get("topic") or inputs.get("query") or inputs.get("target") or "research workflow").strip()
+    try:
+        max_ideas = max(0, int(inputs.get("max_ideas") or 0))
+    except (TypeError, ValueError):
+        max_ideas = 0
     source_bundle = collect_idea_sources(inputs, workspace_root=workspace_root, repository_root=repository_root)
     wiki_sources = list(source_bundle["wiki_sources"])
     discovery_sources = list(source_bundle["discovery_sources"])
@@ -258,15 +297,22 @@ def build_idea_candidates(envelope: dict[str, Any], *, workspace_root: Path, rep
                 }
             ],
             "limitations": ["No wiki or discovery evidence was available; ideation is inconclusive."],
-            "source_summary": {"wiki_source_count": 0, "discovery_source_count": 0, "failed_idea_count": 0},
+            "source_summary": {
+                "wiki_source_count": 0,
+                "discovery_source_count": 0,
+                "failed_idea_count": 0,
+                "source_ids": [],
+                "source_refs": [],
+            },
         }
 
     primary = sources[0]
     secondary = sources[1] if len(sources) > 1 else sources[0]
+    methods = _sources_of_kind(sources, "method")
     source_mode = str(source_bundle["source_mode"])
     title_topic = topic if topic and topic != "research workflow" else str(primary["title"])
     title = f"Close the evidence gap around {title_topic[:80]}"
-    duplicate, duplicate_of = _overlaps_failed(title, failed_ideas)
+    status, duplicate_status, duplicate_of = _candidate_status(title, failed_ideas)
     ideas = [
         {
             "idea_id": "idea-wiki-discovery-001",
@@ -284,17 +330,92 @@ def build_idea_candidates(envelope: dict[str, Any], *, workspace_root: Path, rep
             "grounding_summary": f"Primary source: {primary['title']}; secondary source: {secondary['title']}.",
             "source_mode": source_mode,
             "generation_path": "A:landscape-driven",
-            "duplicate_status": "duplicate" if duplicate else "new",
+            "duplicate_status": duplicate_status,
             "duplicate_of": duplicate_of,
-            "status": "filtered" if duplicate else "candidate",
+            "status": status,
         }
     ]
+    if methods:
+        method = methods[0]
+        title = f"Patch a limitation in {method['title'][:72]}"
+        status, duplicate_status, duplicate_of = _candidate_status(title, failed_ideas)
+        ideas.append(
+            {
+                "idea_id": "idea-method-incremental-001",
+                "title": title,
+                "hypothesis": (
+                    f"A focused improvement to `{method['title']}` can address a method limitation visible in the wiki evidence."
+                ),
+                "approach": (
+                    "Extract the method's stated limitation or unresolved evaluation gap, implement the smallest measurable "
+                    "change, and compare against the original method under the same evidence-backed task."
+                ),
+                "origin_evidence_ids": [str(method["id"])],
+                "novelty_hypothesis": "Incremental novelty must be confirmed by external novelty search and Review LLM validation.",
+                "grounding_summary": f"Incremental path grounded in method evidence: {method['title']}.",
+                "source_mode": source_mode,
+                "generation_path": "B:incremental",
+                "duplicate_status": duplicate_status,
+                "duplicate_of": duplicate_of,
+                "status": status,
+            }
+        )
+    if len(methods) >= 2:
+        first, second = methods[0], methods[1]
+        title = f"Combine {first['title'][:36]} with {second['title'][:36]}"
+        status, duplicate_status, duplicate_of = _candidate_status(title, failed_ideas)
+        ideas.append(
+            {
+                "idea_id": "idea-method-combination-001",
+                "title": title,
+                "hypothesis": (
+                    f"The complementary assumptions of `{first['title']}` and `{second['title']}` can be combined into a stronger method."
+                ),
+                "approach": (
+                    "Map the tradeoff profile of both methods, keep the mechanism that improves robustness, and test whether the "
+                    "combined design preserves the efficiency of the simpler baseline."
+                ),
+                "origin_evidence_ids": [str(first["id"]), str(second["id"])],
+                "novelty_hypothesis": "Combination novelty depends on external prior-work search for the same method pair.",
+                "grounding_summary": f"Combination path grounded in method evidence: {first['title']} + {second['title']}.",
+                "source_mode": source_mode,
+                "generation_path": "C:combination",
+                "duplicate_status": duplicate_status,
+                "duplicate_of": duplicate_of,
+                "status": status,
+            }
+        )
+        title = f"Break a shared assumption behind {first['title'][:48]}"
+        status, duplicate_status, duplicate_of = _candidate_status(title, failed_ideas)
+        ideas.append(
+            {
+                "idea_id": "idea-method-innovation-001",
+                "title": title,
+                "hypothesis": (
+                    f"`{first['title']}` and `{second['title']}` may share an assumption that can be relaxed for a new evaluation setting."
+                ),
+                "approach": (
+                    "Extract the assumptions implicit in both method summaries, choose the assumption most exposed by current "
+                    "open questions, and design an ablation that tests the relaxed assumption directly."
+                ),
+                "origin_evidence_ids": [str(first["id"]), str(second["id"])],
+                "novelty_hypothesis": "Innovation-path novelty must be validated against recent literature and adversarial review.",
+                "grounding_summary": f"Innovation path grounded in shared method evidence: {first['title']} / {second['title']}.",
+                "source_mode": source_mode,
+                "generation_path": "D:innovation",
+                "duplicate_status": duplicate_status,
+                "duplicate_of": duplicate_of,
+                "status": status,
+            }
+        )
     if len(sources) >= 3:
         third = sources[2]
+        title = f"Stress-test method transfer from {primary['title'][:48]}"
+        status, duplicate_status, duplicate_of = _candidate_status(title, failed_ideas)
         ideas.append(
             {
                 "idea_id": "idea-wiki-discovery-002",
-                "title": f"Stress-test method transfer from {primary['title'][:48]}",
+                "title": title,
                 "hypothesis": (
                     f"A mechanism or limitation in `{primary['title']}` can be transferred to the context of "
                     f"`{third['title']}` and evaluated with a bounded pilot."
@@ -308,10 +429,12 @@ def build_idea_candidates(envelope: dict[str, Any], *, workspace_root: Path, rep
                 "grounding_summary": f"Transfer source: {primary['title']}; target context: {third['title']}.",
                 "source_mode": source_mode,
                 "generation_path": "E:cross-domain-transfer",
-                "duplicate_status": "new",
-                "status": "candidate",
+                "duplicate_status": duplicate_status,
+                "duplicate_of": duplicate_of,
+                "status": status,
             }
         )
+    _apply_max_ideas_selection(ideas, max_ideas)
     return {
         "status": "completed",
         "ideas": ideas,
@@ -324,5 +447,10 @@ def build_idea_candidates(envelope: dict[str, Any], *, workspace_root: Path, rep
             "discovery_source_count": len(discovery_sources),
             "failed_idea_count": len(failed_ideas),
             "source_mode": source_mode,
+            "source_ids": _unique_strings([str(source.get("id") or "") for source in sources]),
+            "source_refs": _unique_strings([str(source.get("path") or "") for source in sources]),
+            "generation_path_count": len({str(idea.get("generation_path") or "") for idea in ideas}),
+            "max_ideas": max_ideas,
+            "selected_for_write_count": len([idea for idea in ideas if idea.get("selected_for_write") is True]),
         },
     }

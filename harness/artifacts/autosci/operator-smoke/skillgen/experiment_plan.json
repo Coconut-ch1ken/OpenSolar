@@ -1,0 +1,83 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/operator-smoke/skillgen/experiment_plan.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "claim_id": "claim-001",
+    "execution_mode": "fixture",
+    "idea_id": "idea-001"
+  },
+  "limitations": [
+    "Fixture experiment design is bounded to local bridge artifacts.",
+    "Review LLM design validation was not supplied."
+  ],
+  "node_id": "node-design-experiment",
+  "outputs": {
+    "experiment_plan": {
+      "approval_required": false,
+      "baseline": "previous fixture bridge run writes result.json and evidence.jsonl",
+      "baseline_absence_reason": "",
+      "command_allowlist": [
+        "python3 plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
+        "python3 plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment"
+      ],
+      "evidence_ids": [
+        "claim-001"
+      ],
+      "execution_mode": "fixture",
+      "expected_artifacts": [
+        "experiment_result.json",
+        "experiment_status.json",
+        "experiment_run.log"
+      ],
+      "experiment_id": "exp-001",
+      "hypothesis": "Fixture execution will emit result evidence, a ledger entry, and a monitorable status without external side effects.",
+      "metrics": [
+        "result_json_written",
+        "evidence_jsonl_written",
+        "fixture_passed"
+      ],
+      "objective": "Validate evidence coverage for `claim-001` using a bounded fixture experiment.",
+      "procedure": [
+        "Confirm the experiment plan evidence is present.",
+        "Run the AutoSci bridge in fixture mode only.",
+        "Record command, metrics, logs, and produced evidence paths.",
+        "Validate experiment_result.v1 and experiment_status.v1 gates."
+      ],
+      "resource_limits": {
+        "network": "denied",
+        "timeout_seconds": 30,
+        "write_scope": "artifact_dir_only"
+      },
+      "review_llm": {
+        "checked_paths": [],
+        "claim_id": "claim-001",
+        "reasons": [
+          "No Review LLM evidence was supplied."
+        ],
+        "status": "unavailable"
+      },
+      "success_criteria": [
+        "result_json_written == true",
+        "evidence_jsonl_written == true",
+        "fixture_passed == true"
+      ],
+      "variables": [
+        "execution_mode",
+        "evidence_payload"
+      ]
+    }
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-25T20:34:36Z"
+  },
+  "schema": "experiment_plan.v1",
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "status": "completed",
+  "task_id": "task-autosci-skillgen-design_experiment"
+}

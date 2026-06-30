@@ -1,0 +1,681 @@
+{
+  "edges": [
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen.extracted"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-SkillGen.extracted",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen.extracted"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-SkillGen.extracted",
+      "target": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen.extracted"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-SkillGen.extracted",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen.extracted"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-SkillGen.extracted",
+      "target": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen.extracted"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-SkillGen.extracted",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen.extracted"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-SkillGen.extracted",
+      "target": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-solar-autosci-pdf-smoke-2401.00003"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-solar-autosci-pdf-smoke-2401.00003"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "target": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-SkillGen",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-SkillGen",
+      "target": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-SkillGen",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-SkillGen",
+      "target": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-SkillGen",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-SkillGen"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-SkillGen",
+      "target": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "propose",
+      "relation": "describes",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "concept.solar_evidence_abi"
+    },
+    {
+      "evidence_ids": [
+        "paper-skillgen-operator-smoke-paper"
+      ],
+      "operation": "confirm",
+      "relation": "has_source",
+      "source": "paper-skillgen-operator-smoke-paper",
+      "target": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md"
+    }
+  ],
+  "generated_at": "2026-06-25T20:28:22.959194Z",
+  "nodes": [
+    {
+      "group": "experiments",
+      "id": "experiments/exp-001.md",
+      "label": "Validate evidence coverage for `claim-001` using a bounded fixture experiment.",
+      "path": "experiments/exp-001.md"
+    },
+    {
+      "group": "graph",
+      "id": "graph/context_brief.md",
+      "label": "Solar AutoSci Context Brief",
+      "path": "graph/context_brief.md"
+    },
+    {
+      "group": "graph",
+      "id": "graph/open_questions.md",
+      "label": "Open Questions",
+      "path": "graph/open_questions.md"
+    },
+    {
+      "group": "ideas",
+      "id": "ideas/idea-001.md",
+      "label": "Evidence-linked verification coverage experiment",
+      "path": "ideas/idea-001.md"
+    },
+    {
+      "group": "ideas",
+      "id": "ideas/idea-duplicate-001.md",
+      "label": "Repeat existing fixture bridge smoke",
+      "path": "ideas/idea-duplicate-001.md"
+    },
+    {
+      "group": "wiki",
+      "id": "index.md",
+      "label": "Solar AutoSci Wiki",
+      "path": "index.md"
+    },
+    {
+      "group": "methods",
+      "id": "methods/method-001.md",
+      "label": "Method protocol",
+      "path": "methods/method-001.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-ask-2277d32ac4.md",
+      "label": "Claims from `ask-2277d32ac4`",
+      "path": "outputs/claims-ask-2277d32ac4.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-ask-7a544555ad.md",
+      "label": "Claims from `ask-7a544555ad`",
+      "path": "outputs/claims-ask-7a544555ad.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-exp-design-0f52a1d9b5.md",
+      "label": "Claims from `exp-design-0f52a1d9b5`",
+      "path": "outputs/claims-exp-design-0f52a1d9b5.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-exp-design-9888d7f734.md",
+      "label": "Claims from `exp-design-9888d7f734`",
+      "path": "outputs/claims-exp-design-9888d7f734.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-exp-eval-c87c02a34a.md",
+      "label": "Claims from `exp-eval-c87c02a34a`",
+      "path": "outputs/claims-exp-eval-c87c02a34a.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-exp-run-8b6d0a2615.md",
+      "label": "Claims from `exp-run-8b6d0a2615`",
+      "path": "outputs/claims-exp-run-8b6d0a2615.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-exp-status-5a6b22da38.md",
+      "label": "Claims from `exp-status-5a6b22da38`",
+      "path": "outputs/claims-exp-status-5a6b22da38.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-ideate-95798047c0.md",
+      "label": "Claims from `ideate-95798047c0`",
+      "path": "outputs/claims-ideate-95798047c0.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-ideate-b4632dc219.md",
+      "label": "Claims from `ideate-b4632dc219`",
+      "path": "outputs/claims-ideate-b4632dc219.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-paper-compile-2a74e4dc86.md",
+      "label": "Claims from `paper-compile-2a74e4dc86`",
+      "path": "outputs/claims-paper-compile-2a74e4dc86.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-paper-draft-8035ae7f7a.md",
+      "label": "Claims from `paper-draft-8035ae7f7a`",
+      "path": "outputs/claims-paper-draft-8035ae7f7a.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-paper-plan-3bf27167a5.md",
+      "label": "Claims from `paper-plan-3bf27167a5`",
+      "path": "outputs/claims-paper-plan-3bf27167a5.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/claims-solar-projection-research-smoke.md",
+      "label": "Claims from `solar-projection-research-smoke`",
+      "path": "outputs/claims-solar-projection-research-smoke.md"
+    },
+    {
+      "group": "outputs",
+      "id": "outputs/report-skillgen-operator-smoke.md",
+      "label": "SkillGen Evidence-Linked Operator Smoke Report",
+      "path": "outputs/report-skillgen-operator-smoke.md"
+    },
+    {
+      "group": "papers",
+      "id": "papers/paper-skillgen-extracted.md",
+      "label": "SkillGen PDF Extracted Text",
+      "path": "papers/paper-skillgen-extracted.md"
+    },
+    {
+      "group": "papers",
+      "id": "papers/paper-skillgen-operator-smoke-paper.md",
+      "label": "SKILLGEN: Verified Inference-Time Agent Skill Synthesis",
+      "path": "papers/paper-skillgen-operator-smoke-paper.md"
+    },
+    {
+      "group": "papers",
+      "id": "papers/paper-skillgen.md",
+      "label": "SKILLGEN: Verified Inference-Time Agent Skill",
+      "path": "papers/paper-skillgen.md"
+    },
+    {
+      "group": "papers",
+      "id": "papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+      "label": "Solar Harness PDF Smoke",
+      "path": "papers/paper-solar-autosci-pdf-smoke-2401-00003.md"
+    },
+    {
+      "group": "graph",
+      "id": "paper-skillgen-operator-smoke-paper",
+      "label": "paper-skillgen-operator-smoke-paper",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "concept.solar_evidence_abi",
+      "label": "concept.solar_evidence_abi",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md",
+      "label": "plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "paper-SkillGen.extracted",
+      "label": "paper-SkillGen.extracted",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md",
+      "label": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tmp/pdfs/SkillGen.extracted.md",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "label": "paper-solar-autosci-pdf-smoke-2401.00003",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+      "label": "artifacts/autosci/workspace/raw/tmp/papers/2401-00003.tex",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "paper-SkillGen",
+      "label": "paper-SkillGen",
+      "path": ""
+    },
+    {
+      "group": "graph",
+      "id": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex",
+      "label": "artifacts/autosci/workspace/raw/tmp/papers/skillgen.tex",
+      "path": ""
+    }
+  ],
+  "schema": "autosci_web_graph.v1",
+  "wiki_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki"
+}

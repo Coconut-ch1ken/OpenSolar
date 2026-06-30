@@ -27,8 +27,7 @@ from pathlib import Path
 
 
 HOME = Path.home()
-SOURCE_HARNESS_DIR = Path(__file__).resolve().parents[1]
-HARNESS_DIR = Path(os.environ.get("SOLAR_HARNESS_DIR") or os.environ.get("HARNESS_DIR") or str(SOURCE_HARNESS_DIR))
+HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", str(HOME / ".solar" / "harness")))
 sys.path.insert(0, str(HARNESS_DIR / "lib"))
 from qmd_resolver import resolve_qmd_bin  # noqa: E402
 
@@ -66,11 +65,11 @@ DEFAULT_CONFIG = {
         "harness_dir": str(HARNESS_DIR),
     },
     "models": {
-        "pm": "codex",
-        "planner": "codex",
-        "builder": "codex",
-        "evaluator": "codex",
-        "lab_builder_matrix": "codex,codex,codex,codex",
+        "pm": "opus",
+        "planner": "opus",
+        "builder": "opus",
+        "evaluator": "opus",
+        "lab_builder_matrix": "glm,glm,glm,anthropic-sonnet",
     },
     "providers": {
         "zhipu_base_url": "https://api.z.ai/api/anthropic",
@@ -107,7 +106,7 @@ def load_model_registry() -> dict:
         return json.loads(MODEL_REGISTRY_PATH.read_text(encoding="utf-8"))
     except Exception:
         return {
-            "defaults": {"main_model": "codex", "lab_builder_matrix": "codex,codex,codex,codex"},
+            "defaults": {"main_model": "opus", "lab_builder_matrix": "glm,glm,glm,anthropic-sonnet"},
             "models": {},
             "matrix_options": [],
         }
@@ -127,12 +126,11 @@ def model_registry_options() -> dict[str, object]:
         })
     return {
         "model_options": model_options or [
-            {"value": "codex", "id": "codex-gpt-5.3-spark", "label": "Codex GPT-5.3 Spark"},
-            {"value": "opus", "id": "claude-opus", "label": "Claude Opus 4.8"},
+            {"value": "opus", "id": "claude-opus", "label": "Claude Opus 4.7"},
             {"value": "anthropic-sonnet", "id": "claude-sonnet", "label": "Claude Sonnet"},
         ],
         "matrix_options": reg.get("matrix_options") or [
-            {"value": "codex,codex,codex,codex", "label": "4× Codex GPT-5.3 Spark"},
+            {"value": "glm,glm,glm,anthropic-sonnet", "label": "3× GLM 5.1 + Claude Sonnet"},
         ],
     }
 
@@ -464,8 +462,8 @@ HTML = r"""<!doctype html>
   <script>
     let current = {};
     const secretKeys = ["ANTHROPIC_API_KEY","OPENAI_API_KEY","ZHIPU_AUTH_TOKEN","DEEPSEEK_API_KEY","GOOGLE_APPLICATION_CREDENTIALS"];
-    let modelOptions = [["codex", "Codex GPT-5.3 Spark"], ["opus", "Claude Opus 4.8"], ["anthropic-sonnet", "Claude Sonnet"]];
-    let matrixOptions = [["codex,codex,codex,codex", "4× Codex GPT-5.3 Spark"]];
+    let modelOptions = [["opus", "Claude Opus 4.7"], ["anthropic-sonnet", "Claude Sonnet"], ["glm", "GLM-5.1"]];
+    let matrixOptions = [["glm,glm,glm,anthropic-sonnet", "3× GLM 5.1 + Claude Sonnet"]];
     function get(obj, path) { return path.split('.').reduce((o,k)=>o&&o[k], obj); }
     function set(obj, path, value) { const parts=path.split('.'); let o=obj; parts.slice(0,-1).forEach(k=>o=o[k]||(o[k]={})); o[parts.at(-1)]=value; }
     function renderSelectOptions(el, options, value) {

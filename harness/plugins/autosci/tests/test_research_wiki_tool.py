@@ -110,6 +110,18 @@ def test_research_wiki_tool_mutates_queries_and_rebuilds(tmp_path: Path) -> None
     assert neighbors["count"] == 1
     assert neighbors["neighbors"][0]["target"] == "experiments/exp-skillgen.md"
 
+    resolved = payload(run_tool("resolve", "skillgen", "--wiki-root", str(wiki), "--json"))
+    assert resolved["ok"] is True
+    assert resolved["path"] == "ideas/skillgen.md"
+    assert resolved["group"] == "ideas"
+    assert resolved["status"] == "reviewed"
+    assert resolved["novelty_score"] == 4
+    assert resolved["frontmatter"]["entity_type"] == "idea"
+    assert resolved["linked_experiments"] == ["experiments/exp-skillgen.md"]
+    assert resolved["edge_count"] == 1
+    assert resolved["edges"][0]["evidence_ids"] == ["ev-runtime-1"]
+    assert any("Reviewed SkillGen idea" in item["text"] for item in resolved["log_matches"])
+
     stats = payload(run_tool("stats", "--wiki-root", str(wiki), "--json"))
     assert stats["ok"] is True
     assert stats["stats"]["page_count"] >= 4

@@ -1,0 +1,72 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-eval/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/exp-pilot-eval/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-eval/SKILL.md"
+  ],
+  "native_skill": "exp-pilot-eval",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "Pilot result/runtime evidence can produce completed lenient verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked; pilot_eval_final_acceptance_boundary requires linked pilot runtime/result evidence, a non-inconclusive pilot verdict, and completed approved wiki writeback before pilot evaluation is treated as final.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/exp-pilot-eval",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "Pilot result/runtime evidence can produce completed lenient verdicts; approved --write can update linked wiki idea/experiment status, while unapproved mutation remains blocked; pilot_eval_final_acceptance_boundary requires linked pilot runtime/result evidence, a non-inconclusive pilot verdict, and completed approved wiki writeback before pilot evaluation is treated as final."
+    ],
+    "required_capabilities": [
+      "pilot-specific criteria",
+      "lenient verdict",
+      "idea update proposal"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "evaluate_pilot_result"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/exp-pilot-eval/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}

@@ -1,0 +1,88 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    }
+  ],
+  "inputs": {
+    "anchors": [],
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "from_wiki": false,
+    "limit": 0,
+    "native_options": {
+      "auto": false,
+      "checklist": false,
+      "collect": false,
+      "difficulty": "",
+      "env": "",
+      "fix": false,
+      "focus": "",
+      "full": false,
+      "max_ideas": 0,
+      "quick": false,
+      "review": false,
+      "skip_pilot": false,
+      "skip_validation": false,
+      "title": "Skill Generation for Inference-Time Agents",
+      "verbose": false,
+      "write": false
+    },
+    "negative_ids": [],
+    "paper_path": "",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "contract-paper-plan",
+    "skill": "paper-plan",
+    "skill_args": [
+      "idea-001"
+    ],
+    "smoke": false,
+    "target": "idea-001",
+    "topic": "",
+    "venue": "ICLR",
+    "work_dir": "artifacts/autosci/runs/contract-paper-plan",
+    "year": ""
+  },
+  "limitations": [
+    "Native idea-graph evidence map, --title first-class handling, section/figure/citation plan, and mandatory Review LLM assessment are not yet fully implemented.",
+    "Report plan sidecar is generated from local evidence; native idea-graph planning and mandatory Review LLM assessment are not yet implemented.",
+    "No source paper/artifact resolver is available for this native route yet; fixture bridge actions require explicit --smoke.",
+    "Fixture bridge fallback is disabled unless --smoke is passed explicitly."
+  ],
+  "node_id": "autosci-skill-paper-plan",
+  "outputs": {
+    "skill_run": {
+      "action_count": 0,
+      "actions": [],
+      "autosci_command": "/paper-plan",
+      "execution_status": "partial",
+      "failed_count": 0,
+      "passed_count": 0,
+      "route": {
+        "backend_mode": "route_plan",
+        "coverage_status": "partial",
+        "evidence_schema": "scientific_report.v1",
+        "physical_operator": "AutoSciBridgeReportPlanner",
+        "solar_backend_action": "plan_report",
+        "solar_capability": "cap.research-report-plan",
+        "solar_logical_operator": "ScientificReportPlanner"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "paper-plan",
+      "side_effect_policy": "dry_run_only"
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-24T17:27:26.755035Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "contract-paper-plan",
+  "status": "completed",
+  "task_id": "autosci-skill-paper-plan"
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "task_id": "task-codex-discover-provider-proof",
+  "status": "completed",
+  "outputs": {
+    "runtime": {
+      "action": "discover_literature",
+      "status": "completed",
+      "exit_code": 0,
+      "command_run": "approved-semantic-scholar-fetch",
+      "candidates": [
+        {
+          "candidate_id": "runtime-source-001",
+          "title": "Runtime Verified Skill Generation Source",
+          "url": "https://arxiv.org/abs/2601.00005",
+          "source_channels": [
+            "search_s2"
+          ],
+          "ranking_score": 0.93,
+          "ranking_rationale": "Approved source runtime returned this source.",
+          "dedup_status": "new",
+          "fetch_status": "fetched"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "operator_id": "codex-smoke",
+    "implementation_package": "codex-discover-provider-proof-check",
+    "timestamp": "2026-06-29T00:00:00Z"
+  },
+  "limitations": []
+}

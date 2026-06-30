@@ -1,0 +1,26 @@
+{
+  "capability_capsule_id": "cap.research-code-evidence-map",
+  "handoff_path": "artifacts/scientific/skillgen-phase10-check/handoff.md",
+  "inputs": {
+    "claim_id": "claim-001",
+    "claims_evidence": "artifacts/scientific/skillgen-phase10-check/research_claims.json",
+    "method_evidence": "artifacts/scientific/skillgen-phase10-check/research_method.json",
+    "paper_id": "paper-skillgen-phase10",
+    "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md",
+    "repo_path": "artifacts/scientific/skillgen-phase10-check/missing_repo_fixture"
+  },
+  "lease_ttl_seconds": 120,
+  "mode": "fixture",
+  "node_id": "node-phase10-code-map-unknown",
+  "objective": "Phase 10 negative check for unavailable repo path.",
+  "operator_id": "autosci-code-evidence-map-worker",
+  "output_dir": "artifacts/scientific/skillgen-phase10-check",
+  "outputs": {
+    "evidence_jsonl": "artifacts/scientific/skillgen-phase10-check/evidence.jsonl",
+    "evidence_payload_path": "artifacts/scientific/skillgen-phase10-check/code_evidence_map.unknown.json",
+    "result_path": "artifacts/scientific/skillgen-phase10-check/runtime_code_unknown.result.json"
+  },
+  "sprint_id": "sprint-autosci-phase10-skillgen-check",
+  "task_id": "task-phase10-skillgen-code-map-unknown",
+  "task_type": "SCIENCE_CODE_EVIDENCE_MAPPING"
+}

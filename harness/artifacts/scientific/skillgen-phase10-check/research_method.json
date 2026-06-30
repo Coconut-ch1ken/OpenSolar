@@ -1,0 +1,54 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/skillgen-phase10-check/handoff.md",
+      "type": "handoff_markdown"
+    },
+    {
+      "path": "artifacts/scientific/skillgen-phase10-check/research_method.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "claims_evidence": "artifacts/scientific/skillgen-phase10-check/research_claims.json",
+    "paper_id": "paper-skillgen-phase10",
+    "paper_path": "plugins/autosci/tests/fixtures/skillgen_sample_paper.md",
+    "source_evidence": "artifacts/scientific/skillgen-phase10-check/research_paper.json"
+  },
+  "limitations": [
+    "Method extraction is deterministic and section-based; it does not infer hidden procedure steps."
+  ],
+  "node_id": "node-phase10-method-extract",
+  "outputs": {
+    "methods": [
+      {
+        "evidence_ids": [
+          "paper-skillgen-phase10",
+          "skillgen_sample_paper.md#method"
+        ],
+        "method_id": "method-001",
+        "name": "Method protocol",
+        "procedure": [
+          "The workflow derives candidate skill procedures from trajectory data",
+          "Compares success patterns",
+          "Failure modes",
+          "Verifies whether the generated skill improves the base agent without introducing unacceptable regressions"
+        ],
+        "source_anchor": "skillgen_sample_paper.md#method",
+        "source_papers": [
+          "paper-skillgen-phase10"
+        ],
+        "summary": "The workflow derives candidate skill procedures from trajectory data, compares success patterns and failure modes, and verifies whether the generated skill improves the base agent without introducing unacceptable regressions."
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-18T20:09:39Z"
+  },
+  "schema": "research_method.v1",
+  "sprint_id": "sprint-autosci-phase10-skillgen-check",
+  "status": "completed",
+  "task_id": "task-phase10-skillgen-method-extract"
+}

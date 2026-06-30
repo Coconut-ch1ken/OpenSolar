@@ -1,0 +1,5 @@
+{
+  "commands": [
+    "'/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python' '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tools/remote.py' check --experiment exp-live-remote-proof --run-dir '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-inputs/live-run' --approval-ref approval-live-remote-status-provider --allowlist-evidence '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-inputs/provider-allowlist.json' --status-command ''\"'\"'/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python'\"'\"' '\"'\"'/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-status-live-remote-proof-fixed-inputs/fake_live_status_provider.py'\"'\"'' --transport ssh --session-id ssh-session-proof --execute-approved"
+  ]
+}

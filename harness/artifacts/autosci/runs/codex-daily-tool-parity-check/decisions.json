@@ -1,0 +1,20 @@
+{
+  "schema": "daily_arxiv_llm_decisions.v1",
+  "decisions": [
+    {
+      "arxiv_id": "2601.00004",
+      "decision": "recommend",
+      "confidence": "high",
+      "score": 0.91,
+      "rationale": "Matches the wiki interest profile around verifier-gated generated skills.",
+      "wiki_connections": [
+        "SkillGen Anchor"
+      ],
+      "signals_used": [
+        "arxiv_rss",
+        "wiki_profile",
+        "llm"
+      ]
+    }
+  ]
+}

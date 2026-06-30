@@ -28,8 +28,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-DEFAULT_HARNESS_DIR = Path(__file__).resolve().parents[1]
-HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", DEFAULT_HARNESS_DIR))
+HOME = Path.home()
+HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", HOME / ".solar" / "harness"))
 PLUGINS_DIR = HARNESS_DIR / "plugins"
 EVENTS_FILE = HARNESS_DIR / "events.jsonl"
 
@@ -58,7 +58,7 @@ REQUIRED_FIELDS = {
 
 
 def _now() -> str:
-    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _emit_event(event: str, plugin_id: str, payload: dict) -> None:
@@ -86,70 +86,31 @@ def _load_yaml_manifest(path: Path) -> "dict | None":
             return yaml.safe_load(f)
     except ImportError:
         pass
-
-    def parse_scalar(value: str) -> Any:
-        value = value.strip().strip('"').strip("'")
-        if value == "true":
-            return True
-        if value == "false":
-            return False
-        if value.isdigit():
-            return int(value)
-        try:
-            return json.loads(value)
-        except Exception:
-            return value
-
-    # Fallback: line-by-line parser for simple top-level keys, lists, and
-    # one-level nested objects. This keeps plugin validation usable on systems
-    # where PyYAML is not installed.
+    # Fallback: line-by-line parser for simple key: value and list items
     result: dict[str, Any] = {}
     current_key: "str | None" = None
-    current_container: Any = None
-    current_nested_key: "str | None" = None
+    current_list: "list | None" = None
     with open(path) as f:
         for raw_line in f:
             line = raw_line.rstrip()
             if not line or line.startswith("#") or line.startswith("---"):
                 continue
-            if line.startswith("    - ") and isinstance(current_container, dict) and current_nested_key:
-                item = line.lstrip("- ").strip().strip('"')
-                nested = current_container.setdefault(current_nested_key, [])
-                if not isinstance(nested, list):
-                    nested = []
-                    current_container[current_nested_key] = nested
-                nested.append(parse_scalar(item))
             if line.startswith("  - ") or line.startswith("- "):
                 item = line.lstrip("- ").strip().strip('"')
-                if current_key is not None:
-                    if not isinstance(current_container, list):
-                        current_container = []
-                        result[current_key] = current_container
-                    current_container.append(parse_scalar(item))
-            elif line.startswith("  ") and ":" in line and current_key is not None:
-                k, _, v = line.strip().partition(":")
-                if not isinstance(current_container, dict):
-                    current_container = {}
-                    result[current_key] = current_container
-                nested_key = k.strip()
-                if v.strip() == "":
-                    current_container[nested_key] = []
-                else:
-                    current_container[nested_key] = parse_scalar(v)
-                current_nested_key = nested_key
+                if current_list is not None:
+                    current_list.append(item)
             elif ":" in line and not line.startswith(" "):
                 k, _, v = line.partition(":")
                 k = k.strip()
-                v = v.strip()
+                v = v.strip().strip('"')
                 if v == "":
-                    current_container = None
-                    result[k] = current_container
+                    current_list = []
+                    result[k] = current_list
                     current_key = k
                 else:
-                    result[k] = parse_scalar(v)
+                    result[k] = v
                     current_key = k
-                    current_container = result[k]
-                current_nested_key = None
+                    current_list = None
     return result
 
 

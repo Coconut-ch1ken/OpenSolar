@@ -1,0 +1,19 @@
+{
+  "blocking_reasons": [],
+  "final_quality_ready": true,
+  "limitations": [],
+  "local_blocking_reasons": [],
+  "local_structure_ready": true,
+  "model_confidence": 0.93,
+  "model_evidence_ids": [
+    "model:check-native-lint-proof-20260630"
+  ],
+  "model_name": "gpt-5.5",
+  "model_provider": "codex",
+  "model_source": "model-command",
+  "model_status": "completed",
+  "request_sha256": "f51ad891b793f6bc4fe9a2ebae18db2e8f059c6a680cdabb50aca7694836d3f9",
+  "response_sha256": "b814e31950737db9df04d1f68027ff13c54333d0e364e3c64620f4af00324018",
+  "schema": "autosci_check_final_quality_boundary.v1",
+  "status": "final_quality_ready"
+}

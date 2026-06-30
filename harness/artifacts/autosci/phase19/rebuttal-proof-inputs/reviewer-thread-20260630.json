@@ -1,0 +1,38 @@
+{
+  "schema": "autosci_reviewer_thread.v1",
+  "task_id": "review-thread-skillgen-20260630",
+  "status": "completed",
+  "evidence_ids": ["review-thread:skillgen-20260630"],
+  "outputs": {
+    "reviewer_thread": {
+      "reviewers": [
+        {
+          "reviewer": "Reviewer 1",
+          "overall_score": "borderline",
+          "confidence": "high",
+          "concerns": [
+            {
+              "concern": "The generated skill claim needs baseline ablation evidence.",
+              "type": "evidence",
+              "severity": "major",
+              "evidence_ids": ["review-comment:rv1-c1"]
+            }
+          ]
+        },
+        {
+          "reviewer": "Reviewer 2",
+          "overall_score": "weak accept",
+          "confidence": "medium",
+          "questions": [
+            {
+              "question": "The verifier-gated skill selection method description is unclear.",
+              "type": "clarity",
+              "severity": "minor",
+              "evidence_ids": ["review-comment:rv2-c1"]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

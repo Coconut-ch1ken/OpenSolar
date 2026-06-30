@@ -1,0 +1,9 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "status": "completed",
+  "task_id": "codex-ask-target-proof-20260630",
+  "outputs": {
+    "approved_action": "ask_crystallize_target",
+    "expected_output": "wiki/concepts/skillgen-support.md"
+  }
+}

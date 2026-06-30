@@ -1,0 +1,66 @@
+{
+  "publication_bundle_path": "artifacts/autosci/runs/codex-paper-draft-review-proof-check/publication_bundle.json",
+  "report_id": "report-skillgen-operator-smoke",
+  "sections": [
+    {
+      "evidence_ids": [
+        "task-autosci-skillgen-review_artifact",
+        "paper-draft-compile-handoff",
+        "claim-001",
+        "exp-supported-001"
+      ],
+      "section_id": "summary",
+      "title": "Summary"
+    },
+    {
+      "evidence_ids": [
+        "task-autosci-skillgen-review_artifact",
+        "paper-draft-compile-handoff",
+        "claim-001",
+        "exp-supported-001"
+      ],
+      "section_id": "findings",
+      "title": "Findings"
+    },
+    {
+      "evidence_ids": [
+        "task-autosci-skillgen-review_artifact",
+        "paper-draft-compile-handoff",
+        "claim-001",
+        "exp-supported-001"
+      ],
+      "section_id": "evidence-map",
+      "title": "Evidence Map"
+    },
+    {
+      "evidence_ids": [
+        "task-autosci-skillgen-review_artifact",
+        "paper-draft-compile-handoff",
+        "claim-001",
+        "exp-supported-001",
+        "artifact:idea-001",
+        "review.underspecified",
+        "review-llm:smoke",
+        "wiki:artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+        "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+        "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+        "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+        "wiki:artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+        "wiki:artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md"
+      ],
+      "section_id": "final-manuscript-boundary",
+      "title": "Final Manuscript Boundary"
+    },
+    {
+      "evidence_ids": [
+        "task-autosci-skillgen-review_artifact",
+        "paper-draft-compile-handoff",
+        "claim-001",
+        "exp-supported-001"
+      ],
+      "section_id": "limitations",
+      "title": "Limitations"
+    }
+  ],
+  "title": "SkillGen Draft"
+}

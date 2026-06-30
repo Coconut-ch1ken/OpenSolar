@@ -1,0 +1,76 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/autosci/runs/codex-paper-compile-final-proof-check/compile_paper_executor_stdout.txt",
+      "type": "executor_stdout"
+    },
+    {
+      "path": "artifacts/autosci/runs/codex-paper-compile-final-proof-check/compile_paper_executor_stderr.txt",
+      "type": "executor_stderr"
+    },
+    {
+      "path": "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/paper/main.pdf",
+      "type": "compiled_pdf"
+    }
+  ],
+  "inputs": {
+    "approval_ref": "approval-codex-paper-compile-final-proof"
+  },
+  "limitations": [
+    "Approved paper compile executor ran latexmk locally."
+  ],
+  "node_id": "node-compile-paper",
+  "outputs": {
+    "runtime": {
+      "action": "compile_paper",
+      "approval_ref": "approval-codex-paper-compile-final-proof",
+      "available_tex_executors": [
+        "latexmk",
+        "pdflatex",
+        "xelatex",
+        "lualatex"
+      ],
+      "checks": [
+        {
+          "check": "command_allowlisted",
+          "detail": "executable allowlisted: latexmk",
+          "status": "ok"
+        },
+        {
+          "check": "tex_executor",
+          "detail": "latexmk",
+          "status": "ok"
+        },
+        {
+          "check": "exit_code",
+          "detail": "exit_code=0",
+          "status": "ok"
+        },
+        {
+          "check": "pdf_generated",
+          "detail": "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/paper/main.pdf",
+          "status": "ok"
+        }
+      ],
+      "command_run": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/bin/latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex",
+      "evidence_ids": [
+        "paper-compile-runtime:latexmk",
+        "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/paper/main.tex"
+      ],
+      "exit_code": 0,
+      "pdf_generated": true,
+      "pdf_path": "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/paper/main.pdf",
+      "status": "completed",
+      "tex_executor": "latexmk"
+    }
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-approved-side-effect-executor",
+    "timestamp": "2026-06-30T05:43:12Z"
+  },
+  "schema": "autosci_runtime_evidence.v1",
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "status": "completed",
+  "task_id": "task-autosci-skillgen-compile_paper"
+}

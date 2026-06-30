@@ -1,0 +1,18 @@
+{
+  "allowlist_status": "command allowlisted by commands",
+  "approval_ref": "approval-codex-live-pull-provider",
+  "collection_scope": "live",
+  "command": "pull-results",
+  "count": 1,
+  "files": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json"
+  ],
+  "live_remote_collection": true,
+  "ok": true,
+  "pull_command_exit_code": 0,
+  "result_dir": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results",
+  "schema": "autosci_remote_cli.v1",
+  "session_id": "ssh-session-codex-final-proof",
+  "status": "completed",
+  "transport": "ssh"
+}

@@ -1,0 +1,68 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_wiki_runtime_evidence.json.plan.json",
+      "type": "reset_plan_json"
+    }
+  ],
+  "inputs": {
+    "approval_ref": "approval-reset-native-20260630",
+    "project_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630",
+    "scopes": [
+      "wiki"
+    ],
+    "wiki_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/wiki"
+  },
+  "limitations": [
+    "Destructive reset ran only because explicit approval and execution flags were supplied."
+  ],
+  "node_id": "node-reset-wiki",
+  "outputs": {
+    "runtime": {
+      "action": "reset_plan",
+      "approval_ref": "approval-reset-native-20260630",
+      "checks": [
+        {
+          "check": "approval_ref",
+          "detail": "approval-reset-native-20260630",
+          "status": "ok"
+        },
+        {
+          "check": "execute_approved",
+          "detail": "true",
+          "status": "ok"
+        },
+        {
+          "check": "reset_scope",
+          "detail": "wiki",
+          "status": "ok"
+        }
+      ],
+      "command_run": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/tools/reset_wiki.py --scope wiki --wiki-root /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/wiki --project-root /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630 --yes --execute-approved --approval-ref approval-reset-native-20260630 --runtime-evidence-out /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_wiki_runtime_evidence.json",
+      "deleted_files": 4,
+      "evidence_ids": [
+        "reset:approval-reset-native-20260630",
+        "wiki:wiki"
+      ],
+      "exit_code": 0,
+      "planned_delete_count": 4,
+      "planned_reset_count": 0,
+      "project_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630",
+      "reset_files": 0,
+      "scopes": [
+        "wiki"
+      ],
+      "status": "completed",
+      "wiki_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/wiki"
+    }
+  },
+  "provenance": {
+    "implementation_package": "tools.reset_wiki",
+    "operator_id": "autosci-reset-wiki-cli",
+    "timestamp": "2026-06-30T13:49:47Z"
+  },
+  "schema": "autosci_runtime_evidence.v1",
+  "sprint_id": "reset-wiki",
+  "status": "completed",
+  "task_id": "reset-wiki-runtime"
+}

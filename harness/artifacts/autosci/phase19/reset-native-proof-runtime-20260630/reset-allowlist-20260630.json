@@ -1,0 +1,6 @@
+{
+  "allowed": [
+    "reset_plan"
+  ],
+  "scope": "wiki"
+}

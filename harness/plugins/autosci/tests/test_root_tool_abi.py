@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shlex
 import socketserver
 import subprocess
@@ -49,7 +50,18 @@ def test_side_effect_root_tools_emit_truthful_non_mutating_evidence(tmp_path: Pa
     wiki = tmp_path / "wiki"
     (wiki / "ideas").mkdir(parents=True)
     (wiki / "graph").mkdir()
-    (wiki / "ideas/skillgen.md").write_text("# SkillGen\n\nGenerated skills.\n", encoding="utf-8")
+    (wiki / "ideas/skillgen.md").write_text(
+        "---\n"
+        "title: \"SkillGen\"\n"
+        "slug: \"skillgen\"\n"
+        "status: proposed\n"
+        "origin: \"root-tool-smoke\"\n"
+        "tags: []\n"
+        "priority: 3\n"
+        "---\n"
+        "# SkillGen\n\nGenerated skills.\n",
+        encoding="utf-8",
+    )
     (wiki / "graph/edges.jsonl").write_text("", encoding="utf-8")
 
     lint = payload(run_tool("lint.py", "--wiki-root", str(wiki)))
@@ -72,9 +84,20 @@ def test_side_effect_root_tools_emit_truthful_non_mutating_evidence(tmp_path: Pa
     assert email["schema"] == "autosci_send_email_cli.v1"
     assert email["status"] == "approval_required"
 
+    email_config = payload(run_tool("send_email.py", "--check-config"))
+    assert email_config["schema"] == "autosci_send_email_cli.v1"
+    assert email_config["status"] == "inconclusive"
+
     reset = payload(run_tool("reset_wiki.py", "--wiki-root", str(wiki)))
     assert reset["schema"] == "autosci_reset_wiki_cli.v1"
     assert reset["status"] == "dry_run"
+
+    serve = payload(run_tool("serve.py", "--wiki-root", str(wiki), "--health-check"))
+    assert serve["schema"] == "autosci_serve_cli.v1"
+    assert serve["status"] == "completed"
+    assert serve["ok"] is True
+    assert serve["node_count"] >= 1
+    assert serve["edge_count"] == 0
 
     dag_out = tmp_path / "dag.json"
     dag = payload(run_tool("wiki2dag.py", "build", "--wiki-root", str(wiki), "--out", str(dag_out)))
@@ -160,6 +183,63 @@ def test_poster_tool_executes_approved_render_export(tmp_path: Path) -> None:
     assert gate.ok is True, gate.reasons
 
 
+def test_poster_tool_supports_native_template_outline_pipeline(tmp_path: Path) -> None:
+    template = tmp_path / "poster_template.html"
+    outline = tmp_path / "outline.html"
+    dag = tmp_path / "dag.json"
+    poster_html = tmp_path / "native-poster.html"
+    template.write_text(
+        "<!doctype html><html><head><meta charset='utf-8'>"
+        "<style>:root{--poster-width:1400px;--poster-height:900px}</style>"
+        "</head><body><div class=\"poster\"><header>"
+        "<div class=\"logo-affiliation\"></div>"
+        "<h1 class=\"title\">Paper Title</h1>"
+        "<div class=\"authors\">Anonymous</div>"
+        "<div class=\"conf\"><div class=\"venue\"></div><div class=\"logo-conference\"></div></div>"
+        "</header><main class=\"main\"><div class=\"flow\" id=\"flow\"></div></main>"
+        "</div></body></html>\n",
+        encoding="utf-8",
+    )
+    outline.write_text(
+        "<section class=\"section\"><h2>Problem</h2><p>Context.</p></section>\n"
+        "<section class=\"section\"><h2>Method</h2><p>Approach.</p></section>\n"
+        "<section class=\"section\"><h2>Results</h2><p>Evidence.</p></section>\n",
+        encoding="utf-8",
+    )
+    dag.write_text(
+        json.dumps({"nodes": [{"name": "Native Poster", "content": "AutoSci Authors"}]}),
+        encoding="utf-8",
+    )
+
+    built = payload(
+        run_tool(
+            "poster.py",
+            "build",
+            "--template",
+            str(template),
+            "--outline",
+            str(outline),
+            "--output",
+            str(poster_html),
+        )
+    )
+    assert built["schema"] == "autosci_poster_cli.v1"
+    assert built["status"] == "completed"
+
+    injected = run_tool("poster.py", "inject-title", "--dag", str(dag), str(poster_html))
+    assert injected.returncode == 0, injected.stdout + injected.stderr
+    header = run_tool("poster.py", "inject-header", str(poster_html), "--venue", "ICML 2026")
+    assert header.returncode == 0, header.stdout + header.stderr
+
+    validate = payload(run_tool("poster.py", "validate", str(poster_html)))
+    assert validate["schema"] == "autosci_poster_cli.v1"
+    assert validate["status"] == "completed"
+    text = poster_html.read_text(encoding="utf-8")
+    assert "Native Poster" in text
+    assert "AutoSci Authors" in text
+    assert "ICML 2026" in text
+
+
 def test_send_email_tool_executes_approved_smtp_delivery(tmp_path: Path) -> None:
     captured: dict[str, str] = {}
 
@@ -204,6 +284,8 @@ def test_send_email_tool_executes_approved_smtp_delivery(tmp_path: Path) -> None
     thread.start()
     try:
         runtime_out = tmp_path / "email-runtime.json"
+        body_file = tmp_path / "daily-digest.md"
+        body_file.write_text("Approved SMTP delivery.", encoding="utf-8")
         email = payload(
             run_tool(
                 "send_email.py",
@@ -214,8 +296,8 @@ def test_send_email_tool_executes_approved_smtp_delivery(tmp_path: Path) -> None
                 "autosci@example.com",
                 "--subject",
                 "AutoSci SMTP",
-                "--body",
-                "Approved SMTP delivery.",
+                "--body-file",
+                str(body_file),
                 "--approval-ref",
                 "approval-email-smtp",
                 "--smtp-host",
@@ -243,6 +325,105 @@ def test_send_email_tool_executes_approved_smtp_delivery(tmp_path: Path) -> None
     assert result["action"] == "send_email"
     assert result["delivered"] is True
     assert result["provider"] == "smtp"
+    gate = autosci_runtime_evidence_gate.evaluate(runtime, path=runtime_out)
+    assert gate.ok is True, gate.reasons
+
+
+def test_send_email_tool_supports_native_env_check_config(tmp_path: Path) -> None:
+    env = {
+        **os.environ,
+        "SMTP_HOST": "smtp.example.test",
+        "SMTP_PORT": "465",
+        "SMTP_USER": "daily-user",
+        "SMTP_PASSWORD": "daily-password",
+        "SMTP_FROM": "autosci@example.com",
+        "DAILY_ARXIV_EMAIL_TO": "reader@example.com;reviewer@example.com",
+        "SMTP_SSL": "1",
+    }
+    proc = subprocess.run(
+        [sys.executable, str(REPO / "tools/send_email.py"), "--check-config"],
+        cwd=REPO,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    config = json.loads(proc.stdout)
+    assert config["schema"] == "autosci_send_email_cli.v1"
+    assert config["status"] == "completed"
+    assert config["smtp_host"] == "smtp.example.test"
+    assert config["smtp_port"] == 465
+    assert config["recipient_count"] == 2
+    assert config["use_ssl"] is True
+
+
+def test_reset_wiki_tool_executes_approved_scoped_reset(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    wiki = project / "wiki"
+    raw = project / "raw"
+    (wiki / "ideas").mkdir(parents=True)
+    (wiki / "outputs").mkdir()
+    (wiki / "graph").mkdir()
+    (wiki / ".checkpoints").mkdir()
+    (raw / "papers").mkdir(parents=True)
+    (wiki / "ideas" / "skillgen.md").write_text("# SkillGen\n", encoding="utf-8")
+    (wiki / "outputs" / "report.md").write_text("# Report\n", encoding="utf-8")
+    (wiki / "log.md").write_text("# Log\n", encoding="utf-8")
+    (wiki / "graph" / "edges.jsonl").write_text("[]\n", encoding="utf-8")
+    (wiki / ".checkpoints" / "batch.json").write_text("{}\n", encoding="utf-8")
+    (raw / "papers" / "paper.pdf").write_bytes(b"%PDF-1.4\n")
+
+    blocked = payload(
+        run_tool(
+            "reset_wiki.py",
+            "--scope",
+            "all",
+            "--project-root",
+            str(project),
+            "--yes",
+        )
+    )
+    assert blocked["status"] == "approval_required"
+    assert (wiki / "ideas" / "skillgen.md").exists()
+    assert (raw / "papers" / "paper.pdf").exists()
+
+    runtime_out = tmp_path / "reset-runtime.json"
+    reset = payload(
+        run_tool(
+            "reset_wiki.py",
+            "--scope",
+            "all",
+            "--project-root",
+            str(project),
+            "--approval-ref",
+            "approval-reset-wiki",
+            "--runtime-evidence-out",
+            str(runtime_out),
+            "--execute-approved",
+            "--yes",
+        )
+    )
+    assert reset["schema"] == "autosci_reset_wiki_cli.v1"
+    assert reset["status"] == "completed"
+    assert reset["ok"] is True
+    assert not (wiki / "ideas" / "skillgen.md").exists()
+    assert not (wiki / "outputs" / "report.md").exists()
+    assert not (wiki / "log.md").exists()
+    assert not (wiki / "graph" / "edges.jsonl").exists()
+    assert not (wiki / ".checkpoints" / "batch.json").exists()
+    assert not (raw / "papers" / "paper.pdf").exists()
+    assert (wiki / "ideas" / ".gitkeep").exists()
+    assert (raw / "papers" / ".gitkeep").exists()
+
+    runtime = json.loads(runtime_out.read_text(encoding="utf-8"))
+    result = runtime["outputs"]["runtime"]
+    assert runtime["schema"] == "autosci_runtime_evidence.v1"
+    assert runtime["status"] == "completed"
+    assert result["action"] == "reset_plan"
+    assert result["approval_ref"] == "approval-reset-wiki"
+    assert result["deleted_files"] >= 6
     gate = autosci_runtime_evidence_gate.evaluate(runtime, path=runtime_out)
     assert gate.ok is True, gate.reasons
 

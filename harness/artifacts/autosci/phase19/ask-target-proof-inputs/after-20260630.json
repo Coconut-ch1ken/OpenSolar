@@ -1,0 +1,7 @@
+{
+  "concepts": [
+    "skillgen-support"
+  ],
+  "schema": "autosci_after_state.v1",
+  "wiki_root": "harness/artifacts/autosci/workspace/wiki"
+}

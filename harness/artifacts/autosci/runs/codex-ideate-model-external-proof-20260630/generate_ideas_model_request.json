@@ -1,0 +1,112 @@
+{
+  "action": "generate_ideas",
+  "context": {
+    "local_candidate_count": 3,
+    "source_summary": {
+      "discovery_source_count": 16,
+      "failed_idea_count": 0,
+      "generation_path_count": 3,
+      "max_ideas": 0,
+      "selected_for_write_count": 3,
+      "source_ids": [
+        "discovery:Runtime Verified Skill Generation Source",
+        "discovery:AutoSci Adapter Fixture Paper",
+        "discovery:CoEvoSkills: Self-Evolving Agent Skills via Co-Evolutionary Verification",
+        "discovery:Trace2Skill: Distill Trajectory-Local Lessons into Transferable Agent Skills",
+        "discovery:EvoSkill: Automated Skill Discovery for Multi-Agent Systems",
+        "discovery:SkillX: Automatically Constructing Skill Knowledge Bases for Agents",
+        "discovery:Agent Skills for Large Language Models: Architecture, Acquisition, Security, and the Path Forward",
+        "discovery:SkillRL: Evolving Agents via Recursive Skill-Augmented Reinforcement Learning",
+        "discovery:SkillOpt: Executive Strategy for Self-Evolving Agent Skills",
+        "discovery:SoK: Agentic Skills - Beyond Tool Use in LLM Agents",
+        "discovery:Skill-R1: Agent Skill Evolution via Reinforcement Learning",
+        "discovery:SIRI: Self-Internalizing Reinforcement Learning with Intrinsic Skills for LLM Agent Training",
+        "wiki:papers/paper-research-proof",
+        "wiki:papers/paper-sample-paper",
+        "wiki:papers/paper-skillgen-1",
+        "wiki:papers/paper-skillgen-extracted",
+        "wiki:papers/paper-skillgen-operator-smoke-paper",
+        "wiki:papers/paper-skillgen-sample-paper",
+        "wiki:papers/paper-skillgen",
+        "wiki:papers/paper-solar-autosci-pdf-smoke-2401-00003",
+        "wiki:papers/runtime-source-001",
+        "wiki:papers/skillgen-model-proof",
+        "wiki:methods/method-001",
+        "wiki:topics/foundation-foundation-skillgen-prefill-proof-20260630",
+        "wiki:ideas/edit-proof",
+        "wiki:ideas/idea-001",
+        "wiki:ideas/idea-duplicate-001",
+        "wiki:ideas/idea-method-incremental-001",
+        "wiki:ideas/idea-research-proof",
+        "wiki:ideas/idea-smoke-skillgen-proof",
+        "wiki:ideas/idea-wiki-discovery-001",
+        "wiki:ideas/idea-wiki-discovery-002",
+        "wiki:ideas/pilot-claim-proof-20260630",
+        "wiki:ideas/skillgen-novelty-proof-20260630",
+        "wiki:graph/open_questions.md",
+        "wiki:graph/context_brief.md"
+      ],
+      "source_mode": "mixed",
+      "source_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-discover-provider-proof-check/literature_discovery.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-shim-research-smoke/literature_discovery.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/solar-projection-research-smoke/literature_discovery.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/discover-dfc0efa29c/literature_discovery.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/discover-dda7e55263/literature_discovery.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/discover-2104c80397/literature_discovery.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/discover-205805bdcf/literature_discovery.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-research-proof.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-sample-paper.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-operator-smoke-paper.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-sample-paper.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/paper-solar-autosci-pdf-smoke-2401-00003.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/runtime-source-001.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/papers/skillgen-model-proof.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/methods/method-001.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/topics/foundation-foundation-skillgen-prefill-proof-20260630.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/edit-proof.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-001.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-duplicate-001.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-method-incremental-001.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-research-proof.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-smoke-skillgen-proof.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-wiki-discovery-001.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/idea-wiki-discovery-002.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/pilot-claim-proof-20260630.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/ideas/skillgen-novelty-proof-20260630.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/open_questions.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md"
+      ],
+      "wiki_source_count": 24
+    },
+    "topic": "skillgen generated skills",
+    "wiki_state_resolution": {
+      "fallback_used": false,
+      "target": "skillgen generated skills",
+      "target_id": "",
+      "target_path": "",
+      "target_type": "unresolved",
+      "warnings": [
+        "Target `skillgen generated skills` was not found in wiki ideas, experiments, outputs, or graph edges."
+      ]
+    }
+  },
+  "prompt": "Brainstorm source-grounded AutoSci research ideas. Return JSON with outputs.ideas; each idea must include title, hypothesis, approach, novelty_hypothesis, origin_evidence_ids, and generation_path using exactly one native path: A:landscape-driven, B:incremental, C:combination, D:innovation, or E:cross-domain-transfer.",
+  "required_response_schema": {
+    "outputs": {
+      "answer": "source-grounded answer or assessment",
+      "confidence": "number between 0 and 1",
+      "evidence_ids": [
+        "source id used by the answer"
+      ],
+      "findings": [],
+      "ideas": []
+    },
+    "schema": "autosci_model_response.v1",
+    "status": "completed"
+  },
+  "schema": "autosci_model_request.v1"
+}

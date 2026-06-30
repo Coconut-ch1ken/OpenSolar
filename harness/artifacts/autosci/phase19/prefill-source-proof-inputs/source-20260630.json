@@ -1,0 +1,19 @@
+{
+  "schema": "autosci_prefill_source_evidence.v1",
+  "status": "completed",
+  "outputs": {
+    "title": "LoRA Source Proof 20260630",
+    "source_url": "https://en.wikipedia.org/wiki/Low-rank_adaptation",
+    "summary": "LoRA source proof evidence describes low-rank adaptation as a parameter-efficient adaptation method using low-rank update matrices.",
+    "sections": [
+      {
+        "title": "Architecture",
+        "content": "- Low-rank adapters are inserted into selected neural network layers."
+      },
+      {
+        "title": "Limitations",
+        "content": "- Rank choice can affect quality, memory use, and adaptation capacity."
+      }
+    ]
+  }
+}

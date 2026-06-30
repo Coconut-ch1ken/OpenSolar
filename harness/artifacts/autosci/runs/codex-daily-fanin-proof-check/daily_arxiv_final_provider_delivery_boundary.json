@@ -1,0 +1,23 @@
+{
+  "approval_contract_verified": true,
+  "approval_state": "verified",
+  "candidate_count": 1,
+  "delivery_completed": false,
+  "delivery_evidence_ids": [],
+  "fan_in_completed": true,
+  "final_delivery_ready": true,
+  "limitations": [
+    "Daily arXiv final boundary passed with provider candidates plus delivery or ingest evidence."
+  ],
+  "provider_boundary_completed": true,
+  "provider_boundary_status": "completed",
+  "ranking_ready": true,
+  "schema": "autosci_daily_arxiv_final_provider_delivery_boundary.v1",
+  "semantic_runtime_status": "verified",
+  "semantic_runtime_verified": true,
+  "source_channels": [
+    "search_s2"
+  ],
+  "stage_provider_ready": true,
+  "status": "daily_final_delivery_ready"
+}

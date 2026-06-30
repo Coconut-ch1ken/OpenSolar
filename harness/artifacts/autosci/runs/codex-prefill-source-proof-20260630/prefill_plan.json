@@ -1,0 +1,71 @@
+{
+  "catalog": {
+    "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.agents/skills/prefill/foundations-catalog.yaml",
+    "status": "completed"
+  },
+  "catalog_domain_count": 5,
+  "dedup": [
+    {
+      "domain": "NLP",
+      "exists": false,
+      "foundation_id": "foundation-lora-source-proof-20260630",
+      "path": "artifacts/autosci/workspace/wiki/foundations/foundation-lora-source-proof-20260630.md",
+      "seed_slug": "lora-source-proof-20260630",
+      "source_evidence_path": "artifacts/autosci/phase19/prefill-source-proof-inputs/source-20260630.json",
+      "source_status": "completed",
+      "source_url": "https://en.wikipedia.org/wiki/Low-rank_adaptation",
+      "title": "LoRA Source Proof 20260630"
+    }
+  ],
+  "domain": "NLP",
+  "domain_resolution": {
+    "domain": "NLP",
+    "source": "input.domain",
+    "status": "explicit"
+  },
+  "limitations": [],
+  "mode": "add",
+  "schema": "autosci_prefill_plan.v1",
+  "seed_count": 1,
+  "selected_count": 1,
+  "selected_seeds": [
+    {
+      "domain": "NLP",
+      "exists": false,
+      "foundation_id": "foundation-lora-source-proof-20260630",
+      "path": "artifacts/autosci/workspace/wiki/foundations/foundation-lora-source-proof-20260630.md",
+      "seed_slug": "lora-source-proof-20260630",
+      "slug": "lora-source-proof-20260630",
+      "source": "add",
+      "source_evidence": {
+        "path": "artifacts/autosci/phase19/prefill-source-proof-inputs/source-20260630.json",
+        "schema": "autosci_prefill_source_evidence.v1",
+        "sections": [
+          {
+            "content": "- Low-rank adapters are inserted into selected neural network layers.",
+            "title": "Architecture"
+          },
+          {
+            "content": "- Rank choice can affect quality, memory use, and adaptation capacity.",
+            "title": "Limitations"
+          }
+        ],
+        "source_url": "https://en.wikipedia.org/wiki/Low-rank_adaptation",
+        "status": "completed",
+        "summary": "LoRA source proof evidence describes low-rank adaptation as a parameter-efficient adaptation method using low-rank update matrices.",
+        "title": "LoRA Source Proof 20260630"
+      },
+      "source_evidence_path": "artifacts/autosci/phase19/prefill-source-proof-inputs/source-20260630.json",
+      "source_status": "completed",
+      "source_url": "https://en.wikipedia.org/wiki/Low-rank_adaptation",
+      "summary": "",
+      "title": "LoRA Source Proof 20260630"
+    }
+  ],
+  "skipped_existing_count": 0,
+  "source_evidence_count": 1,
+  "source_evidence_refs": [
+    "artifacts/autosci/phase19/prefill-source-proof-inputs/source-20260630.json"
+  ],
+  "status": "completed"
+}

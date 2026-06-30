@@ -16,6 +16,7 @@ from typing import Any
 WORKSPACE_REL = "artifacts/autosci/workspace"
 WIKI_SUBDIRS = [
     "papers",
+    "foundations",
     "concepts",
     "methods",
     "people",
@@ -471,7 +472,7 @@ def rebuild_index(workspace: Path, run_id: str) -> list[Path]:
         "Human-facing research memory projected from Solar-managed evidence.\n\n",
         f"Last projected run: `{run_id}`\n\n",
     ]
-    for subdir in ["papers", "concepts", "methods", "people", "topics", "ideas", "experiments", "outputs"]:
+    for subdir in ["papers", "foundations", "concepts", "methods", "people", "topics", "ideas", "experiments", "outputs"]:
         lines.append(f"## {subdir.title()}\n\n")
         pages = sorted((wiki / subdir).glob("*.md"))
         if not pages:

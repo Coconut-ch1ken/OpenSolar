@@ -1,0 +1,1 @@
+/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/.venv/bin/python: can't open file '/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/harness/artifacts/autosci/phase19/model-external-proof-inputs/bin/ask-model-command-20260630.py': [Errno 2] No such file or directory

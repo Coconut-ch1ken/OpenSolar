@@ -2,8 +2,7 @@
 # test-ruflo-integration.sh — Ruflo safe vendor/plugin/capability integration.
 set -euo pipefail
 
-HARNESS_DIR="${HARNESS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-export HARNESS_DIR
+HARNESS_DIR="${HARNESS_DIR:-$HOME/.solar/harness}"
 PASS=0
 FAIL=0
 

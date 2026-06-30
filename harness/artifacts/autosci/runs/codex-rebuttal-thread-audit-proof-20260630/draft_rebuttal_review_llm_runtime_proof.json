@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-06-30T16:00:56Z",
+  "proofs": [
+    {
+      "categories": [
+        "review_llm_or_model_evidence",
+        "external_runtime_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed Review LLM evidence for AutoSci `rebuttal` parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-rebuttal-thread-audit-proof-20260630/publication_bundle.rebuttal.json",
+        "harness/artifacts/autosci/phase19/rebuttal-proof-inputs/rebuttal-review-llm-20260630.json"
+      ],
+      "native_skill": "rebuttal",
+      "production_ready": true,
+      "proof_id": "runtime:rebuttal:codex-review-llm-proof:20260630T160056Z",
+      "provenance": {
+        "artifact_kind": "artifact_review",
+        "captured_at": "2026-06-30T16:00:56Z",
+        "command": "review_llm_evidence:codex-review-llm-proof",
+        "source": "codex-review-llm-proof"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

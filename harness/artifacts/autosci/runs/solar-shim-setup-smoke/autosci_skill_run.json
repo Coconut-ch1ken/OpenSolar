@@ -1,0 +1,61 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    }
+  ],
+  "inputs": {
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "paper_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/tests/fixtures/skillgen_operator_smoke_paper.md",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "solar-shim-setup-smoke",
+    "skill": "setup",
+    "skill_args": [],
+    "target": "",
+    "topic": "",
+    "work_dir": "artifacts/autosci/runs/solar-shim-setup-smoke"
+  },
+  "limitations": [
+    "Solar must not write secrets or credentials without explicit user-provided values and approval.",
+    "Secret writing/configuration is not executed without explicit user-provided values and approval.",
+    "Approval-gated external effects were not executed by the shim.",
+    "This skill route has no bounded local bridge action; shim emitted route evidence only."
+  ],
+  "node_id": "autosci-skill-setup",
+  "outputs": {
+    "skill_run": {
+      "action_count": 0,
+      "actions": [],
+      "autosci_command": "/setup",
+      "execution_status": "gated",
+      "failed_count": 0,
+      "passed_count": 0,
+      "route": {
+        "backend_mode": "side_effect_gated",
+        "coverage_status": "gated",
+        "evidence_schema": "workflow_evolution.v1",
+        "physical_operator": "ApprovalGatedSetupStatusOperator",
+        "solar_backend_action": "setup_status",
+        "solar_capability": "cap.research-workflow-evolve",
+        "solar_logical_operator": "ScientificWorkflowEvolver"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "setup",
+      "side_effect_policy": "approval_required"
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-19T15:49:52.170395Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "solar-shim-setup-smoke",
+  "status": "completed",
+  "task_id": "autosci-skill-setup"
+}

@@ -1,0 +1,85 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_verify/task-autosci-scheduler-smoke-step38-final-claim_verify/claim_verdict.json",
+      "type": "solar_evidence_json"
+    }
+  ],
+  "inputs": {
+    "allow_network_fetch": false,
+    "claim_id": "claim-001",
+    "claims_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/claim_extract/task-autosci-scheduler-smoke-step38-final-claim_extract/research_claims.json",
+    "code_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/code_evidence_map/task-autosci-scheduler-smoke-step38-final-code_evidence_map/code_evidence_map.json",
+    "experiment_result_evidence": "artifacts/scientific/scheduler-lifecycle-smoke/autosci-scheduler-smoke-step38-final/experiment_run/task-autosci-scheduler-smoke-step38-final-experiment_run/experiment_result.json",
+    "paper_id": "paper-autosci-scheduler-smoke-step38-final",
+    "paper_path": "plugins/autosci/tests/fixtures/sample_paper.md",
+    "smoke_mode": true
+  },
+  "limitations": [
+    "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation.",
+    "Review LLM second-opinion evidence was not supplied or did not complete."
+  ],
+  "node_id": "claim_verify",
+  "outputs": {
+    "verdicts": [
+      {
+        "basis": "Verdict derived from experiment_result.v1 outcome `supports` for `exp-001`. Claim text: The fixture path should produce a `result.json` file and an `evidence.jsonl` ledger entry without invoking a monolithic AutoSci workflow owner.",
+        "claim_evidence_ids": [
+          "claim-001",
+          "paper-autosci-scheduler-smoke-step38-final",
+          "sample_paper.md#results"
+        ],
+        "claim_id": "claim-001",
+        "code_evidence_ids": [
+          "task-autosci-scheduler-smoke-step38-final-code_evidence_map",
+          "map-001",
+          "plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py",
+          "claim-001"
+        ],
+        "confidence": 0.72,
+        "evidence_ids": [
+          "claim-001",
+          "paper-autosci-scheduler-smoke-step38-final",
+          "sample_paper.md#results",
+          "task-autosci-scheduler-smoke-step38-final-experiment_run",
+          "exp-001",
+          "evidence:autosci-fixture-result",
+          "evidence:autosci-fixture-ledger",
+          "task-autosci-scheduler-smoke-step38-final-code_evidence_map",
+          "map-001",
+          "plugins/autosci/tests/fixtures/sample_repo/bridge_fixture.py"
+        ],
+        "evidence_outcome": "supports",
+        "experiment_evidence_ids": [
+          "task-autosci-scheduler-smoke-step38-final-experiment_run",
+          "exp-001",
+          "evidence:autosci-fixture-result",
+          "evidence:autosci-fixture-ledger"
+        ],
+        "experiment_id": "exp-001",
+        "limitations": [
+          "Fixture verdict is derived only from supplied local evidence; it is not external scientific validation.",
+          "Review LLM second-opinion evidence was not supplied or did not complete."
+        ],
+        "review_llm": {
+          "checked_paths": [],
+          "claim_id": "claim-001",
+          "reasons": [
+            "No Review LLM evidence was supplied."
+          ],
+          "status": "unavailable"
+        },
+        "verdict": "supported"
+      }
+    ]
+  },
+  "provenance": {
+    "implementation_package": "plugins/autosci",
+    "operator_id": "autosci-bridge",
+    "timestamp": "2026-06-26T16:03:45Z"
+  },
+  "schema": "claim_verdict.v1",
+  "sprint_id": "autosci-scheduler-smoke-step38-final",
+  "status": "completed",
+  "task_id": "task-autosci-scheduler-smoke-step38-final-claim_verify"
+}

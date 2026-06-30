@@ -42,6 +42,7 @@ SCHEMA_GATE_MAP = {
     "experiment_status.v1": "experiment_status_gate.py",
     "claim_verdict.v1": "claim_verdict_gate.py",
     "scientific_report.v1": "report_gate.py",
+    "artifact_review.v1": "artifact_review_gate.py",
     "publication_bundle.v1": "publication_gate.py",
     "workflow_evolution.v1": "workflow_evolution_gate.py",
 }
@@ -63,6 +64,7 @@ NODE_ACTION_MAP = {
     "claim_verify": "verify_claim",
     "report_plan": "plan_report",
     "report_draft": "write_report",
+    "artifact_review": "review_artifact",
     "publication_produce": "compile_paper",
     "memory_update_final": "update_memory",
     "workflow_evolve": "evolve_workflow",

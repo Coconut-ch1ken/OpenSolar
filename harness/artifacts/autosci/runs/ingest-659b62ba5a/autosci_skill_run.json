@@ -1,0 +1,126 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    }
+  ],
+  "inputs": {
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "paper_path": "tmp/pdfs/SkillGen.extracted.md",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "ingest-659b62ba5a",
+    "skill": "ingest",
+    "skill_args": [],
+    "target": "",
+    "topic": "",
+    "work_dir": "artifacts/autosci/runs/ingest-659b62ba5a"
+  },
+  "limitations": [
+    "External PDF/arXiv acquisition is source-mode dependent and must keep source artifacts explicit.",
+    "Skillgen smoke uses local markdown paper input."
+  ],
+  "node_id": "autosci-skill-ingest",
+  "outputs": {
+    "skill_run": {
+      "action_count": 2,
+      "actions": [
+        {
+          "action": "ingest_paper",
+          "evidence_ids": [
+            "artifacts/autosci/runs/ingest-659b62ba5a/research_paper.json",
+            "solar_evidence_json",
+            "tmp/pdfs/SkillGen.extracted.md",
+            "Paper source not found: tmp/pdfs/SkillGen.extracted.md",
+            "node-ingest-paper",
+            "autosci-phase9",
+            "paper-missing",
+            "failed",
+            "sec-abstract",
+            "sample_paper.md#abstract",
+            "Fixture abstract.",
+            "Abstract",
+            "unknown",
+            "Missing paper source",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-22T19:10:22Z",
+            "research_paper.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-ingest_paper"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/ingest-659b62ba5a/research_paper.json",
+          "gate_status": "failed",
+          "reasons": [
+            "paper parse_status is failed"
+          ],
+          "schema": "research_paper.v1",
+          "status": "failed",
+          "warnings": []
+        },
+        {
+          "action": "analyze_paper",
+          "evidence_ids": [
+            "artifacts/autosci/runs/ingest-659b62ba5a/research_paper.analyzed.json",
+            "solar_evidence_json",
+            "tmp/pdfs/SkillGen.extracted.md",
+            "Paper source not found: tmp/pdfs/SkillGen.extracted.md",
+            "node-analyze-paper",
+            "autosci-phase9",
+            "paper-missing",
+            "failed",
+            "sec-abstract",
+            "sample_paper.md#abstract",
+            "Fixture abstract.",
+            "Abstract",
+            "unknown",
+            "Missing paper source",
+            "plugins/autosci",
+            "autosci-bridge",
+            "2026-06-22T19:10:22Z",
+            "research_paper.v1",
+            "phase19-skillgen-operator-smoke",
+            "task-autosci-skillgen-analyze_paper"
+          ],
+          "evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/ingest-659b62ba5a/research_paper.analyzed.json",
+          "gate_status": "failed",
+          "reasons": [
+            "paper parse_status is failed"
+          ],
+          "schema": "research_paper.v1",
+          "status": "failed",
+          "warnings": []
+        }
+      ],
+      "autosci_command": "/ingest",
+      "execution_status": "failed",
+      "failed_count": 2,
+      "passed_count": 0,
+      "route": {
+        "backend_mode": "solar_native",
+        "coverage_status": "full",
+        "evidence_schema": "research_paper.v1",
+        "physical_operator": "AutoSciBridgePaperIngestor",
+        "solar_backend_action": "ingest_paper",
+        "solar_capability": "cap.research-paper-ingest",
+        "solar_logical_operator": "ScientificPaperIngestor"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "ingest",
+      "side_effect_policy": "dry_run_only"
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-22T19:10:23.007725Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "ingest-659b62ba5a",
+  "status": "failed",
+  "task_id": "autosci-skill-ingest"
+}

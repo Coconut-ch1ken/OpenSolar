@@ -1,0 +1,89 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+      "type": "binding_config"
+    }
+  ],
+  "inputs": {
+    "anchors": [],
+    "binding_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_operator_bindings.v1.json",
+    "from_wiki": false,
+    "limit": 0,
+    "native_options": {
+      "auto": false,
+      "checklist": false,
+      "collect": true,
+      "difficulty": "",
+      "env": "local",
+      "fix": false,
+      "focus": "",
+      "full": false,
+      "max_ideas": 0,
+      "quick": false,
+      "review": false,
+      "skip_pilot": false,
+      "skip_validation": false,
+      "title": "",
+      "verbose": false,
+      "write": false
+    },
+    "negative_ids": [],
+    "paper_path": "",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "run_id": "contract-exp-run",
+    "skill": "exp-run",
+    "skill_args": [
+      "exp-001"
+    ],
+    "smoke": false,
+    "target": "exp-001",
+    "topic": "",
+    "venue": "",
+    "work_dir": "artifacts/autosci/runs/contract-exp-run",
+    "year": ""
+  },
+  "limitations": [
+    "SSH, rsync, screen sessions, and long-running code execution require approval and runtime status evidence.",
+    "Only fixture execution runs; SSH, rsync, screen, and long-running code are not executed without approval.",
+    "Approval-gated external effects were not executed by the shim.",
+    "No source paper/artifact resolver is available for this native route yet; fixture bridge actions require explicit --smoke.",
+    "Fixture bridge fallback is disabled unless --smoke is passed explicitly."
+  ],
+  "node_id": "autosci-skill-exp-run",
+  "outputs": {
+    "skill_run": {
+      "action_count": 0,
+      "actions": [],
+      "autosci_command": "/exp-run",
+      "execution_status": "gated",
+      "failed_count": 0,
+      "passed_count": 0,
+      "route": {
+        "backend_mode": "side_effect_gated",
+        "coverage_status": "gated",
+        "evidence_schema": "experiment_result.v1",
+        "physical_operator": "ApprovalGatedExperimentRunner",
+        "solar_backend_action": "run_experiment",
+        "solar_capability": "cap.research-experiment-run",
+        "solar_logical_operator": "ScientificExperimentRunner"
+      },
+      "schema_only_count": 0,
+      "selected_skill": "exp-run",
+      "side_effect_policy": "approval_required"
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciSkillShim",
+    "timestamp": "2026-06-24T17:27:26.498091Z"
+  },
+  "schema": "autosci_skill_run.v1",
+  "sprint_id": "contract-exp-run",
+  "status": "completed",
+  "task_id": "autosci-skill-exp-run"
+}

@@ -1,0 +1,4 @@
+import json
+import sys
+request = json.loads(sys.stdin.read())
+print(json.dumps({"schema":"autosci_model_response.v1","status":"completed","outputs":{"answer":"SkillGen supports verifier-gated generated skills.","confidence":0.9,"evidence_ids":["model:ask-proof-20260630"],"model":"test-model","provider":"command"}}))

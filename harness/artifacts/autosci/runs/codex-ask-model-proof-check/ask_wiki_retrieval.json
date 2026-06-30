@@ -1,0 +1,118 @@
+{
+  "answer_lines": [
+    "- Skills are a promising way to improve LLM agent capabilities without retraining, while keeping the added procedure reusable and controllable. However, high- quality skills are still largely written by hand. We introduce SKILLGEN, a multi- agent framework that synthesizes a single auditable skill fro Source: `artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md`.",
+    "- Skills are a promising way to improve LLM agent capabilities without retraining, while keeping the added procedure reusable and controllable. However, high- quality skills are still largely written by hand. We introduce SKILLGEN, a multi- agent framework that synthesizes a single auditable skill fro Source: `artifacts/autosci/workspace/wiki/papers/paper-skillgen.md`.",
+    "- 3 SKILLGEN Source: `artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md`.",
+    "- ## Evidence Map Source: `artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md`.",
+    "- ## Result Evidence IDs Source: `artifacts/autosci/workspace/wiki/experiments/exp-001.md`."
+  ],
+  "answer_status": "completed",
+  "final_answer_boundary": {
+    "answer_status": "completed",
+    "blocking_reasons": [],
+    "final_answer_ready": true,
+    "limitations": [],
+    "model_confidence": 0.81,
+    "model_evidence_ids": [
+      "model:ask-smoke"
+    ],
+    "model_name": "smoke-model",
+    "model_provider": "command",
+    "model_source": "model-command",
+    "model_status": "completed",
+    "query": "What evidence supports SkillGen?",
+    "request_sha256": "83668fbcab568515951561672b926d20a6f9622a55da4d0cf125116598c6e74a",
+    "response_sha256": "497bf2f7ea568b97a21364bfcdae0094ccd76f3e2a0b5c61e6e667504e1419e1",
+    "retrieval_paths": [
+      "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+      "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+      "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+      "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+      "artifacts/autosci/workspace/wiki/experiments/exp-001.md"
+    ],
+    "retrieval_source_count": 5,
+    "retrieval_status": "completed",
+    "schema": "autosci_ask_final_answer_boundary.v1",
+    "status": "final_answer_ready"
+  },
+  "hits": [
+    {
+      "matched_terms": [
+        "evidence",
+        "supports",
+        "skillgen"
+      ],
+      "path": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+      "score": 93,
+      "snippet": "Skills are a promising way to improve LLM agent capabilities without retraining, while keeping the added procedure reusable and controllable. However, high- quality skills are still largely written by hand. We introduce SKILLGEN, a multi- agent framework that synthesizes a single auditable skill fro"
+    },
+    {
+      "matched_terms": [
+        "evidence",
+        "supports",
+        "skillgen"
+      ],
+      "path": "artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+      "score": 93,
+      "snippet": "Skills are a promising way to improve LLM agent capabilities without retraining, while keeping the added procedure reusable and controllable. However, high- quality skills are still largely written by hand. We introduce SKILLGEN, a multi- agent framework that synthesizes a single auditable skill fro"
+    },
+    {
+      "matched_terms": [
+        "evidence",
+        "supports",
+        "skillgen"
+      ],
+      "path": "artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+      "score": 77,
+      "snippet": "3 SKILLGEN"
+    },
+    {
+      "matched_terms": [
+        "evidence",
+        "skillgen"
+      ],
+      "path": "artifacts/autosci/workspace/wiki/outputs/report-skillgen-operator-smoke.md",
+      "score": 60,
+      "snippet": "## Evidence Map"
+    },
+    {
+      "matched_terms": [
+        "evidence",
+        "supports"
+      ],
+      "path": "artifacts/autosci/workspace/wiki/experiments/exp-001.md",
+      "score": 15,
+      "snippet": "## Result Evidence IDs"
+    }
+  ],
+  "limitations": [
+    "Extractive answer is grounded in retrieved wiki snippets.",
+    "Model synthesis is included only when explicit model evidence or a model command was supplied."
+  ],
+  "model_output": {
+    "answer": "SkillGen is supported by retrieved wiki evidence.",
+    "checked_paths": [],
+    "command": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv/bin/python",
+      "-c",
+      "import json, sys; req=json.loads(sys.stdin.read()); print(json.dumps({\"schema\":\"autosci_model_response.v1\",\"status\":\"completed\",\"outputs\":{\"answer\":\"SkillGen is supported by retrieved wiki evidence.\",\"confidence\":0.81,\"evidence_ids\":[\"model:ask-smoke\"],\"model\":\"smoke-model\",\"provider\":\"command\"}}))"
+    ],
+    "confidence": 0.81,
+    "evidence_ids": [
+      "model:ask-smoke"
+    ],
+    "findings": [],
+    "ideas": [],
+    "invocation_mode": "command",
+    "model": "smoke-model",
+    "provider": "command",
+    "request_path": "artifacts/autosci/runs/codex-ask-model-proof-check/ask_wiki_model_request.json",
+    "request_sha256": "83668fbcab568515951561672b926d20a6f9622a55da4d0cf125116598c6e74a",
+    "response_path": "artifacts/autosci/runs/codex-ask-model-proof-check/ask_wiki_model_stdout.json",
+    "response_sha256": "497bf2f7ea568b97a21364bfcdae0094ccd76f3e2a0b5c61e6e667504e1419e1",
+    "source": "model-command",
+    "status": "completed"
+  },
+  "query": "What evidence supports SkillGen?",
+  "status": "completed"
+}

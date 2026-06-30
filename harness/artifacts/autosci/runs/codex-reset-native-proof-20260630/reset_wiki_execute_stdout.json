@@ -1,0 +1,13 @@
+{
+  "deleted_files": 4,
+  "ok": true,
+  "project_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630",
+  "reset_files": 0,
+  "runtime_evidence_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-reset-native-proof-20260630/reset_wiki_runtime_evidence.json",
+  "schema": "autosci_reset_wiki_cli.v1",
+  "scopes": [
+    "wiki"
+  ],
+  "status": "completed",
+  "wiki_root": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/reset-native-proof-runtime-20260630/wiki"
+}

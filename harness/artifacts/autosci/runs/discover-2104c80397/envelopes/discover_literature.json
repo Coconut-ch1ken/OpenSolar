@@ -1,0 +1,19 @@
+{
+  "inputs": {
+    "discover_mode": "wiki",
+    "fixture_fallback": false,
+    "from_wiki": true,
+    "limit": 10,
+    "query": "SkillGen verified inference-time agent skill synthesis"
+  },
+  "mode": "fixture",
+  "node_id": "node-discover-literature",
+  "output_dir": "artifacts/autosci/runs/discover-2104c80397",
+  "outputs": {
+    "evidence_jsonl": "artifacts/autosci/runs/discover-2104c80397/evidence.jsonl",
+    "evidence_payload_path": "artifacts/autosci/runs/discover-2104c80397/literature_discovery.json",
+    "result_path": "artifacts/autosci/runs/discover-2104c80397/discover_literature.result.json"
+  },
+  "sprint_id": "phase19-skillgen-operator-smoke",
+  "task_id": "task-autosci-skillgen-discover_literature"
+}

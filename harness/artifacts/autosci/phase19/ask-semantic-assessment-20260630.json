@@ -1,0 +1,145 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "ask": {
+      "semantic_parity": "full",
+      "auditor": "phase19-ask-semantic-audit",
+      "summary": "Solar $ask now preserves native AutoSci /ask semantics: it reads wiki context and gap files, retrieves source pages with wiki citations, requires explicit model synthesis evidence for final answers, supports markdown/table/timeline/bullets output modes, recommends crystallization from evidence boundaries, stays read-only by default, and performs approval-gated crystallize writeback to outputs or typed wiki targets with graph/log/rebuild proof.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/ask/SKILL.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/ask/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/research_memory_update.ask.json",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_answer.md",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_retrieval.json",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_final_answer_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_model_request.json",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_model_stdout.json",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_model_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ask-format-proof-20260630/research_memory_update.ask.json",
+        "harness/artifacts/autosci/runs/codex-ask-format-proof-20260630/ask_wiki_answer.md",
+        "harness/artifacts/autosci/runs/codex-ask-format-proof-20260630/ask_wiki_retrieval.json",
+        "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/research_memory_update.ask.json",
+        "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_crystallize_writeback.json",
+        "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/research_memory_update.ask.json",
+        "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_wiki_crystallize_writeback.json",
+        "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_wiki_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_wiki_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_wiki_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/concepts/skillgen-support.md",
+        "harness/artifacts/autosci/workspace/wiki/outputs/what-evidence-supports-skillgen.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/open_questions.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/workspace/wiki/index.md",
+        "harness/artifacts/autosci/workspace/wiki/log.md"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "context_and_gap_loading",
+          "status": "ok",
+          "detail": "Solar ask records context_brief, open_questions, index, and graph edge evidence with status, hashes, matches, and gap annotations before model synthesis.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/ask/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_retrieval.json",
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_model_request.json"
+          ]
+        },
+        {
+          "check": "source_grounded_retrieval_and_citations",
+          "status": "ok",
+          "detail": "Ask output is grounded in retrieved wiki pages and emits wiki-style [[slug]] citations plus source paths; no matching source produces an incomplete status rather than fabricated content.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_answer.md",
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_retrieval.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "model_final_answer_boundary",
+          "status": "ok",
+          "detail": "Final answers require retrieved source evidence and completed model-command or supplied model evidence with evidence ids; request/response hashes and runtime proof are persisted.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_final_answer_boundary.json",
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_model_request.json",
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_model_stdout.json",
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/ask_wiki_model_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "native_format_modes",
+          "status": "ok",
+          "detail": "Solar ask preserves native markdown/table/timeline/bullets output modes in answer markdown and records the requested format in retrieval evidence.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/artifacts/autosci/runs/codex-ask-format-proof-20260630/ask_wiki_answer.md",
+            "harness/artifacts/autosci/runs/codex-ask-format-proof-20260630/ask_wiki_retrieval.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "read_only_default",
+          "status": "ok",
+          "detail": "Default ask remains read-only/no-op and does not mutate the wiki unless crystallize/write plus approval and runtime evidence are supplied.",
+          "evidence_refs": [
+            ".agents/skills/ask/SKILL.md",
+            "harness/artifacts/autosci/runs/codex-ask-context-gap-proof-20260630/research_memory_update.ask.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "approved_default_crystallize_writeback",
+          "status": "ok",
+          "detail": "Approved crystallize writes the default query output page, log, graph edges, rebuilt index/context brief, and approval/side-effect/wiki mutation proofs only after final answer readiness.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_crystallize_writeback.json",
+            "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_approval_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_side_effect_execution_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-ask-crystallize-proof-20260630/ask_wiki_wiki_mutation_runtime_proof.json",
+            "harness/artifacts/autosci/workspace/wiki/outputs/what-evidence-supports-skillgen.md"
+          ]
+        },
+        {
+          "check": "typed_crystallize_target_selection",
+          "status": "ok",
+          "detail": "Ask preserves the natural-language query while resolving typed crystallize targets such as concept:skillgen-support into the correct wiki directory and entity metadata.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/research_memory_update.ask.json",
+            "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_wiki_crystallize_writeback.json",
+            "harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_wiki_wiki_mutation_runtime_proof.json",
+            "harness/artifacts/autosci/workspace/wiki/concepts/skillgen-support.md",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "regression_coverage",
+          "status": "ok",
+          "detail": "Targeted ask tests cover model evidence, context/gap evidence, output format modes, default and typed crystallize writeback, finality, approval, and wiki mutation proof behavior.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The remaining route limitation is an operational caveat, not an unimplemented ask semantic block; missing evidence is surfaced as incomplete rather than inferred."
+        },
+        {
+          "status": "ok",
+          "finding": "Solar keeps default ask read-only while preserving native crystallize semantics through explicit approval/runtime proof gates."
+        }
+      ]
+    }
+  }
+}

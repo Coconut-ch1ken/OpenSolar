@@ -155,6 +155,22 @@ def _validate_node_result(
         reasons.append(f"node_results.{node_id}.node_id must match {node_id}")
     if job_id and result.get("job_id") and str(result.get("job_id")) != job_id:
         reasons.append(f"node_results.{node_id}.job_id must match {job_id}")
+    if not str(result.get("gate") or "").strip():
+        reasons.append(f"node_results.{node_id}.gate is required")
+    _require_existing_file_field(
+        result,
+        "operator_result_path",
+        node_id=node_id,
+        input_path=input_path,
+        reasons=reasons,
+    )
+    _require_existing_file_field(
+        result,
+        "bridge_result_path",
+        node_id=node_id,
+        input_path=input_path,
+        reasons=reasons,
+    )
 
     artifact_raw = str(result.get("evidence_path") or result.get("artifact_path") or result.get("artifact") or "").strip()
     if not artifact_raw:
@@ -207,6 +223,22 @@ def _validate_node_result(
         reasons.append(f"gate_results.{node_id}.job_id must match {job_id}")
     if gate.get("node_id") and str(gate.get("node_id")) != node_id:
             reasons.append(f"gate_results.{node_id}.node_id must match {node_id}")
+
+
+def _require_existing_file_field(
+    result: dict[str, Any],
+    field: str,
+    *,
+    node_id: str,
+    input_path: Path | None,
+    reasons: list[str],
+) -> None:
+    raw = str(result.get(field) or "").strip()
+    if not raw:
+        reasons.append(f"node_results.{node_id}.{field} is required")
+        return
+    if _resolve_path(raw, input_path) is None:
+        reasons.append(f"node_results.{node_id}.{field} does not exist: {raw}")
 
 
 def _validate_blocked_node(

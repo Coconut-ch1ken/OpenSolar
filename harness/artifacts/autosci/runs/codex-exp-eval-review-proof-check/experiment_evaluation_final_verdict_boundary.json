@@ -1,0 +1,45 @@
+{
+  "claim_evidence_ids": [
+    "claim-skillgen",
+    "claim-skillgen"
+  ],
+  "claim_evidence_linked": false,
+  "claim_id": "claim-skillgen",
+  "code_evidence_ids": [],
+  "code_evidence_linked": false,
+  "evidence_ids": [
+    "claim-skillgen",
+    "task-autosci-skillgen-review_artifact",
+    "artifact:idea-001",
+    "review.underspecified",
+    "review-llm:smoke"
+  ],
+  "experiment_evidence_ids": [],
+  "experiment_result_ready": false,
+  "experiment_schema": "missing",
+  "experiment_status": "missing",
+  "final_verdict_ready": false,
+  "limitations": [
+    "Final experiment evaluation requires a non-inconclusive claim verdict.",
+    "Final experiment evaluation requires completed experiment_result.v1 evidence.",
+    "Final experiment evaluation requires linked claim evidence beyond the claim id.",
+    "Final experiment evaluation requires linked code evidence for the evaluated claim.",
+    "Final experiment evaluation requires completed approved wiki writeback before treating the verdict as final."
+  ],
+  "review_llm_completed": true,
+  "review_llm_status": "completed",
+  "schema": "autosci_experiment_evaluation_final_verdict_boundary.v1",
+  "status": "final_verdict_incomplete",
+  "verdict": "inconclusive",
+  "writeback_completed": false,
+  "writeback_status": {
+    "applied": false,
+    "approval_ref": "N/A",
+    "limitations": [
+      "Claim verdict writeback was not requested."
+    ],
+    "path": "",
+    "requested": false,
+    "status": "not_requested"
+  }
+}

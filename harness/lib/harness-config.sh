@@ -18,8 +18,8 @@ solar_model_registry() {
   python3 "$HARNESS_DIR/lib/model_registry.py" --registry "$SOLAR_MODEL_REGISTRY" "$@"
 }
 
-SOLAR_DEFAULT_MAIN_MODEL="$(solar_model_registry default main_model 2>/dev/null || printf 'codex-gpt-5.5')"
-SOLAR_DEFAULT_LAB_BUILDER_MATRIX="$(solar_model_registry validate-lab-matrix "$(solar_model_registry default lab_builder_matrix 2>/dev/null || printf 'codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5')" 2>/dev/null || printf 'codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5,codex-gpt-5.5')"
+SOLAR_DEFAULT_MAIN_MODEL="$(solar_model_registry default main_model 2>/dev/null || printf 'opus')"
+SOLAR_DEFAULT_LAB_BUILDER_MATRIX="$(solar_model_registry validate-lab-matrix "$(solar_model_registry default lab_builder_matrix 2>/dev/null || printf 'glm,glm,glm,anthropic-sonnet')" 2>/dev/null || printf 'glm,glm,glm,anthropic-sonnet')"
 
 solar_config_json_get() {
   local dotted_key="$1"

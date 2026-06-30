@@ -1,0 +1,75 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/discover/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "full_semantic_assessment_supplied",
+      "detail": "No completed route-level full semantic equivalence assessment was supplied.",
+      "status": "pending"
+    }
+  ],
+  "audited_at": "2026-06-30T13:17:09Z",
+  "auditor": "phase19-semantic-audit-matrix",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md"
+  ],
+  "native_skill": "discover",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-06-30T13:17:09Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [
+    "Live API failures must be represented as incomplete source evidence rather than synthetic recommendations.",
+    "Root discover CLI now covers topic, anchor, wiki, and venue modes; source runtime completion requires a non-fixture provider channel boundary, and discover_final_shortlist_boundary requires non-empty candidates backed by provider source channels; keep partial until live/wiki source evidence produces completed shortlist evidence under real provider conditions.",
+    "Supply a completed full semantic equivalence assessment with passing checks and existing native/Solar evidence refs."
+  ],
+  "route_snapshot": {
+    "autosci_command": "/discover",
+    "backend_mode": "solar_native",
+    "coverage_status": "partial",
+    "limitations": [
+      "Live API failures must be represented as incomplete source evidence rather than synthetic recommendations.",
+      "Root discover CLI now covers topic, anchor, wiki, and venue modes; source runtime completion requires a non-fixture provider channel boundary, and discover_final_shortlist_boundary requires non-empty candidates backed by provider source channels; keep partial until live/wiki source evidence produces completed shortlist evidence under real provider conditions."
+    ],
+    "required_capabilities": [
+      "shortlist generation",
+      "deduplication",
+      "ranking signals",
+      "source manifest"
+    ],
+    "side_effect_policy": "none",
+    "solar_backend_action": "discover_literature"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "partial",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/discover/SKILL.md"
+  ],
+  "status": "completed",
+  "summary": "Semantic audit evidence is materialized, but full semantic equivalence is not yet proven."
+}
