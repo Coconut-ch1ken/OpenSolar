@@ -394,6 +394,120 @@ def project_report(run_dir: Path, wiki: Path, output_harness: Path, run_id: str)
     return []
 
 
+def _resolve_output_ref(raw: Any, output_harness: Path) -> Path | None:
+    text = value_as_text(raw, "").strip()
+    if not text:
+        return None
+    path = Path(text)
+    if path.is_absolute():
+        return path
+    return output_harness / path
+
+
+def _markdown_table(headers: list[str], rows: list[list[str]]) -> str:
+    if not rows:
+        return "- N/A\n"
+    header = "| " + " | ".join(headers) + " |\n"
+    divider = "| " + " | ".join("---" for _ in headers) + " |\n"
+    body = "".join("| " + " | ".join(value_as_text(cell).replace("\n", " ") for cell in row) + " |\n" for row in rows)
+    return header + divider + body
+
+
+def project_lifecycle_summary(
+    skill_run_path: Path,
+    payload: dict[str, Any],
+    wiki: Path,
+    output_harness: Path,
+    run_id: str,
+) -> list[Path]:
+    skill_run = payload.get("outputs", {}).get("skill_run", {})
+    if not isinstance(skill_run, dict):
+        return []
+    scheduler_lifecycle = skill_run.get("scheduler_lifecycle")
+    if not isinstance(scheduler_lifecycle, dict) or not scheduler_lifecycle:
+        return []
+
+    summary_path = _resolve_output_ref(scheduler_lifecycle.get("summary_path"), output_harness)
+    lifecycle = load_json_if_exists(summary_path) if summary_path else None
+    if not isinstance(lifecycle, dict):
+        return []
+
+    output_page = wiki / "outputs" / "lifecycle_summary.md"
+    workflow_id = value_as_text(lifecycle.get("workflow_id"))
+    job_id = value_as_text(lifecycle.get("job_id"))
+    status = value_as_text(lifecycle.get("lifecycle_status"), value_as_text(scheduler_lifecycle.get("status")))
+    execution_owner = value_as_text(lifecycle.get("execution_owner"))
+    dispatch = lifecycle.get("dispatch_boundary") if isinstance(lifecycle.get("dispatch_boundary"), dict) else {}
+    lifecycle_gate = lifecycle.get("lifecycle_gate_result") if isinstance(lifecycle.get("lifecycle_gate_result"), dict) else {}
+    node_results = lifecycle.get("node_results") if isinstance(lifecycle.get("node_results"), dict) else {}
+    gate_results = lifecycle.get("gate_results") if isinstance(lifecycle.get("gate_results"), dict) else {}
+    blocked_nodes = lifecycle.get("blocked_nodes") if isinstance(lifecycle.get("blocked_nodes"), dict) else {}
+
+    node_rows: list[list[str]] = []
+    for node_id in sorted(set(node_results) | set(gate_results)):
+        node_result = node_results.get(node_id) if isinstance(node_results.get(node_id), dict) else {}
+        gate_result = gate_results.get(node_id) if isinstance(gate_results.get(node_id), dict) else {}
+        node_rows.append(
+            [
+                node_id,
+                value_as_text(node_result.get("status")),
+                value_as_text(gate_result.get("status") or gate_result.get("gate_status")),
+                value_as_text(node_result.get("artifact_path")),
+            ]
+        )
+
+    blocked_rows: list[list[str]] = []
+    for node_id, raw in sorted(blocked_nodes.items()):
+        node = raw if isinstance(raw, dict) else {}
+        required = node.get("required_evidence")
+        if isinstance(required, list):
+            required_text = ", ".join(value_as_text(item) for item in required)
+        else:
+            required_text = value_as_text(required)
+        blocked_rows.append(
+            [
+                node_id,
+                value_as_text(node.get("reason")),
+                required_text,
+                value_as_text(node.get("unblock_condition")),
+            ]
+        )
+
+    runtime_manifest = _resolve_output_ref(lifecycle.get("runtime_manifest_path"), output_harness)
+    source_summary = evidence_link(summary_path, output_harness) if summary_path else "N/A"
+    runtime_manifest_ref = evidence_link(runtime_manifest, output_harness) if runtime_manifest else "N/A"
+    skill_run_ref = evidence_link(skill_run_path, output_harness)
+
+    body = [
+        frontmatter("output", f"lifecycle-summary-{run_id}", f"Lifecycle summary for {run_id}", run_id, source_summary),
+        f"# Lifecycle Summary: `{run_id}`\n\n",
+        "## Status\n\n",
+        f"- Lifecycle status: `{status}`\n",
+        f"- Workflow id: `{workflow_id}`\n",
+        f"- Job id: `{job_id}`\n",
+        f"- Execution owner: `{execution_owner}`\n",
+        f"- Dispatch boundary: `{value_as_text(dispatch.get('status'))}`\n",
+        f"- Production ready: `{value_as_text(dispatch.get('production_ready'))}`\n",
+        f"- Lifecycle gate: `{value_as_text(lifecycle_gate.get('status'))}`\n",
+        f"- Node count: `{len(node_results)}`\n",
+        f"- Blocked node count: `{len(blocked_nodes)}`\n\n",
+        "## Evidence\n\n",
+        f"- Skill run: `{skill_run_ref}`\n",
+        f"- Lifecycle summary: `{source_summary}`\n",
+        f"- Runtime manifest: `{runtime_manifest_ref}`\n\n",
+        "## Node Results\n\n",
+        _markdown_table(["Node", "Node Status", "Gate Status", "Artifact"], node_rows),
+        "\n## Blocked Nodes\n\n",
+        _markdown_table(["Node", "Reason", "Required Evidence", "Unblock Condition"], blocked_rows),
+        "\n## Notes\n\n",
+        "- This page is projected from Solar-managed evidence; it is not the execution ledger.\n",
+        "- Missing provider, model, approval, or runtime evidence remains visible as blocked or inconclusive state.\n",
+    ]
+    if write_text_if_changed(output_page, "".join(body)):
+        return [output_page]
+    return []
+
+
 def project_graph(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
     updated: list[Path] = []
     graph_dir = wiki / "graph"
@@ -509,6 +623,7 @@ def project_run_to_workspace(
     updated.extend(project_ideas(run_dir, wiki, output_harness, run_id))
     updated.extend(project_experiment(run_dir, wiki, output_harness, run_id))
     updated.extend(project_report(run_dir, wiki, output_harness, run_id))
+    updated.extend(project_lifecycle_summary(skill_run_path, payload, wiki, output_harness, run_id))
     updated.extend(project_graph(run_dir, wiki, output_harness, run_id))
     updated.extend(rebuild_index(workspace, run_id))
 

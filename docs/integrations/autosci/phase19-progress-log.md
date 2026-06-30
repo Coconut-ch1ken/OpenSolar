@@ -7559,3 +7559,35 @@ Logged: 2026-06-30 EDT
 | Global inventory | ok | `current-parity-inventory-after-daily-arxiv-truthfulness.json` passes ordinary gate and reports `semantic_full_count=15`, `semantic_partial_count=13`; remaining blockers are real parity work, not route-truthfulness overclaim. |
 | Sanity checks | ok | `$daily-arxiv` targeted tests passed: 5 passed; `py_compile`, route/inventory gates, `git diff --check`, and `git diff --cached --check` passed. |
 | Remaining blocker | pending | `$daily-arxiv` can only become semantic full after the native `/ingest` route is completed and daily auto-ingest can attach completed ingest evidence rather than handoff-only evidence. |
+
+## Priority A/B Product Entry And Workspace Projection Follow-up
+
+Logged: 2026-06-30 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Product AutoSci artifact root contract | ok | Added explicit `AUTOSCI_ARTIFACT_ROOT`, `SCIENTIFIC_ARTIFACT_ROOT`, and `SOLAR_AUTOSCI_OUTPUT_HARNESS` handling across the harness entrypoint, shim, bridge, operator smoke, parity bridge, and generic workflow runner. |
+| `harness/bin/python3` wrapper hazard | warn | The wrapper resets `HARNESS_DIR` to the wrapper's own harness directory. Product entry must preserve the caller-selected runtime harness through `SOLAR_AUTOSCI_OUTPUT_HARNESS`; otherwise isolated runs leak back into the repo harness. |
+| Human lifecycle projection | ok | `$research --scheduler-run` now projects `wiki/outputs/lifecycle_summary.md` from `scientific_lifecycle.v1`, including node results, gate status, blocked-node fields, and evidence refs. |
+| Route truthfulness cleanup | ok | `ask`, `paper-draft`, `paper-plan`, and `survey` were corrected to avoid overclaiming route coverage without the corresponding runtime/semantic proof state in this branch. |
+| Priority contract tests | ok | Added `harness/tests/test_autosci_priority_a_contracts.py` and `harness/tests/test_autosci_priority_b_demo_contracts.py` for product entry roots, route ABI, registries, scientific root, and human lifecycle workspace projection. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Smoke tests can mutate tracked workspace projection files (`wiki/index.md`, `wiki/graph/context_brief.md`, canvases, logs) | warn | After smoke/demo runs, inspect `git status --short` and automatically roll back only smoke-generated workspace projection noise when it is unrelated to the task. Do not roll back user-owned dirty files. |
+| Product entry tests can leave ignored run directories under `harness/artifacts/autosci/runs/` after a failed root contract | warn | Use unique run ids in tests and assert no repo-root run directory is created for that run id. |
+| Sandbox blocks local `127.0.0.1` listener tests | warn | Full plugin suite may show socket bind failures in sandbox. Re-run only the affected local-server tests with approved unsandboxed execution before treating them as real failures. |
+| Route `coverage_status=full` with unresolved semantic/runtime proof causes parity gate failures | warn | Keep route coverage and operator binding status synchronized unless a route-level verified semantic proof is present and the side-effect policy permits the claim. |
+| `$research --scheduler-run` may look successful while non-engineers cannot inspect what happened | warn | Require a human-facing `wiki/outputs/lifecycle_summary.md` page that names status, owner, node/gate evidence, blocked reasons, required evidence, and unblock condition. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_a_contracts.py -q` | ok: 4 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py harness/tests/test_autosci_priority_a_contracts.py harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary -q` | ok: 6 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_phase19_parity_bridge.py harness/plugins/autosci/tests/test_phase19_operator_smoke.py harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py harness/tests/evaluators/scientific/test_autosci_operator_smoke_gate.py -q` | ok: 36 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests -q` | warn: 222 passed and 3 local socket-bind tests failed under sandbox. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest <three local socket tests> -q` with approved unsandboxed execution | ok: 3 passed. |
