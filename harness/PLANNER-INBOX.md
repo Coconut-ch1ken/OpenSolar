@@ -5100,3 +5100,17 @@
 - [ ] [2026-06-30T16:24:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
 - [ ] [2026-06-30T16:27:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
 - [ ] [2026-06-30T16:31:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:35:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:38:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:42:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:45:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:49:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:52:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:56:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T16:59:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T17:03:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T17:06:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T17:10:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T17:13:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T17:17:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-06-30T17:21:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260608-193859-intent-please-reply-with-one-short--69fe4d37 planner dispatch failed (pane_busy); cooldown 90s, no pane spam

@@ -27,8 +27,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -63,21 +63,21 @@
       "fallback_profile": "planner",
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T16:31:49Z",
-        "last_pruned_at": "2026-06-30T16:31:51Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T17:47:26Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T17:32:26Z",
+        "last_pruned_at": "2026-06-30T17:32:25Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T16:31:49Z",
-        "last_block_expires_at": "2026-06-30T16:46:49Z",
-        "last_block_excerpt": "ript) --json --db DB ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 我有一个不碰现有 tmux pane 的备选执行路径：按 dispatch 文件里给的 codex run wiki-ingest --dispatch ... 直接跑技能。这个比硬清 builder 队列更安全，先试它。 • Ran codex run wiki-ingest --dispatch /Users/jamesyuan/Knowledge/_raw/solar-harness/.dispatch/wiki-ingest-20260630T152508Z.md └ error: unexpected argument 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + ",
+        "last_block_detected_at": "2026-06-30T17:32:26Z",
+        "last_block_expires_at": "2026-06-30T17:47:26Z",
+        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T16:31:51Z"
+        "last_pruned_at": "2026-06-30T17:32:25Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -118,8 +118,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-06-01T23:58:00Z",
       "available": true,
@@ -167,20 +167,20 @@
       "deprecated": true,
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T16:31:49Z",
-        "last_pruned_at": "2026-06-30T16:31:51Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T17:47:26Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T17:32:26Z",
+        "last_pruned_at": "2026-06-30T17:32:25Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T16:31:49Z",
-        "last_block_expires_at": "2026-06-30T16:46:49Z",
-        "last_block_excerpt": "ript) --json --db DB ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 我有一个不碰现有 tmux pane 的备选执行路径：按 dispatch 文件里给的 codex run wiki-ingest --dispatch ... 直接跑技能。这个比硬清 builder 队列更安全，先试它。 • Ran codex run wiki-ingest --dispatch /Users/jamesyuan/Knowledge/_raw/solar-harness/.dispatch/wiki-ingest-20260630T152508Z.md └ error: unexpected argument 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + ",
-        "last_pruned_at": "2026-06-30T16:31:51Z",
+        "last_block_detected_at": "2026-06-30T17:32:26Z",
+        "last_block_expires_at": "2026-06-30T17:47:26Z",
+        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
+        "last_pruned_at": "2026-06-30T17:32:25Z",
         "last_prune_reason": "weak_pane_rate_limit_evidence"
       }
     },
@@ -209,8 +209,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-06-01T23:58:00Z",
       "available": true,
@@ -258,20 +258,20 @@
       "deprecated": true,
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T16:31:49Z",
-        "last_pruned_at": "2026-06-30T16:31:51Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T17:47:26Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T17:32:26Z",
+        "last_pruned_at": "2026-06-30T17:32:25Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T16:31:49Z",
-        "last_block_expires_at": "2026-06-30T16:46:49Z",
-        "last_block_excerpt": "ript) --json --db DB ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 我有一个不碰现有 tmux pane 的备选执行路径：按 dispatch 文件里给的 codex run wiki-ingest --dispatch ... 直接跑技能。这个比硬清 builder 队列更安全，先试它。 • Ran codex run wiki-ingest --dispatch /Users/jamesyuan/Knowledge/_raw/solar-harness/.dispatch/wiki-ingest-20260630T152508Z.md └ error: unexpected argument 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + ",
-        "last_pruned_at": "2026-06-30T16:31:51Z",
+        "last_block_detected_at": "2026-06-30T17:32:26Z",
+        "last_block_expires_at": "2026-06-30T17:47:26Z",
+        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
+        "last_pruned_at": "2026-06-30T17:32:25Z",
         "last_prune_reason": "weak_pane_rate_limit_evidence"
       }
     },
@@ -344,18 +344,18 @@
         "runtime_state": "idle",
         "cooldown_until": null,
         "last_error": null,
-        "last_error_at": "2026-06-29T20:14:32Z",
-        "last_pruned_at": "2026-06-29T20:29:34Z"
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
-        "last_block_reason": "contract_closeout_failed",
-        "last_block_source": "graph_node_dispatcher",
-        "last_block_detected_at": "2026-06-29T20:14:32Z",
-        "last_block_expires_at": "2026-06-29T20:29:32Z",
-        "last_block_excerpt": "{\"pane\": \"operator:mini-claude-sonnet-builder\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201413Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/mini-claude-sonnet-builder/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-861128ea/result.json\"}",
-        "last_prune_reason": "expired_operator_block",
-        "last_pruned_at": "2026-06-29T20:29:34Z"
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -1311,8 +1311,8 @@
       "launch_cmd_kind": "print_once",
       "compat_alias_for": "tmux_pane",
       "quota_cycle": "monthly",
-      "quota_refresh_at": null,
-      "quota_guard_state": "ok",
+      "quota_refresh_at": "2026-06-30T17:47:26Z",
+      "quota_guard_state": "cooldown",
       "enabled": true,
       "enabled_at": "2026-05-23T00:53:00Z",
       "available": true,
@@ -1360,21 +1360,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "idle",
-        "cooldown_until": null,
-        "last_error": null,
-        "last_error_at": "2026-06-30T16:31:49Z",
-        "last_pruned_at": "2026-06-30T16:31:51Z"
+        "runtime_state": "cooldown",
+        "cooldown_until": "2026-06-30T17:47:26Z",
+        "last_error": "pane_tui_rate_limit_fallback_ttl",
+        "last_error_at": "2026-06-30T17:32:26Z",
+        "last_pruned_at": "2026-06-30T17:32:25Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-06-30T16:31:49Z",
-        "last_block_expires_at": "2026-06-30T16:46:49Z",
-        "last_block_excerpt": "ript) --json --db DB ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 我有一个不碰现有 tmux pane 的备选执行路径：按 dispatch 文件里给的 codex run wiki-ingest --dispatch ... 直接跑技能。这个比硬清 builder 队列更安全，先试它。 • Ran codex run wiki-ingest --dispatch /Users/jamesyuan/Knowledge/_raw/solar-harness/.dispatch/wiki-ingest-20260630T152508Z.md └ error: unexpected argument 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + ",
+        "last_block_detected_at": "2026-06-30T17:32:26Z",
+        "last_block_expires_at": "2026-06-30T17:47:26Z",
+        "last_block_excerpt": "ment 'wiki-ingest' found … +2 lines (ctrl + t to view transcript) For more information, try '--help'. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex run 不是这个 CLI 的子命令形态。我要看一下本机 codex 的真实 command surface，再判断是不是有一个等价的 skill execution entry。 • Ran codex --help └ Codex CLI … +126 lines (ctrl + t to view transcript) -V, --version Print version • Ran command -v codex && codex --version └ /Users/jamesyuan/.local/share/mise/installs/codex/0.135.0/codex codex-cli 0.135.0 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • codex 这边有 exec 子命令，和 dispatch 文件里写的老式 run 不同。我要看 exec 的参数，看看能不能用它把这份 dispatch 直接喂给技能。 • Ran codex exec --hel",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-06-30T16:31:51Z"
+        "last_pruned_at": "2026-06-30T17:32:25Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -1471,18 +1471,18 @@
         "runtime_state": "idle",
         "cooldown_until": null,
         "last_error": null,
-        "last_error_at": "2026-06-29T20:12:36Z",
-        "last_pruned_at": "2026-06-29T20:27:40Z"
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
-        "last_block_reason": "contract_closeout_failed",
-        "last_block_source": "graph_node_dispatcher",
-        "last_block_detected_at": "2026-06-29T20:12:36Z",
-        "last_block_expires_at": "2026-06-29T20:27:36Z",
-        "last_block_excerpt": "{\"pane\": \"operator:mini-claude-sonnet-builder-print\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201213Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/mini-claude-sonnet-builder-print/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-65cc3dad/result.json\"}",
-        "last_prune_reason": "expired_operator_block",
-        "last_pruned_at": "2026-06-29T20:27:40Z"
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -2489,16 +2489,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -2586,16 +2590,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3410,16 +3418,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3516,16 +3528,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3622,16 +3638,20 @@
       "state": {
         "availability": "enabled",
         "runtime_state": "idle",
-        "cooldown_until": null
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
-        "last_block_state": "unknown",
-        "last_block_reason": null,
-        "last_block_source": null,
-        "last_block_detected_at": null,
-        "last_block_expires_at": null,
-        "last_block_excerpt": null,
-        "last_prune_reason": null
+        "last_block_state": "cooldown",
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -4297,18 +4317,18 @@
         "runtime_state": "idle",
         "cooldown_until": null,
         "last_error": null,
-        "last_error_at": "2026-06-29T20:11:53Z",
-        "last_pruned_at": "2026-06-29T20:26:53Z"
+        "last_error_at": "2026-06-30T17:20:30Z",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
-        "last_block_reason": "contract_closeout_failed",
-        "last_block_source": "graph_node_dispatcher",
-        "last_block_detected_at": "2026-06-29T20:11:53Z",
-        "last_block_expires_at": "2026-06-29T20:26:53Z",
-        "last_block_excerpt": "{\"pane\": \"operator:mini-claude-sonnet-evaluator-print\", \"dispatch_id\": \"graph-eval-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-20260629T201130Z-q1\", \"reason\": \"eval_failed_contract_closeout\", \"operator_status\": \"failed\", \"result_json\": \"/Users/jamesyuan/.solar/harness/run/operator-results/mini-claude-sonnet-evaluator-print/pm-sprint-20260608-193354-intent-startup-smoke-can-you-say-hi-73a27b0f-N4-independent-verifier-fe73ecdb/result.json\"}",
-        "last_prune_reason": "expired_operator_block",
-        "last_pruned_at": "2026-06-29T20:26:53Z"
+        "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
+        "last_block_source": "tmux_pane:solar-harness:0.1",
+        "last_block_detected_at": "2026-06-30T17:20:30Z",
+        "last_block_expires_at": "2026-06-30T17:35:30Z",
+        "last_block_excerpt": "-smoke-response-submit\", \"S2-smoke-evidence-check\", \"S3-independent-verifier\"], \"failed_nodes\": [], \"required_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"], \"missing_gates\": [\"G_IMPL\", \"G_TEST\", \"G_REVIEW\"]}} ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • hi coconut chicken Planner artifacts 已产出并注册，sprint 已交接到 builder_main 已完成 ┌──────────────┬────────┬────────────────────────────────────────────┐ │ 项 │ 状态 │ 结果 │ ├──────────────┼────────┼────────────────────────────────────────────┤ │ design.md │ ok │ 已写入 sprint 架构设计 │ │ plan.md │ ok │ 已写入执行计划、write_scope、stop rules │ │ task_graph │ ok │ 3 节点串行 DAG，显式需求/验收映射 │ │ design.html │ ok │ html-anything renderer 生成并注册 │ │ planning.html│ ok │ html-anything renderer 生成并注册 │ │ status.j",
+        "last_prune_reason": "weak_pane_rate_limit_evidence",
+        "last_pruned_at": "2026-06-30T17:21:25Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
