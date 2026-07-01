@@ -11,6 +11,8 @@ HARNESS = Path(__file__).resolve().parents[1]
 REPO = HARNESS.parent
 AUDIT = REPO / "docs" / "integrations" / "autosci" / "phase-c-premerge-readiness-audit.v1.json"
 MANIFEST = REPO / "docs" / "integrations" / "autosci" / "phase-c-solar-unification-import-manifest.v1.json"
+CI_WORKFLOW = REPO / ".github" / "workflows" / "solar-ci.yml"
+GATE_SCRIPT = HARNESS / "tests" / "test-autosci-premerge-gate.sh"
 SOLAR_HARNESS = HARNESS / "solar-harness.sh"
 SHIM = HARNESS / "plugins" / "autosci" / "bin" / "autosci_skill_shim.py"
 SHIM_TEST = HARNESS / "plugins" / "autosci" / "tests" / "test_autosci_skill_shim.py"
@@ -58,7 +60,8 @@ def test_premerge_readiness_audit_records_ready_but_no_merge_started() -> None:
 
     assert payload["schema"] == "autosci_phase_c_premerge_readiness_audit.v1"
     assert payload["status"] == "ready_for_integration_branch_premerge"
-    assert payload["source_inputs"]["latest_attachment"].endswith("/d1462411-4aa9-4a88-8f05-5410e3e21707/pasted-text.txt")
+    assert payload["source_inputs"]["latest_attachment"].endswith("/3735d5e6-b4f4-4abf-a7d3-c368f88a54f0/pasted-text.txt")
+    assert payload["source_inputs"]["prior_attachment"].endswith("/d1462411-4aa9-4a88-8f05-5410e3e21707/pasted-text.txt")
     assert payload["source_inputs"]["updated_plan"].endswith("/AutoSci_Solar_Prioritized_Integration_Plan_2026-06-30.md")
 
     decision = payload["decision"]
@@ -127,6 +130,47 @@ def test_generated_artifacts_remain_untracked_for_premerge() -> None:
 
     for pattern in cleanup["must_remain_untracked_patterns"]:
         assert _git_ls_files(pattern) == [], pattern
+
+
+def test_local_ci_premerge_gate_is_wired_without_merge_activity() -> None:
+    payload = _load_json(AUDIT)
+    gate = payload["local_ci_gate"]
+    assert gate == {
+        "status": "wired",
+        "script_path": "harness/tests/test-autosci-premerge-gate.sh",
+        "ci_workflow_path": ".github/workflows/solar-ci.yml",
+        "ci_job": "autosci-premerge-gate",
+        "runs_current_branch_contracts": True,
+        "runs_product_level_smokes": True,
+        "runs_scheduler_demo_shim_tests": True,
+        "checks_generated_artifact_tracking": True,
+        "checks_git_connectivity": True,
+        "starts_merge_branch": False,
+        "fetches_or_merges_stellven": False,
+        "claims_full_autosci_parity": False,
+    }
+
+    script_text = GATE_SCRIPT.read_text(encoding="utf-8")
+    workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+    assert "test_autosci_phase_c_premerge_readiness.py" in script_text
+    assert "test_autosci_routes_list.py" in script_text
+    assert "test_autosci_research_scheduler_demo.py" in script_text
+    assert "test_autosci_skill_shim_research_scheduler_demo_uses_multi_node_preset" in script_text
+    assert "git fsck --connectivity-only --no-dangling" in script_text
+    assert "autosci-premerge-gate:" in workflow_text
+    assert "bash harness/tests/test-autosci-premerge-gate.sh" in workflow_text
+
+    forbidden = (
+        "git fetch",
+        "git merge",
+        "git maintenance",
+        "git repack",
+        "git checkout -b",
+        "git switch -c",
+        "gh pr merge",
+    )
+    for needle in forbidden:
+        assert needle not in script_text
 
 
 def test_phase_c_manifest_references_premerge_readiness_audit() -> None:

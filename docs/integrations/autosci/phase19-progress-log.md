@@ -7899,3 +7899,33 @@ Logged: 2026-07-01 EDT
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_phase_c_premerge_readiness.py harness/tests/test_autosci_phase_c_unification_contracts.py -q` | ok: 10 passed. |
 | `git diff --check -- docs/integrations/autosci/phase-c-premerge-readiness-audit.v1.json docs/integrations/autosci/phase-c-solar-unification-import-manifest.v1.json docs/integrations/autosci/phase19-progress-log.md harness/tests/test_autosci_phase_c_premerge_readiness.py harness/tests/test_autosci_phase_c_unification_contracts.py .agents/skills` | ok |
 | `git fsck --connectivity-only --no-dangling` | ok |
+
+## Phase C Local/CI Premerge Gate Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Latest attachment review | ok | Read `/Users/jamesyuan/.codex/attachments/3735d5e6-b4f4-4abf-a7d3-c368f88a54f0/pasted-text.txt`; it recommends entering integration branch only after local/CI smoke proof, not direct product-main merge. |
+| Merge not started | ok | No integration branch was created, no Stellven branch was fetched/merged, and no product-main merge was attempted. |
+| Local gate script | ok | Added `harness/tests/test-autosci-premerge-gate.sh` to run Phase C contracts, product-level AutoSci smokes, scheduler-demo shim tests, artifact tracking guard, and git connectivity check. |
+| CI gate wiring | ok | Added `autosci-premerge-gate` to `.github/workflows/solar-ci.yml`; the job runs the same local script on PR/main CI. |
+| Readiness audit update | ok | Updated `phase-c-premerge-readiness-audit.v1.json` to point at the latest attachment and record the local/CI gate without claiming full AutoSci parity. |
+| Static guard update | ok | Extended `harness/tests/test_autosci_phase_c_premerge_readiness.py` to assert the gate is wired and does not contain fetch/merge/branch-creation commands. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The latest attachment explicitly says its judgment is inspection-based, not runtime proof | warn | Add a runnable premerge gate and CI job so future integration work has a concrete pass/fail command. |
+| A CI gate could accidentally be read as permission to merge straight to product main | warn | Keep audit fields `direct_product_branch_merge_recommended=false`, `starts_merge_branch=false`, and `claims_full_autosci_parity=false`. |
+| Product smokes may write temporary AutoSci artifacts if not isolated | warn | Gate reuses the existing product-level pytest smokes, which create isolated temporary `HARNESS_DIR` roots and assert repo run dirs are untouched. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `bash harness/tests/test-autosci-premerge-gate.sh` | ok: Phase C contracts 11 passed; product smokes 6 passed; scheduler-demo shim tests 2 passed; artifact tracking and git connectivity checks passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_phase_c_premerge_readiness.py harness/tests/test_autosci_phase_c_unification_contracts.py -q` | ok: covered by premerge gate. |
+| `git diff --check -- .github/workflows/solar-ci.yml docs/integrations/autosci/phase-c-premerge-readiness-audit.v1.json docs/integrations/autosci/phase19-progress-log.md harness/tests/test-autosci-premerge-gate.sh harness/tests/test_autosci_phase_c_premerge_readiness.py` | ok |
+| `git fsck --connectivity-only --no-dangling` | ok: covered by premerge gate. |
