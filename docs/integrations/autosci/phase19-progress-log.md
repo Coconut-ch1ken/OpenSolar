@@ -7619,3 +7619,38 @@ Logged: 2026-06-30 EDT
 | `harness/bin/python3 -m py_compile harness/plugins/autosci/bin/autosci_workspace_projector.py harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 3 passed. |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_runs_review_as_artifact_review harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_runs_ideate_from_wiki_and_discovery_sources -q` | ok: 2 passed. |
+
+### Pause Checkpoint
+
+Logged: 2026-06-30 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Last pushed commit | ok | `8891f37e2 Project AutoSci review and idea summaries` is pushed to `origin/feature/autosci-solar-native`. |
+| Completed scope | ok | Priority B review and ideate workspace summaries are implemented, tested, committed, and pushed. |
+| Smoke pollution cleanup | ok | Test-generated `harness/.coordinator-state` content diff was rolled back before commit; later Git status showed a no-content stat/index modified marker. |
+| Remaining uncommitted files | warn | Pre-existing/user/environment changes remain outside the commit: `.DS_Store`, `AGENTS.md`, `harness/config/physical-operators.json`; `harness/.coordinator-state` may need an index refresh or exact checkout if it reappears. |
+| Pause state | pending | Stop here and resume from the next unchecked item in the implementation plan later. Do not redo completed Priority B review/ideate summary work unless regression appears. |
+
+## Git Object Database Repair Checkpoint
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Safety backup | ok | Saved `.git/config`, `.git/index`, `.git/packed-refs`, `.git/refs`, `worktree.diff`, and `staged.diff` to `/Users/jamesyuan/Desktop/OpenSolar_repair_safety_20260701_005359`. |
+| Active maintenance process check | ok | No active `git maintenance`, `git repack`, `git pack-objects`, or `git gc` process was found before repair. |
+| Auto maintenance disabled | ok | Set local and global `maintenance.auto=false`, `maintenance.autoDetach=false`, `gc.auto=0`, and `gc.autoDetach=false` before object repair. |
+| Finder ref pollution | ok | Moved `.git/refs/.DS_Store` to `/Users/jamesyuan/Desktop/OpenSolar_repair_safety_20260701_005359/quarantine_refs/.DS_Store.refs`; no `.git/refs/.DS_Store` remains. |
+| Missing parent object | ok | Direct SHA fetch did not restore `12f49391fadb30e294b697594ecbb718f3693cc9`; `git fetch --no-tags --refetch origin feature/autosci-solar-native` restored it and `git cat-file -t` now reports `commit`. |
+| Index repair | ok | Backed up `.git/index` to `index.before_restore_staged`, then ran `git restore --staged .`; `git diff --cached --name-status` is empty. |
+| History/connectivity validation | ok | `git log --oneline --decorate -5` reads through `12f49391f`; `git fsck --connectivity-only --no-dangling` exits cleanly. |
+| GitHub Desktop reported blob | ok | `git ls-files --stage harness/tools/run_scientific_workflow.py` points to `0a9133e35850d459ce0c891695ab2bae8dc9c40f`; `git cat-file -t` reports `blob` and size is `27382`. |
+
+### Repair Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Concurrent auto maintenance can corrupt or strand temporary pack state under `.git/objects/pack/.tmp-*` | warn | Keep local/global `maintenance.auto=false` and `gc.auto=0` until the repository has remained stable across normal GitHub Desktop/Codex usage. |
+| Branch fetch alone may not repair a missing ancestor when local and remote tips already match | warn | Fetch the missing SHA first, then use `--refetch` on the branch if `cat-file` still fails. |
+| Invalid staged entries can make GUI commit fail even after object repair | warn | Back up `.git/index`, run `git restore --staged .`, and re-stage intentionally after `git diff --cached` is empty. |
