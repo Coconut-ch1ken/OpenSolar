@@ -288,6 +288,186 @@ def project_ideas(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) 
     return updated
 
 
+def project_review_summary(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
+    evidence_path = run_dir / "artifact_review.json"
+    payload = load_json_if_exists(evidence_path)
+    if payload is None:
+        return []
+
+    outputs = payload.get("outputs", {}) if isinstance(payload.get("outputs"), dict) else {}
+    review = outputs.get("review") if isinstance(outputs.get("review"), dict) else {}
+    artifact = outputs.get("artifact") if isinstance(outputs.get("artifact"), dict) else {}
+    boundary = outputs.get("final_acceptance_boundary") if isinstance(outputs.get("final_acceptance_boundary"), dict) else {}
+    findings = outputs.get("findings") if isinstance(outputs.get("findings"), list) else []
+    limitations = payload.get("limitations") if isinstance(payload.get("limitations"), list) else []
+
+    finding_rows: list[list[str]] = []
+    for finding in findings:
+        if not isinstance(finding, dict):
+            continue
+        finding_rows.append(
+            [
+                value_as_text(finding.get("finding_id"), f"finding-{len(finding_rows) + 1}"),
+                value_as_text(finding.get("severity")),
+                value_as_text(finding.get("summary") or finding.get("description")),
+                value_as_text(finding.get("evidence")),
+            ]
+        )
+
+    blocking_rows: list[list[str]] = [
+        [value_as_text(reason)]
+        for reason in boundary.get("blocking_reasons", [])
+        if str(reason).strip()
+    ]
+    evidence_id_rows: list[list[str]] = [
+        [value_as_text(evidence_id)]
+        for evidence_id in (review.get("evidence_ids") or boundary.get("evidence_ids") or [])
+        if str(evidence_id).strip()
+    ]
+
+    review_llm = review.get("review_llm") if isinstance(review.get("review_llm"), dict) else {}
+    page = wiki / "outputs" / "review.md"
+    body = [
+        frontmatter("output", f"review-{run_id}", f"Review diagnostics for {run_id}", run_id, evidence_link(evidence_path, output_harness)),
+        f"# Review Diagnostics: `{run_id}`\n\n",
+        "## Status\n\n",
+        f"- Evidence status: `{value_as_text(payload.get('status'))}`\n",
+        f"- Target: `{value_as_text(artifact.get('path') or payload.get('inputs', {}).get('target'))}`\n",
+        f"- Focus: `{value_as_text(review.get('focus') or payload.get('inputs', {}).get('focus'))}`\n",
+        f"- Difficulty: `{value_as_text(review.get('difficulty') or payload.get('inputs', {}).get('difficulty'))}`\n",
+        f"- Review mode: `{value_as_text(review.get('review_mode'))}`\n",
+        f"- Review available: `{value_as_text(review.get('review_available'))}`\n",
+        f"- Score: `{value_as_text(review.get('score'))}`\n",
+        f"- Recommendation: `{value_as_text(review.get('recommendation'))}`\n",
+        f"- Final acceptance ready: `{value_as_text(boundary.get('final_acceptance_ready'))}`\n",
+        f"- Final boundary status: `{value_as_text(boundary.get('status'))}`\n\n",
+        "## Review LLM Evidence\n\n",
+        f"- Review LLM status: `{value_as_text(review_llm.get('status'))}`\n",
+        f"- Invocation mode: `{value_as_text(boundary.get('invocation_mode') or review_llm.get('invocation_mode'))}`\n",
+        f"- Provider: `{value_as_text(boundary.get('provider') or review_llm.get('provider'))}`\n",
+        f"- Model: `{value_as_text(boundary.get('model') or review_llm.get('model'))}`\n",
+        f"- Request sha256: `{value_as_text(boundary.get('request_sha256') or review_llm.get('request_sha256'))}`\n",
+        f"- Response sha256: `{value_as_text(boundary.get('response_sha256') or review_llm.get('response_sha256'))}`\n\n",
+        "## Evidence\n\n",
+        f"- Review evidence: `{evidence_link(evidence_path, output_harness)}`\n\n",
+        _markdown_table(["Evidence ID"], evidence_id_rows),
+        "\n## Findings\n\n",
+        _markdown_table(["Finding", "Severity", "Summary", "Evidence"], finding_rows),
+        "\n## Blocking Reasons\n\n",
+        _markdown_table(["Reason"], blocking_rows),
+        "\n## Limitations\n\n",
+        list_lines([str(item) for item in limitations if str(item).strip()]),
+    ]
+    if write_text_if_changed(page, "".join(body)):
+        return [page]
+    return []
+
+
+def project_ideas_summary(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
+    candidate_path = run_dir / "idea_candidate.json"
+    candidate_payload = load_json_if_exists(candidate_path)
+    if candidate_payload is None:
+        return []
+
+    ideas = candidate_payload.get("outputs", {}).get("ideas")
+    if not isinstance(ideas, list):
+        return []
+
+    evaluation_path = run_dir / "idea_evaluation.json"
+    evaluation_payload = load_json_if_exists(evaluation_path)
+    evaluations = (
+        evaluation_payload.get("outputs", {}).get("evaluations")
+        if isinstance(evaluation_payload, dict)
+        else None
+    )
+    if not isinstance(evaluations, list):
+        evaluations = []
+    evaluation_by_id = {
+        value_as_text(item.get("idea_id")): item
+        for item in evaluations
+        if isinstance(item, dict)
+    }
+
+    idea_rows: list[list[str]] = []
+    selected_rows: list[list[str]] = []
+    for idea in ideas:
+        if not isinstance(idea, dict):
+            continue
+        idea_id = value_as_text(idea.get("idea_id"), f"idea-{len(idea_rows) + 1:03d}")
+        evaluation = evaluation_by_id.get(idea_id, {})
+        boundary = evaluation.get("final_acceptance_boundary") if isinstance(evaluation.get("final_acceptance_boundary"), dict) else {}
+        idea_rows.append(
+            [
+                idea_id,
+                value_as_text(idea.get("title"), idea_id),
+                value_as_text(idea.get("status")),
+                value_as_text(idea.get("duplicate_status")),
+                value_as_text(idea.get("source_mode")),
+                value_as_text(evaluation.get("recommendation")),
+                value_as_text(boundary.get("final_acceptance_ready")),
+            ]
+        )
+        if idea.get("selected_for_write") is True or len(selected_rows) < 5:
+            selected_rows.append(
+                [
+                    idea_id,
+                    value_as_text(idea.get("hypothesis")),
+                    value_as_text(idea.get("approach")),
+                    ", ".join(value_as_text(item) for item in idea.get("origin_evidence_ids", []) if str(item).strip()) or "N/A",
+                ]
+            )
+
+    limitations = [str(item) for item in candidate_payload.get("limitations", []) if str(item).strip()]
+    if evaluation_payload:
+        limitations.extend(str(item) for item in evaluation_payload.get("limitations", []) if str(item).strip())
+
+    boundary_rows: list[list[str]] = []
+    for evaluation in evaluations:
+        if not isinstance(evaluation, dict):
+            continue
+        boundary = evaluation.get("final_acceptance_boundary") if isinstance(evaluation.get("final_acceptance_boundary"), dict) else {}
+        blocking_reasons = boundary.get("blocking_reasons") if isinstance(boundary.get("blocking_reasons"), list) else []
+        boundary_rows.append(
+            [
+                value_as_text(evaluation.get("idea_id")),
+                value_as_text(boundary.get("status")),
+                value_as_text(boundary.get("external_novelty_status")),
+                value_as_text(boundary.get("review_llm_status")),
+                "; ".join(value_as_text(reason) for reason in blocking_reasons if str(reason).strip()) or "N/A",
+            ]
+        )
+
+    page = wiki / "outputs" / "ideas.md"
+    body = [
+        frontmatter("output", f"ideas-{run_id}", f"Idea summary for {run_id}", run_id, evidence_link(candidate_path, output_harness)),
+        f"# Idea Summary: `{run_id}`\n\n",
+        "## Status\n\n",
+        f"- Candidate evidence status: `{value_as_text(candidate_payload.get('status'))}`\n",
+        f"- Evaluation evidence status: `{value_as_text(evaluation_payload.get('status') if evaluation_payload else None)}`\n",
+        f"- Candidate count: `{len([idea for idea in ideas if isinstance(idea, dict)])}`\n",
+        f"- Evaluation count: `{len(evaluations)}`\n",
+        f"- Candidate evidence: `{evidence_link(candidate_path, output_harness)}`\n",
+        f"- Evaluation evidence: `{evidence_link(evaluation_path, output_harness) if evaluation_payload else 'N/A'}`\n\n",
+        "## Ideas\n\n",
+        _markdown_table(
+            ["Idea", "Title", "Status", "Duplicate", "Source Mode", "Recommendation", "Final Ready"],
+            idea_rows,
+        ),
+        "\n## Selected Details\n\n",
+        _markdown_table(["Idea", "Hypothesis", "Approach", "Origin Evidence"], selected_rows),
+        "\n## Novelty And Review Boundary\n\n",
+        _markdown_table(
+            ["Idea", "Boundary Status", "External Novelty", "Review LLM", "Blocking Reasons"],
+            boundary_rows,
+        ),
+        "\n## Limitations\n\n",
+        list_lines(limitations),
+    ]
+    if write_text_if_changed(page, "".join(body)):
+        return [page]
+    return []
+
+
 def project_experiment(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
     evidence_path = run_dir / "experiment_plan.json"
     payload = load_json_if_exists(evidence_path)
@@ -621,6 +801,8 @@ def project_run_to_workspace(
     updated.extend(project_methods(run_dir, wiki, output_harness, run_id))
     updated.extend(project_claims_output(run_dir, wiki, output_harness, run_id))
     updated.extend(project_ideas(run_dir, wiki, output_harness, run_id))
+    updated.extend(project_review_summary(run_dir, wiki, output_harness, run_id))
+    updated.extend(project_ideas_summary(run_dir, wiki, output_harness, run_id))
     updated.extend(project_experiment(run_dir, wiki, output_harness, run_id))
     updated.extend(project_report(run_dir, wiki, output_harness, run_id))
     updated.extend(project_lifecycle_summary(skill_run_path, payload, wiki, output_harness, run_id))

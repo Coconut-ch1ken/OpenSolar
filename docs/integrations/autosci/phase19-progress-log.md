@@ -7591,3 +7591,31 @@ Logged: 2026-06-30 EDT
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_phase19_parity_bridge.py harness/plugins/autosci/tests/test_phase19_operator_smoke.py harness/tests/evaluators/scientific/test_autosci_feature_parity_gate.py harness/tests/evaluators/scientific/test_autosci_operator_smoke_gate.py -q` | ok: 36 passed. |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests -q` | warn: 222 passed and 3 local socket-bind tests failed under sandbox. |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest <three local socket tests> -q` with approved unsandboxed execution | ok: 3 passed. |
+
+## Priority B Review And Ideate Workspace Projection Follow-up
+
+Logged: 2026-06-30 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Review diagnostics workspace output | ok | `$review` now projects `wiki/outputs/review.md` from `artifact_review.v1`, including target, focus, difficulty, review mode, Review LLM status, final acceptance boundary, findings, blocking reasons, and limitations. |
+| Ideate candidate/evaluation workspace output | ok | `$ideate` now projects `wiki/outputs/ideas.md` from `idea_candidate.v1` plus `idea_evaluation.v1` when present, including candidate/evaluation status, idea rows, selected details, novelty/review boundary status, blocking reasons, and limitations. |
+| Truthfulness boundary | ok | The new pages render local surrogate, missing external novelty, and missing Review LLM states as incomplete/blocked evidence instead of promoting them to provider-backed completion. |
+| Priority B contract tests | ok | `harness/tests/test_autosci_priority_b_demo_contracts.py` now verifies product entry projection for `$review` and `$ideate --from-wiki`, plus the existing `$research --scheduler-run` lifecycle summary. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| `$review` generated valid `artifact_review.v1` evidence but no stable human-facing `outputs/review.md` page | warn | Product demo routes that generate review diagnostics must project a durable workspace summary page from evidence, not require users to inspect raw JSON sidecars. |
+| `$ideate` generated individual idea pages but lacked a single candidate/evaluation summary for demo review | warn | Keep `outputs/ideas.md` as the top-level human scan surface, while individual `wiki/ideas/<idea>.md` pages remain per-idea memory entries. |
+| Local surrogate Review/Novelty output can be mistaken for final provider-backed validation | warn | Workspace pages must include `review_mode`, `review_available`, Review LLM status, external novelty status, final acceptance readiness, and blocking reasons whenever those fields exist. |
+| Test runs can briefly touch coordinator/runtime state | warn | Inspect `git status --short` after validation and roll back only test-generated runtime pollution. In this run, `harness/.coordinator-state` showed transiently but had no persisted diff. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/plugins/autosci/bin/autosci_workspace_projector.py harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 3 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_runs_review_as_artifact_review harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_runs_ideate_from_wiki_and_discovery_sources -q` | ok: 2 passed. |

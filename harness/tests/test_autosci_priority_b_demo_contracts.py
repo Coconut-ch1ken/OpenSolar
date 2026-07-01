@@ -85,3 +85,148 @@ def test_research_scheduler_run_projects_human_lifecycle_summary(tmp_path: Path)
     index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
     assert "outputs/lifecycle_summary.md" in index_text
     assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
+
+
+def test_review_projects_human_diagnostics_summary(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    run_id = f"priority-b-review-workspace-{uuid.uuid4().hex}"
+    wiki_root = harness_dir / "artifacts" / "autosci" / "workspace" / "wiki"
+    review_target = wiki_root / "outputs" / "priority-b-review.md"
+    review_target.parent.mkdir(parents=True)
+    review_target.write_text(
+        "---\ntitle: Priority B Review Target\n---\n# Priority B Review Target\n\n"
+        "The method describes a dataset, metric, baseline, evidence artifact, and reproducible result table.\n",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            f"$review priority-b-review --from-wiki --difficulty hard --focus method --run-id {run_id}",
+        ],
+        cwd=REPO,
+        env=_env_for(harness_dir),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "review"
+    assert summary["execution_status"] == "partial"
+    assert summary["action_count"] == 1
+
+    review_page = wiki_root / "outputs" / "review.md"
+    assert review_page.exists()
+    page = review_page.read_text(encoding="utf-8")
+    assert f"Review Diagnostics: `{run_id}`" in page
+    assert "- Review mode: `local_surrogate`" in page
+    assert "- Review available: `False`" in page
+    assert "- Final acceptance ready: `False`" in page
+    assert "Review LLM" in page
+    assert "review_llm_incomplete" in page
+    assert "Review LLM evidence from supplied evidence, command bridge, or provider mode" in page
+
+    index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
+    assert "outputs/review.md" in index_text
+    assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
+
+
+def test_ideate_projects_human_candidate_and_evaluation_summary(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    run_id = f"priority-b-ideate-workspace-{uuid.uuid4().hex}"
+    wiki_root = harness_dir / "artifacts" / "autosci" / "workspace" / "wiki"
+    (wiki_root / "papers").mkdir(parents=True)
+    (wiki_root / "methods").mkdir(parents=True)
+    (wiki_root / "graph").mkdir(parents=True)
+    (wiki_root / "papers" / "skillgen.md").write_text(
+        "---\ntitle: SkillGen Paper\n---\n# SkillGen Paper\n\n"
+        "Skill generation exposes an inference-time adaptation gap with measurable validation needs.\n",
+        encoding="utf-8",
+    )
+    (wiki_root / "methods" / "adaptation.md").write_text(
+        "---\ntitle: Inference-Time Adaptation\n---\n# Inference-Time Adaptation\n\n"
+        "A reusable method with open evaluation and robustness questions.\n",
+        encoding="utf-8",
+    )
+    (wiki_root / "graph" / "open_questions.md").write_text(
+        "# Open Questions\n\n- How should generated skills be validated against baseline tools?\n",
+        encoding="utf-8",
+    )
+    discovery_dir = harness_dir / "artifacts" / "autosci" / "runs" / "priority-b-discover-seed"
+    discovery_dir.mkdir(parents=True)
+    discovery_path = discovery_dir / "literature_discovery.json"
+    discovery_path.write_text(
+        json.dumps(
+            {
+                "schema": "literature_discovery.v1",
+                "task_id": "priority-b-discover-seed",
+                "sprint_id": "test",
+                "node_id": "discover",
+                "status": "completed",
+                "inputs": {},
+                "outputs": {
+                    "candidates": [
+                        {
+                            "paper_id": "paper-discovery-001",
+                            "title": "Recent Agent Skill Adaptation",
+                            "summary": "A recent paper about adapting agent skills at inference time.",
+                        }
+                    ]
+                },
+                "artifacts": [],
+                "provenance": {
+                    "operator_id": "test",
+                    "implementation_package": "test",
+                    "timestamp": "2026-06-24T00:00:00Z",
+                },
+                "limitations": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            (
+                "$ideate agent skill learning --from-wiki "
+                f"--wiki-root {wiki_root} --discovery-evidence {discovery_path} "
+                f"--max-ideas 2 --run-id {run_id}"
+            ),
+        ],
+        cwd=REPO,
+        env=_env_for(harness_dir),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "ideate"
+    assert summary["execution_status"] == "partial"
+    assert summary["action_count"] == 2
+
+    ideas_page = wiki_root / "outputs" / "ideas.md"
+    assert ideas_page.exists()
+    page = ideas_page.read_text(encoding="utf-8")
+    assert f"Idea Summary: `{run_id}`" in page
+    assert "- Candidate evidence status: `completed`" in page
+    assert "- Evaluation evidence status: `completed`" in page
+    assert "idea_promotion_incomplete" in page or "novelty_acceptance_incomplete" in page
+    assert "external_novelty status is" in page
+    assert "review_llm status is" in page
+    assert "Independent Review LLM and live external search are still required before promotion." in page
+    assert "N/A" not in page.split("## Ideas", maxsplit=1)[0]
+
+    index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
+    assert "outputs/ideas.md" in index_text
+    assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
