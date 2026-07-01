@@ -7654,3 +7654,30 @@ Logged: 2026-07-01 EDT
 | Concurrent auto maintenance can corrupt or strand temporary pack state under `.git/objects/pack/.tmp-*` | warn | Keep local/global `maintenance.auto=false` and `gc.auto=0` until the repository has remained stable across normal GitHub Desktop/Codex usage. |
 | Branch fetch alone may not repair a missing ancestor when local and remote tips already match | warn | Fetch the missing SHA first, then use `--refetch` on the branch if `cat-file` still fails. |
 | Invalid staged entries can make GUI commit fail even after object repair | warn | Back up `.git/index`, run `git restore --staged .`, and re-stage intentionally after `git diff --cached` is empty. |
+
+## Priority B Ingest Product Entry Contract Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Git safety precheck | ok | Before coding, `git status` showed no staged changes, `git log` read through `12f49391f`, `git fsck --connectivity-only --no-dangling` passed, `origin` used SSH, and local/global auto maintenance remained disabled. |
+| Plan source fallback | warn | `/Users/jamesyuan/Downloads/autosci_solar_native_implementation_plan.md` was no longer present, so this continuation used the latest Phase19 log entries as the recovery source of truth. |
+| Direct ingest product entry | ok | Added a Priority B contract for `solar-harness autosci "$ingest --paper <source> --run-id <id>"` through an isolated harness. |
+| Human workspace paper projection | ok | The new contract asserts `research_paper.v1` evidence, parsed paper metadata, final source-registration readiness fields, one projected `wiki/papers/*.md` page, and `wiki/index.md` linkage. |
+| Root pollution guard | ok | The contract asserts the unique run id is not written under the repo harness run directory, preserving isolated product-entry artifact roots. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The external implementation plan file can disappear between sessions | warn | Fall back to `docs/integrations/autosci/phase19-progress-log.md` and explicitly log the missing source before choosing the next scoped task. |
+| Direct `$ingest` product-entry behavior was covered in shim tests but not in Priority B product contract tests | warn | Keep a product-entry test that runs through `harness/solar-harness.sh autosci`, not only the lower-level shim helper. |
+| Git repair state must remain protected during normal AutoSci work | warn | Avoid fetch/repack/maintenance; verify cached diff is empty before edits and stage only files changed for the current task. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 4 passed. |

@@ -230,3 +230,65 @@ def test_ideate_projects_human_candidate_and_evaluation_summary(tmp_path: Path) 
     index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
     assert "outputs/ideas.md" in index_text
     assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
+
+
+def test_ingest_projects_human_paper_workspace_page(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    run_id = f"priority-b-ingest-workspace-{uuid.uuid4().hex}"
+    paper = harness_dir / "raw" / "priority-b-ingest-paper.md"
+    paper.parent.mkdir()
+    paper.write_text(
+        "# Priority B Product Ingest\n\n"
+        "## Abstract\n"
+        "This source verifies direct product entry for AutoSci paper ingestion.\n\n"
+        "## Method\n"
+        "The ingest route should emit research_paper.v1 evidence and a human-facing workspace paper page.\n",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            f"$ingest --paper {paper} --run-id {run_id}",
+        ],
+        cwd=REPO,
+        env=_env_for(harness_dir),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "ingest"
+    assert summary["execution_status"] == "partial"
+    assert summary["action_count"] == 2
+    assert summary["workspace_updated_count"] > 0
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    actions = payload["outputs"]["skill_run"]["actions"]
+    assert [action["action"] for action in actions] == ["ingest_paper", "analyze_paper"]
+    ingest_evidence = json.loads(Path(actions[0]["evidence_path"]).read_text(encoding="utf-8"))
+    assert ingest_evidence["schema"] == "research_paper.v1"
+    assert ingest_evidence["status"] == "completed"
+    paper_output = ingest_evidence["outputs"]["paper"]
+    assert paper_output["parse_status"] == "parsed"
+    assert "Priority B Product Ingest" in paper_output["title"]
+    boundary = paper_output["final_source_registration_boundary"]
+    assert boundary["source_preparation_verified"] is True
+    assert boundary["raw_artifact_provenance_ready"] is True
+
+    wiki_root = harness_dir / "artifacts" / "autosci" / "workspace" / "wiki"
+    paper_pages = sorted((wiki_root / "papers").glob("*.md"))
+    assert len(paper_pages) == 1
+    page = paper_pages[0].read_text(encoding="utf-8")
+    assert "# Priority B Product Ingest" in page
+    assert "Evidence:" in page
+    assert "research_paper.analyzed.json" in page or "research_paper.json" in page
+
+    index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
+    assert f"papers/{paper_pages[0].name}" in index_text
+    assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
