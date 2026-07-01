@@ -7739,3 +7739,31 @@ Logged: 2026-07-01 EDT
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 7 passed. |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_lists_configured_skills harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_lists_skills_with_dollar_alias harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_paper_draft_writes_latex_source -q` | ok: 3 passed. |
 | `bash harness/tests/test-autosci-harness-entrypoint.sh` | ok |
+
+## Priority B Exp Run Product Entry Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| `$exp-run` product entry contract | ok | Added a Priority B contract for `solar-harness autosci "$exp-run exp-demo --run-id <id>"` through an isolated harness. |
+| Runtime boundary projection | ok | The workspace projector now writes stable `wiki/outputs/experiment.md` from `experiment_plan.v1`, `experiment_result.v1`, optional `experiment_status.v1`, and `autosci_experiment_run_final_runtime_audit_boundary.v1`. |
+| Truthfulness boundary | ok | The demo remains `gated` / `inconclusive` when approval/runtime evidence is absent; no command execution or remote collection is claimed. |
+| Root pollution guard | ok | The contract asserts the unique run id is not written under the repo harness run directory, preserving isolated product-entry artifact roots. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| `$exp-run exp-demo` currently expands through the route dependency chain before `run_experiment` | warn | Product-entry tests assert that `run_experiment` is present and truthful rather than hard-coding a two-action route shape. |
+| Experiment result pages existed under `wiki/experiments/`, but demo users lacked a stable top-level runtime summary | warn | Project the latest run boundary to `wiki/outputs/experiment.md` while preserving per-experiment pages. |
+| Approval-gated experiment runs can look like dry-run success if only command return code is checked | warn | Assert `experiment_result.v1.status=inconclusive`, `final_runtime_audit_ready=false`, missing approval/runtime evidence limitations, and absence of fixture execution logs. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/plugins/autosci/bin/autosci_workspace_projector.py harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py::test_exp_run_projects_demo_runtime_boundary_summary -q` | ok: 1 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 8 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_accepts_exp_run_native_options_without_fixture_fallback harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_exp_run_full_routes_deploy_and_collect_actions harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_blocks_unapproved_exp_run_deploy_without_fixture_support -q` | ok: 3 passed. |

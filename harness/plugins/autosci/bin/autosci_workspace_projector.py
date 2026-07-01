@@ -645,6 +645,105 @@ def project_experiment(run_dir: Path, wiki: Path, output_harness: Path, run_id: 
     return []
 
 
+def project_experiment_summary(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
+    plan_path = run_dir / "experiment_plan.json"
+    result_path = run_dir / "experiment_result.json"
+    status_path = run_dir / "experiment_status.json"
+    plan_payload = load_json_if_exists(plan_path)
+    result_payload = load_json_if_exists(result_path)
+    status_payload = load_json_if_exists(status_path)
+    if plan_payload is None and result_payload is None and status_payload is None:
+        return []
+
+    plan = plan_payload.get("outputs", {}).get("experiment_plan") if plan_payload else None
+    result = result_payload.get("outputs", {}).get("result") if result_payload else None
+    status_report = status_payload.get("outputs", {}).get("status_report") if status_payload else None
+    plan = plan if isinstance(plan, dict) else {}
+    result = result if isinstance(result, dict) else {}
+    status_report = status_report if isinstance(status_report, dict) else {}
+    boundary = (
+        result.get("final_runtime_audit_boundary")
+        or status_report.get("final_runtime_audit_boundary")
+        or (result_payload or {}).get("outputs", {}).get("final_runtime_audit_boundary")
+        or (status_payload or {}).get("outputs", {}).get("final_runtime_audit_boundary")
+    )
+    boundary = boundary if isinstance(boundary, dict) else {}
+    experiment_id = value_as_text(
+        result.get("experiment_id") or status_report.get("experiment_id") or plan.get("experiment_id"),
+        "experiment-unknown",
+    )
+    metrics = result.get("metrics") if isinstance(result.get("metrics"), list) else []
+    metric_rows = [
+        [value_as_text(metric.get("name")), value_as_text(metric.get("value"))]
+        for metric in metrics
+        if isinstance(metric, dict)
+    ]
+    artifacts = [
+        *list((plan_payload or {}).get("artifacts") or []),
+        *list((result_payload or {}).get("artifacts") or []),
+        *list((status_payload or {}).get("artifacts") or []),
+    ]
+    artifact_rows = [
+        [value_as_text(artifact.get("type")), value_as_text(artifact.get("path"))]
+        for artifact in artifacts
+        if isinstance(artifact, dict)
+    ]
+    limitations = []
+    for item in [
+        *list((plan_payload or {}).get("limitations") or []),
+        *list((result_payload or {}).get("limitations") or []),
+        *list((status_payload or {}).get("limitations") or []),
+        *list(boundary.get("limitations") or []),
+    ]:
+        text = str(item).strip()
+        if text and text not in limitations:
+            limitations.append(text)
+    log_rows = [
+        [value_as_text(line)]
+        for line in result.get("logs", [])
+        if str(line).strip()
+    ]
+    source_evidence_path = result_path if result_path.exists() else status_path if status_path.exists() else plan_path
+    page = wiki / "outputs" / "experiment.md"
+    body = [
+        frontmatter("output", f"experiment-{run_id}", f"Experiment summary for {run_id}", run_id, evidence_link(source_evidence_path, output_harness)),
+        f"# Experiment Summary: `{run_id}`\n\n",
+        "## Status\n\n",
+        f"- Experiment id: `{experiment_id}`\n",
+        f"- Plan evidence status: `{value_as_text(plan_payload.get('status') if plan_payload else None)}`\n",
+        f"- Result evidence status: `{value_as_text(result_payload.get('status') if result_payload else None)}`\n",
+        f"- Status evidence status: `{value_as_text(status_payload.get('status') if status_payload else None)}`\n",
+        f"- Outcome: `{value_as_text(result.get('outcome'))}`\n",
+        f"- State: `{value_as_text(status_report.get('state'))}`\n",
+        f"- Execution mode: `{value_as_text(result.get('execution_mode') or plan.get('execution_mode'))}`\n",
+        f"- Command run: `{value_as_text(result.get('command_run'))}`\n",
+        f"- Plan evidence: `{evidence_link(plan_path, output_harness) if plan_path.exists() else 'N/A'}`\n",
+        f"- Result evidence: `{evidence_link(result_path, output_harness) if result_path.exists() else 'N/A'}`\n",
+        f"- Status evidence: `{evidence_link(status_path, output_harness) if status_path.exists() else 'N/A'}`\n\n",
+        "## Runtime Audit Boundary\n\n",
+        f"- Boundary status: `{value_as_text(boundary.get('status'))}`\n",
+        f"- Stage: `{value_as_text(boundary.get('stage'))}`\n",
+        f"- Final runtime audit ready: `{value_as_text(boundary.get('final_runtime_audit_ready'))}`\n",
+        f"- Stage audit ready: `{value_as_text(boundary.get('stage_audit_ready'))}`\n",
+        f"- Approval contract verified: `{value_as_text(boundary.get('approval_contract_verified'))}`\n",
+        f"- Runtime semantic verified: `{value_as_text(boundary.get('runtime_semantic_verified'))}`\n",
+        f"- Result collected: `{value_as_text(boundary.get('result_collected'))}`\n",
+        f"- Collection ledger recorded: `{value_as_text(boundary.get('collection_ledger_recorded'))}`\n",
+        f"- Live remote collection verified: `{value_as_text(boundary.get('live_remote_collection_verified'))}`\n\n",
+        "## Metrics\n\n",
+        _markdown_table(["Metric", "Value"], metric_rows),
+        "\n## Logs\n\n",
+        _markdown_table(["Log"], log_rows),
+        "\n## Artifacts\n\n",
+        _markdown_table(["Type", "Path"], artifact_rows),
+        "\n## Limitations\n\n",
+        list_lines(limitations),
+    ]
+    if write_text_if_changed(page, "".join(body)):
+        return [page]
+    return []
+
+
 def project_report(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
     evidence_path = run_dir / "scientific_report.json"
     payload = load_json_if_exists(evidence_path)
@@ -919,6 +1018,7 @@ def project_run_to_workspace(
     updated.extend(project_review_summary(run_dir, wiki, output_harness, run_id))
     updated.extend(project_ideas_summary(run_dir, wiki, output_harness, run_id))
     updated.extend(project_experiment(run_dir, wiki, output_harness, run_id))
+    updated.extend(project_experiment_summary(run_dir, wiki, output_harness, run_id))
     updated.extend(project_report(run_dir, wiki, output_harness, run_id))
     updated.extend(project_lifecycle_summary(skill_run_path, payload, wiki, output_harness, run_id))
     updated.extend(project_graph(run_dir, wiki, output_harness, run_id))

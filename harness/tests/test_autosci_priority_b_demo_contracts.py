@@ -397,6 +397,75 @@ def test_paper_draft_projects_demo_visible_report_summary(tmp_path: Path) -> Non
     assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
 
 
+def test_exp_run_projects_demo_runtime_boundary_summary(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    run_id = f"priority-b-exp-run-workspace-{uuid.uuid4().hex}"
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            f"$exp-run exp-demo --run-id {run_id}",
+        ],
+        cwd=REPO,
+        env=_env_for(harness_dir),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "exp-run"
+    assert summary["execution_status"] == "gated"
+    assert summary["action_count"] >= 2
+    assert summary["schema_only_count"] >= 1
+    assert summary["workspace_updated_count"] > 0
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    actions = payload["outputs"]["skill_run"]["actions"]
+    action_names = [action["action"] for action in actions]
+    assert "design_experiment" in action_names
+    assert "run_experiment" in action_names
+    result_action = next(action for action in actions if action["action"] == "run_experiment")
+    assert result_action["schema"] == "experiment_result.v1"
+    assert result_action["gate_status"] == "schema_only"
+    result_evidence = json.loads(Path(result_action["evidence_path"]).read_text(encoding="utf-8"))
+    assert result_evidence["status"] == "inconclusive"
+    result = result_evidence["outputs"]["result"]
+    assert result["experiment_id"] == "exp-demo"
+    assert result["outcome"] == "inconclusive"
+    assert result["execution_mode"] == "human_approved"
+    assert "fixture result collected" not in "\n".join(result["logs"])
+    assert any("approval is required and absent" in item for item in result_evidence["limitations"])
+    boundary = result["final_runtime_audit_boundary"]
+    assert boundary["schema"] == "autosci_experiment_run_final_runtime_audit_boundary.v1"
+    assert boundary["final_runtime_audit_ready"] is False
+    assert boundary["approval_contract_verified"] is False
+    assert boundary["runtime_semantic_verified"] is False
+    artifact_types = {artifact["type"] for artifact in result_evidence["artifacts"]}
+    assert "approval_contract_json" in artifact_types
+    assert "experiment_run_final_runtime_audit_boundary_json" in artifact_types
+
+    wiki_root = harness_dir / "artifacts" / "autosci" / "workspace" / "wiki"
+    experiment_page = wiki_root / "outputs" / "experiment.md"
+    assert experiment_page.exists()
+    page = experiment_page.read_text(encoding="utf-8")
+    assert f"Experiment Summary: `{run_id}`" in page
+    assert "- Experiment id: `exp-demo`" in page
+    assert "- Result evidence status: `inconclusive`" in page
+    assert "- Final runtime audit ready: `False`" in page
+    assert "- Approval contract verified: `False`" in page
+    assert "Experiment execution was blocked because approval is required and absent" in page
+    assert "Final runtime audit requires semantic runtime verification to pass." in page
+
+    index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
+    assert "outputs/experiment.md" in index_text
+    assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
+
+
 def test_ingest_projects_human_paper_workspace_page(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
     run_id = f"priority-b-ingest-workspace-{uuid.uuid4().hex}"
