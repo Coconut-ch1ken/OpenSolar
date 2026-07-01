@@ -7794,3 +7794,35 @@ Logged: 2026-07-01 EDT
 | `harness/bin/python3 -m py_compile harness/plugins/autosci/bin/autosci_workspace_projector.py harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py::test_workspace_index_explains_demo_entry_points -q` | ok: 1 passed. |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 9 passed. |
+
+## Phase C Solar Unification Import Manifest Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Phase C premerge contract | ok | Added `docs/integrations/autosci/phase-c-solar-unification-import-manifest.v1.json` as the machine-readable selective-import contract for merging AutoSci into `Stellven/AI4Research#openJiuwen-Solar`. |
+| Product base boundary | ok | The manifest names Stellven Solar as the product/install/desktop/distribution base and `Coconut-ch1ken/OpenSolar#feature/autosci-solar-native` as the AutoSci scientific runtime source. |
+| Selective import groups | ok | The manifest enumerates AutoSci plugin runtime, scientific tools, workflows, evaluators, evidence schemas, research capability capsules, wrapper skills, and curated docs as import groups. |
+| Manual merge boundary | ok | Shared files such as `README.md`, `AGENTS.md`, `CLAUDE.md`, `harness/solar-harness.sh`, operator registries, capsule registry, `bin/solar`, and `core/daemon/skill-dispatcher.ts` are explicitly marked manual-merge-only. |
+| Local/generated state exclusion | ok | `.git`, `.DS_Store`, `__pycache__`, `*.pyc`, AutoSci run artifacts, operator smoke outputs, coordinator/watchdog/pane state, planner inbox, logs, and run directories are explicitly excluded. |
+| Unified repo smoke checklist | ok | The manifest records the Phase C unified-repo smoke files still required after import, including route listing, CLI dispatch, ingest/review demo artifacts, scheduler lifecycle, and artifact-root isolation. |
+| Static guard test | ok | Added `harness/tests/test_autosci_phase_c_unification_contracts.py` to enforce the manifest schema, import paths, excludes, manual-merge boundary, dispatcher boundary, and no-claim premerge verification policy. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Phase C can be misread as copying this branch over the Stellven product repo | warn | Keep `wholesale_copy_allowed=false`; import AutoSci modules selectively and merge shared runtime files manually. |
+| Current working copy contains local state and generated cache files that must not enter the unified product repo | warn | Exclude `.DS_Store`, `__pycache__`, `*.pyc`, pane/coordinator/watchdog state, planner inbox, logs, and generated AutoSci artifacts. |
+| Stellven `SkillDispatcher` can return instruction text with `executed=false` | warn | Do not treat it as the final AutoSci execution path until it dispatches AutoSci routes to the native shim or an equivalent execution bridge. |
+| A premerge manifest is not proof that the Stellven merge or unified smoke tests already ran | warn | Keep `premerge_manifest_only=true` and require the listed `tests/integration/test_autosci_*.py` smokes after importing into the unified Solar repo. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/tests/test_autosci_phase_c_unification_contracts.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_phase_c_unification_contracts.py -q` | ok: 5 passed. |
+| `git diff --check -- docs/integrations/autosci/phase-c-solar-unification-import-manifest.v1.json harness/tests/test_autosci_phase_c_unification_contracts.py docs/integrations/autosci/phase19-progress-log.md` | ok |
+| `git fsck --connectivity-only --no-dangling` | ok |
