@@ -3481,3 +3481,39 @@
 {"ts": "2026-07-01T20:51:38Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
 {"ts": "2026-07-01T20:51:44Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
 {"ts": "2026-07-01T20:51:50Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T20:56:35Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T20:56:41Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T20:56:47Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T20:56:53Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T20:57:13Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T20:57:19Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T20:57:25Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T20:57:31Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T20:57:50Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T20:57:56Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T20:58:02Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T20:58:08Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:03:00Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:03:06Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:03:12Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:03:18Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:03:38Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:03:44Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:03:50Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:03:56Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:04:17Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:04:23Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:04:29Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:04:35Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:09:23Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:09:29Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:09:35Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:09:41Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:10:00Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:10:06Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:10:12Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:10:18Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:10:38Z", "pane": "%3", "persona": "evaluator", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:10:44Z", "pane": "%1", "persona": "builder", "exit_code": 127, "signal": "normal", "last_30_lines": ""}
+{"ts": "2026-07-01T21:10:50Z", "pane": "%2", "persona": "planner", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
+{"ts": "2026-07-01T21:10:56Z", "pane": "%0", "persona": "pm", "exit_code": 127, "signal": "normal", "last_30_lines": "/Users/jamesyuan/.solar/harness/start-incarnation.sh: line 240: /Users/jamesyuan/.npm-global/bin/claude: No such file or directory"}
