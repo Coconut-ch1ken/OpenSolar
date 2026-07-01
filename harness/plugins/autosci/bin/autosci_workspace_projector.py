@@ -974,10 +974,49 @@ def project_graph(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) 
 
 def rebuild_index(workspace: Path, run_id: str) -> list[Path]:
     wiki = workspace / "wiki"
+    demo_entries = [
+        (
+            "what ran",
+            "outputs/lifecycle_summary.md",
+            "Lifecycle status, node/gate results, and blocked nodes.",
+        ),
+        (
+            "what was produced",
+            "outputs/report.md",
+            "Report artifact, evidence ids, and publication limitations.",
+        ),
+        (
+            "what is blocked",
+            "outputs/review.md",
+            "Review availability, findings, and blocking reasons.",
+        ),
+        (
+            "what evidence exists",
+            "outputs/ideas.md",
+            "Candidate/evaluation evidence and promotion boundaries.",
+        ),
+        (
+            "what remains incomplete",
+            "outputs/experiment.md",
+            "Approval/runtime audit, collection, and remote proof status.",
+        ),
+    ]
+    demo_rows = [
+        [
+            question,
+            "ok" if (wiki / rel_path).exists() else "pending",
+            f"[{Path(rel_path).stem}]({rel_path})",
+            description,
+        ]
+        for question, rel_path, description in demo_entries
+    ]
     lines = [
         "# Solar AutoSci Wiki\n\n",
         "Human-facing research memory projected from Solar-managed evidence.\n\n",
         f"Last projected run: `{run_id}`\n\n",
+        "## Demo Entry Points\n\n",
+        _markdown_table(["Question", "Status", "Page", "What to inspect"], demo_rows),
+        "\n",
     ]
     for subdir in ["papers", "foundations", "concepts", "methods", "people", "topics", "ideas", "experiments", "outputs"]:
         lines.append(f"## {subdir.title()}\n\n")

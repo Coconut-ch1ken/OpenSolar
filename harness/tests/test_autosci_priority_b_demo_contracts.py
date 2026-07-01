@@ -466,6 +466,55 @@ def test_exp_run_projects_demo_runtime_boundary_summary(tmp_path: Path) -> None:
     assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
 
 
+def test_workspace_index_explains_demo_entry_points(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    run_id = f"priority-b-workspace-index-{uuid.uuid4().hex}"
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            f"$paper-draft --topic 'agentic scientific workflow' --title 'Priority B Workspace Index' --run-id {run_id}",
+        ],
+        cwd=REPO,
+        env=_env_for(harness_dir),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "paper-draft"
+    assert summary["workspace_updated_count"] > 0
+
+    wiki_root = harness_dir / "artifacts" / "autosci" / "workspace" / "wiki"
+    index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
+    assert "## Demo Entry Points" in index_text
+    for question in (
+        "what ran",
+        "what was produced",
+        "what is blocked",
+        "what evidence exists",
+        "what remains incomplete",
+    ):
+        assert question in index_text
+    for page in (
+        "outputs/lifecycle_summary.md",
+        "outputs/report.md",
+        "outputs/review.md",
+        "outputs/ideas.md",
+        "outputs/experiment.md",
+    ):
+        assert page in index_text
+    assert "| what was produced | ok | [report](outputs/report.md) |" in index_text
+    assert "| what ran | pending | [lifecycle_summary](outputs/lifecycle_summary.md) |" in index_text
+    assert "Approval/runtime audit, collection, and remote proof status." in index_text
+    assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
+
+
 def test_ingest_projects_human_paper_workspace_page(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
     run_id = f"priority-b-ingest-workspace-{uuid.uuid4().hex}"
