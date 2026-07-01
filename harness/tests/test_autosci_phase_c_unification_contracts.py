@@ -180,6 +180,17 @@ def test_phase_c_manifest_lists_unified_repo_smoke_tests_without_claiming_execut
     for entry in existing_contracts:
         assert (REPO / entry["path"]).exists(), entry["path"]
 
+    readiness = payload["premerge_readiness_audit"]
+    assert readiness == {
+        "path": "docs/integrations/autosci/phase-c-premerge-readiness-audit.v1.json",
+        "test_path": "harness/tests/test_autosci_phase_c_premerge_readiness.py",
+        "status": "ready_for_integration_branch_premerge",
+        "does_not_claim_stellven_merge_executed": True,
+        "does_not_start_merge_branch": True,
+    }
+    assert (REPO / readiness["path"]).exists()
+    assert (REPO / readiness["test_path"]).exists()
+
     verification_policy = payload["verification_policy"]
     assert verification_policy["premerge_manifest_only"] is True
     assert verification_policy["does_not_claim_stellven_merge_executed"] is True

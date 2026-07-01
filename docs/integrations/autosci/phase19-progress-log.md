@@ -7868,3 +7868,34 @@ Logged: 2026-07-01 EDT
 | `git ls-files 'harness/artifacts/scientific/workflow-runs/*' \| wc -l` | ok: 0. |
 | `git diff --check -- docs/integrations/autosci/phase-c-solar-unification-import-manifest.v1.json docs/integrations/autosci/phase19-progress-log.md harness/plugins/autosci/bin/autosci_skill_shim.py harness/plugins/autosci/tests/test_autosci_skill_shim.py harness/tests/test_autosci_phase_c_unification_contracts.py harness/tests/integration/autosci_product_smoke_helpers.py harness/tests/integration/test_autosci_routes_list.py harness/tests/integration/test_autosci_cli_dispatch.py harness/tests/integration/test_autosci_ingest_demo.py harness/tests/integration/test_autosci_review_demo.py harness/tests/integration/test_autosci_research_scheduler_demo.py harness/tests/integration/test_autosci_artifact_root.py` | ok |
 | `git fsck --connectivity-only --no-dangling` | ok |
+
+## Phase C Premerge Readiness Audit Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Latest attachment review | ok | Read `/Users/jamesyuan/.codex/attachments/d1462411-4aa9-4a88-8f05-5410e3e21707/pasted-text.txt` and treated it as a premerge readiness note, not a merge-start instruction. |
+| Merge not started | ok | No integration branch was created, no Stellven product branch was modified, and no fetch/merge/repack/maintenance command was run for this follow-up. |
+| Wrapper CLI wording | ok | Updated `.agents/skills/*/SKILL.md` to prefer `solar-harness.sh autosci '$<skill> <user args>'`, matching the explicit product-level entrypoint requested by the attachment. |
+| Readiness audit artifact | ok | Added `docs/integrations/autosci/phase-c-premerge-readiness-audit.v1.json` to record P0 reconciliation, no-merge activity, post-import gates, and residual risks. |
+| Static readiness guard | ok | Added `harness/tests/test_autosci_phase_c_premerge_readiness.py` to verify product dispatch, wrapper wording, scheduler-demo coverage, product smoke presence, and generated artifact tracking hygiene. |
+| Manifest linkage | ok | Linked the readiness audit from `phase-c-solar-unification-import-manifest.v1.json` without claiming the Stellven merge already happened. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The latest attachment still described missing product dispatch that current code already has | warn | Added a readiness audit that reconciles attachment P0 items against current files instead of redoing stale work. |
+| Direct `$command` harness dispatch is supported, but wrapper docs could still look ambiguous for product merge | warn | Prefer explicit `autosci` subcommand in all wrapper docs while keeping direct dispatch as a supported convenience path. |
+| `.agents/skills` was read-only under the sandbox during bulk wording update | warn | Used a single approved escalated write for wrapper docs only; no Git metadata, fetch, merge, maintenance, or runtime state was touched. |
+| A readiness audit can be mistaken for a completed Stellven merge | warn | The audit and manifest explicitly record `does_not_claim_stellven_merge_executed=true` and `does_not_start_merge_branch=true`. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/tests/test_autosci_phase_c_premerge_readiness.py harness/tests/test_autosci_phase_c_unification_contracts.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_phase_c_premerge_readiness.py harness/tests/test_autosci_phase_c_unification_contracts.py -q` | ok: 10 passed. |
+| `git diff --check -- docs/integrations/autosci/phase-c-premerge-readiness-audit.v1.json docs/integrations/autosci/phase-c-solar-unification-import-manifest.v1.json docs/integrations/autosci/phase19-progress-log.md harness/tests/test_autosci_phase_c_premerge_readiness.py harness/tests/test_autosci_phase_c_unification_contracts.py .agents/skills` | ok |
+| `git fsck --connectivity-only --no-dangling` | ok |

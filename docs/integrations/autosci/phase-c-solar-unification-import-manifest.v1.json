@@ -261,6 +261,13 @@
       "purpose": "Current-branch harness autosci entrypoint smoke contract."
     }
   ],
+  "premerge_readiness_audit": {
+    "path": "docs/integrations/autosci/phase-c-premerge-readiness-audit.v1.json",
+    "test_path": "harness/tests/test_autosci_phase_c_premerge_readiness.py",
+    "status": "ready_for_integration_branch_premerge",
+    "does_not_claim_stellven_merge_executed": true,
+    "does_not_start_merge_branch": true
+  },
   "verification_policy": {
     "premerge_manifest_only": true,
     "does_not_claim_stellven_merge_executed": true,

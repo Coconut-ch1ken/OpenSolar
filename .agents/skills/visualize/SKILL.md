@@ -14,16 +14,16 @@ Do not run native AutoSci repo tools directly. Do not mutate AutoSci's original 
 When the user invokes this skill, preserve their arguments and route the request through the Solar Harness runtime, not the current worktree copy:
 
 ```bash
-"${HARNESS_DIR:-$HOME/.solar/harness}/solar-harness.sh" '$visualize' <user args>
+"${HARNESS_DIR:-$HOME/.solar/harness}/solar-harness.sh" autosci '$visualize <user args>'
 ```
 
-If `HARNESS_DIR` is unset but `solar-harness` is on PATH, this direct form is also valid:
+If `HARNESS_DIR` is unset but `solar-harness` is on PATH, this explicit AutoSci subcommand form is also valid:
 
 ```bash
-solar-harness '$visualize' <user args>
+solar-harness autosci '$visualize <user args>'
 ```
 
-Quote the dollar command in shell contexts so it is not expanded as an environment variable.
+Keep the AutoSci subcommand explicit and quote the dollar command in shell contexts so it is not expanded as an environment variable.
 
 ## Solar Route
 
