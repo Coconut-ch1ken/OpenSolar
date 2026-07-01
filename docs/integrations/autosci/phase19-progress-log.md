@@ -7681,3 +7681,31 @@ Logged: 2026-07-01 EDT
 |---|---|
 | `harness/bin/python3 -m py_compile harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 4 passed. |
+
+## Priority B Discover Product Entry Workspace Projection Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Direct discover product entry | ok | Added a Priority B contract for `solar-harness autosci "$discover <topic> --from-wiki --limit <n> --run-id <id>"` through an isolated harness. |
+| Human workspace discovery projection | ok | `literature_discovery.v1` now projects `wiki/outputs/discovery.md` with evidence status, query, mode, limit, candidate count, source-provider boundary, final-shortlist boundary, candidates, artifacts, blocking reasons, and limitations. |
+| Truthfulness boundary | ok | The workspace page preserves inconclusive discovery state when network/provider evidence is absent; it does not promote empty wiki discovery to a completed provider-backed shortlist. |
+| Root pollution guard | ok | The new contract asserts the unique run id is not written under the repo harness run directory, preserving isolated product-entry artifact roots. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| `$discover --from-wiki` can emit valid `literature_discovery.v1` evidence without a durable human-facing summary page | warn | Always project discovery evidence to `wiki/outputs/discovery.md` so product users do not need to inspect raw JSON to understand source readiness. |
+| Empty discovery shortlists can be mistaken for successful discovery if only route execution is checked | warn | Surface `status`, `source_provider_boundary`, `final_shortlist_boundary`, blocking reasons, and limitations in the workspace page. |
+| Network-disabled product-entry tests should not depend on live provider behavior | warn | Set `AUTOSCI_DISABLE_NETWORK_FETCH=1`, assert the truthful `inconclusive` state, and verify no fixture/local provider candidate is silently treated as real discovery evidence. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/plugins/autosci/bin/autosci_workspace_projector.py harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py::test_discover_projects_human_shortlist_summary -q` | ok: 1 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 5 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_accepts_discover_from_wiki_limit -q` | ok: 1 passed. |

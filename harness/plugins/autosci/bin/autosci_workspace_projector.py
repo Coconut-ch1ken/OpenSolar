@@ -288,6 +288,114 @@ def project_ideas(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) 
     return updated
 
 
+def project_discovery_summary(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
+    evidence_path = run_dir / "literature_discovery.json"
+    payload = load_json_if_exists(evidence_path)
+    if payload is None:
+        return []
+
+    outputs = payload.get("outputs", {}) if isinstance(payload.get("outputs"), dict) else {}
+    candidates = outputs.get("candidates") if isinstance(outputs.get("candidates"), list) else []
+    source_boundary = (
+        outputs.get("source_provider_boundary")
+        if isinstance(outputs.get("source_provider_boundary"), dict)
+        else {}
+    )
+    final_boundary = (
+        source_boundary.get("final_shortlist_boundary")
+        if isinstance(source_boundary.get("final_shortlist_boundary"), dict)
+        else {}
+    )
+
+    candidate_rows: list[list[str]] = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = value_as_text(
+            candidate.get("candidate_id")
+            or candidate.get("paper_id")
+            or candidate.get("paperId")
+            or candidate.get("arxiv_id"),
+            f"candidate-{len(candidate_rows) + 1:03d}",
+        )
+        channels = candidate.get("source_channels") if isinstance(candidate.get("source_channels"), list) else []
+        summary = value_as_text(candidate.get("summary") or candidate.get("abstract") or candidate.get("ranking_rationale"))
+        if len(summary) > 240:
+            summary = summary[:237].rstrip() + "..."
+        candidate_rows.append(
+            [
+                candidate_id,
+                value_as_text(candidate.get("title"), candidate_id),
+                ", ".join(value_as_text(channel) for channel in channels if str(channel).strip()) or "N/A",
+                value_as_text(candidate.get("ranking_score") or candidate.get("score")),
+                value_as_text(candidate.get("dedup_status")),
+                value_as_text(candidate.get("fetch_status")),
+                value_as_text(candidate.get("source_ref") or candidate.get("url") or candidate.get("pdf_url")),
+                summary,
+            ]
+        )
+
+    blocking_rows: list[list[str]] = [
+        [value_as_text(reason)]
+        for reason in final_boundary.get("blocking_reasons", [])
+        if str(reason).strip()
+    ]
+    artifact_rows: list[list[str]] = []
+    for artifact in payload.get("artifacts", []):
+        if not isinstance(artifact, dict):
+            continue
+        artifact_rows.append(
+            [
+                value_as_text(artifact.get("type")),
+                value_as_text(artifact.get("path")),
+            ]
+        )
+
+    limitations: list[str] = []
+    for item in [
+        *list(payload.get("limitations") or []),
+        *list(source_boundary.get("limitations") or []),
+        *list(final_boundary.get("limitations") or []),
+    ]:
+        text = str(item).strip()
+        if text and text not in limitations:
+            limitations.append(text)
+
+    page = wiki / "outputs" / "discovery.md"
+    body = [
+        frontmatter("output", f"discovery-{run_id}", f"Discovery summary for {run_id}", run_id, evidence_link(evidence_path, output_harness)),
+        f"# Discovery Summary: `{run_id}`\n\n",
+        "## Status\n\n",
+        f"- Evidence status: `{value_as_text(payload.get('status'))}`\n",
+        f"- Query: `{value_as_text(outputs.get('query') or payload.get('inputs', {}).get('query'))}`\n",
+        f"- Mode: `{value_as_text(outputs.get('mode'))}`\n",
+        f"- Limit: `{value_as_text(outputs.get('limit'))}`\n",
+        f"- Candidate count: `{len([candidate for candidate in candidates if isinstance(candidate, dict)])}`\n",
+        f"- Source provider boundary status: `{value_as_text(source_boundary.get('status'))}`\n",
+        f"- Final shortlist ready: `{value_as_text(final_boundary.get('final_shortlist_ready'))}`\n",
+        f"- Final boundary status: `{value_as_text(final_boundary.get('status'))}`\n",
+        f"- Discovery evidence: `{evidence_link(evidence_path, output_harness)}`\n\n",
+        "## Source Boundary\n\n",
+        f"- Source channels: `{', '.join(value_as_text(channel) for channel in source_boundary.get('source_channels', []) if str(channel).strip()) or 'N/A'}`\n",
+        f"- Provider channels: `{', '.join(value_as_text(channel) for channel in source_boundary.get('provider_channels', []) if str(channel).strip()) or 'N/A'}`\n",
+        f"- Generic channels: `{', '.join(value_as_text(channel) for channel in source_boundary.get('generic_channels', []) if str(channel).strip()) or 'N/A'}`\n\n",
+        "## Candidates\n\n",
+        _markdown_table(
+            ["Candidate", "Title", "Channels", "Score", "Dedup", "Fetch", "Source", "Summary"],
+            candidate_rows,
+        ),
+        "\n## Blocking Reasons\n\n",
+        _markdown_table(["Reason"], blocking_rows),
+        "\n## Artifacts\n\n",
+        _markdown_table(["Type", "Path"], artifact_rows),
+        "\n## Limitations\n\n",
+        list_lines(limitations),
+    ]
+    if write_text_if_changed(page, "".join(body)):
+        return [page]
+    return []
+
+
 def project_review_summary(run_dir: Path, wiki: Path, output_harness: Path, run_id: str) -> list[Path]:
     evidence_path = run_dir / "artifact_review.json"
     payload = load_json_if_exists(evidence_path)
@@ -801,6 +909,7 @@ def project_run_to_workspace(
     updated.extend(project_methods(run_dir, wiki, output_harness, run_id))
     updated.extend(project_claims_output(run_dir, wiki, output_harness, run_id))
     updated.extend(project_ideas(run_dir, wiki, output_harness, run_id))
+    updated.extend(project_discovery_summary(run_dir, wiki, output_harness, run_id))
     updated.extend(project_review_summary(run_dir, wiki, output_harness, run_id))
     updated.extend(project_ideas_summary(run_dir, wiki, output_harness, run_id))
     updated.extend(project_experiment(run_dir, wiki, output_harness, run_id))

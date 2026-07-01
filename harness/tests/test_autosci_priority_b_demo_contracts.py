@@ -136,6 +136,72 @@ def test_review_projects_human_diagnostics_summary(tmp_path: Path) -> None:
     assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
 
 
+def test_discover_projects_human_shortlist_summary(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    run_id = f"priority-b-discover-workspace-{uuid.uuid4().hex}"
+    wiki_root = harness_dir / "artifacts" / "autosci" / "workspace" / "wiki"
+    (wiki_root / "papers").mkdir(parents=True)
+    (wiki_root / "papers" / "skillgen-seed.md").write_text(
+        "---\ntitle: SkillGen Seed\narxiv: 2401.00001\n---\n# SkillGen Seed\n\n"
+        "Skill generation and agent adaptation need provider-backed literature discovery before promotion.\n",
+        encoding="utf-8",
+    )
+    env = _env_for(harness_dir)
+    env["AUTOSCI_DISABLE_NETWORK_FETCH"] = "1"
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            f"$discover agent skill learning --from-wiki --limit 3 --run-id {run_id}",
+        ],
+        cwd=REPO,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "discover"
+    assert summary["execution_status"] == "partial"
+    assert summary["action_count"] == 1
+    assert summary["workspace_updated_count"] > 0
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    actions = payload["outputs"]["skill_run"]["actions"]
+    assert [action["action"] for action in actions] == ["discover_literature"]
+    discovery = json.loads(Path(actions[0]["evidence_path"]).read_text(encoding="utf-8"))
+    assert discovery["schema"] == "literature_discovery.v1"
+    assert discovery["status"] == "inconclusive"
+    assert discovery["outputs"]["mode"] == "wiki"
+    assert discovery["outputs"]["limit"] == 3
+    boundary = discovery["outputs"]["source_provider_boundary"]["final_shortlist_boundary"]
+    assert boundary["final_shortlist_ready"] is False
+    assert "discovery shortlist is empty" in boundary["blocking_reasons"]
+    assert "provider-backed source channel is missing" in boundary["blocking_reasons"]
+
+    discovery_page = wiki_root / "outputs" / "discovery.md"
+    assert discovery_page.exists()
+    page = discovery_page.read_text(encoding="utf-8")
+    assert f"Discovery Summary: `{run_id}`" in page
+    assert "- Evidence status: `inconclusive`" in page
+    assert "- Mode: `wiki`" in page
+    assert "- Limit: `3`" in page
+    assert "- Final shortlist ready: `False`" in page
+    assert "literature_discovery.json" in page
+    assert "discovery shortlist is empty" in page
+    assert "provider-backed source channel is missing" in page
+    assert "Final discovery shortlist requires non-empty candidates" in page
+
+    index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
+    assert "outputs/discovery.md" in index_text
+    assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
+
+
 def test_ideate_projects_human_candidate_and_evaluation_summary(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
     run_id = f"priority-b-ideate-workspace-{uuid.uuid4().hex}"
