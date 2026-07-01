@@ -1,1 +1,0 @@
-{"schema": "autosci_model_response.v1", "status": "completed", "outputs": {"answer": "SkillGen is supported by retrieved wiki evidence.", "confidence": 0.81, "evidence_ids": ["model:ask-smoke"], "model": "smoke-model", "provider": "command"}}

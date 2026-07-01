@@ -7826,3 +7826,45 @@ Logged: 2026-07-01 EDT
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_phase_c_unification_contracts.py -q` | ok: 5 passed. |
 | `git diff --check -- docs/integrations/autosci/phase-c-solar-unification-import-manifest.v1.json harness/tests/test_autosci_phase_c_unification_contracts.py docs/integrations/autosci/phase19-progress-log.md` | ok |
 | `git fsck --connectivity-only --no-dangling` | ok |
+
+## Phase C Product-Level Smoke And Cleanup Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Attachment review | ok | Read `/Users/jamesyuan/.codex/attachments/eb647a4d-8eca-40be-85ae-cdb20f7726ec/pasted-text.txt` and reconciled its P0 list against current code. |
+| Product CLI dispatch status | ok | Current `harness/solar-harness.sh` already has `autosci)` dispatch and `$*)` direct AutoSci dispatch through `do_autosci_command()`, so the attachment's P0-1 blocker is no longer current. |
+| Wrapper path status | ok | `.agents/skills/*/SKILL.md` direct `$command` examples are compatible with the current `$*)` dispatch path, while `solar-harness.sh autosci "$cmd"` remains the preferred explicit product path for tests. |
+| Product-level integration smokes | ok | Added `harness/tests/integration/test_autosci_routes_list.py`, `test_autosci_cli_dispatch.py`, `test_autosci_ingest_demo.py`, `test_autosci_review_demo.py`, `test_autosci_research_scheduler_demo.py`, and `test_autosci_artifact_root.py` plus `autosci_product_smoke_helpers.py`. |
+| Smoke isolation | ok | The new smokes run `solar-harness.sh autosci ...` through an isolated temporary `HARNESS_DIR`, asserting outputs remain under that root and do not appear under the repo harness artifact root. |
+| Scheduler demo preset | ok | Added explicit `$research --scheduler-run --scheduler-demo`; the preset is paper-grounded and limited to `paper_ingest`, `paper_analyze`, `claim_extract`, and `method_extract` so it does not falsely pass model/provider-dependent nodes. |
+| Tracked generated artifact cleanup | ok | Removed generated AutoSci artifacts from the Git index with `git rm --cached`, preserving local files: 2541 tracked run files, 62 operator-smoke files, and 62 phase19 inventory JSON files were cleaned from tracking; scientific workflow-runs had 0 tracked files. |
+| Manifest update | ok | Updated `phase-c-solar-unification-import-manifest.v1.json` to map unified target smoke files to current-branch smoke files and to record generated-artifact cleanup policy. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The attachment's product CLI blocker was stale relative to the latest branch | warn | Verify current code before acting on inspection notes; `solar-harness.sh autosci` and direct `$*` dispatch now exist. |
+| Product-level smoke tests initially had no files under `harness/tests/integration/test_autosci_*.py` | warn | Keep dedicated product-entry smokes separate from lower-level shim tests so a future Stellven merge can catch CLI/artifact-root regressions. |
+| Test import failed because pytest collects `harness/tests/integration` as a package | warn | Use relative imports from `.autosci_product_smoke_helpers` inside integration tests. |
+| `$ingest` route status is still `partial` even when `research_paper.v1` is written | warn | Tests assert the required typed evidence rather than overclaiming route completion. |
+| `artifact_review.v1` stores `review_available` under `outputs.review`, not directly under `outputs` | warn | Assert the schema's actual structure to avoid brittle or misleading review readiness checks. |
+| `git rm --cached` was blocked by sandbox permissions while creating `.git/index.lock` | warn | Use approved escalation for index-only cleanup; keep local generated files in place and rely on `.gitignore` after removing tracking. |
+| A first draft of `--scheduler-demo` included `idea_generate` and failed because source/model evidence was missing | warn | Demo presets must not turn inconclusive model/provider-dependent nodes into success; keep deeper nodes explicit until supporting evidence is supplied. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/plugins/autosci/bin/autosci_skill_shim.py harness/tests/integration/autosci_product_smoke_helpers.py harness/tests/integration/test_autosci_routes_list.py harness/tests/integration/test_autosci_cli_dispatch.py harness/tests/integration/test_autosci_ingest_demo.py harness/tests/integration/test_autosci_review_demo.py harness/tests/integration/test_autosci_research_scheduler_demo.py harness/tests/integration/test_autosci_artifact_root.py harness/tests/test_autosci_phase_c_unification_contracts.py harness/plugins/autosci/tests/test_autosci_skill_shim.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/integration/test_autosci_routes_list.py harness/tests/integration/test_autosci_cli_dispatch.py harness/tests/integration/test_autosci_ingest_demo.py harness/tests/integration/test_autosci_review_demo.py harness/tests/integration/test_autosci_research_scheduler_demo.py harness/tests/integration/test_autosci_artifact_root.py -q` | ok: 6 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_research_scheduler_demo_uses_multi_node_preset -q` | ok: 2 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_phase_c_unification_contracts.py -q` | ok: 5 passed. |
+| `git ls-files 'harness/artifacts/autosci/runs/*' \| wc -l` | ok: 0. |
+| `git ls-files 'harness/artifacts/autosci/operator-smoke/*' \| wc -l` | ok: 0. |
+| `git ls-files 'harness/artifacts/autosci/phase19/current-parity-inventory-*.json' \| wc -l` | ok: 0. |
+| `git ls-files 'harness/artifacts/scientific/workflow-runs/*' \| wc -l` | ok: 0. |
+| `git diff --check -- docs/integrations/autosci/phase-c-solar-unification-import-manifest.v1.json docs/integrations/autosci/phase19-progress-log.md harness/plugins/autosci/bin/autosci_skill_shim.py harness/plugins/autosci/tests/test_autosci_skill_shim.py harness/tests/test_autosci_phase_c_unification_contracts.py harness/tests/integration/autosci_product_smoke_helpers.py harness/tests/integration/test_autosci_routes_list.py harness/tests/integration/test_autosci_cli_dispatch.py harness/tests/integration/test_autosci_ingest_demo.py harness/tests/integration/test_autosci_review_demo.py harness/tests/integration/test_autosci_research_scheduler_demo.py harness/tests/integration/test_autosci_artifact_root.py` | ok |
+| `git fsck --connectivity-only --no-dangling` | ok |

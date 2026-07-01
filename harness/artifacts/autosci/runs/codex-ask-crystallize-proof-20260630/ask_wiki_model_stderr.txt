@@ -1,2 +1,0 @@
-<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv, got /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/../.venv
-<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.venv, got /Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/../.venv

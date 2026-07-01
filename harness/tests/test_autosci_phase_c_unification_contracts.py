@@ -51,6 +51,14 @@ REQUIRED_UNIFIED_SMOKE_TESTS = {
     "tests/integration/test_autosci_research_scheduler_demo.py",
     "tests/integration/test_autosci_artifact_root.py",
 }
+REQUIRED_CURRENT_BRANCH_SMOKE_TESTS = {
+    "harness/tests/integration/test_autosci_routes_list.py",
+    "harness/tests/integration/test_autosci_cli_dispatch.py",
+    "harness/tests/integration/test_autosci_ingest_demo.py",
+    "harness/tests/integration/test_autosci_review_demo.py",
+    "harness/tests/integration/test_autosci_research_scheduler_demo.py",
+    "harness/tests/integration/test_autosci_artifact_root.py",
+}
 
 
 def _payload() -> dict[str, Any]:
@@ -159,6 +167,14 @@ def test_phase_c_manifest_lists_unified_repo_smoke_tests_without_claiming_execut
     assert "unified HARNESS_DIR" in planned_tests["tests/integration/test_autosci_artifact_root.py"][
         "minimum_assertion"
     ]
+    current_branch_tests = {entry["current_branch_test_path"] for entry in planned_tests.values()}
+    assert current_branch_tests == REQUIRED_CURRENT_BRANCH_SMOKE_TESTS
+    for relative in current_branch_tests:
+        assert (REPO / relative).exists(), relative
+
+    helper = payload["current_branch_product_smoke_helper"]
+    assert helper["path"] == "harness/tests/integration/autosci_product_smoke_helpers.py"
+    assert (REPO / helper["path"]).exists()
 
     existing_contracts = payload["existing_branch_contract_tests"]
     for entry in existing_contracts:
@@ -167,5 +183,12 @@ def test_phase_c_manifest_lists_unified_repo_smoke_tests_without_claiming_execut
     verification_policy = payload["verification_policy"]
     assert verification_policy["premerge_manifest_only"] is True
     assert verification_policy["does_not_claim_stellven_merge_executed"] is True
+    assert verification_policy["current_branch_product_smokes_present"] is True
     assert verification_policy["unified_repo_smoke_required_after_import"] is True
     assert verification_policy["publication_or_analysis_success_must_not_be_claimed_without_evidence"] is True
+
+    cleanup = payload["tracked_generated_artifact_cleanup"]
+    assert cleanup["status"] == "cleaned_in_source_branch_index"
+    assert cleanup["cleanup_mode"] == "git rm --cached; local files preserved by .gitignore"
+    assert cleanup["tracked_before_cleanup"]["harness/artifacts/autosci/runs/**"] > 0
+    assert "harness/artifacts/autosci/runs/**" in cleanup["must_remain_untracked_patterns"]

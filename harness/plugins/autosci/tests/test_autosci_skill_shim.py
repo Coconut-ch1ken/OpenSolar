@@ -41,6 +41,12 @@ FULL_LIFECYCLE_NODES = [
     "report_plan",
     "publication_produce",
 ]
+DEMO_SCHEDULER_NODES = [
+    "paper_ingest",
+    "paper_analyze",
+    "claim_extract",
+    "method_extract",
+]
 
 MINIMAL_STRUCTURAL_PDF = (
     b"%PDF-1.4\n"
@@ -1159,6 +1165,40 @@ def test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary(tmp_
     state_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "pipeline_state_json")
     state = json.loads((tmp_path / state_artifact["path"]).read_text(encoding="utf-8"))
     assert state["evidence_report"]["scheduler_lifecycle_completed"] is False
+
+
+def test_autosci_skill_shim_research_scheduler_demo_uses_multi_node_preset(tmp_path: Path) -> None:
+    paper = tmp_path / "scheduler-demo-paper.md"
+    paper.write_text(
+        "# Scheduler Demo Paper\n\n"
+        "## Abstract\n"
+        "This paper verifies the explicit multi-node scheduler demo preset.\n",
+        encoding="utf-8",
+    )
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen demo",
+        "--paper",
+        str(paper),
+        "--scheduler-run",
+        "--scheduler-demo",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-demo-scheduler",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "research"
+    assert summary["scheduler_lifecycle_status"] == "passed"
+    assert summary["scheduler_lifecycle_node_count"] == len(DEMO_SCHEDULER_NODES)
+    assert summary["scheduler_dispatch_boundary_status"] == "generic_workflow_runner"
+
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    assert scheduler_summary["required_nodes"] == DEMO_SCHEDULER_NODES
+    assert set(scheduler_summary["node_results"]) == set(DEMO_SCHEDULER_NODES)
+    assert scheduler_summary["dispatch_boundary"]["required_nodes"] == DEMO_SCHEDULER_NODES
 
 
 def test_autosci_skill_shim_research_legacy_scheduler_run_attaches_blocked_summary(tmp_path: Path) -> None:

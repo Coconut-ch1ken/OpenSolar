@@ -91,6 +91,12 @@ SOURCE_REQUIRED_ACTIONS = {
     "verify_claim",
     "write_report",
 }
+SCHEDULER_DEMO_NODE_IDS = [
+    "paper_ingest",
+    "paper_analyze",
+    "claim_extract",
+    "method_extract",
+]
 
 
 def stable_run_id(skill: str, args: argparse.Namespace) -> str:
@@ -251,6 +257,7 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "remote_run_dir": str(args.remote_run_dir or ""),
         "lifecycle_summary": list(args.lifecycle_summary or []),
         "scheduler_run": bool(args.scheduler_run),
+        "scheduler_demo": bool(args.scheduler_demo),
         "scheduler_include_blocked_external": bool(args.scheduler_include_blocked_external),
         "scheduler_include_human_gates": bool(args.scheduler_include_human_gates),
         "scheduler_dispatch_external_evidence": bool(args.scheduler_dispatch_external_evidence),
@@ -405,7 +412,10 @@ def run_research_scheduler_lifecycle(args: argparse.Namespace, *, run_id: str, w
             "--out",
             str(summary_rel),
         ]
-        scheduler_nodes = list(args.scheduler_node_id or []) or ["paper_ingest"]
+        scheduler_nodes = list(args.scheduler_node_id or [])
+        if args.scheduler_demo:
+            scheduler_nodes = list(dict.fromkeys([*scheduler_nodes, *SCHEDULER_DEMO_NODE_IDS]))
+        scheduler_nodes = scheduler_nodes or ["paper_ingest"]
         for node_id in scheduler_nodes:
             command.extend(["--node-id", str(node_id)])
         if args.scheduler_include_blocked_external:
@@ -1626,6 +1636,7 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--remote-run-dir", help="Remote/local run directory to pass through approved status-check commands")
     skill.add_argument("--lifecycle-summary", action="append", help="Existing scientific_lifecycle.v1 scheduler runtime summary evidence")
     skill.add_argument("--scheduler-run", action="store_true", help="For $research only: explicitly run the scheduler-dispatched scientific lifecycle proof and attach its summary")
+    skill.add_argument("--scheduler-demo", action="store_true", help="For $research --scheduler-run only: dispatch the demo-safe multi-node lifecycle preset")
     skill.add_argument("--scheduler-legacy-smoke-runner", action="store_true", help="Use the legacy bounded lifecycle smoke runner instead of the generic workflow runner")
     skill.add_argument("--scheduler-node-id", action="append", help="For the generic workflow runner, dispatch a specific workflow node; may be repeated")
     skill.add_argument("--scheduler-timeout", type=float, default=30.0, help="Timeout in seconds for each scheduler-dispatched lifecycle node")

@@ -1,3 +1,0 @@
-# Refine Proof
-
-Old draft.
