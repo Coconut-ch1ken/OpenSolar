@@ -7709,3 +7709,33 @@ Logged: 2026-07-01 EDT
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py::test_discover_projects_human_shortlist_summary -q` | ok: 1 passed. |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 5 passed. |
 | `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_accepts_discover_from_wiki_limit -q` | ok: 1 passed. |
+
+## Priority B Skills And Paper Draft Product Entry Follow-up
+
+Logged: 2026-07-01 EDT
+
+| Item | Status | Evidence |
+|---|---|---|
+| Updated plan source | ok | Used `/Users/jamesyuan/Downloads/AutoSci_Solar_Prioritized_Integration_Plan_2026-06-30.md`; next Priority B gaps were `$skills` route-list and `$paper-draft` minimal report demo. |
+| `$skills` product entry contract | ok | Added a Priority B contract for `solar-harness autosci "$skills"` through an isolated harness, asserting 28 routes, demo skills, `coverage_status`, `side_effect_policy`, and non-full route truthfulness. |
+| `$paper-draft` product entry contract | ok | Added a Priority B contract for `solar-harness autosci "$paper-draft --topic ... --title ... --run-id <id>"`, asserting `scientific_report.v1`, report sidecars, final-manuscript boundary, and root pollution guard. |
+| Stable report workspace output | ok | The workspace projector now keeps the existing report-id page and also writes `wiki/outputs/report.md` for the boss/demo-visible report entry required by the updated plan. |
+| Truthfulness boundary | ok | The paper draft demo remains `inconclusive` until source evidence, source-backed citations, Review LLM proof, and verified compile/PDF handoff evidence are present. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| `$paper-draft` generated report pages with dynamic report ids, but the updated demo plan expects stable `wiki/outputs/report.md` | warn | Preserve dynamic pages for durable IDs while also projecting the latest report to the stable demo-visible report path. |
+| Publication readiness is easy to overclaim from a generated report | warn | Assert the final-manuscript boundary file explicitly and require `publication_ready_claim_allowed=false` when Review LLM/source/compile evidence is missing. |
+| `$skills` route-list can look like parity completion if statuses are not inspected | warn | Product-entry tests must assert per-route `coverage_status` and `side_effect_policy`, plus at least one non-full route, rather than only route count. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `harness/bin/python3 -m py_compile harness/plugins/autosci/bin/autosci_workspace_projector.py harness/tests/test_autosci_priority_b_demo_contracts.py` | ok |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py::test_skills_product_entry_lists_route_statuses harness/tests/test_autosci_priority_b_demo_contracts.py::test_paper_draft_projects_demo_visible_report_summary -q` | ok: 2 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/tests/test_autosci_priority_b_demo_contracts.py -q` | ok: 7 passed. |
+| `env PYTHONPATH=harness harness/bin/python3 -m pytest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_lists_configured_skills harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_lists_skills_with_dollar_alias harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_paper_draft_writes_latex_source -q` | ok: 3 passed. |
+| `bash harness/tests/test-autosci-harness-entrypoint.sh` | ok |

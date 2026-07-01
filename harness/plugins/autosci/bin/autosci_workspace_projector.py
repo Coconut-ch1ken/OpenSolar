@@ -659,7 +659,6 @@ def project_report(run_dir: Path, wiki: Path, output_harness: Path, run_id: str)
     if not source_report.exists() and payload is None:
         return []
 
-    page = wiki / "outputs" / f"{slugify(report_id)}.md"
     source_body = source_report.read_text(encoding="utf-8") if source_report.exists() else ""
     body = [
         frontmatter("output", report_id, title, run_id, evidence_link(evidence_path if evidence_path.exists() else source_report, output_harness)),
@@ -677,9 +676,16 @@ def project_report(run_dir: Path, wiki: Path, output_harness: Path, run_id: str)
                 continue
             body.extend([f"### {value_as_text(section.get('title'), 'Section')}\n\n", f"{value_as_text(section.get('body'))}\n\n"])
 
-    if write_text_if_changed(page, "".join(body)):
-        return [page]
-    return []
+    updated: list[Path] = []
+    pages = [wiki / "outputs" / f"{slugify(report_id)}.md"]
+    stable_page = wiki / "outputs" / "report.md"
+    if stable_page not in pages:
+        pages.append(stable_page)
+    content = "".join(body)
+    for page in pages:
+        if write_text_if_changed(page, content):
+            updated.append(page)
+    return updated
 
 
 def _resolve_output_ref(raw: Any, output_harness: Path) -> Path | None:

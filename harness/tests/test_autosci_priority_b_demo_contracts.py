@@ -35,6 +35,38 @@ def _env_for(harness_dir: Path) -> dict[str, str]:
     return env
 
 
+def test_skills_product_entry_lists_route_statuses(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            "$skills",
+        ],
+        cwd=REPO,
+        env=_env_for(harness_dir),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["ok"] is True
+    assert payload["count"] == 28
+    skills = {item["skill"]: item for item in payload["skills"]}
+    expected_demo_skills = {"ingest", "review", "ideate", "research", "paper-draft", "exp-run"}
+    assert expected_demo_skills <= set(skills)
+    assert {item["coverage_status"] for item in payload["skills"]} <= {"full", "partial", "gated", "missing"}
+    assert {item["side_effect_policy"] for item in payload["skills"]} <= {"none", "dry_run_only", "approval_required"}
+    assert any(item["coverage_status"] != "full" for item in payload["skills"])
+    assert skills["exp-run"]["side_effect_policy"] == "approval_required"
+    assert skills["paper-draft"]["coverage_status"] in {"full", "partial"}
+
+
 def test_research_scheduler_run_projects_human_lifecycle_summary(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
     run_id = f"priority-b-lifecycle-workspace-{uuid.uuid4().hex}"
@@ -295,6 +327,73 @@ def test_ideate_projects_human_candidate_and_evaluation_summary(tmp_path: Path) 
 
     index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
     assert "outputs/ideas.md" in index_text
+    assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
+
+
+def test_paper_draft_projects_demo_visible_report_summary(tmp_path: Path) -> None:
+    harness_dir = _prepare_isolated_harness(tmp_path)
+    run_id = f"priority-b-paper-draft-workspace-{uuid.uuid4().hex}"
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(SOLAR_HARNESS),
+            "autosci",
+            f"$paper-draft --topic 'agentic scientific workflow' --title 'Priority B Paper Draft' --run-id {run_id}",
+        ],
+        cwd=REPO,
+        env=_env_for(harness_dir),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "paper-draft"
+    assert summary["execution_status"] == "partial"
+    assert summary["action_count"] == 1
+    assert summary["schema_only_count"] == 1
+    assert summary["workspace_updated_count"] > 0
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "write_report"
+    assert action["schema"] == "scientific_report.v1"
+    assert action["gate_status"] == "schema_only"
+    report_evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert report_evidence["status"] == "inconclusive"
+    report = report_evidence["outputs"]["report"]
+    assert report["title"] == "Priority B Paper Draft"
+    artifacts = {artifact["type"]: artifact["path"] for artifact in report_evidence["artifacts"]}
+    assert {
+        "markdown_report",
+        "latex_source",
+        "paper_sections_directory",
+        "citation_map_json",
+        "paper_draft_final_manuscript_boundary_json",
+    } <= set(artifacts)
+    boundary = json.loads((harness_dir / artifacts["paper_draft_final_manuscript_boundary_json"]).read_text(encoding="utf-8"))
+    assert boundary["final_manuscript_ready"] is False
+    assert boundary["publication_ready_claim_allowed"] is False
+    assert "completed Review LLM boundary evidence is missing" in boundary["blocking_reasons"]
+    assert "verified compile/PDF handoff is missing" in boundary["blocking_reasons"]
+
+    wiki_root = harness_dir / "artifacts" / "autosci" / "workspace" / "wiki"
+    report_page = wiki_root / "outputs" / "report.md"
+    assert report_page.exists()
+    page = report_page.read_text(encoding="utf-8")
+    assert "# Priority B Paper Draft" in page
+    assert "scientific_report.json" in page
+    assert "report.md" in page
+    assert "Evidence ids:" in page
+    assert "No source-backed citation entries were available." in page
+    assert "Publication-ready claim allowed: `False`" in page
+    assert "Final manuscript readiness requires source evidence" in page
+
+    index_text = (wiki_root / "index.md").read_text(encoding="utf-8")
+    assert "outputs/report.md" in index_text
     assert not (HARNESS / "artifacts" / "autosci" / "runs" / run_id).exists()
 
 
