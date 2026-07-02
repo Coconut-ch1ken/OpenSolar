@@ -5452,3 +5452,193 @@
 - [ ] [2026-07-02T14:00:30Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
 - [ ] [2026-07-02T14:06:47Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
 - [ ] [2026-07-02T14:13:02Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T14:19:30Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T14:25:56Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T14:32:24Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T14:38:42Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T14:45:10Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T14:51:28Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T14:57:55Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:04:10Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:10:36Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:17:03Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:23:29Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:29:44Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:36:13Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:42:39Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:49:07Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T15:55:33Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:02:02Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:08:31Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:14:47Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:21:06Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:27:28Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:33:46Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:40:03Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:46:34Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:52:51Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T16:59:08Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T17:05:30Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T17:11:50Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T17:14:36Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T17:19:38Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T17:24:46Z] [WATCHDOG-CIRCUIT-BREAKER] Pane solar-harness:0.3 (host_role=evaluator, persona=evaluator) 300s 内 restart 3/3 次,已熔断,停止重启,需人工介入
+- [ ] [2026-07-02T17:29:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:29:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:29:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:29:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:30:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:30:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:30:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:30:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:30:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:31:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:31:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:31:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:31:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:31:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:31:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:32:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:32:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:32:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:32:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:32:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:33:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:33:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:33:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:33:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:33:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:33:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:34:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:34:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:34:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:34:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:34:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:35:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:35:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:35:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:35:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:35:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:35:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:36:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:36:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:36:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:36:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:36:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:37:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:37:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:37:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:37:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:37:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:37:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:38:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:38:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:38:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:38:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:38:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:38:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:39:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:39:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:39:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:39:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:39:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:40:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:40:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:40:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:40:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:40:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:40:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:41:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:41:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:41:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:41:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:41:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:42:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:42:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:42:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:42:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:42:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:43:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:43:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:43:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:43:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:43:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:43:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:44:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:44:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:44:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:44:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:44:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:44:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:45:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:45:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:45:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:45:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:45:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:46:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:46:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:46:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:46:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:46:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:46:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:47:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:47:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:47:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:47:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:47:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:48:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:48:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:48:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:48:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:48:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:48:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:49:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:49:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:49:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:49:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:49:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:50:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:50:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:50:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:50:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:50:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:51:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:51:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:51:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:51:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:51:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:51:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:52:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:52:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:52:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:52:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:52:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:53:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:53:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:53:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:53:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:53:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:53:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:54:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:54:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:54:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:54:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:54:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:55:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:55:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:55:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:55:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:55:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:55:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:56:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:56:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:56:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:56:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:56:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:56:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:57:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:57:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:57:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:57:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:57:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-02T17:58:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild

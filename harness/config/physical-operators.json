@@ -27,8 +27,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -63,21 +63,21 @@
       "fallback_profile": "planner",
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -118,8 +118,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-06-01T23:58:00Z",
       "available": true,
@@ -167,20 +167,20 @@
       "deprecated": true,
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
-        "last_pruned_at": "2026-07-02T14:17:27Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z",
         "last_prune_reason": "weak_pane_rate_limit_evidence"
       }
     },
@@ -209,8 +209,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-06-01T23:58:00Z",
       "available": true,
@@ -258,20 +258,20 @@
       "deprecated": true,
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
-        "last_pruned_at": "2026-07-02T14:17:27Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z",
         "last_prune_reason": "weak_pane_rate_limit_evidence"
       }
     },
@@ -300,8 +300,8 @@
       "billing_pool": "anthropic_subscription_interactive",
       "launch_cmd_kind": "interactive_repl",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -341,21 +341,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -1311,8 +1311,8 @@
       "launch_cmd_kind": "print_once",
       "compat_alias_for": "tmux_pane",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-23T00:53:00Z",
       "available": true,
@@ -1360,21 +1360,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -1415,8 +1415,8 @@
       "launch_cmd_kind": "print_once",
       "compat_alias_for": "tmux_pane",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-23T00:53:00Z",
       "available": true,
@@ -1468,21 +1468,21 @@
       ],
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
@@ -2442,8 +2442,8 @@
       "billing_pool": "anthropic_agent_sdk_credit",
       "launch_cmd_kind": "print_once",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -2488,21 +2488,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -2543,8 +2543,8 @@
       "billing_pool": "anthropic_agent_sdk_credit",
       "launch_cmd_kind": "print_once",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-22T00:12:00Z",
       "available": true,
@@ -2589,21 +2589,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3354,8 +3354,8 @@
       "auth_mode": "api_key_or_gateway",
       "key_ref": "zhipu_api_key",
       "quota_cycle": "none",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-30T00:00:00Z",
       "available": true,
@@ -3417,21 +3417,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3464,8 +3464,8 @@
       "auth_mode": "api_key_or_gateway",
       "key_ref": "zhipu_api_key",
       "quota_cycle": "none",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-30T00:00:00Z",
       "available": true,
@@ -3527,21 +3527,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -3574,8 +3574,8 @@
       "auth_mode": "api_key_or_gateway",
       "key_ref": "zhipu_api_key",
       "quota_cycle": "none",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-30T00:00:00Z",
       "available": true,
@@ -3637,21 +3637,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_alias_for": "tmux_pane",
       "compat_maps_to": {
@@ -4266,8 +4266,8 @@
       "launch_cmd_kind": "print_once",
       "compat_alias_for": "tmux_pane",
       "quota_cycle": "monthly",
-      "quota_refresh_at": "2026-07-02T14:32:27Z",
-      "quota_guard_state": "cooldown",
+      "quota_refresh_at": null,
+      "quota_guard_state": "ok",
       "enabled": true,
       "enabled_at": "2026-05-23T00:53:00Z",
       "available": true,
@@ -4314,21 +4314,21 @@
       },
       "state": {
         "availability": "enabled",
-        "runtime_state": "cooldown",
-        "cooldown_until": "2026-07-02T14:32:27Z",
-        "last_error": "pane_tui_rate_limit_fallback_ttl",
-        "last_error_at": "2026-07-02T14:17:27Z",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "runtime_state": "idle",
+        "cooldown_until": null,
+        "last_error": null,
+        "last_error_at": "2026-07-02T17:27:44Z",
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "flow_control": {
         "last_block_state": "cooldown",
         "last_block_reason": "pane_tui_rate_limit_fallback_ttl",
         "last_block_source": "tmux_pane:solar-harness:0.2",
-        "last_block_detected_at": "2026-07-02T14:17:27Z",
-        "last_block_expires_at": "2026-07-02T14:32:27Z",
+        "last_block_detected_at": "2026-07-02T17:27:44Z",
+        "last_block_expires_at": "2026-07-02T17:42:44Z",
         "last_block_excerpt": ") ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── • 找到了一个更可能脱离 tmux 的入口：knowledge-ingest 下面有 process-queue 和 run-pipeline。我先看它们的参数，再决定直接跑哪一 个。 • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py --help └ usage: knowledge_ingest_dispatcher.py [-h] [--db DB] [--json] … +11 lines (ctrl + t to view transcript) --db DB --json • Ran solar-harness wiki knowledge-ingest status --json └ { \"counts\": { … +55 lines (ctrl + t to view transcript) ] } • Ran python3 /Users/jamesyuan/.solar/harness/lib/knowledge_ingest_dispatcher.py run-pipeline --help └ usage: knowledge_ingest_dispatcher.py run-pipeline [-h] [--raw-dir RAW_DIR] [--vault VAULT] … +40 lines (ctrl + t to view transcript) --json --d",
         "last_prune_reason": "weak_pane_rate_limit_evidence",
-        "last_pruned_at": "2026-07-02T14:17:27Z"
+        "last_pruned_at": "2026-07-02T17:29:53Z"
       },
       "compat_maps_to": {
         "host_type": "tmux_pane",
