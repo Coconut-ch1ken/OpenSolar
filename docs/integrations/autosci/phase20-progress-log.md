@@ -105,3 +105,44 @@ native AutoSci root tool after the `$visualize`, `$poster`, `$daily-arxiv`,
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k ingest` | ok: 8 passed, 146 deselected |
 | `pytest -q harness/plugins/autosci/tests/test_source_cli_tools.py harness/plugins/autosci/tests/test_paper_prepare.py` | ok: 11 passed |
 | `git diff --check -- harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/tests/test_autosci_skill_shim.py docs/integrations/autosci/phase20-progress-log.md` | ok |
+
+## Agent B Problem 3 Side-Effect Parity: Visualize Serve Policy Gate
+
+Logged: 2026-07-03 EDT
+
+Intent: begin solving the side-effect parity class from the updated prompt:
+allow the same bounded side effects in AutoSci parity modes instead of only
+emitting health/proposal evidence. This slice covers `$visualize --serve`.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Central gate policy | ok | Added `harness/plugins/autosci/policy/gate_policy.py` with `strict_hitl`, `safe`, `parity_demo`, `unsafe_native`, and `autosci_native` modes. |
+| Strict default | ok | Default mode remains `strict_hitl`; existing `$visualize --serve` without approval still does not execute the server path. |
+| Visualize side effect | ok | In `parity_demo`, `$visualize --serve` auto-generates a synthetic policy approval and runs native `tools/serve.py --probe-server --port 0`. |
+| Native server lifecycle | ok | `tools/serve.py --probe-server` binds a loopback HTTP server, probes `/api/health`, records `server_started=true`, and shuts down. |
+| Evidence attachment | ok | Action evidence includes `outputs.policy_decision`, `provenance.gate_policy`, `gate_policy_decision_json`, and synthetic approval contract evidence. |
+| Scope | partial | Only `$visualize --serve` is connected to the new policy gate in this slice; compile/poster/experiment/daily/reset remain follow-up action integrations. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The prompt's full policy request spans many side-effect routes. | scoped | Implemented the shared policy layer plus one representative route first; did not broad-edit all side-effect actions in one pass. |
+| `serve.py --health-check` did not actually bind a server. | fixed | Added bounded `--probe-server`, which starts the HTTP server, probes it, then shuts it down. |
+| System `python3` lacked PyYAML for native visualize/serve dependencies in a manual demo. | documented | Use the repo `.venv/bin/python` or harness Python for native tools requiring project dependencies. |
+| Sandbox loopback restrictions can block the server probe. | documented | Focused pytest passed; manual demo needed an elevated loopback run to prove `server_started=true`. |
+| Synthetic policy approval could be mistaken for human approval. | guarded | Synthetic refs use `policy:auto:<mode>:<action>:<timestamp>` and evidence warnings state no human approval was requested. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/bin/autosci_skill_shim.py harness/plugins/autosci/policy/gate_policy.py tools/serve.py` | ok |
+| `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
+| `pytest -q harness/plugins/autosci/tests/test_root_tool_abi.py::test_side_effect_root_tools_emit_truthful_non_mutating_evidence` | ok: 1 passed |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_accepts_visualize_serve_flag_without_server_execution test_autosci_skill_shim.py::test_autosci_skill_shim_visualize_parity_demo_auto_runs_server_probe test_autosci_skill_shim.py::test_autosci_skill_shim_visualize_serve_emits_approved_runtime_proofs` | ok: 3 passed |
+| `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py harness/plugins/autosci/tests/test_root_tool_abi.py::test_side_effect_root_tools_emit_truthful_non_mutating_evidence ...visualize serve tests` | ok: 13 passed |
+| `env HARNESS_DIR=/private/tmp/opensolar_autosci_policy_smoke SOLAR_AUTOSCI_OUTPUT_HARNESS=/private/tmp/opensolar_autosci_policy_smoke python3 harness/plugins/autosci/bin/autosci_bridge.py smoke` | ok |
+| `env HARNESS_DIR=/private/tmp/opensolar_autosci_policy_smoke SOLAR_AUTOSCI_OUTPUT_HARNESS=/private/tmp/opensolar_autosci_policy_smoke python3 harness/plugins/autosci/bin/autosci_bridge.py validate --result /private/tmp/opensolar_autosci_policy_smoke/artifacts/autosci/smoke/result.json` | ok |
+| elevated demo: `.venv/bin/python harness/plugins/autosci/bin/autosci_skill_shim.py skill visualize "autosci graph" --serve --gate-mode parity_demo --run-id policy-demo-visualize-serve` | ok: `passed_count=1`; `visualize_web_health.json` has `server_started=true`, `server_stopped=true`; approval contract has `execution_verified=true`. |
+| `git diff --check -- <changed AutoSci policy/visualize files>` | ok |

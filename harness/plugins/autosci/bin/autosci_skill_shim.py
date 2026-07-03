@@ -588,6 +588,8 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
     inputs["smoke_mode"] = bool(args.smoke)
     native = native_options(args)
     inputs["native_options"] = native
+    if args.gate_mode:
+        inputs["gate_mode"] = str(args.gate_mode)
     if args.approval_ref:
         inputs["approval_ref"] = str(args.approval_ref)
     if args.allowlist_evidence:
@@ -1849,7 +1851,12 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--discover", action="store_true", help="Native ingest/init discovery follow-up hint")
     skill.add_argument("--visualize", action="store_true", help="Native ingest/init visualization follow-up hint")
     skill.add_argument("--render", action="store_true", help="Native poster render/export request; execution remains approval-gated")
-    skill.add_argument("--serve", action="store_true", help="Native visualize web serving request; execution remains approval-gated")
+    skill.add_argument("--serve", action="store_true", help="Native visualize web serving request; execution follows the configured AutoSci gate mode")
+    skill.add_argument(
+        "--gate-mode",
+        choices=["strict_hitl", "safe", "parity_demo", "unsafe_native", "autosci_native"],
+        help="AutoSci side-effect gate mode for this skill run",
+    )
     skill.add_argument("--obsidian", action="store_true", help="Native visualize Obsidian graph config mode")
     skill.add_argument("--canvas", action="store_true", help="Native visualize Canvas generation mode")
     skill.add_argument("--from-wiki", action="store_true", help="Derive discovery anchors from current wiki papers")

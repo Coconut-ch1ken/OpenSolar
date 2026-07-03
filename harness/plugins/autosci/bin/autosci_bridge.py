@@ -52,6 +52,7 @@ from backends.idea_source import build_idea_candidates
 from backends.literature_discover import discover_literature
 from backends.novelty_review import evaluate_novelty_and_review
 from backends.paper_prepare import read_paper_source
+from policy.gate_policy import GateDecision, decide_gate
 
 REQUIRED_EVIDENCE_FIELDS = {
     "schema",
@@ -592,6 +593,84 @@ def _write_approval_contract_sidecar(envelope: dict[str, Any], action: str, cont
         output_dir / f"{action}_approval_contract.json",
     )
     return {"type": "approval_contract_json", "path": _write_json_sidecar(path, contract)}
+
+
+def _decision_payload(decision: GateDecision | dict[str, Any]) -> dict[str, Any]:
+    if isinstance(decision, GateDecision):
+        return decision.to_dict()
+    return dict(decision)
+
+
+def _gate_decision(envelope: dict[str, Any], action: str, side_effects: list[str]) -> dict[str, Any]:
+    return decide_gate(action, side_effects, envelope=envelope).to_dict()
+
+
+def _policy_execute_side_effect(decision: dict[str, Any], inputs: dict[str, Any]) -> bool:
+    if bool(decision.get("execute_side_effects")):
+        return True
+    return bool(inputs.get("execute_approved_side_effect"))
+
+
+def _write_policy_decision_sidecar(
+    envelope: dict[str, Any],
+    action: str,
+    decision: GateDecision | dict[str, Any],
+) -> dict[str, str]:
+    output_dir = _output_dir(envelope, action)
+    path = output_dir / f"{action}_gate_policy_decision.json"
+    return {"type": "gate_policy_decision_json", "path": _write_json_sidecar(path, _decision_payload(decision))}
+
+
+def _policy_contract_entry(artifact: dict[str, str]) -> dict[str, Any]:
+    path = str(artifact.get("path") or "").strip()
+    return {
+        "path": path,
+        "artifact_path": path,
+        "exists": bool(path),
+        "kind": "file",
+        "verifiable": bool(path),
+    }
+
+
+def _apply_policy_approval_to_contract(
+    contract: dict[str, Any],
+    decision: dict[str, Any],
+    policy_artifact: dict[str, str],
+) -> dict[str, Any]:
+    synthetic_ref = str(decision.get("synthetic_approval_ref") or "").strip()
+    if not synthetic_ref:
+        return contract
+    contract["approval_ref"] = synthetic_ref
+    contract["policy_auto_approved"] = True
+    contract["policy_decision"] = decision
+    entry = _policy_contract_entry(policy_artifact)
+    if entry["exists"]:
+        for key in ("allowlist_evidence", "before_artifacts"):
+            entries = contract.setdefault(key, [])
+            if not any(isinstance(item, dict) and item.get("artifact_path") == entry["artifact_path"] for item in entries):
+                entries.append(dict(entry))
+    contract = _refresh_approval_contract(contract)
+    if contract.get("ready_for_execution") is True and contract.get("execution_verified") is not True:
+        contract["approval_state"] = "policy_auto_approved_pending_runtime"
+    elif contract.get("execution_verified") is True:
+        contract["approval_state"] = "policy_auto_verified"
+    return contract
+
+
+def _attach_policy_decision(evidence: dict[str, Any], decision: GateDecision | dict[str, Any]) -> dict[str, Any]:
+    payload = _decision_payload(decision)
+    evidence.setdefault("outputs", {})["policy_decision"] = payload
+    provenance = evidence.setdefault("provenance", {})
+    provenance["gate_policy"] = {
+        "mode": payload.get("mode"),
+        "action": payload.get("action"),
+        "allowed": payload.get("allowed"),
+        "execute_side_effects": payload.get("execute_side_effects"),
+        "proof_required": payload.get("proof_required"),
+        "proof_best_effort": payload.get("proof_best_effort"),
+        "synthetic_approval_ref": payload.get("synthetic_approval_ref"),
+    }
+    return evidence
 
 
 def _runtime_records(contract: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
@@ -20633,7 +20712,7 @@ def _visualize_graph_artifacts(
     envelope: dict[str, Any],
     target: str,
     slug: str,
-) -> tuple[dict[str, Any], list[dict[str, str]], list[str], dict[str, Any]]:
+) -> tuple[dict[str, Any], list[dict[str, str]], list[str], dict[str, Any], dict[str, Any]]:
     inputs = dict(envelope.get("inputs") or {})
     wiki_root = _resolve_harness_path(inputs.get("wiki_root") or "artifacts/autosci/workspace/wiki")
     output_dir = _output_dir(envelope, "visualize_graph")
@@ -20744,12 +20823,30 @@ def _visualize_graph_artifacts(
 
     serve_payload: dict[str, Any] = {}
     side_effects = ["obsidian_canvas_write", "local_web_server", "graph_read"]
+    policy_decision = _gate_decision(
+        envelope,
+        "visualize_graph",
+        ["read_local", "write_artifact", "wiki_mutation", "local_command", "browser_render"],
+    )
+    policy_artifact = _write_policy_decision_sidecar(envelope, "visualize_graph", policy_decision)
+    artifacts.append(policy_artifact)
     contract = _approval_contract(envelope, "visualize_graph", side_effects)
+    native_options = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
+    serve_requested = bool(inputs.get("serve_requested") or inputs.get("serve") or native_options.get("serve"))
+    policy_auto_execute = serve_requested and bool(policy_decision.get("execute_side_effects"))
+    if policy_auto_execute:
+        contract = _apply_policy_approval_to_contract(contract, policy_decision, policy_artifact)
     serve_success = False
-    if bool(inputs.get("execute_approved_side_effect")) and contract.get("ready_for_execution"):
+    execute_requested = bool(inputs.get("execute_approved_side_effect")) or policy_auto_execute
+    if execute_requested and contract.get("ready_for_execution"):
+        serve_args = ["--wiki-root", str(wiki_root)]
+        if policy_auto_execute and not bool(inputs.get("execute_approved_side_effect")):
+            serve_args.extend(["--probe-server", "--port", "0"])
+        else:
+            serve_args.append("--health-check")
         code, serve_payload, serve_artifacts = _run_visualize_tool(
             REPO_HARNESS_DIR.parent / "tools" / "serve.py",
-            ["--wiki-root", str(wiki_root), "--health-check"],
+            serve_args,
             output_dir=output_dir,
             artifact_prefix="visualize_web_health",
         )
@@ -20761,7 +20858,7 @@ def _visualize_graph_artifacts(
         )
         if not serve_success:
             status_reasons.append("Local web health check execution failed.")
-    elif bool(inputs.get("execute_approved_side_effect")):
+    elif execute_requested:
         status_reasons.append("Local web health check was not executed because approval preflight was incomplete.")
     if serve_payload:
         serve_health_rel = _write_json_sidecar(output_dir / "visualize_web_health.json", serve_payload)
@@ -20880,22 +20977,25 @@ def _visualize_graph_artifacts(
             "edge_types": edge_types,
         },
     }
-    return output, artifacts, status_reasons, contract
+    return output, artifacts, status_reasons, contract, policy_decision
 
 
 def _action_visualize_graph(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     target = str(inputs.get("target") or inputs.get("topic") or "autosci-graph")
     slug = _slug(target)
-    raw_output, artifacts, status_reasons, contract = _visualize_graph_artifacts(
+    raw_output, artifacts, status_reasons, contract, policy_decision = _visualize_graph_artifacts(
         envelope,
         target,
         slug,
     )
-    limitations = [
-        "Visualization artifacts are generated from local wiki graph state.",
-        "Local web serving, browser opening, and screenshot capture remain approval-gated side effects.",
-    ]
+    limitations = ["Visualization artifacts are generated from local wiki graph state."]
+    if policy_decision.get("execute_side_effects"):
+        limitations.append(
+            f"Auto-approved by gate policy mode `{policy_decision.get('mode')}`; no human approval was requested."
+        )
+    else:
+        limitations.append("Local web serving, browser opening, and screenshot capture remain approval-gated side effects.")
     if not status_reasons:
         limitations.append("All requested visualization artifacts were generated from local wiki data.")
     else:
@@ -20913,7 +21013,7 @@ def _action_visualize_graph(envelope: dict[str, Any]) -> dict[str, Any]:
         "limits": status_reasons,
         "status_reasons": status_reasons,
     }
-    return convert_research_graph_update({
+    evidence = convert_research_graph_update({
         "paper_id": f"visualize-{slug}",
         "source_ref": target,
         "evidence_ids": [f"visualize:{slug}", slug],
@@ -20922,6 +21022,7 @@ def _action_visualize_graph(envelope: dict[str, Any]) -> dict[str, Any]:
         "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
+    return _attach_policy_decision(evidence, policy_decision)
 
 
 ACTIONS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
@@ -20990,6 +21091,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"ERROR: unsupported action: {args.action}", file=sys.stderr)
         return 2
     envelope = load_envelope(args.envelope)
+    if getattr(args, "gate_mode", None):
+        envelope.setdefault("inputs", {})["gate_mode"] = str(args.gate_mode)
     evidence = ACTIONS[args.action](envelope)
     extra: dict[str, Any] = {}
     if args.action in {"ingest_paper", "prepare_paper_source"}:
@@ -21056,6 +21159,11 @@ def build_parser() -> argparse.ArgumentParser:
     run = sub.add_parser("run", help="Run one fixture-mode backend action")
     run.add_argument("--action", required=True, choices=sorted(ACTIONS))
     run.add_argument("--envelope", required=True)
+    run.add_argument(
+        "--gate-mode",
+        choices=["strict_hitl", "safe", "parity_demo", "unsafe_native", "autosci_native"],
+        help="Override AutoSci side-effect gate mode for this bridge run",
+    )
     return parser
 
 

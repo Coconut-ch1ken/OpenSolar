@@ -27,6 +27,7 @@ def run_bridge(args: list[str], tmp_path: Path) -> subprocess.CompletedProcess[s
 def test_help_lists_required_actions(tmp_path: Path) -> None:
     proc = run_bridge(["run", "--help"], tmp_path)
     assert proc.returncode == 0, proc.stderr
+    assert "--gate-mode" in proc.stdout
     for action in [
         "discover_literature",
         "ingest_paper",

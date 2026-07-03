@@ -164,6 +164,7 @@ Audience: Agent A and future unification work. Agent B worked only in the OpenSo
 ## Handoff Notes
 
 - Agent A should import this slice intentionally after reviewing the shared gate change.
+- Gate policy slice: OpenSolar now has a centralized AutoSci gate policy module with five modes (`strict_hitl`, `safe`, `parity_demo`, `unsafe_native`, `autosci_native`). Default remains `strict_hitl`. The first connected side-effect route is `$visualize --serve`: `parity_demo` can auto-run a bounded native `tools/serve.py --probe-server --port 0` loopback server probe with synthetic policy approval evidence. Do not assume other side-effect actions are policy-connected until their action-level evidence says so.
 - The fallback is intentionally limited and should not be interpreted as full JSON Schema coverage.
 - The inventory tool is a reporting aid, not a route promotion mechanism.
 - Provider, Review LLM, paper compile, and remote execution proofs remain pending.

@@ -6695,6 +6695,63 @@ def test_autosci_skill_shim_accepts_visualize_serve_flag_without_server_executio
     assert "approval_ref" in contract["missing"]
 
 
+def test_autosci_skill_shim_visualize_parity_demo_auto_runs_server_probe(tmp_path: Path) -> None:
+    wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
+    (wiki_root / "ideas").mkdir(parents=True)
+    (wiki_root / "graph").mkdir()
+    (wiki_root / "ideas" / "skillgen.md").write_text(
+        "---\n"
+        "title: SkillGen\n"
+        "slug: skillgen\n"
+        "status: proposed\n"
+        "tags: []\n"
+        "---\n"
+        "# SkillGen\n",
+        encoding="utf-8",
+    )
+    (wiki_root / "graph" / "edges.jsonl").write_text("", encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$visualize",
+        "autosci graph",
+        "--serve",
+        "--wiki-root",
+        str(wiki_root),
+        "--gate-mode",
+        "parity_demo",
+        "--run-id",
+        "shim-visualize-parity-demo-serve",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "visualize"
+    assert summary["passed_count"] == 1
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    policy = evidence["outputs"]["policy_decision"]
+    assert policy["mode"] == "parity_demo"
+    assert policy["allowed"] is True
+    assert policy["execute_side_effects"] is True
+    assert policy["synthetic_approval_ref"].startswith("policy:auto:parity_demo:visualize_graph:")
+
+    artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
+    assert "gate_policy_decision_json" in artifacts
+    assert "visualize_web_health_json" in artifacts
+    assert "approval_contract_json" in artifacts
+    serve_probe = json.loads((tmp_path / artifacts["visualize_web_health_json"]).read_text(encoding="utf-8"))
+    assert serve_probe["server_started"] is True
+    assert serve_probe["server_stopped"] is True
+    assert serve_probe["health"]["ok"] is True
+
+    contract = json.loads((tmp_path / artifacts["approval_contract_json"]).read_text(encoding="utf-8"))
+    assert contract["policy_auto_approved"] is True
+    assert contract["approval_ref"].startswith("policy:auto:parity_demo:visualize_graph:")
+    assert contract["execution_verified"] is True
+
+
 def test_autosci_skill_shim_visualize_serve_emits_approved_runtime_proofs(tmp_path: Path) -> None:
     wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
     (wiki_root / "topics").mkdir(parents=True)
