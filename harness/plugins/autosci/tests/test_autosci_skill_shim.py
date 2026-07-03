@@ -5691,6 +5691,99 @@ def test_autosci_skill_shim_init_write_fans_runtime_sources_into_wiki(tmp_path: 
     assert (wiki_root / "graph/context_brief.md").exists()
 
 
+def test_autosci_skill_shim_init_parity_demo_auto_fans_runtime_sources_into_wiki(tmp_path: Path) -> None:
+    wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
+    (wiki_root / "papers").mkdir(parents=True)
+    (wiki_root / "graph").mkdir(parents=True)
+    runtime = tmp_path / "init-parity-runtime.json"
+    runtime.write_text(
+        json.dumps(
+            {
+                "schema": "autosci_runtime_evidence.v1",
+                "task_id": "init-parity-runtime-skillgen",
+                "status": "completed",
+                "exit_code": 0,
+                "candidates": [
+                    {
+                        "candidate_id": "skillgen-parity-source",
+                        "title": "SkillGen Parity Source Candidate",
+                        "url": "https://arxiv.org/abs/2601.00004",
+                        "abstract": "Runtime-discovered source candidate for parity fan-in.",
+                    }
+                ],
+                "evidence_ids": ["runtime:init-parity-skillgen"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    proc = run_shim(
+        tmp_path,
+        "$init",
+        "skill generation",
+        "--runtime-evidence",
+        str(runtime),
+        "--wiki-root",
+        str(wiki_root),
+        "--write",
+        "--gate-mode",
+        "parity_demo",
+        "--run-id",
+        "shim-init-parity-demo-source-fan-in",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+
+    assert evidence["status"] == "completed"
+    fan_in = evidence["outputs"]["source_fan_in"]
+    assert fan_in["status"] == "completed"
+    assert fan_in["applied"] is True
+    assert fan_in["policy_auto_fan_in"] is True
+    assert fan_in["source_runtime_verified_for_policy"] is True
+    assert fan_in["written_count"] == 1
+    boundary = evidence["outputs"]["final_fan_in_boundary"]
+    assert boundary["status"] == "init_sources_final_fan_in_ready"
+    assert boundary["final_fan_in_ready"] is True
+    assert boundary["approval_contract_verified"] is True
+    policy = evidence["outputs"]["policy_decision"]
+    assert policy["mode"] == "parity_demo"
+    assert policy["execute_side_effects"] is True
+    assert policy["synthetic_approval_ref"].startswith("policy:auto:parity_demo:init_sources:")
+
+    artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
+    assert "gate_policy_decision_json" in artifacts
+    assert "gate_policy_allowlist_json" in artifacts
+    assert "source_fan_in_writeback_json" in artifacts
+    assert "wiki_mutation_runtime_proof_manifest_json" in artifacts
+    assert "provider_source_runtime_proof_manifest_json" in artifacts
+    contract = json.loads((tmp_path / artifacts["approval_contract_json"]).read_text(encoding="utf-8"))
+    assert contract["policy_auto_approved"] is True
+    assert contract["execution_verified"] is True
+    assert contract["semantic_runtime"]["verified"] is True
+    assert contract["approval_ref"].startswith("policy:auto:parity_demo:init_sources:")
+    after_refs = [
+        str(item.get("artifact_path") or item.get("path") or "")
+        for item in contract["after_artifacts"]
+        if isinstance(item, dict)
+    ]
+    assert any(ref.endswith("source_fan_in_writeback.json") for ref in after_refs)
+    assert any(ref.endswith("wiki/graph/edges.jsonl") for ref in after_refs)
+
+    fan_in_evidence = json.loads((tmp_path / artifacts["source_fan_in_writeback_json"]).read_text(encoding="utf-8"))
+    assert fan_in_evidence["status"] == "completed"
+    assert fan_in_evidence["outputs"]["write"]["policy_auto_fan_in"] is True
+    page = wiki_root / "papers/skillgen-parity-source.md"
+    assert page.exists()
+    assert "SkillGen Parity Source Candidate" in page.read_text(encoding="utf-8")
+    assert "Source Candidate Fan-In" in (wiki_root / "log.md").read_text(encoding="utf-8")
+    assert "source_candidate_ingested" in (wiki_root / "graph/edges.jsonl").read_text(encoding="utf-8")
+    assert (wiki_root / "index.md").exists()
+    assert (wiki_root / "graph/context_brief.md").exists()
+
+
 def test_autosci_skill_shim_daily_arxiv_uses_verified_runtime_digest(tmp_path: Path) -> None:
     allowlist = tmp_path / "daily-allowlist.json"
     before = tmp_path / "daily-before.json"

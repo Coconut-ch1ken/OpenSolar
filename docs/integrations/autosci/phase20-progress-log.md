@@ -182,3 +182,38 @@ preserving runtime semantic verification.
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'paper_compile or poster or exp_run'` | ok: 28 passed, 130 deselected |
 | `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
 | `git diff --check -- <changed AutoSci problem3 files>` | ok |
+
+## Agent B Problem 3 Side-Effect Parity: Init Source Fan-In
+
+Logged: 2026-07-03 EDT
+
+Intent: continue solving the side-effect parity class for remaining commands by
+connecting `$init --write` to the policy-approved local wiki fan-in path without
+auto-running provider/network fetch, email, remote execution, or bulk ingest.
+
+| Item | Status | Evidence |
+|---|---|---|
+| `$init --write` policy approval | ok | In `parity_demo`, `$init --write` can generate synthetic policy approval/allowlist evidence for the local `wiki_fan_in` side effect. |
+| Runtime source boundary | ok | Fan-in still requires supplied runtime source candidates with completed provider-source boundary evidence; policy mode does not fabricate source/provider proof. |
+| Two-stage contract | ok | Before fan-in, the contract can be ready with runtime candidates but missing after artifacts; after real page/log/graph/rebuild files are written, those files are appended as after artifacts and the contract is refreshed. |
+| Final readiness | ok | `init_sources_final_fan_in_boundary` reaches `init_sources_final_fan_in_ready` only after provider candidates, semantic runtime verification, wiki mutation, log, graph edge, index, and context brief evidence are present. |
+| Scope preservation | ok | `$daily-arxiv` still emits ingest handoff for daily candidates and does not directly write paper pages or auto-send email/auto-ingest. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The original generic approval semantic check required after artifacts before fan-in, but fan-in itself produces the after artifacts. | fixed | `$init` now uses a two-stage source-runtime check for policy fan-in, then re-runs semantic verification after real fan-in files exist. |
+| Runtime candidates could be replaced by the local init plan when semantic verification was incomplete only because after artifacts were missing. | fixed | If runtime candidate records are loaded, `$init` keeps them and does not fall back to the local plan candidate list. |
+| Synthetic policy approval could be mistaken for live provider/network execution. | guarded | Policy allowlist text and handoff docs state that `$init` policy approval covers local wiki fan-in only. Provider/network, email, remote, and bulk ingest remain gated. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py` | ok |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_init_parity_demo_auto_fans_runtime_sources_into_wiki` | ok: 1 passed |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_init_uses_verified_runtime_source_manifest test_autosci_skill_shim.py::test_autosci_skill_shim_init_write_fans_runtime_sources_into_wiki test_autosci_skill_shim.py::test_autosci_skill_shim_init_parity_demo_auto_fans_runtime_sources_into_wiki` | ok: 3 passed |
+| `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'init or daily_arxiv or discover or source_fan_in or ingest'` | ok: 22 passed, 137 deselected |
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/policy/gate_policy.py` | ok |

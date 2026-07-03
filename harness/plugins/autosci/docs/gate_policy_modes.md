@@ -62,6 +62,7 @@ the bounded local side effects below:
 | `compile_paper` | `$paper-compile --checklist` | Executes a discovered supported TeX executor (`latexmk`, `pdflatex`, `xelatex`, or `lualatex`) when available. | Synthetic allowlist is limited to TeX executors discovered on `PATH`; missing or invalid PDF output remains inconclusive. |
 | `build_poster` | `$poster` | Executes a render/export command only when concrete `poster_render_command` or `poster_renderer` allowlist evidence is supplied. | The policy gate does not invent a browser renderer; absent render allowlist remains inconclusive. |
 | `run_experiment` | `$exp-run --env local` | Executes a concrete allowlisted local experiment command and then applies the existing runtime/wiki mutation checks. | Policy sidecar records plan handoff commands for audit but does not auto-allowlist them as executable commands. |
+| `init_sources` | `$init --write` | Writes supplied provider/runtime source candidates into the local wiki papers, graph edges, log, index, and context brief. | Policy approval covers wiki fan-in only; it does not execute network/provider fetch, email, remote execution, or bulk ingest. |
 
 Future slices should connect the same policy helper to daily/discover,
 setup/reset, and other side-effect actions only when their concrete executor

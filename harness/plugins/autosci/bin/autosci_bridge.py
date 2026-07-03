@@ -5124,10 +5124,28 @@ def _source_candidate_wiki_fan_in(
         "semantic_runtime_status": str(semantic.get("status") or "unknown"),
         "written_pages": [],
     }
+    detail = semantic.get("detail") if isinstance(semantic.get("detail"), dict) else {}
+    source_boundary = detail.get("source_provider_boundary") if isinstance(detail.get("source_provider_boundary"), dict) else {}
+    policy_auto_fan_in = (
+        action == "init_sources"
+        and bool(inputs.get("policy_auto_execute_side_effect"))
+        and contract.get("policy_auto_approved") is True
+    )
+    policy_source_runtime_verified = (
+        policy_auto_fan_in
+        and contract.get("ready_for_execution") is True
+        and contract.get("runtime_ready") is True
+        and bool(detail.get("source_fetch_ok"))
+        and bool(source_boundary.get("completed"))
+    )
+    source_runtime_verified = bool(semantic.get("verified")) or policy_source_runtime_verified
+    if policy_auto_fan_in:
+        write["policy_auto_fan_in"] = True
+        write["source_runtime_verified_for_policy"] = policy_source_runtime_verified
 
-    if not contract.get("execution_verified"):
+    if not contract.get("execution_verified") and not policy_source_runtime_verified:
         limitations.append("Source fan-in write-back requires verified approval, allowlist, runtime, before, and after artifacts.")
-    elif not semantic.get("verified"):
+    elif not source_runtime_verified:
         limitations.append("Source fan-in write-back requires verified runtime source candidates.")
     elif not candidates:
         limitations.append("Source fan-in write-back requires at least one runtime source candidate.")
@@ -5191,6 +5209,10 @@ def _source_candidate_wiki_fan_in(
                 ]
             )
             limitations.append("Approved source fan-in wrote runtime candidates into wiki papers, graph edges, log, and views.")
+            if policy_auto_fan_in:
+                limitations.append(
+                    "Policy auto approval applied only to wiki fan-in; source candidates came from supplied runtime evidence."
+                )
         else:
             limitations.append("Source fan-in write-back found no valid candidate dictionaries to write.")
 
@@ -5233,6 +5255,25 @@ def _source_candidate_wiki_fan_in(
         writeback_path=sidecar_path,
         writeback=evidence,
     )
+    if status == "completed" and policy_auto_fan_in:
+        after_paths = [sidecar_path]
+        for item in artifacts:
+            if not isinstance(item, dict):
+                continue
+            raw_path = str(item.get("path") or "").strip()
+            if raw_path:
+                after_paths.append(_resolve_harness_path(raw_path))
+        if isinstance(runtime_proof_artifact, dict):
+            raw_path = str(runtime_proof_artifact.get("path") or "").strip()
+            if raw_path:
+                after_paths.append(_resolve_harness_path(raw_path))
+        for path in after_paths:
+            _append_contract_path(contract, "after_artifacts", path)
+        _refresh_approval_contract(contract)
+        write["approval_state"] = str(contract.get("approval_state") or "unknown")
+        write["policy_auto_after_artifacts"] = _unique_strings([_rel(path) for path in after_paths if path.exists()])
+        evidence["outputs"]["write"] = write
+        artifact = {"type": "source_fan_in_writeback_json", "path": _write_evidence_payload(sidecar_path, evidence)}
     return {
         "summary": write,
         "artifact": artifact,
@@ -5461,20 +5502,37 @@ def _init_native_local_plan(envelope: dict[str, Any], query: str) -> dict[str, A
 
 def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
+    native_options = inputs.get("native_options") if isinstance(inputs.get("native_options"), dict) else {}
     query = str(inputs.get("query") or inputs.get("topic") or inputs.get("target") or "AutoSci source initialization")
     contract = _approval_contract(
         envelope,
         "init_sources",
         ["network_source_fetch", "bulk_ingest", "wiki_fan_in"],
     )
+    policy_decision: dict[str, Any] = {}
+    policy_artifacts: list[dict[str, str]] = []
+    if native_options.get("write"):
+        contract, policy_decision, policy_artifacts = _policy_prepare_auto_contract(
+            envelope,
+            "init_sources",
+            ["read_local", "write_artifact", "wiki_mutation"],
+            contract,
+            allowlist_payload={
+                "allowed_side_effects": ["wiki_fan_in"],
+                "limitations": [
+                    "Policy approval applies only to approved runtime source candidates written into the local wiki.",
+                    "Policy approval does not execute network/provider fetch, email delivery, remote execution, or bulk ingest.",
+                ],
+            },
+        )
     semantic = _approval_semantic_runtime(contract, "init_sources", limit=int(inputs.get("limit") or 10))
     contract["semantic_runtime"] = semantic
     candidates = semantic.get("detail", {}).get("candidates") if isinstance(semantic.get("detail"), dict) else []
     candidates = candidates if isinstance(candidates, list) else []
-    local_plan = _init_native_local_plan(envelope, query) if not semantic.get("verified") else {}
-    if local_plan.get("candidates") and not semantic.get("verified"):
+    runtime_candidates_available = bool(candidates)
+    local_plan = _init_native_local_plan(envelope, query) if not runtime_candidates_available and not semantic.get("verified") else {}
+    if local_plan.get("candidates") and not runtime_candidates_available and not semantic.get("verified"):
         candidates = [item for item in local_plan["candidates"] if isinstance(item, dict)]
-    contract_artifact = _write_approval_contract_sidecar(envelope, "init_sources", contract)
     fan_in = _source_candidate_wiki_fan_in(
         envelope,
         action="init_sources",
@@ -5483,7 +5541,14 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
         semantic=semantic,
         contract=contract,
     )
-    artifacts = [contract_artifact, *list(local_plan.get("artifacts") or [])]
+    if (fan_in.get("summary") or {}).get("applied") is True and contract.get("execution_verified") is True:
+        semantic = _approval_semantic_runtime(contract, "init_sources", limit=int(inputs.get("limit") or 10))
+        contract["semantic_runtime"] = semantic
+        refreshed_candidates = semantic.get("detail", {}).get("candidates") if isinstance(semantic.get("detail"), dict) else []
+        if isinstance(refreshed_candidates, list) and refreshed_candidates:
+            candidates = [item for item in refreshed_candidates if isinstance(item, dict)]
+    contract_artifact = _write_approval_contract_sidecar(envelope, "init_sources", contract)
+    artifacts = [contract_artifact, *policy_artifacts, *list(local_plan.get("artifacts") or [])]
     if fan_in.get("artifact"):
         artifacts.append(fan_in["artifact"])
     if fan_in.get("runtime_proof_artifact"):
@@ -5523,6 +5588,8 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
         source_boundary=source_boundary if isinstance(source_boundary, dict) else {},
         fan_in_summary=fan_in.get("summary") if isinstance(fan_in, dict) else {},
     )
+    if policy_decision:
+        evidence = _attach_policy_decision(evidence, policy_decision)
     approval_proof_artifact = _write_approval_boundary_runtime_proof_manifest(
         envelope,
         action="init_sources",
