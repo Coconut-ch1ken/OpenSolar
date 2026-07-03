@@ -5419,6 +5419,186 @@ def _daily_arxiv_management_raw(envelope: dict[str, Any], command: str) -> dict[
     }
 
 
+def _run_daily_arxiv_tool(
+    args: list[str],
+    *,
+    output_dir: Path,
+    artifact_prefix: str,
+) -> tuple[int, str, str, list[dict[str, str]]]:
+    command = [sys.executable, str(REPO_HARNESS_DIR.parent / "tools" / "daily_arxiv.py"), *args]
+    timeout = int(os.environ.get("AUTOSCI_DAILY_ARXIV_TIMEOUT_SECONDS", "60"))
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=REPO_HARNESS_DIR.parent,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=timeout,
+        )
+        stdout = proc.stdout
+        stderr = proc.stderr
+        return_code = proc.returncode
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        stdout = ""
+        stderr = str(exc)
+        return_code = 1
+    stdout_path = _write_text_sidecar(output_dir / f"{artifact_prefix}_stdout.txt", stdout)
+    stderr_path = _write_text_sidecar(output_dir / f"{artifact_prefix}_stderr.txt", stderr)
+    return return_code, stdout, stderr, [
+        {"type": f"{artifact_prefix}_stdout", "path": stdout_path},
+        {"type": f"{artifact_prefix}_stderr", "path": stderr_path},
+    ]
+
+
+def _daily_arxiv_native_local_pipeline(envelope: dict[str, Any]) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    feed_raw = str(inputs.get("feed") or inputs.get("daily_feed") or "").strip()
+    if not feed_raw:
+        return {}
+    output_dir = _output_dir(envelope, "daily_arxiv_prepare_finalize")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    feed_path = _resolve_harness_path(feed_raw)
+    artifacts: list[dict[str, str]] = []
+    limitations: list[str] = []
+    if not feed_path.exists():
+        return {
+            "status": "failed",
+            "candidates": [],
+            "artifacts": [],
+            "limitations": [f"Local daily-arxiv feed was not found: {feed_raw}"],
+        }
+    wiki_root = _resolve_harness_path(inputs.get("wiki_root") or "artifacts/autosci/workspace/wiki")
+    context_path = output_dir / "daily_arxiv_recommendation_context.json"
+    digest_md_path = output_dir / "daily_arxiv_digest.md"
+    digest_json_path = output_dir / "daily_arxiv_digest.json"
+    prepare_args = [
+        "prepare",
+        "--feed",
+        str(feed_path),
+        "--wiki-root",
+        str(wiki_root),
+        "--out",
+        str(context_path),
+    ]
+    if inputs.get("mode"):
+        prepare_args.extend(["--mode", str(inputs["mode"])])
+    if inputs.get("hours"):
+        prepare_args.extend(["--hours", str(inputs["hours"])])
+    if inputs.get("max_recommendations") or inputs.get("limit"):
+        prepare_args.extend(["--max-recommendations", str(inputs.get("max_recommendations") or inputs.get("limit"))])
+    if inputs.get("max_auto_ingest"):
+        prepare_args.extend(["--max-auto-ingest", str(inputs["max_auto_ingest"])])
+    categories = inputs.get("categories")
+    if isinstance(categories, list) and categories:
+        prepare_args.append("--categories")
+        prepare_args.extend(str(item) for item in categories)
+    if inputs.get("send_email"):
+        prepare_args.extend(["--send-email", str(inputs["send_email"])])
+    if inputs.get("no_external", True):
+        prepare_args.append("--no-external")
+    code, _stdout, stderr, run_artifacts = _run_daily_arxiv_tool(
+        prepare_args,
+        output_dir=output_dir,
+        artifact_prefix="daily_arxiv_prepare",
+    )
+    artifacts.extend(run_artifacts)
+    if code != 0 or not context_path.exists():
+        limitations.append(f"Native daily_arxiv.py prepare failed: {stderr.strip() or 'no stderr'}")
+        return {"status": "failed", "candidates": [], "artifacts": artifacts, "limitations": limitations}
+    artifacts.append(_artifact("daily_arxiv_recommendation_context_json", context_path))
+    context_payload = _load_json(context_path)
+    candidates = context_payload.get("candidates") if isinstance(context_payload.get("candidates"), list) else []
+    normalized_candidates = _daily_arxiv_normalize_local_candidates(candidates)
+    decisions_raw = str(inputs.get("decisions") or inputs.get("daily_decisions") or "").strip()
+    if not decisions_raw:
+        limitations.append("Native daily_arxiv.py prepare completed from a supplied local feed; finalize is pending LLM decisions.")
+        return {
+            "status": "prepared",
+            "candidates": normalized_candidates,
+            "artifacts": artifacts,
+            "limitations": limitations,
+            "context_path": _rel(context_path),
+        }
+    decisions_path = _resolve_harness_path(decisions_raw)
+    if not decisions_path.exists():
+        limitations.append(f"Daily-arxiv decisions file was not found: {decisions_raw}")
+        return {
+            "status": "prepared",
+            "candidates": normalized_candidates,
+            "artifacts": artifacts,
+            "limitations": limitations,
+            "context_path": _rel(context_path),
+        }
+    finalize_args = [
+        "finalize",
+        "--context",
+        str(context_path),
+        "--decisions",
+        str(decisions_path),
+        "--out-md",
+        str(digest_md_path),
+        "--out-json",
+        str(digest_json_path),
+    ]
+    code, _stdout, stderr, run_artifacts = _run_daily_arxiv_tool(
+        finalize_args,
+        output_dir=output_dir,
+        artifact_prefix="daily_arxiv_finalize",
+    )
+    artifacts.extend(run_artifacts)
+    if code != 0 or not digest_json_path.exists():
+        limitations.append(f"Native daily_arxiv.py finalize failed: {stderr.strip() or 'no stderr'}")
+        return {
+            "status": "prepared",
+            "candidates": normalized_candidates,
+            "artifacts": artifacts,
+            "limitations": limitations,
+            "context_path": _rel(context_path),
+        }
+    artifacts.append(_artifact("daily_arxiv_digest_markdown", digest_md_path))
+    artifacts.append(_artifact("daily_arxiv_digest_json", digest_json_path))
+    digest_payload = _load_json(digest_json_path)
+    listed = digest_payload.get("listed_candidates") if isinstance(digest_payload.get("listed_candidates"), list) else []
+    normalized_listed = _daily_arxiv_normalize_local_candidates(listed or candidates)
+    limitations.append(
+        "Native daily_arxiv.py prepare/finalize completed from supplied local feed and decisions; network, email, scheduler, and auto-ingest side effects were not executed by the bridge."
+    )
+    return {
+        "status": "completed",
+        "candidates": normalized_listed,
+        "artifacts": artifacts,
+        "limitations": limitations,
+        "context_path": _rel(context_path),
+        "digest_json_path": _rel(digest_json_path),
+        "digest_markdown_path": _rel(digest_md_path),
+    }
+
+
+def _daily_arxiv_normalize_local_candidates(candidates: list[Any]) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
+    for index, item in enumerate(candidates, start=1):
+        if not isinstance(item, dict):
+            continue
+        raw = dict(item)
+        if "ranking_score" not in raw:
+            raw["ranking_score"] = raw.get("score") or raw.get("tool_rank_score") or 1.0
+        if "ranking_rationale" not in raw:
+            raw["ranking_rationale"] = raw.get("rationale") or "Native daily_arxiv.py local feed pipeline selected this candidate."
+        if "source_channels" not in raw:
+            signals = raw.get("signals_used") if isinstance(raw.get("signals_used"), list) else []
+            raw["source_channels"] = signals or ["arxiv"]
+        if "dedup_status" not in raw:
+            raw["dedup_status"] = "known" if raw.get("is_known") else "new"
+        if "source_ref" not in raw:
+            raw["source_ref"] = raw.get("arxiv_url") or raw.get("url") or raw.get("arxiv_id") or ""
+        candidate = _candidate_from_runtime(raw, index)
+        if candidate is not None:
+            normalized.append(candidate)
+    return normalized
+
+
 def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     daily_command = str(inputs.get("daily_command") or "run").strip().lower()
@@ -5435,9 +5615,12 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
         "daily_arxiv_prepare_finalize",
         limit=int(inputs.get("limit") or 10),
     )
+    local_pipeline = _daily_arxiv_native_local_pipeline(envelope)
     contract["semantic_runtime"] = semantic
     candidates = semantic.get("detail", {}).get("candidates") if isinstance(semantic.get("detail"), dict) else []
     candidates = candidates if isinstance(candidates, list) else []
+    if local_pipeline.get("candidates") and not semantic.get("verified"):
+        candidates = [item for item in local_pipeline["candidates"] if isinstance(item, dict)]
     contract_artifact = _write_approval_contract_sidecar(envelope, "daily_arxiv_prepare_finalize", contract)
     fan_in = _source_candidate_wiki_fan_in(
         envelope,
@@ -5452,7 +5635,7 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
         "daily_arxiv_digest_selection",
         artifact_type="daily_arxiv_review_llm_evidence_json",
     )
-    artifacts = [contract_artifact]
+    artifacts = [contract_artifact, *list(local_pipeline.get("artifacts") or [])]
     if fan_in.get("artifact"):
         artifacts.append(fan_in["artifact"])
     if fan_in.get("runtime_proof_artifact"):
@@ -5463,6 +5646,8 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
         "Provide approved feed fetch evidence before treating this digest as complete.",
         *_approval_contract_limitations(contract),
     ]
+    if local_pipeline:
+        limitations.extend(str(item) for item in local_pipeline.get("limitations") or [])
     if semantic.get("verified"):
         limitations = [
             "Daily arXiv runtime was verified from supplied approval-gated evidence; this bridge did not execute network/email side effects.",
@@ -5479,12 +5664,20 @@ def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, 
         limitations.extend(str(item) for item in review_llm.get("reasons") or ["Review LLM evidence did not complete."])
     evidence = convert_literature_discovery({
         "query": query,
-        "mode": "daily_arxiv_runtime_verified" if semantic.get("verified") else "daily_arxiv_plan",
+        "mode": (
+            "daily_arxiv_runtime_verified"
+            if semantic.get("verified")
+            else "daily_arxiv_native_local_finalized"
+            if local_pipeline.get("status") == "completed"
+            else "daily_arxiv_native_local_prepare"
+            if local_pipeline.get("status") == "prepared"
+            else "daily_arxiv_plan"
+        ),
         "limit": int(inputs.get("limit") or 10),
         "candidates": candidates,
         "source_provider_boundary": source_boundary,
         "source_fan_in": fan_in.get("summary"),
-        "status": "completed" if semantic.get("verified") else "inconclusive",
+        "status": "completed" if semantic.get("verified") or local_pipeline.get("status") == "completed" else "inconclusive",
         "artifacts": artifacts,
         "limitations": limitations,
     }, envelope)
@@ -13586,6 +13779,23 @@ def _poster_review_llm_boundary(
 ) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     requested = _poster_review_requested(inputs)
+    if requested and not poster_html_path.exists():
+        return {
+            "schema": "autosci_poster_review_llm_boundary.v1",
+            "status": "poster_html_missing",
+            "requested": True,
+            "review_llm_completed": False,
+            "critique_refine_ready": False,
+            "poster_html_path": _rel(poster_html_path),
+            "content_report_path": content_report_path,
+            "review_llm": {
+                "status": "blocked",
+                "reasons": ["Poster Review LLM cannot run because poster HTML was not generated."],
+            },
+            "evidence_ids": [],
+            "artifacts": [],
+            "limitations": ["Poster Review LLM critique/refine is blocked until native poster HTML exists."],
+        }
     if inputs.get("no_refine"):
         return {
             "schema": "autosci_poster_review_llm_boundary.v1",
@@ -13677,7 +13887,9 @@ def _poster_native_content_pipeline(
         "limitations": [],
     }
     if paper_dir is None:
-        report["limitations"].append("No paper directory containing main.tex was resolved; scaffold poster mode is used.")
+        report["limitations"].append(
+            "No paper directory containing main.tex was resolved; native /poster precondition was not met."
+        )
         report_rel = _write_json_sidecar(report_path, report)
         return {"ready": False, "report_path": report_rel, "artifacts": [{"type": "poster_generation_report_json", "path": report_rel}], "report": report}
     wiki2dag = REPO_HARNESS_DIR.parent / "tools" / "wiki2dag.py"
@@ -14028,6 +14240,7 @@ def _action_draft_rebuttal(envelope: dict[str, Any]) -> dict[str, Any]:
 
 def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
     paths = _publication_action_paths(envelope, "build_poster")
+    inputs = dict(envelope.get("inputs") or {})
     title = _native_publication_title(envelope, "AutoSci Poster")
     target = _native_publication_target(envelope)
     evidence_ids = _native_publication_evidence_ids(envelope, "poster:request")
@@ -14047,7 +14260,10 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
     if content_ready:
         html_path = _rel(paths["html"])
         has_source_evidence = True
-    else:
+    elif inputs.get("smoke_mode") or inputs.get("allow_compat_scaffold"):
+        limitations.append(
+            "Compatibility poster scaffold was generated only because smoke/compat mode was explicit."
+        )
         html_body = (
             "<!doctype html>\n"
             "<html><head><meta charset=\"utf-8\"><title>"
@@ -14063,6 +14279,11 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
             "</main></body></html>\n"
         )
         html_path = _write_text_sidecar(paths["html"], html_body)
+    else:
+        html_path = ""
+        limitations.append(
+            "No poster HTML was generated because native /poster requires a paper directory containing main.tex."
+        )
     review_boundary = _poster_review_llm_boundary(
         envelope,
         poster_html_path=paths["html"],
@@ -14115,7 +14336,6 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
         "limitations": limitations,
     })
     files = [
-        {"type": "poster_html", "path": html_path},
         {"type": "poster_validation_json", "path": validation_path},
         {"type": "poster_review_llm_boundary_json", "path": review_boundary_path},
         *list(content_pipeline.get("artifacts") or []),
@@ -14124,6 +14344,8 @@ def _action_build_poster(envelope: dict[str, Any]) -> dict[str, Any]:
         *runtime_evidence_artifacts,
         *_contract_existing_artifacts(contract, "after_artifacts", "poster_runtime_after_artifact"),
     ]
+    if html_path:
+        files.insert(0, {"type": "poster_html", "path": html_path})
     evidence_payload_path = _configured_output_path(
         envelope,
         "evidence_payload_path",
@@ -15835,6 +16057,24 @@ def _execute_poster_if_approved(
         runtime_rel = _write_json_sidecar(runtime_path, payload)
         contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
         return _refresh_approval_contract(contract), {"executed": False, "reason": "approval_preflight_incomplete", "runtime_path": runtime_rel}
+
+    if not html_path.exists():
+        payload = _runtime_evidence_payload(
+            envelope,
+            action="build_poster",
+            status="inconclusive",
+            approval_ref=str(contract.get("approval_ref") or ""),
+            command_run="blocked:poster-html-missing",
+            exit_code=1,
+            evidence_ids=["poster-runtime:blocked"],
+            checks=[{"check": "poster_html_exists", "status": "error", "detail": f"Poster HTML was not found at {html_path}."}],
+            runtime_fields={"browser_rendered": False, "png_exported": False, "overflow_probe": "not_run"},
+            artifacts=[],
+            limitations=["Poster executor did not run because native poster HTML was not generated."],
+        )
+        runtime_rel = _write_json_sidecar(runtime_path, payload)
+        contract.setdefault("runtime_evidence", []).append({"path": runtime_rel, "artifact_path": runtime_rel, "exists": True, "kind": "file", "verifiable": True})
+        return _refresh_approval_contract(contract), {"executed": False, "reason": "poster_html_missing", "runtime_path": runtime_rel}
 
     command, allow_reason = _poster_render_command(contract, html_path, png_path, executor_validation_path)
     if not command:

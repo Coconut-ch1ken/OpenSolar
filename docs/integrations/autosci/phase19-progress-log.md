@@ -9745,3 +9745,37 @@ approval/provider gates.
 | JSON unresolved-runtime check on final inventory | ok: no item has runtime proof status outside `verified` or `not_required` |
 | `git -c maintenance.auto=false -c gc.auto=0 diff --check` | ok |
 | `git -c maintenance.auto=false -c gc.auto=0 fsck --connectivity-only --no-dangling` | ok |
+
+## Agent B First-Class Native Execution Parity Tightening
+
+Logged: 2026-07-03 EDT
+
+Intent: tighten slash-command paths where OpenSolar compatibility output could be
+mistaken for native AutoSci execution. This keeps Solar approval/evidence gates,
+but prevents scaffold or bridge-only output from presenting as native command
+completion.
+
+| Item | Status | Evidence |
+|---|---|---|
+| `$poster` native precondition | ok | `$poster report-001` no longer emits scaffold `poster_html`; the regular route records `paper_source_missing` until a paper directory containing `main.tex` is supplied. |
+| Poster compatibility scaffold | ok | `tools/poster.py build --out` now requires explicit `--compat-scaffold`; the native template/outline/output path remains unchanged. |
+| Poster approved renderer | ok | Approved renderer execution now requires actual poster HTML; no-paper route writes inconclusive runtime evidence instead of launching the renderer. |
+| `$daily-arxiv` local native path | ok | Shim accepts `--feed`, `--decisions`, and `--no-external`; bridge runs native `tools/daily_arxiv.py prepare/finalize` against local inputs and attaches context/digest artifacts. |
+| Side effects | ok | Daily local path defaults to `--no-external`; network, email, scheduler, and auto-ingest side effects remain gated. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| `$poster` could silently produce scaffold HTML without native paper source. | fixed | Scaffold output is only allowed in explicit smoke/compat mode; regular command records the missing native precondition. |
+| `tools/poster.py build --out` looked like a native poster build. | fixed | `--compat-scaffold` is now required for scaffold output. |
+| Approved poster renderer could be invoked before native poster HTML existed. | fixed | Renderer is blocked with `poster_html_exists=error` runtime evidence if HTML is missing. |
+| `$daily-arxiv` with local feed/decisions did not execute native `daily_arxiv.py`. | fixed | Local feed path now invokes native prepare/finalize and maps candidates to Solar evidence schema. |
+| Native daily candidates lacked Solar `literature_discovery.v1` required fields. | fixed | Added normalization through `_candidate_from_runtime`. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/bin/autosci_skill_shim.py tools/poster.py` | ok |
+| `pytest -q harness/plugins/autosci/tests/test_root_tool_abi.py harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'poster or daily_arxiv or research_start_from'` | ok: 14 passed, 148 deselected |

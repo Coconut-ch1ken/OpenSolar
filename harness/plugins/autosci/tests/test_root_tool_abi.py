@@ -106,7 +106,7 @@ def test_side_effect_root_tools_emit_truthful_non_mutating_evidence(tmp_path: Pa
     assert dag_out.exists()
 
     poster_out = tmp_path / "poster.html"
-    poster = payload(run_tool("poster.py", "build", "--out", str(poster_out), "--title", "SkillGen"))
+    poster = payload(run_tool("poster.py", "build", "--compat-scaffold", "--out", str(poster_out), "--title", "SkillGen"))
     assert poster["schema"] == "autosci_poster_cli.v1"
     assert poster["status"] == "completed"
     validate = payload(run_tool("poster.py", "validate", str(poster_out)))
@@ -119,7 +119,7 @@ def test_side_effect_root_tools_emit_truthful_non_mutating_evidence(tmp_path: Pa
 
 def test_poster_tool_executes_approved_render_export(tmp_path: Path) -> None:
     poster_html = tmp_path / "poster.html"
-    poster = payload(run_tool("poster.py", "build", "--out", str(poster_html), "--title", "SkillGen"))
+    poster = payload(run_tool("poster.py", "build", "--compat-scaffold", "--out", str(poster_html), "--title", "SkillGen"))
     assert poster["status"] == "completed"
 
     renderer = tmp_path / "poster_renderer.py"

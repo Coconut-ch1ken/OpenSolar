@@ -4260,6 +4260,15 @@ def test_autosci_skill_shim_runs_survey_rebuttal_and_poster_native_sidecars(tmp_
             files = evidence["outputs"]["bundle"]["files"]
             assert files
             assert all((tmp_path / item["path"]).exists() for item in files)
+            if expected_action == "build_poster":
+                assert not any(item["type"] == "poster_html" for item in files)
+                validation = json.loads(
+                    (
+                        tmp_path
+                        / next(item for item in files if item["type"] == "poster_validation_json")["path"]
+                    ).read_text(encoding="utf-8")
+                )
+                assert validation["content_pipeline_status"] == "paper_source_missing"
 
 
 def test_autosci_skill_shim_survey_completes_with_citation_evidence(tmp_path: Path) -> None:
@@ -5701,6 +5710,81 @@ def test_autosci_skill_shim_daily_arxiv_uses_verified_runtime_digest(tmp_path: P
     contract_artifact = next(artifact for artifact in evidence["artifacts"] if artifact["type"] == "approval_contract_json")
     contract = json.loads((tmp_path / contract_artifact["path"]).read_text(encoding="utf-8"))
     assert contract["semantic_runtime"]["verified"] is True
+
+
+def test_autosci_skill_shim_daily_arxiv_runs_native_local_feed_pipeline(tmp_path: Path) -> None:
+    wiki_root = tmp_path / "wiki"
+    (wiki_root / "papers").mkdir(parents=True)
+    feed = tmp_path / "daily-feed.json"
+    decisions = tmp_path / "daily-decisions.json"
+    feed.write_text(
+        json.dumps(
+            [
+                {
+                    "arxiv_id": "2607.00001",
+                    "title": "Native Local Daily AutoSci",
+                    "abstract": "A local-feed paper for daily arXiv parity.",
+                    "category": "cs.AI",
+                    "published": "2026-07-03T00:00:00Z",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    decisions.write_text(
+        json.dumps(
+            {
+                "decisions": [
+                    {
+                        "arxiv_id": "2607.00001",
+                        "decision": "strong_recommend",
+                        "confidence": "high",
+                        "score": 0.94,
+                        "rationale": "Matches the local AutoSci parity test topic.",
+                        "wiki_connections": ["autosci parity"],
+                        "signals_used": ["arxiv", "local_decision"],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$daily-arxiv",
+        "autosci parity",
+        "--feed",
+        str(feed),
+        "--decisions",
+        str(decisions),
+        "--wiki-root",
+        str(wiki_root),
+        "--no-external",
+        "--run-id",
+        "shim-daily-native-local",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    native_options = payload["inputs"]["native_options"]
+    assert native_options["daily_feed"] == str(feed)
+    assert native_options["daily_decisions"] == str(decisions)
+    assert native_options["daily_no_external"] is True
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert evidence["status"] == "completed"
+    assert evidence["outputs"]["mode"] == "daily_arxiv_native_local_finalized"
+    assert evidence["outputs"]["candidates"][0]["title"] == "Native Local Daily AutoSci"
+    artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
+    assert "daily_arxiv_recommendation_context_json" in artifacts
+    assert "daily_arxiv_digest_json" in artifacts
+    assert "daily_arxiv_digest_markdown" in artifacts
+    context = json.loads((tmp_path / artifacts["daily_arxiv_recommendation_context_json"]).read_text(encoding="utf-8"))
+    digest = json.loads((tmp_path / artifacts["daily_arxiv_digest_json"]).read_text(encoding="utf-8"))
+    assert context["counts"]["feed_total"] == 1
+    assert context["notes"][-1] == "External enrichment skipped by command-line option."
+    assert digest["llm_decision_available"] is True
 
 
 def test_autosci_skill_shim_daily_arxiv_write_creates_ingest_handoff(tmp_path: Path) -> None:
@@ -8160,6 +8244,23 @@ def test_autosci_skill_shim_paper_compile_missing_tool_inconclusive(tmp_path: Pa
 
 
 def test_autosci_skill_shim_executes_approved_poster_executor(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "poster-paper"
+    sections = paper_dir / "sections"
+    sections.mkdir(parents=True)
+    (paper_dir / "main.tex").write_text(
+        "\\title{Approved Poster Executor}\n"
+        "\\author{Research Team}\n"
+        "\\begin{document}\n"
+        "\\maketitle\n"
+        "\\input{sections/intro}\n"
+        "\\input{sections/method}\n"
+        "\\input{sections/results}\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    (sections / "intro.tex").write_text("\\section{Introduction}\nApproved poster rendering needs native HTML.\n", encoding="utf-8")
+    (sections / "method.tex").write_text("\\section{Method}\nThe bridge builds poster content from paper source.\n", encoding="utf-8")
+    (sections / "results.tex").write_text("\\section{Results}\nThe renderer exports a verified PNG.\n", encoding="utf-8")
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     fake_renderer = fake_bin / "poster-renderer"
@@ -8191,7 +8292,7 @@ def test_autosci_skill_shim_executes_approved_poster_executor(tmp_path: Path) ->
     proc = run_shim(
         tmp_path,
         "$poster",
-        "report-001",
+        str(paper_dir),
         "--approval-ref",
         "approval-execute-poster",
         "--allowlist-evidence",
@@ -8208,7 +8309,7 @@ def test_autosci_skill_shim_executes_approved_poster_executor(tmp_path: Path) ->
     action = payload["outputs"]["skill_run"]["actions"][0]
     assert action["action"] == "build_poster"
     evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
-    assert evidence["status"] == "inconclusive"
+    assert evidence["status"] == "completed"
     bundle_files = evidence["outputs"]["bundle"]["files"]
     assert any(item["type"] == "poster_runtime_evidence_json" for item in bundle_files)
     assert any(item["type"] == "poster_runtime_after_artifact" and item["path"].endswith("poster.png") for item in bundle_files)

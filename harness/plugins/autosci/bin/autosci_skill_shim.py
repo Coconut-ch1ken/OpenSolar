@@ -315,6 +315,9 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "daily_max_recommendations": int(args.daily_max_recommendations or 0),
         "daily_max_auto_ingest": int(args.daily_max_auto_ingest or 0),
         "daily_send_email": str(args.daily_send_email or ""),
+        "daily_feed": str(args.feed or ""),
+        "daily_decisions": str(args.decisions or ""),
+        "daily_no_external": bool(args.no_external),
     }
 
 
@@ -1056,6 +1059,12 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
                 inputs["max_auto_ingest"] = int(args.daily_max_auto_ingest)
             if args.daily_send_email:
                 inputs["send_email"] = str(args.daily_send_email)
+            if args.feed:
+                inputs["feed"] = str(args.feed)
+            if args.decisions:
+                inputs["decisions"] = str(args.decisions)
+            if args.no_external:
+                inputs["no_external"] = True
             if args.review or args.require_review_llm:
                 inputs["review_llm_requested"] = True
             if args.require_review_llm:
@@ -1968,6 +1977,9 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--max-recommendations", dest="daily_max_recommendations", type=int, help="Native daily-arxiv recommendation cap")
     skill.add_argument("--max-auto-ingest", dest="daily_max_auto_ingest", type=int, help="Native daily-arxiv auto-ingest cap")
     skill.add_argument("--send-email", dest="daily_send_email", choices=["true", "false"], help="Native daily-arxiv SMTP delivery preference")
+    skill.add_argument("--feed", help="Native daily-arxiv local feed JSON for no-network prepare runs")
+    skill.add_argument("--decisions", help="Native daily-arxiv local LLM decisions JSON for finalize")
+    skill.add_argument("--no-external", action="store_true", help="Skip daily-arxiv S2/DeepXiv enrichment when local feed is supplied")
     skill.add_argument("--run-id", help="Stable run/artifact namespace")
     skill.add_argument("--work-dir", help="Output work dir relative to HARNESS_DIR")
     skill.add_argument("--route-config", default=str(ROUTE_CONFIG))
