@@ -217,3 +217,70 @@ auto-running provider/network fetch, email, remote execution, or bulk ingest.
 | `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'init or daily_arxiv or discover or source_fan_in or ingest'` | ok: 22 passed, 137 deselected |
 | `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/policy/gate_policy.py` | ok |
+
+## Agent B Problem 3 Side-Effect Parity: High-Risk Reset Execution
+
+Logged: 2026-07-03 EDT
+
+Intent: continue solving the side-effect parity class for commands with high-risk
+side effects. This slice covers `$reset --scope ...` by connecting it to the
+same policy gate while preserving default HITL blocking.
+
+| Item | Status | Evidence |
+|---|---|---|
+| `$reset` policy approval | ok | High-risk policy modes can synthesize approval/allowlist evidence for native reset execution; default `strict_hitl` and `safe` stay blocked. |
+| Native executor reuse | ok | Auto execution reuses `tools/reset_wiki.py --execute-approved`; no separate reset/delete implementation was introduced. |
+| Before proof | ok | Policy reset execution writes `reset_before_snapshot.json` before mutation and appends it to the approval contract. |
+| Runtime/after proof | ok | Completed reset appends `reset_wiki_runtime_evidence.json` and `reset_after_snapshot.json`, then emits approval, side-effect, and wiki-mutation proof manifests. |
+| Scoped safety | ok | Regression test executes only against a pytest temporary wiki root and uses `--scope wiki`, leaving raw source files intact. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| High-risk reset could be over-enabled if policy mode alone bypassed audit evidence. | guarded | Execution still flows through native `reset_wiki.py`, and final contract verification depends on concrete runtime/after artifacts. |
+| Destructive reset needs a pre-mutation state record. | fixed | Added a real before snapshot artifact instead of relying only on policy sidecars as preflight evidence. |
+| Synthetic policy approval can be mistaken for human approval. | guarded | Evidence includes `outputs.policy_decision`; synthetic refs keep the `policy:auto:<mode>:reset_plan:<timestamp>` prefix. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py` | ok |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_reset_executes_approved_local_scope_with_runtime_proofs test_autosci_skill_shim.py::test_autosci_skill_shim_reset_autosci_native_auto_executes_scoped_reset` | ok: 2 passed |
+
+## Agent B Problem 3 Side-Effect Parity: High-Risk Setup Config Write
+
+Logged: 2026-07-03 EDT
+
+Intent: continue solving high-risk side-effect parity by giving `$setup` a
+controlled credential/config mutation path while preserving default status-only
+behavior.
+
+| Item | Status | Evidence |
+|---|---|---|
+| `$setup` explicit target | ok | Added `--setup-dotenv-path`; local config writes are not attempted unless the target `.env` path is explicit. |
+| Policy approval | ok | High-risk policy modes can synthesize approval/allowlist evidence for setup credential/config mutation; default `strict_hitl` and `safe` stay blocked. |
+| Approved after artifact | ok | Setup writes only key/value rows from the supplied after-artifact and only for known AutoSci setup keys. |
+| Secret hygiene | ok | Evidence records key names, redacted before/after snapshots, runtime proof, and hashes/paths only; secret values are not serialized. |
+| Gate truthfulness | ok | `workflow_evolution_gate.py` accepts applied setup only when approval contract, setup runtime evidence, after snapshot, approval proof, and side-effect proof are present. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The existing workflow-evolution gate rejected all protected-core applied changes except refine apply. | fixed | Added a narrow setup-control application exception requiring verified setup runtime/proof artifacts. |
+| Existing external setup runtime evidence should not be treated as a local `.env` write request. | fixed | Local setup writes now require explicit `setup_dotenv_path`; external runtime evidence without a target path remains proposal/gated shaped. |
+| Secret values can leak through evidence if serialized carelessly. | guarded | Regression test writes a fake secret to temp `.env` and asserts the secret is absent from setup evidence, contract, runtime evidence, and setup status. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/bin/autosci_skill_shim.py harness/evaluators/scientific/workflow_evolution_gate.py` | ok |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_keeps_setup_gated test_autosci_skill_shim.py::test_autosci_skill_shim_setup_autosci_native_writes_explicit_dotenv_without_secret_leakage` | ok: 2 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'reset or setup'` | ok: 9 passed, 152 deselected |
+| `pytest -q harness/tests/evaluators/scientific/test_workflow_evolution_gate.py` | ok: 2 passed |
+| `pytest -q harness/tests/evaluators/scientific/test_workflow_evolution_gate.py harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 11 passed |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_refine_applies_approved_after_artifact` | ok: 1 passed |
+| `git diff --check -- <changed AutoSci setup/reset problem3 files>` | ok |

@@ -5250,6 +5250,74 @@ def test_autosci_skill_shim_reset_executes_approved_local_scope_with_runtime_pro
     assert wiki_proof["proofs"][0]["categories"] == ["wiki_mutation_evidence"]
 
 
+def test_autosci_skill_shim_reset_autosci_native_auto_executes_scoped_reset(tmp_path: Path) -> None:
+    project_root = tmp_path / "reset-native-project"
+    wiki_root = project_root / "wiki"
+    raw_root = project_root / "raw/papers"
+    (wiki_root / "papers").mkdir(parents=True)
+    (wiki_root / "graph").mkdir(parents=True)
+    raw_root.mkdir(parents=True)
+    (wiki_root / "papers/old.md").write_text("# Old Paper\n", encoding="utf-8")
+    (wiki_root / "graph/context_brief.md").write_text("# Old Context\n", encoding="utf-8")
+    (wiki_root / "log.md").write_text("# Old Log\n", encoding="utf-8")
+    (raw_root / "source.txt").write_text("raw source remains for wiki-only reset\n", encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$reset",
+        "autosci",
+        "--scope",
+        "wiki",
+        "--wiki-root",
+        str(wiki_root),
+        "--gate-mode",
+        "autosci_native",
+        "--run-id",
+        "shim-reset-autosci-native-policy",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["passed_count"] == 1
+    assert not (wiki_root / "papers/old.md").exists()
+    assert not (wiki_root / "graph/context_brief.md").exists()
+    assert (wiki_root / "papers/.gitkeep").exists()
+    assert (raw_root / "source.txt").exists()
+    assert "Applied approved reset scope" in (wiki_root / "log.md").read_text(encoding="utf-8")
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    evolution = evidence["outputs"]["evolution"]
+    assert evolution["review"]["local_reset_execution"]["executed"] is True
+    assert evolution["review"]["approval_contract_verified"] is True
+    policy = evidence["outputs"]["policy_decision"]
+    assert policy["mode"] == "autosci_native"
+    assert policy["execute_side_effects"] is True
+    assert policy["synthetic_approval_ref"].startswith("policy:auto:autosci_native:reset_plan:")
+
+    artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}
+    assert "gate_policy_decision_json" in artifacts
+    assert "gate_policy_allowlist_json" in artifacts
+    assert "reset_before_snapshot_json" in artifacts
+    assert "reset_runtime_evidence_json" in artifacts
+    assert "reset_after_snapshot_json" in artifacts
+    assert "side_effect_runtime_proof_manifest_json" in artifacts
+    assert "wiki_mutation_runtime_proof_manifest_json" in artifacts
+    contract = json.loads((tmp_path / artifacts["approval_contract_json"]).read_text(encoding="utf-8"))
+    assert contract["policy_auto_approved"] is True
+    assert contract["execution_verified"] is True
+    assert contract["approval_ref"].startswith("policy:auto:autosci_native:reset_plan:")
+    before_refs = [
+        str(item.get("artifact_path") or item.get("path") or "")
+        for item in contract["before_artifacts"]
+        if isinstance(item, dict)
+    ]
+    assert any(ref.endswith("reset_before_snapshot.json") for ref in before_refs)
+    before_snapshot = json.loads((tmp_path / artifacts["reset_before_snapshot_json"]).read_text(encoding="utf-8"))
+    assert before_snapshot["schema"] == "autosci_reset_before_snapshot.v1"
+    assert before_snapshot["wiki_directories"]["papers"]["markdown_count"] == 1
+
+
 def test_autosci_skill_shim_edit_applies_approved_after_artifact(tmp_path: Path) -> None:
     wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
     (wiki_root / "ideas").mkdir(parents=True)
@@ -11653,3 +11721,78 @@ def test_autosci_skill_shim_keeps_setup_gated(tmp_path: Path) -> None:
     gate = run_gate(evidence_path)
     result = assert_gate_inconclusive_without_reasons(gate)
     assert result["warnings"]
+
+
+def test_autosci_skill_shim_setup_autosci_native_writes_explicit_dotenv_without_secret_leakage(tmp_path: Path) -> None:
+    secret_value = "sk-test-autosci-native-setup-secret"
+    approved_env = tmp_path / "approved-setup.env"
+    dotenv_path = tmp_path / "runtime/.env"
+    approved_env.write_text(
+        "\n".join(
+            [
+                "OPENAI_API_KEY=" + secret_value,
+                "AUTOSCI_REVIEW_LLM_MODEL=gpt-5.5",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "skill",
+        "setup",
+        "--after-artifact",
+        str(approved_env),
+        "--setup-dotenv-path",
+        str(dotenv_path),
+        "--gate-mode",
+        "autosci_native",
+        "--run-id",
+        "shim-setup-autosci-native-write",
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert dotenv_path.exists()
+    dotenv_text = dotenv_path.read_text(encoding="utf-8")
+    assert "OPENAI_API_KEY=" + secret_value in dotenv_text
+    assert "AUTOSCI_REVIEW_LLM_MODEL=gpt-5.5" in dotenv_text
+
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    setup_evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    review = setup_evidence["outputs"]["evolution"]["review"]
+    assert review["protected_core_edits_applied"] is True
+    assert review["application_state"] == "applied"
+    assert review["setup_config_execution"]["executed"] is True
+    assert review["setup_config_execution"]["keys_written"] == [
+        "AUTOSCI_REVIEW_LLM_MODEL",
+        "OPENAI_API_KEY",
+    ]
+    assert review["setup_status"]["secrets_redacted"] is True
+    policy = setup_evidence["outputs"]["policy_decision"]
+    assert policy["mode"] == "autosci_native"
+    assert policy["execute_side_effects"] is True
+    assert policy["synthetic_approval_ref"].startswith("policy:auto:autosci_native:setup_status:")
+
+    artifacts = {artifact["type"]: artifact["path"] for artifact in setup_evidence["artifacts"]}
+    assert "gate_policy_decision_json" in artifacts
+    assert "gate_policy_allowlist_json" in artifacts
+    assert "setup_before_snapshot_json" in artifacts
+    assert "setup_after_snapshot_json" in artifacts
+    assert "setup_config_runtime_evidence_json" in artifacts
+    assert "approval_runtime_proof_manifest_json" in artifacts
+    assert "side_effect_runtime_proof_manifest_json" in artifacts
+    contract = json.loads((tmp_path / artifacts["approval_contract_json"]).read_text(encoding="utf-8"))
+    runtime = json.loads((tmp_path / artifacts["setup_config_runtime_evidence_json"]).read_text(encoding="utf-8"))
+    status = json.loads((tmp_path / artifacts["setup_status_json"]).read_text(encoding="utf-8"))
+    assert contract["policy_auto_approved"] is True
+    assert contract["execution_verified"] is True
+    assert contract["setup_config_applied"] is True
+    assert runtime["secret_values_recorded"] is False
+    assert runtime["keys_written"] == ["AUTOSCI_REVIEW_LLM_MODEL", "OPENAI_API_KEY"]
+    assert status["summary"]["review_llm_ready"] is True
+    assert secret_value not in json.dumps(setup_evidence)
+    assert secret_value not in json.dumps(contract)
+    assert secret_value not in json.dumps(runtime)
+    assert secret_value not in json.dumps(status)

@@ -63,9 +63,11 @@ the bounded local side effects below:
 | `build_poster` | `$poster` | Executes a render/export command only when concrete `poster_render_command` or `poster_renderer` allowlist evidence is supplied. | The policy gate does not invent a browser renderer; absent render allowlist remains inconclusive. |
 | `run_experiment` | `$exp-run --env local` | Executes a concrete allowlisted local experiment command and then applies the existing runtime/wiki mutation checks. | Policy sidecar records plan handoff commands for audit but does not auto-allowlist them as executable commands. |
 | `init_sources` | `$init --write` | Writes supplied provider/runtime source candidates into the local wiki papers, graph edges, log, index, and context brief. | Policy approval covers wiki fan-in only; it does not execute network/provider fetch, email, remote execution, or bulk ingest. |
+| `reset_plan` | `$reset --scope ...` | Executes native `tools/reset_wiki.py` scoped reset when high-risk policy mode allows destructive mutation. | Default `strict_hitl`/`safe` remain blocked; completed execution must include before snapshot, reset runtime evidence, after snapshot, and mutation proof. |
+| `setup_status` | `$setup --setup-dotenv-path ...` | Writes a supplied `.env` after-artifact to an explicit dotenv path when high-risk policy mode allows credential/config mutation. | Default `strict_hitl`/`safe` remain blocked; evidence records key names, snapshots, and hashes only, never secret values. |
 
 Future slices should connect the same policy helper to daily/discover,
-setup/reset, and other side-effect actions only when their concrete executor
+and other side-effect actions only when their concrete executor
 boundaries are similarly scoped and verified.
 
 ## Examples

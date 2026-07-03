@@ -999,6 +999,8 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
                 inputs["max_rounds"] = int(args.max_rounds)
             if args.target_score:
                 inputs["target_score"] = float(args.target_score)
+            if action == "setup_status" and args.setup_dotenv_path:
+                inputs["setup_dotenv_path"] = str(args.setup_dotenv_path)
             if action == "refine_artifact":
                 if args.difficulty:
                     inputs["difficulty"] = str(args.difficulty)
@@ -1941,6 +1943,7 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--before-artifact", action="append", help="Before-state artifact for approved mutation/execution")
     skill.add_argument("--after-artifact", action="append", help="After-state artifact for approved mutation/execution")
     skill.add_argument("--execute-approved", action="store_true", help="Execute an implemented side-effect path only when approval and allowlist evidence are present")
+    skill.add_argument("--setup-dotenv-path", help="Approved setup target .env path; required for setup config write execution")
     skill.add_argument("--verbose", action="store_true", help="Native verbose output mode")
     skill.add_argument("--write", action="store_true", help="Native write-back mode for supported skills")
     skill.add_argument("--crystallize", action="store_true", help="Native ask mode: approved crystallized wiki output write-back")

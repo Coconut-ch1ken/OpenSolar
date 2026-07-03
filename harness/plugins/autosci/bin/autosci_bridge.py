@@ -18090,12 +18090,12 @@ def _phase16_workflow_evolution_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "change_type": "workflow_template",
         "rationale": "A failed scientific workflow run exposed recoverable workflow, gate, manual, schema, or routing gaps.",
         "expected_effect": "Make future failures easier to diagnose and resume without silently changing protected runtime behavior.",
-        "approval_state": "proposed",
+        "approval_state": "applied" if setup_execution.get("executed") else "proposed",
         "evidence_ids": evidence_ids,
         "collected": collected,
         "proposed_changes": proposed_changes,
         "review": {
-            "human_accept_reject_required": True,
+            "human_accept_reject_required": not bool(setup_execution.get("executed")),
             "protected_core_edits_applied": False,
             "application_state": "proposed_only",
             "approval_ref": "N/A",
@@ -18343,6 +18343,37 @@ def _reset_plan_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     dry_payload = dry_run.get("payload") if isinstance(dry_run.get("payload"), dict) else {}
     scopes = _reset_scopes_from_payload(scope, dry_payload)
     contract = _approval_contract(envelope, "reset_plan", ["destructive_reset", "state_archive", "workspace_rebuild"])
+    contract, policy_decision, policy_artifacts = _policy_prepare_auto_contract(
+        envelope,
+        "reset_plan",
+        ["read_local", "write_artifact", "local_command", "wiki_mutation", "destructive_mutation"],
+        contract,
+        allowlist_payload={
+            "native_tool": "tools/reset_wiki.py",
+            "scope": scope,
+            "allowed_side_effects": ["scoped_reset", "state_archive", "workspace_rebuild"],
+            "limitations": [
+                "Policy approval applies only to the native reset_wiki.py scoped reset executor.",
+                "Default strict_hitl and safe modes still block destructive reset execution.",
+                "Use autosci_native or an explicit high-risk environment opt-in before auto-executing this path.",
+            ],
+        },
+    )
+    if policy_decision.get("execute_side_effects"):
+        wiki_root = dry_run.get("wiki_root") if isinstance(dry_run.get("wiki_root"), Path) else _wiki_roots_for_write(envelope)[0]
+        project_root = dry_run.get("project_root") if isinstance(dry_run.get("project_root"), Path) else wiki_root.parent
+        before_snapshot_path = _output_dir(envelope, "reset_plan") / "reset_before_snapshot.json"
+        before_snapshot = _reset_state_snapshot(wiki_root, project_root, scopes, dry_payload)
+        before_snapshot["schema"] = "autosci_reset_before_snapshot.v1"
+        before_snapshot["status"] = "snapshot"
+        before_snapshot_artifact = {
+            "type": "reset_before_snapshot_json",
+            "path": _write_json_sidecar(before_snapshot_path, before_snapshot),
+        }
+        policy_artifacts.append(before_snapshot_artifact)
+        _append_contract_path(contract, "before_artifacts", before_snapshot_path)
+        _refresh_approval_contract(contract)
+    inputs = dict(envelope.get("inputs") or {})
     external_runtime_supplied = bool(_input_path_values(inputs, "runtime_evidence"))
     execute_requested = bool(inputs.get("execute_approved_side_effect"))
     local_execution: dict[str, Any] = {
@@ -18446,6 +18477,7 @@ def _reset_plan_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         _artifact("recommended_changes_markdown", paths["recommended_changes"]),
         _artifact("patch_candidates_directory", paths["patch_candidates"]),
         *(dry_run.get("artifacts") or []),
+        *policy_artifacts,
         *execution_artifacts,
         contract_artifact,
     ]
@@ -18501,6 +18533,10 @@ def _reset_plan_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         limitations.append("Reset dry-run tool returned a non-zero exit code.")
     if execute_requested and not external_runtime_supplied and not local_execution.get("attempted"):
         limitations.append(str(local_execution.get("blocked_reason") or "Local reset execution was blocked by the approval gate."))
+    if policy_decision.get("execute_side_effects"):
+        limitations.append(
+            f"Auto-approved by gate policy mode `{policy_decision.get('mode')}`; destructive reset execution was scoped to native reset_wiki.py and verified by runtime/after artifacts."
+        )
 
     proposed_changes = [
         {
@@ -18580,11 +18616,13 @@ def _reset_plan_raw(envelope: dict[str, Any]) -> dict[str, Any]:
                 "reset_count": len(dry_payload.get("reset_files") or []),
             },
             "local_reset_execution": local_execution,
+            "policy_decision": policy_decision,
         },
         "recommended_changes_path": _rel(paths["recommended_changes"]),
         "patch_candidates_path": _rel(paths["patch_candidates"]),
         "artifacts": artifacts,
         "limitations": limitations,
+        "policy_decision": policy_decision,
     }
 
 
@@ -18621,17 +18659,22 @@ def _dotenv_configured_keys(path: Path) -> dict[str, bool]:
     return configured
 
 
-def _setup_status_paths() -> dict[str, Path]:
+def _setup_status_paths(envelope: dict[str, Any] | None = None) -> dict[str, Path]:
+    inputs = envelope.get("inputs") if isinstance(envelope, dict) and isinstance(envelope.get("inputs"), dict) else {}
+    raw_dotenv = str(inputs.get("setup_dotenv_path") or "").strip()
+    dotenv = Path(raw_dotenv) if raw_dotenv else REPO_HARNESS_DIR.parent / ".env"
+    if raw_dotenv and not dotenv.is_absolute():
+        dotenv = HARNESS_DIR / dotenv
     return {
         "setup_guide": PLUGIN_DIR / "config" / "setup-guide.md",
         "env_example": PLUGIN_DIR / "config" / ".env.example",
-        "dotenv": REPO_HARNESS_DIR.parent / ".env",
+        "dotenv": dotenv,
         "venv": REPO_HARNESS_DIR.parent / ".venv",
     }
 
 
 def _setup_status_payload(envelope: dict[str, Any]) -> dict[str, Any]:
-    paths = _setup_status_paths()
+    paths = _setup_status_paths(envelope)
     dotenv_keys = _dotenv_configured_keys(paths["dotenv"])
     env_example_keys = _dotenv_configured_keys(paths["env_example"])
     key_statuses: list[dict[str, Any]] = []
@@ -18719,6 +18762,133 @@ def _setup_status_payload(envelope: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _setup_allowed_keys() -> set[str]:
+    return {key for key, _label, _priority in SETUP_STATUS_KEYS}
+
+
+def _parse_setup_env_after_artifact(path: Path) -> tuple[dict[str, str], list[str]]:
+    values: dict[str, str] = {}
+    errors: list[str] = []
+    if not path.exists() or not path.is_file():
+        return values, [f"Setup after_artifact does not exist or is not a file: {_rel(path)}"]
+    allowed = _setup_allowed_keys()
+    for line_no, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("export "):
+            stripped = stripped[len("export "):].strip()
+        if "=" not in stripped:
+            errors.append(f"Line {line_no} is not KEY=value.")
+            continue
+        key, value = stripped.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if key not in allowed:
+            errors.append(f"Line {line_no} key `{key}` is not an AutoSci setup key.")
+            continue
+        if not value.strip().strip('"').strip("'"):
+            errors.append(f"Line {line_no} key `{key}` has an empty value.")
+            continue
+        values[key] = value
+    if not values and not errors:
+        errors.append("Setup after_artifact contained no approved KEY=value rows.")
+    return values, errors
+
+
+def _setup_redacted_snapshot(path: Path, *, status: str, label: str) -> dict[str, Any]:
+    configured = _dotenv_configured_keys(path)
+    return {
+        "schema": f"autosci_setup_{label}_snapshot.v1",
+        "status": status,
+        "dotenv_path": _rel(path),
+        "dotenv_exists": path.exists(),
+        "configured_keys": sorted(key for key, present in configured.items() if present),
+        "secret_values_recorded": False,
+        "captured_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    }
+
+
+def _setup_config_write_if_approved(
+    envelope: dict[str, Any],
+    contract: dict[str, Any],
+) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    explicit_dotenv = bool(str(inputs.get("setup_dotenv_path") or "").strip())
+    execution = {
+        "requested": bool(inputs.get("execute_approved_side_effect")) and explicit_dotenv,
+        "attempted": False,
+        "executed": False,
+        "reason": "",
+        "secret_values_recorded": False,
+        "keys_written": [],
+    }
+    artifacts: list[dict[str, str]] = []
+    if not bool(inputs.get("execute_approved_side_effect")):
+        execution["reason"] = "execute_approved_side_effect=false"
+        return {"execution": execution, "artifacts": artifacts}
+    dotenv_path = _setup_status_paths(envelope)["dotenv"]
+    after_paths = _input_path_values(inputs, "after_artifacts")
+    if not explicit_dotenv:
+        execution["reason"] = "setup_dotenv_path_not_requested"
+        return {"execution": execution, "artifacts": artifacts}
+    if not contract.get("ready_for_execution"):
+        execution["reason"] = "approval_contract_preflight_incomplete"
+        return {"execution": execution, "artifacts": artifacts}
+    if not after_paths:
+        execution["reason"] = "after_artifact_required"
+        return {"execution": execution, "artifacts": artifacts}
+
+    before_snapshot_path = _output_dir(envelope, "setup_status") / "setup_before_snapshot.json"
+    before_snapshot = _setup_redacted_snapshot(dotenv_path, status="snapshot", label="before")
+    before_artifact = {"type": "setup_before_snapshot_json", "path": _write_json_sidecar(before_snapshot_path, before_snapshot)}
+    artifacts.append(before_artifact)
+    _append_contract_path(contract, "before_artifacts", before_snapshot_path)
+    _refresh_approval_contract(contract)
+
+    after_path = _resolve_harness_path(after_paths[0])
+    values, errors = _parse_setup_env_after_artifact(after_path)
+    if errors:
+        execution["reason"] = "invalid_after_artifact"
+        execution["errors"] = errors
+        return {"execution": execution, "artifacts": artifacts}
+
+    execution["attempted"] = True
+    dotenv_path.parent.mkdir(parents=True, exist_ok=True)
+    body = "\n".join(f"{key}={values[key]}" for key in sorted(values)) + "\n"
+    changed = _write_text_if_changed_bridge(dotenv_path, body)
+    after_snapshot_path = _output_dir(envelope, "setup_status") / "setup_after_snapshot.json"
+    after_snapshot = _setup_redacted_snapshot(dotenv_path, status="completed", label="after")
+    after_artifact = {"type": "setup_after_snapshot_json", "path": _write_json_sidecar(after_snapshot_path, after_snapshot)}
+    runtime_path = _output_dir(envelope, "setup_status") / "setup_config_runtime_evidence.json"
+    runtime_payload = {
+        "schema": "autosci_setup_config_runtime.v1",
+        "status": "completed",
+        "exit_code": 0,
+        "dotenv_path": _rel(dotenv_path),
+        "after_artifact": _rel(after_path),
+        "keys_written": sorted(values),
+        "changed": changed,
+        "secret_values_recorded": False,
+        "evidence_ids": [f"setup-config:{_slug(key)}" for key in sorted(values)],
+    }
+    runtime_artifact = {"type": "setup_config_runtime_evidence_json", "path": _write_json_sidecar(runtime_path, runtime_payload)}
+    artifacts.extend([after_artifact, runtime_artifact])
+    _append_contract_path(contract, "after_artifacts", after_snapshot_path)
+    _append_contract_path(contract, "after_artifacts", dotenv_path)
+    _append_contract_path(contract, "runtime_evidence", runtime_path)
+    _refresh_approval_contract(contract)
+    execution.update({
+        "executed": True,
+        "changed": changed,
+        "dotenv_path": _rel(dotenv_path),
+        "keys_written": sorted(values),
+        "runtime_evidence": runtime_artifact["path"],
+        "after_snapshot": after_artifact["path"],
+    })
+    return {"execution": execution, "artifacts": artifacts}
+
+
 def _setup_status_markdown(status: dict[str, Any], *, contract: dict[str, Any]) -> str:
     summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
     lines = [
@@ -18746,7 +18916,7 @@ def _setup_status_markdown(status: dict[str, Any], *, contract: dict[str, Any]) 
         "",
         f"- Approval state: `{contract.get('approval_state')}`",
         "- Secret values recorded: `false`",
-        "- Local `.env` mutation by bridge: `false`",
+        f"- Local `.env` mutation by bridge: `{str(bool(contract.get('setup_config_applied'))).lower()}`",
         "",
     ])
     return "\n".join(lines)
@@ -18759,9 +18929,30 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
     paths = _control_workflow_paths(envelope, "setup_status")
     paths["patch_candidates"].mkdir(parents=True, exist_ok=True)
     status = _setup_status_payload(envelope)
+    contract = _approval_contract(envelope, "setup_status", ["credential_probe", "persistent_config_write", "workspace_bootstrap"])
+    contract, policy_decision, policy_artifacts = _policy_prepare_auto_contract(
+        envelope,
+        "setup_status",
+        ["read_local", "write_artifact", "protected_config_mutation", "credential_mutation"],
+        contract,
+        allowlist_payload={
+            "native_surface": "$setup",
+            "allowed_side_effects": ["approved_dotenv_write"],
+            "limitations": [
+                "Policy approval can only write a user-supplied after_artifact to an explicit setup_dotenv_path.",
+                "Secret values are written to the target .env file but are never serialized into evidence.",
+                "Default strict_hitl and safe modes still block setup credential/config mutation.",
+            ],
+        },
+    )
+    inputs = dict(envelope.get("inputs") or {})
+    setup_write = _setup_config_write_if_approved(envelope, contract)
+    setup_execution = setup_write.get("execution") if isinstance(setup_write.get("execution"), dict) else {}
+    if setup_execution.get("executed"):
+        contract["setup_config_applied"] = True
+        status = _setup_status_payload(envelope)
     status_path = _output_dir(envelope, "setup_status") / "setup_status.json"
     status_artifact = {"type": "setup_status_json", "path": _write_json_sidecar(status_path, status)}
-    contract = _approval_contract(envelope, "setup_status", ["credential_probe", "persistent_config_write", "workspace_bootstrap"])
     control_runtime_semantic: dict[str, Any] = {}
     control_runtime_verified = False
     if bool(inputs.get("execute_approved_side_effect")):
@@ -18774,8 +18965,10 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         _artifact("recommended_changes_markdown", paths["recommended_changes"]),
         _artifact("patch_candidates_directory", paths["patch_candidates"]),
         status_artifact,
-        {"type": "setup_guide_markdown", "path": _rel(_setup_status_paths()["setup_guide"])},
-        {"type": "env_example", "path": _rel(_setup_status_paths()["env_example"])},
+        {"type": "setup_guide_markdown", "path": _rel(_setup_status_paths(envelope)["setup_guide"])},
+        {"type": "env_example", "path": _rel(_setup_status_paths(envelope)["env_example"])},
+        *policy_artifacts,
+        *[artifact for artifact in setup_write.get("artifacts") or [] if isinstance(artifact, dict)],
         contract_artifact,
     ]
     if control_runtime_verified:
@@ -18807,19 +19000,31 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
                 source_refs=[],
                 mutation_refs=runtime_refs,
                 include_wiki_mutation=False,
-                source_label="approved_setup_external_runtime",
-                artifact_kind="setup_status_external_runtime",
+                source_label="approved_setup_runtime",
+                artifact_kind="setup_status_runtime",
                 include_provider_source=False,
             )
         )
     limitations = [
         (
-            "Approved external setup runtime was verified from supplied evidence; local secret/config mutation was not executed by the bridge."
-            if control_runtime_verified
-            else "Setup route reports configuration status only; it does not write secrets or credentials."
+            "Approved setup config mutation wrote the supplied after_artifact to the explicit setup_dotenv_path; secret values were not serialized into evidence."
+            if setup_execution.get("executed")
+            else (
+                "Approved external setup runtime was verified from supplied evidence; local secret/config mutation was not executed by the bridge."
+                if control_runtime_verified
+                else "Setup route reports configuration status only; it does not write secrets or credentials."
+            )
         ),
         *_approval_contract_limitations(contract),
     ]
+    if setup_execution.get("requested") and setup_execution.get("reason") and not setup_execution.get("executed"):
+        limitations.append(f"Setup config write was not executed: {setup_execution.get('reason')}.")
+    if policy_decision.get("execute_side_effects"):
+        limitations.append(
+            f"Auto-approved by gate policy mode `{policy_decision.get('mode')}`; setup writes still require after_artifact and explicit setup_dotenv_path."
+        )
+    application_state = "applied" if setup_execution.get("executed") else "proposed_only"
+    gate_status = "passed" if setup_execution.get("executed") else "blocked"
     proposed_changes = [
         {
             "change_id": "change.setup.status",
@@ -18828,7 +19033,7 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             "description": "Review current provider key status and choose which optional keys to configure.",
             "evidence_ids": evidence_ids,
             "review_required": True,
-            "application_state": "proposed_only",
+            "application_state": application_state,
         },
         {
             "change_id": "change.setup.approval_gate",
@@ -18837,7 +19042,7 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             "description": "Keep .env writes blocked unless explicit approved runtime evidence supplies user-selected secret values.",
             "evidence_ids": evidence_ids,
             "review_required": True,
-            "application_state": "proposed_only",
+            "application_state": application_state,
         },
     ]
     status_summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
@@ -18847,10 +19052,12 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         "change_type": "workflow_template",
         "rationale": "Native AutoSci setup requires configuration guide review, environment status detection, and approval-gated credential writes.",
         "expected_effect": "Make setup readiness auditable without serializing secrets or mutating .env automatically.",
-        "approval_state": "proposed",
+        "approval_state": "applied" if setup_execution.get("executed") else "proposed",
         "evidence_ids": evidence_ids,
         "collected": {
-            "failed_nodes": [
+            "failed_nodes": []
+            if gate_status == "passed"
+            else [
                 {
                     "node_id": "node-setup-status",
                     "logical_operator": "ScientificWorkflowEvolver",
@@ -18861,9 +19068,11 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             "gate_rejection_reasons": [
                 {
                     "gate_id": "approval_gate",
-                    "status": "blocked",
+                    "status": gate_status,
                     "reasons": [
-                        "Setup writes are approval-gated; status detection completed without writing secrets.",
+                        "Approved setup config mutation executed with redacted evidence."
+                        if setup_execution.get("executed")
+                        else "Setup writes are approval-gated; status detection completed without writing secrets.",
                         f"Approval contract missing: {', '.join(str(item) for item in contract.get('missing', [])) if contract.get('missing') else 'N/A'}",
                     ],
                 }
@@ -18871,7 +19080,9 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
             "ambiguous_manuals_or_prompts": [],
             "insufficient_schemas": [],
             "poor_operator_bindings": [],
-            "human_intervention_points": [
+            "human_intervention_points": []
+            if gate_status == "passed"
+            else [
                 {
                     "id": "setup_status.configure_keys",
                     "description": "User chooses which optional provider keys to configure before any .env write.",
@@ -18885,9 +19096,9 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
         },
         "proposed_changes": proposed_changes,
         "review": {
-            "human_accept_reject_required": True,
-            "protected_core_edits_applied": False,
-            "application_state": "proposed_only",
+            "human_accept_reject_required": not bool(setup_execution.get("executed")),
+            "protected_core_edits_applied": bool(setup_execution.get("executed")),
+            "application_state": application_state,
             "approval_ref": str(contract.get("approval_ref") or "N/A"),
             "approval_contract_path": contract_artifact["path"],
             "approval_contract_verified": bool(contract.get("execution_verified")),
@@ -18900,11 +19111,14 @@ def _setup_status_raw(envelope: dict[str, Any]) -> dict[str, Any]:
                 "setup_status_path": status_artifact["path"],
                 "secrets_redacted": True,
             },
+            "setup_config_execution": setup_execution,
+            "policy_decision": policy_decision,
         },
         "recommended_changes_path": _rel(paths["recommended_changes"]),
         "patch_candidates_path": _rel(paths["patch_candidates"]),
         "artifacts": artifacts,
         "limitations": limitations,
+        "policy_decision": policy_decision,
     }
 
 
@@ -20461,11 +20675,19 @@ def _research_lifecycle_raw(envelope: dict[str, Any]) -> dict[str, Any]:
 
 
 def _action_setup_status(envelope: dict[str, Any]) -> dict[str, Any]:
-    return convert_workflow_evolution(_setup_status_raw(envelope), envelope)
+    raw = _setup_status_raw(envelope)
+    evidence = convert_workflow_evolution(raw, envelope)
+    if isinstance(raw.get("policy_decision"), dict):
+        evidence = _attach_policy_decision(evidence, raw["policy_decision"])
+    return evidence
 
 
 def _action_reset_plan(envelope: dict[str, Any]) -> dict[str, Any]:
-    return convert_workflow_evolution(_reset_plan_raw(envelope), envelope)
+    raw = _reset_plan_raw(envelope)
+    evidence = convert_workflow_evolution(raw, envelope)
+    if isinstance(raw.get("policy_decision"), dict):
+        evidence = _attach_policy_decision(evidence, raw["policy_decision"])
+    return evidence
 
 
 def _run_wiki_lint_report(wiki_root: Path, output_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
