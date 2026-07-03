@@ -2483,6 +2483,103 @@ def test_autosci_skill_shim_exp_run_executes_approved_native_command(tmp_path: P
     assert "runtime:exp-native" in state_text
 
 
+def test_autosci_skill_shim_exp_run_parity_demo_auto_executes_local_command(tmp_path: Path) -> None:
+    allowlist = tmp_path / "exp-parity-allowlist.json"
+    marker = tmp_path / "exp-parity-marker.txt"
+    marker_command_script = tmp_path / "exp_parity_command.py"
+    marker_command_script.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env python3",
+                "import argparse",
+                "from pathlib import Path",
+                "import json",
+                "",
+                "parser = argparse.ArgumentParser()",
+                "parser.add_argument('--experiment-id', required=True)",
+                "parser.add_argument('--marker', required=True)",
+                "args = parser.parse_args()",
+                "Path(args.marker).write_text('parity executed', encoding='utf-8')",
+                "payload = {",
+                "    'schema': 'experiment_result.v1',",
+                "    'status': 'completed',",
+                "    'outputs': {",
+                "        'result': {",
+                "            'experiment_id': args.experiment_id,",
+                "            'outcome': 'supports',",
+                "            'metrics': [{'name': 'f1', 'value': 0.92}],",
+                "            'evidence_ids': ['runtime:exp-parity'],",
+                "            'logs': ['parity local command executed'],",
+                "        }",
+                "    },",
+                "}",
+                "print(json.dumps(payload))",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    marker_command_script.chmod(0o755)
+    allowlist.write_text(
+        json.dumps(
+            {
+                "commands": [
+                    " ".join(
+                        [
+                            str(sys.executable),
+                            str(marker_command_script),
+                            "--experiment-id",
+                            "{experiment_id}",
+                            "--marker",
+                            str(marker),
+                        ]
+                    )
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$exp-run",
+        "exp-parity-001",
+        "--review",
+        "--env",
+        "local",
+        "--allowlist-evidence",
+        str(allowlist),
+        "--gate-mode",
+        "parity_demo",
+        "--run-id",
+        "shim-exp-run-parity-demo-command",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = next(action for action in payload["outputs"]["skill_run"]["actions"] if action["action"] == "run_experiment")
+    assert action["status"] == "passed"
+    result = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    experiment_result = result["outputs"]["result"]
+    assert result["status"] == "completed"
+    assert experiment_result["experiment_id"] == "exp-parity-001"
+    assert experiment_result["outcome"] == "supports"
+    assert marker.read_text(encoding="utf-8") == "parity executed"
+    assert "runtime:exp-parity" in experiment_result["evidence_ids"]
+    policy = result["outputs"]["policy_decision"]
+    assert policy["mode"] == "parity_demo"
+    assert policy["execute_side_effects"] is True
+    assert policy["synthetic_approval_ref"].startswith("policy:auto:parity_demo:run_experiment:")
+    artifacts = {artifact["type"]: artifact["path"] for artifact in result["artifacts"]}
+    assert "gate_policy_decision_json" in artifacts
+    assert "gate_policy_allowlist_json" in artifacts
+    assert "experiment_runtime_evidence_json" in artifacts
+    assert "run_experiment_result_json" in artifacts
+    contract = json.loads((tmp_path / artifacts["approval_contract_json"]).read_text(encoding="utf-8"))
+    assert contract["policy_auto_approved"] is True
+    assert contract["execution_verified"] is True
+    assert contract["approval_ref"].startswith("policy:auto:parity_demo:run_experiment:")
+
+
 def test_autosci_skill_shim_exp_pilot_run_executes_approved_native_command_without_wiki_writeback(tmp_path: Path) -> None:
     allowlist = tmp_path / "pilot-native-allowlist.json"
     before = tmp_path / "pilot-native-before.json"
@@ -8138,6 +8235,64 @@ def test_autosci_skill_shim_executes_approved_paper_compile_executor(tmp_path: P
     assert report["pdf"]["compiled_pdf_verified"] is True
 
 
+def test_autosci_skill_shim_paper_compile_parity_demo_auto_executes_executor(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "parity-paper"
+    paper_dir.mkdir()
+    (paper_dir / "main.tex").write_text(
+        "\\documentclass{article}\n\\begin{document}\nParity demo compile.\n\\end{document}\n",
+        encoding="utf-8",
+    )
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    fake_latexmk = fake_bin / "latexmk"
+    fake_latexmk.write_text(
+        "#!/usr/bin/env python3\n"
+        "from pathlib import Path\n"
+        f"Path('main.pdf').write_bytes({MINIMAL_STRUCTURAL_PDF!r})\n"
+        "print('fake parity latexmk completed')\n",
+        encoding="utf-8",
+    )
+    fake_latexmk.chmod(0o755)
+
+    proc = run_shim(
+        tmp_path,
+        "$paper-compile",
+        str(paper_dir),
+        "--checklist",
+        "--gate-mode",
+        "parity_demo",
+        "--run-id",
+        "shim-paper-compile-parity-demo-executor",
+        extra_env={"PATH": f"{fake_bin}{os.pathsep}{os.environ.get('PATH', '')}"},
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert evidence["status"] == "completed"
+    policy = evidence["outputs"]["policy_decision"]
+    assert policy["mode"] == "parity_demo"
+    assert policy["execute_side_effects"] is True
+    assert policy["synthetic_approval_ref"].startswith("policy:auto:parity_demo:compile_paper:")
+    bundle_files = evidence["outputs"]["bundle"]["files"]
+    file_map = {item["type"]: item["path"] for item in bundle_files}
+    assert "gate_policy_decision_json" in file_map
+    assert "gate_policy_allowlist_json" in file_map
+    assert "compile_runtime_evidence_json" in file_map
+    assert any(item["type"] == "compiled_pdf" and item["path"].endswith("main.pdf") for item in bundle_files)
+    checklist = json.loads((tmp_path / file_map["paper_compile_checklist_json"]).read_text(encoding="utf-8"))
+    assert checklist["toolchain"]["selected_executor"] == "latexmk"
+    assert checklist["runtime_semantic"]["verified"] is True
+    contract = checklist["approval_contract"]
+    assert contract["policy_auto_approved"] is True
+    assert contract["execution_verified"] is True
+    assert contract["approval_ref"].startswith("policy:auto:parity_demo:compile_paper:")
+    allowlist_sidecar = json.loads((tmp_path / file_map["gate_policy_allowlist_json"]).read_text(encoding="utf-8"))
+    assert "latexmk" in allowlist_sidecar["executables"]
+
+
 def test_autosci_skill_shim_rejects_invalid_paper_compile_pdf(tmp_path: Path) -> None:
     paper_dir = tmp_path / "invalid-pdf-paper"
     paper_dir.mkdir()
@@ -8405,6 +8560,86 @@ def test_autosci_skill_shim_executes_approved_poster_executor(tmp_path: Path) ->
     assert approval_proof["proofs"][0]["categories"] == ["external_runtime_evidence", "approval_boundary_evidence"]
     assert side_effect_proof["proofs"][0]["categories"] == ["side_effect_execution_evidence"]
     assert "approved side-effect executor" in " ".join(evidence["limitations"])
+
+
+def test_autosci_skill_shim_poster_parity_demo_auto_executes_renderer(tmp_path: Path) -> None:
+    paper_dir = tmp_path / "poster-parity-paper"
+    sections = paper_dir / "sections"
+    sections.mkdir(parents=True)
+    (paper_dir / "main.tex").write_text(
+        "\\title{Parity Poster Executor}\n"
+        "\\author{Research Team}\n"
+        "\\begin{document}\n"
+        "\\maketitle\n"
+        "\\input{sections/intro}\n"
+        "\\input{sections/method}\n"
+        "\\input{sections/results}\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    (sections / "intro.tex").write_text("\\section{Introduction}\nParity poster rendering needs native HTML.\n", encoding="utf-8")
+    (sections / "method.tex").write_text("\\section{Method}\nThe bridge builds poster content from paper source.\n", encoding="utf-8")
+    (sections / "results.tex").write_text("\\section{Results}\nThe renderer exports a verified PNG.\n", encoding="utf-8")
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    fake_renderer = fake_bin / "poster-renderer"
+    fake_renderer.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json\n"
+        "import sys\n"
+        "from pathlib import Path\n"
+        "html, png, validation = sys.argv[1:4]\n"
+        "assert Path(html).exists()\n"
+        "Path(png).write_bytes(b'\\x89PNG\\r\\n\\x1a\\n')\n"
+        "Path(validation).write_text(json.dumps({\n"
+        "  'browser_rendered': True,\n"
+        "  'png_exported': True,\n"
+        "  'overflow_probe': 'passed'\n"
+        "}), encoding='utf-8')\n"
+        "print('fake parity poster renderer completed')\n",
+        encoding="utf-8",
+    )
+    fake_renderer.chmod(0o755)
+    allowlist = tmp_path / "poster-parity-allowlist.json"
+    allowlist.write_text(
+        json.dumps({"poster_render_command": [str(fake_renderer), "{html}", "{png}", "{validation}"]}),
+        encoding="utf-8",
+    )
+
+    proc = run_shim(
+        tmp_path,
+        "$poster",
+        str(paper_dir),
+        "--allowlist-evidence",
+        str(allowlist),
+        "--gate-mode",
+        "parity_demo",
+        "--run-id",
+        "shim-poster-parity-demo-renderer",
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "build_poster"
+    assert action["status"] == "passed"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert evidence["status"] == "completed"
+    policy = evidence["outputs"]["policy_decision"]
+    assert policy["mode"] == "parity_demo"
+    assert policy["execute_side_effects"] is True
+    assert policy["synthetic_approval_ref"].startswith("policy:auto:parity_demo:build_poster:")
+    bundle_files = evidence["outputs"]["bundle"]["files"]
+    file_map = {item["type"]: item["path"] for item in bundle_files}
+    assert "gate_policy_decision_json" in file_map
+    assert "poster_runtime_evidence_json" in file_map
+    assert "poster_runtime_after_artifact" in file_map
+    validation = json.loads((tmp_path / file_map["poster_validation_json"]).read_text(encoding="utf-8"))
+    assert validation["runtime_semantic"]["verified"] is True
+    contract = json.loads((tmp_path / file_map["approval_contract_json"]).read_text(encoding="utf-8"))
+    assert contract["policy_auto_approved"] is True
+    assert contract["execution_verified"] is True
+    assert contract["approval_ref"].startswith("policy:auto:parity_demo:build_poster:")
 
 
 def test_autosci_skill_shim_accepts_paper_compile_checklist_without_bundle_fallback(tmp_path: Path) -> None:

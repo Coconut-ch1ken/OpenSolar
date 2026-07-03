@@ -146,3 +146,39 @@ emitting health/proposal evidence. This slice covers `$visualize --serve`.
 | `env HARNESS_DIR=/private/tmp/opensolar_autosci_policy_smoke SOLAR_AUTOSCI_OUTPUT_HARNESS=/private/tmp/opensolar_autosci_policy_smoke python3 harness/plugins/autosci/bin/autosci_bridge.py validate --result /private/tmp/opensolar_autosci_policy_smoke/artifacts/autosci/smoke/result.json` | ok |
 | elevated demo: `.venv/bin/python harness/plugins/autosci/bin/autosci_skill_shim.py skill visualize "autosci graph" --serve --gate-mode parity_demo --run-id policy-demo-visualize-serve` | ok: `passed_count=1`; `visualize_web_health.json` has `server_started=true`, `server_stopped=true`; approval contract has `execution_verified=true`. |
 | `git diff --check -- <changed AutoSci policy/visualize files>` | ok |
+
+## Agent B Problem 3 Side-Effect Parity: Compile, Poster, And Local Experiment Run
+
+Logged: 2026-07-03 EDT
+
+Intent: continue solving the side-effect parity class after `$visualize --serve`
+by letting policy-approved parity modes execute bounded local side effects for
+publication compile, poster render/export, and local experiment run paths while
+preserving runtime semantic verification.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Shared policy helper | ok | Added `_policy_prepare_auto_contract()` and `autosci_gate_policy_allowlist.v1` sidecars so side-effect actions can attach gate decisions and synthetic allowlist evidence consistently. |
+| `$paper-compile` | ok | In `parity_demo`, discovered supported TeX executors are converted into a synthetic policy allowlist; actual completion still requires executor exit success and structurally valid PDF proof. |
+| `$poster` | ok | In `parity_demo`, policy approval can trigger the existing approved renderer path, but only when concrete `poster_render_command` or `poster_renderer` allowlist evidence is supplied. |
+| `$exp-run --env local` | ok | In `parity_demo`, policy approval can trigger a supplied concrete local command allowlist, then the existing runtime semantic and wiki mutation checks decide completion. |
+| Evidence attachment | ok | Compile/poster/experiment evidence now includes `outputs.policy_decision`, `provenance.gate_policy`, `gate_policy_decision_json`, and relevant policy/allowlist sidecars. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| The initial `$exp-run` policy allowlist treated exp-design's generic handoff command (`autosci_bridge.py run --action run_experiment`) as executable allowlist evidence. | fixed | `run_experiment` policy sidecars now record `declared_plan_commands` for audit only; executable selection still requires concrete command allowlist evidence or supplied verified runtime evidence. |
+| Synthetic policy approval can look similar to user approval in downstream contracts. | guarded | Synthetic refs keep the `policy:auto:<mode>:<action>:<timestamp>` prefix and sidecars state that they are not human approval artifacts. |
+| `$poster` cannot safely infer a browser renderer from policy mode alone. | guarded | The policy gate can approve execution, but the renderer still must come from concrete allowlist evidence. Missing renderer remains inconclusive. |
+| TeX availability differs by machine. | guarded | `$paper-compile` auto-execution only allowlists supported executors discovered on `PATH`; missing executor or invalid PDF output remains inconclusive. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/bin/autosci_skill_shim.py harness/plugins/autosci/policy/gate_policy.py tools/serve.py` | ok |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_exp_run_parity_demo_auto_executes_local_command test_autosci_skill_shim.py::test_autosci_skill_shim_paper_compile_parity_demo_auto_executes_executor test_autosci_skill_shim.py::test_autosci_skill_shim_poster_parity_demo_auto_executes_renderer` | ok: 3 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'paper_compile or poster or exp_run'` | ok: 28 passed, 130 deselected |
+| `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
+| `git diff --check -- <changed AutoSci problem3 files>` | ok |

@@ -52,15 +52,20 @@ This is not human approval. It records why the side effect was allowed.
 
 ## Current Bridge Coverage
 
-The first integrated action is `visualize_graph` / `$visualize --serve`.
-
 In `strict_hitl`, existing approval/runtime evidence behavior is preserved. In
-`parity_demo`, `$visualize --serve` can automatically run a bounded native
-server probe through `tools/serve.py --probe-server --port 0`, which starts the
-loopback HTTP server, requests `/api/health`, and shuts the server down.
+`parity_demo`, the bridge can generate synthetic policy approval evidence for
+the bounded local side effects below:
 
-Future slices should connect the same policy helper to compile, poster,
-experiment, daily/discover, setup/reset, and other side-effect actions.
+| Action | Command surface | Parity side effect | Guardrail |
+|---|---|---|---|
+| `visualize_graph` | `$visualize --serve` | Runs `tools/serve.py --probe-server --port 0`, probes `/api/health`, then shuts down. | Loopback/server proof must still be attached as runtime evidence. |
+| `compile_paper` | `$paper-compile --checklist` | Executes a discovered supported TeX executor (`latexmk`, `pdflatex`, `xelatex`, or `lualatex`) when available. | Synthetic allowlist is limited to TeX executors discovered on `PATH`; missing or invalid PDF output remains inconclusive. |
+| `build_poster` | `$poster` | Executes a render/export command only when concrete `poster_render_command` or `poster_renderer` allowlist evidence is supplied. | The policy gate does not invent a browser renderer; absent render allowlist remains inconclusive. |
+| `run_experiment` | `$exp-run --env local` | Executes a concrete allowlisted local experiment command and then applies the existing runtime/wiki mutation checks. | Policy sidecar records plan handoff commands for audit but does not auto-allowlist them as executable commands. |
+
+Future slices should connect the same policy helper to daily/discover,
+setup/reset, and other side-effect actions only when their concrete executor
+boundaries are similarly scoped and verified.
 
 ## Examples
 
