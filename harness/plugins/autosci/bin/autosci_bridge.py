@@ -698,6 +698,68 @@ def _source_provider_runtime_description(native_skill: str, collection_mode: str
     return f"Completed provider-backed source evidence for AutoSci `{native_skill}` parity."
 
 
+def _run_root_tool_json(
+    tool_name: str,
+    args: list[str],
+    *,
+    output_dir: Path,
+    artifact_prefix: str,
+    timeout_env: str,
+    timeout_default: int = 60,
+) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    command = [sys.executable, str(REPO_HARNESS_DIR.parent / "tools" / tool_name), *args]
+    timeout = int(os.environ.get(timeout_env, str(timeout_default)))
+    env = dict(os.environ)
+    env["HARNESS_DIR"] = str(HARNESS_DIR)
+    env["SOLAR_AUTOSCI_OUTPUT_HARNESS"] = str(HARNESS_DIR)
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=REPO_HARNESS_DIR.parent,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=timeout,
+        )
+        returncode = proc.returncode
+        stdout = proc.stdout
+        stderr = proc.stderr
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        returncode = 1
+        stdout = ""
+        stderr = str(exc)
+    stdout_path = _write_text_sidecar(output_dir / f"{artifact_prefix}_stdout.json", stdout)
+    stderr_path = _write_text_sidecar(output_dir / f"{artifact_prefix}_stderr.txt", stderr)
+    payload: dict[str, Any] = {}
+    if stdout.strip():
+        try:
+            parsed = json.loads(stdout)
+            if isinstance(parsed, dict):
+                payload = parsed
+            else:
+                payload = {"status": "failed", "error": "Native tool stdout JSON was not an object."}
+        except json.JSONDecodeError as exc:
+            payload = {
+                "status": "failed",
+                "error": f"Native tool stdout was not JSON: {exc}",
+                "stdout_preview": stdout[:1000],
+            }
+    return {
+        "returncode": returncode,
+        "payload": payload,
+        "stdout": stdout,
+        "stderr": stderr,
+        "command": command,
+        "artifacts": [
+            {"type": f"{artifact_prefix}_stdout_json", "path": stdout_path},
+            {"type": f"{artifact_prefix}_stderr", "path": stderr_path},
+        ],
+    }
+
+
 def _source_provider_boundary(
     records: list[dict[str, Any]],
     candidates: list[dict[str, Any]],
@@ -5074,6 +5136,124 @@ def _attach_init_sources_final_fan_in_boundary(
     return evidence
 
 
+def _init_native_plan_candidates(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    shortlist = plan.get("shortlist") if isinstance(plan.get("shortlist"), list) else []
+    candidates: list[dict[str, Any]] = []
+    for index, item in enumerate(shortlist, start=1):
+        if not isinstance(item, dict):
+            continue
+        raw = dict(item)
+        raw["candidate_id"] = raw.get("candidate_id") or raw.get("paper_id") or raw.get("arxiv_id") or f"init-candidate-{index:03d}"
+        raw["ranking_score"] = raw.get("ranking_score") or raw.get("total_score") or raw.get("_score") or 1.0
+        raw["ranking_rationale"] = raw.get("ranking_rationale") or raw.get("selection_reason") or "Native init_discovery.py selected this source candidate."
+        source_channels = raw.get("source_channels") if isinstance(raw.get("source_channels"), list) else []
+        raw["source_channels"] = source_channels or [str(raw.get("source") or raw.get("origin") or "native_init_discovery")]
+        raw["dedup_status"] = raw.get("dedup_status") or ("known" if raw.get("user_owned") else "new")
+        raw["source_ref"] = (
+            raw.get("source_ref")
+            or raw.get("canonical_ingest_path")
+            or raw.get("prepared_path")
+            or raw.get("source_path")
+            or raw.get("url")
+            or raw.get("arxiv_id")
+            or raw.get("candidate_id")
+            or ""
+        )
+        candidate = _candidate_from_runtime(raw, index)
+        if candidate is not None:
+            candidates.append(candidate)
+    return candidates
+
+
+def _init_native_local_plan(envelope: dict[str, Any], query: str) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    output_dir = _output_dir(envelope, "init_sources")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    raw_root = _resolve_harness_path(inputs.get("raw_root") or "artifacts/autosci/workspace/raw")
+    wiki_root = _resolve_harness_path(inputs.get("wiki_root") or "artifacts/autosci/workspace/wiki")
+    prepare_manifest_path = output_dir / "init_prepare_manifest.json"
+    plan_path = output_dir / "init_discovery_plan.json"
+    artifacts: list[dict[str, str]] = []
+    limitations: list[str] = []
+
+    prepare_run = _run_root_tool_json(
+        "init_discovery.py",
+        [
+            "prepare",
+            "--raw-root",
+            str(raw_root),
+            "--output-manifest",
+            str(prepare_manifest_path),
+        ],
+        output_dir=output_dir,
+        artifact_prefix="init_discovery_prepare",
+        timeout_env="AUTOSCI_INIT_DISCOVERY_TIMEOUT_SECONDS",
+    )
+    artifacts.extend(prepare_run.get("artifacts") or [])
+    if prepare_manifest_path.exists():
+        artifacts.append(_artifact("init_discovery_prepare_manifest_json", prepare_manifest_path))
+    if int(prepare_run.get("returncode") or 0) != 0:
+        limitations.append(
+            f"Native init_discovery.py prepare failed: {str(prepare_run.get('stderr') or '').strip() or 'no stderr'}"
+        )
+
+    plan_args = [
+        "plan",
+        "--topic",
+        query,
+        "--raw-root",
+        str(raw_root),
+        "--wiki-root",
+        str(wiki_root),
+        "--no-network-fetch",
+        "--output-plan",
+        str(plan_path),
+    ]
+    if prepare_manifest_path.exists():
+        plan_args.extend(["--prepared-manifest", str(prepare_manifest_path)])
+    if inputs.get("init_mode"):
+        plan_args.extend(["--mode", str(inputs["init_mode"])])
+    plan_run = _run_root_tool_json(
+        "init_discovery.py",
+        plan_args,
+        output_dir=output_dir,
+        artifact_prefix="init_discovery_plan",
+        timeout_env="AUTOSCI_INIT_DISCOVERY_TIMEOUT_SECONDS",
+    )
+    artifacts.extend(plan_run.get("artifacts") or [])
+    if plan_path.exists():
+        artifacts.append(_artifact("init_discovery_plan_json", plan_path))
+    payload = plan_run.get("payload") if isinstance(plan_run.get("payload"), dict) else {}
+    plan = payload.get("plan") if isinstance(payload.get("plan"), dict) else payload
+    if not isinstance(plan, dict):
+        plan = {}
+    candidates = _init_native_plan_candidates(plan)
+    if int(plan_run.get("returncode") or 0) != 0:
+        limitations.append(
+            f"Native init_discovery.py plan failed: {str(plan_run.get('stderr') or '').strip() or 'no stderr'}"
+        )
+        status = "failed"
+    elif candidates:
+        limitations.append(
+            "Native init_discovery.py prepare/plan completed in no-network local mode; provider fetch and bulk ingest were not executed."
+        )
+        status = "prepared"
+    else:
+        limitations.append(
+            "Native init_discovery.py prepare/plan completed in no-network local mode, but no shortlist candidates were selected."
+        )
+        status = "prepared"
+    return {
+        "status": status,
+        "query": query,
+        "mode": "init_native_local_plan",
+        "candidates": candidates,
+        "artifacts": artifacts,
+        "limitations": limitations,
+        "plan": plan,
+    }
+
+
 def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     query = str(inputs.get("query") or inputs.get("topic") or inputs.get("target") or "AutoSci source initialization")
@@ -5086,6 +5266,9 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
     contract["semantic_runtime"] = semantic
     candidates = semantic.get("detail", {}).get("candidates") if isinstance(semantic.get("detail"), dict) else []
     candidates = candidates if isinstance(candidates, list) else []
+    local_plan = _init_native_local_plan(envelope, query) if not semantic.get("verified") else {}
+    if local_plan.get("candidates") and not semantic.get("verified"):
+        candidates = [item for item in local_plan["candidates"] if isinstance(item, dict)]
     contract_artifact = _write_approval_contract_sidecar(envelope, "init_sources", contract)
     fan_in = _source_candidate_wiki_fan_in(
         envelope,
@@ -5095,7 +5278,7 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
         semantic=semantic,
         contract=contract,
     )
-    artifacts = [contract_artifact]
+    artifacts = [contract_artifact, *list(local_plan.get("artifacts") or [])]
     if fan_in.get("artifact"):
         artifacts.append(fan_in["artifact"])
     if fan_in.get("runtime_proof_artifact"):
@@ -5105,6 +5288,8 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
         "Provide topic, anchors, approved network fetch, or source manifests before treating initialization as complete.",
         *_approval_contract_limitations(contract),
     ]
+    if local_plan:
+        limitations.extend(str(item) for item in local_plan.get("limitations") or [])
     if semantic.get("verified"):
         limitations = [
             "Init source runtime was verified from supplied approval-gated evidence; this bridge did not execute the fetch.",
@@ -5115,7 +5300,7 @@ def _action_init_sources(envelope: dict[str, Any]) -> dict[str, Any]:
     limitations.extend(str(item) for item in fan_in.get("limitations") or [])
     evidence = convert_literature_discovery({
         "query": query,
-        "mode": "init_runtime_verified" if semantic.get("verified") else "init_plan",
+        "mode": "init_runtime_verified" if semantic.get("verified") else str(local_plan.get("mode") or "init_plan"),
         "limit": int(inputs.get("limit") or 10),
         "candidates": candidates,
         "source_provider_boundary": source_boundary,
@@ -5599,6 +5784,140 @@ def _daily_arxiv_normalize_local_candidates(candidates: list[Any]) -> list[dict[
     return normalized
 
 
+def _discover_native_values(raw: Any) -> list[str]:
+    if isinstance(raw, list):
+        return _unique_strings([str(item) for item in raw if str(item).strip()])
+    text = str(raw or "").strip()
+    if not text:
+        return []
+    return _unique_strings([item.strip() for item in text.split(",") if item.strip()])
+
+
+def _discover_native_command(inputs: dict[str, Any], wiki_root: Path, allow_network_fetch: bool) -> tuple[str, list[str]]:
+    query = str(inputs.get("query") or inputs.get("topic") or "").strip()
+    limit = int(inputs.get("limit") or 10)
+    discover_mode = str(inputs.get("discover_mode") or "").strip().lower()
+    anchors = _discover_native_values(inputs.get("anchors") or inputs.get("anchor_ids"))
+    negative_ids = _discover_native_values(inputs.get("negative_ids"))
+    venue = str(inputs.get("venue") or "").strip()
+    year = inputs.get("year")
+    if inputs.get("from_wiki") and not discover_mode:
+        discover_mode = "wiki"
+    args: list[str]
+    mode: str
+    if discover_mode in {"wiki", "from-wiki"}:
+        mode = "wiki"
+        args = ["from-wiki"]
+    elif anchors:
+        mode = "anchors"
+        args = ["from-anchors"]
+        for anchor in anchors:
+            args.extend(["--id", anchor])
+        for negative in negative_ids:
+            args.extend(["--negative", negative])
+    elif discover_mode in {"venue", "from-venue"} or (venue and year):
+        mode = "venue"
+        args = ["from-venue", "--venue", venue, "--year", str(year or datetime.now(UTC).year)]
+    else:
+        mode = "topic"
+        args = ["from-topic", query or "AutoSci literature discovery"]
+    args.extend([
+        "--wiki-root",
+        str(wiki_root),
+        "--limit",
+        str(limit),
+        "--workspace-root",
+        str(HARNESS_DIR),
+        "--repository-root",
+        str(REPO_HARNESS_DIR),
+    ])
+    if bool(inputs.get("no_citation_expand")) and mode in {"anchors", "wiki"}:
+        args.append("--no-citation-expand")
+    if not allow_network_fetch:
+        args.append("--no-network-fetch")
+    return mode, args
+
+
+def _discover_native_candidates(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_candidates = payload.get("shortlist") if isinstance(payload.get("shortlist"), list) else payload.get("candidates")
+    candidates = raw_candidates if isinstance(raw_candidates, list) else []
+    normalized: list[dict[str, Any]] = []
+    for index, item in enumerate(candidates, start=1):
+        if not isinstance(item, dict):
+            continue
+        raw = dict(item)
+        raw["candidate_id"] = (
+            raw.get("candidate_id")
+            or (f"arxiv:{raw.get('arxiv_id')}" if raw.get("arxiv_id") else "")
+            or (f"s2:{raw.get('paperId')}" if raw.get("paperId") else "")
+            or f"discover-candidate-{index:03d}"
+        )
+        raw["ranking_score"] = raw.get("ranking_score") or raw.get("_score") or raw.get("score") or 1.0
+        raw["ranking_rationale"] = raw.get("ranking_rationale") or raw.get("_rationale") or "Native discover.py selected this candidate."
+        sources = raw.get("_sources") if isinstance(raw.get("_sources"), list) else raw.get("source_channels")
+        raw["source_channels"] = sources if isinstance(sources, list) and sources else ["native_discover"]
+        raw["dedup_status"] = raw.get("dedup_status") or "new"
+        raw["source_ref"] = raw.get("source_ref") or raw.get("url") or raw.get("arxiv_id") or raw.get("paperId") or ""
+        candidate = _candidate_from_runtime(raw, index)
+        if candidate is not None:
+            normalized.append(candidate)
+    return normalized
+
+
+def _discover_native_local_pipeline(envelope: dict[str, Any], *, wiki_root: Path, allow_network_fetch: bool) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    output_dir = _output_dir(envelope, "discover_literature")
+    mode, args = _discover_native_command(inputs, wiki_root, allow_network_fetch)
+    checkpoint_path = output_dir / "discover_native_checkpoint.json"
+    args.extend(["--output-checkpoint", str(checkpoint_path)])
+    run = _run_root_tool_json(
+        "discover.py",
+        args,
+        output_dir=output_dir,
+        artifact_prefix="discover_native",
+        timeout_env="AUTOSCI_DISCOVER_TIMEOUT_SECONDS",
+    )
+    artifacts = list(run.get("artifacts") or [])
+    if checkpoint_path.exists():
+        artifacts.append(_artifact("discover_native_checkpoint_json", checkpoint_path))
+    payload = run.get("payload") if isinstance(run.get("payload"), dict) else {}
+    payload_path = output_dir / "discover_native_payload.json"
+    artifacts.append(_artifact("discover_native_payload_json", payload_path))
+    _write_json_sidecar(payload_path, payload)
+    candidates = _discover_native_candidates(payload)
+    seed = payload.get("seed") if isinstance(payload.get("seed"), dict) else {}
+    native_mode = str(payload.get("mode") or seed.get("mode") or mode)
+    anchors = payload.get("anchors")
+    if not anchors and isinstance(seed.get("derived_anchors"), list):
+        anchors = seed.get("derived_anchors")
+    if not anchors and isinstance(seed.get("positive_ids"), list):
+        anchors = seed.get("positive_ids")
+    limitations = [str(item) for item in payload.get("limitations") or []]
+    if int(run.get("returncode") or 0) != 0:
+        limitations.append(f"Native discover.py failed: {str(run.get('stderr') or '').strip() or 'no stderr'}")
+        status = "failed"
+    elif candidates:
+        status = "completed"
+    else:
+        status = str(payload.get("status") or "inconclusive")
+        if not limitations:
+            limitations.append("Native discover.py completed without shortlist candidates.")
+    return {
+        "status": status,
+        "mode": native_mode,
+        "query": str(inputs.get("query") or inputs.get("topic") or payload.get("query") or ""),
+        "limit": int(inputs.get("limit") or payload.get("shortlist_count") or 10),
+        "anchors": anchors if isinstance(anchors, list) else [],
+        "negative_ids": _discover_native_values(inputs.get("negative_ids")),
+        "venue": str(inputs.get("venue") or (seed.get("venue") if isinstance(seed, dict) else "") or ""),
+        "year": inputs.get("year") or (seed.get("year") if isinstance(seed, dict) else None),
+        "candidates": candidates,
+        "artifacts": artifacts,
+        "limitations": limitations,
+        "native_payload": payload,
+    }
+
+
 def _action_daily_arxiv_prepare_finalize(envelope: dict[str, Any]) -> dict[str, Any]:
     inputs = dict(envelope.get("inputs") or {})
     daily_command = str(inputs.get("daily_command") or "run").strip().lower()
@@ -5842,21 +6161,28 @@ def _action_discover_literature(envelope: dict[str, Any]) -> dict[str, Any]:
     discover_mode = str(inputs.get("discover_mode") or "")
     if inputs.get("from_wiki") and not discover_mode:
         discover_mode = "wiki"
-    raw = discover_literature(
-        query=str(inputs.get("query") or inputs.get("topic") or ""),
-        mode=discover_mode,
-        anchors=list(inputs.get("anchors") or inputs.get("anchor_ids") or []),
-        negative_ids=list(inputs.get("negative_ids") or []),
-        venue=str(inputs.get("venue") or ""),
-        year=int(inputs["year"]) if inputs.get("year") else None,
-        limit=int(inputs.get("limit") or 10),
-        wiki_root=wiki_root,
-        workspace_root=HARNESS_DIR,
-        repository_root=REPO_HARNESS_DIR,
-        allow_network_fetch=allow_network_fetch,
-        no_citation_expand=bool(inputs.get("no_citation_expand")),
-        fixture_fallback=fixture_fallback,
-    )
+    if fixture_fallback:
+        raw = discover_literature(
+            query=str(inputs.get("query") or inputs.get("topic") or ""),
+            mode=discover_mode,
+            anchors=list(inputs.get("anchors") or inputs.get("anchor_ids") or []),
+            negative_ids=list(inputs.get("negative_ids") or []),
+            venue=str(inputs.get("venue") or ""),
+            year=int(inputs["year"]) if inputs.get("year") else None,
+            limit=int(inputs.get("limit") or 10),
+            wiki_root=wiki_root,
+            workspace_root=HARNESS_DIR,
+            repository_root=REPO_HARNESS_DIR,
+            allow_network_fetch=allow_network_fetch,
+            no_citation_expand=bool(inputs.get("no_citation_expand")),
+            fixture_fallback=True,
+        )
+    else:
+        raw = _discover_native_local_pipeline(
+            envelope,
+            wiki_root=wiki_root,
+            allow_network_fetch=allow_network_fetch,
+        )
     raw["source_provider_boundary"] = _source_provider_boundary(
         [],
         raw.get("candidates") if isinstance(raw.get("candidates"), list) else [],

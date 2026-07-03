@@ -617,7 +617,10 @@ def test_autosci_skill_shim_accepts_discover_from_wiki_limit(tmp_path: Path) -> 
     assert boundary["final_shortlist_ready"] is False
     assert boundary["status"] == "discover_shortlist_incomplete"
     assert "discovery shortlist is empty" in boundary["blocking_reasons"]
-    assert any(artifact["type"] == "discover_final_shortlist_boundary_json" for artifact in discovery["artifacts"])
+    artifact_types = {artifact["type"] for artifact in discovery["artifacts"]}
+    assert "discover_native_stdout_json" in artifact_types
+    assert "discover_native_payload_json" in artifact_types
+    assert "discover_final_shortlist_boundary_json" in artifact_types
     assert "local_fixture" not in json.dumps(discovery)
 
 
@@ -5389,8 +5392,11 @@ def test_autosci_skill_shim_runs_ask_check_and_init_diagnostics(tmp_path: Path) 
             assert (tmp_path / evidence["outputs"]["evolution"]["recommended_changes_path"]).exists()
         elif expected_action == "init_sources":
             assert evidence["status"] == "inconclusive"
-            assert evidence["outputs"]["mode"] == "init_plan"
+            assert evidence["outputs"]["mode"] == "init_native_local_plan"
             assert evidence["outputs"]["candidates"] == []
+            artifact_types = {artifact["type"] for artifact in evidence["artifacts"]}
+            assert "init_discovery_prepare_manifest_json" in artifact_types
+            assert "init_discovery_plan_json" in artifact_types
 
 
 def test_autosci_skill_shim_init_uses_verified_runtime_source_manifest(tmp_path: Path) -> None:
