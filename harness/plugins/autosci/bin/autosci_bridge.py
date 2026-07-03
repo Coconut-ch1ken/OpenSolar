@@ -315,7 +315,12 @@ def _read_sample_paper(envelope: dict[str, Any] | None = None, *, analyzed: bool
     allow_network_fetch = str(inputs.get("allow_network_fetch", "true")).lower() not in {"0", "false", "no"}
     if os.environ.get("AUTOSCI_DISABLE_NETWORK_FETCH", "").lower() in {"1", "true", "yes"}:
         allow_network_fetch = False
-    return read_paper_source(
+    native_prepare = (
+        _native_prepare_paper_source(envelope or {}, paper_path, raw_root, allow_network_fetch=allow_network_fetch)
+        if not is_remote_source
+        else {}
+    )
+    paper = read_paper_source(
         paper_path,
         raw_root=raw_root,
         workspace_root=HARNESS_DIR,
@@ -326,6 +331,69 @@ def _read_sample_paper(envelope: dict[str, Any] | None = None, *, analyzed: bool
         allow_network_fetch=allow_network_fetch,
         analyzed=analyzed,
     )
+    if native_prepare:
+        payload = native_prepare.get("payload") if isinstance(native_prepare.get("payload"), dict) else {}
+        preparation = paper.setdefault("preparation", {})
+        preparation["native_prepare_paper_source"] = {
+            "schema": str(payload.get("schema") or "autosci_prepare_paper_source_cli.v1"),
+            "status": str(payload.get("status") or "unknown"),
+            "ok": bool(payload.get("ok")),
+            "canonical_ingest_path": str(payload.get("canonical_ingest_path") or ""),
+            "prepared_path": payload.get("prepared_path"),
+            "source_path": str(payload.get("source_path") or ""),
+            "raw_root": str(payload.get("raw_root") or ""),
+            "allow_network_fetch": payload.get("allow_network_fetch"),
+        }
+        identifiers = paper.setdefault("identifiers", {})
+        identifiers["native_prepare_status"] = str(payload.get("status") or "unknown")
+        paper.setdefault("artifacts", []).extend(native_prepare.get("artifacts") or [])
+        if int(native_prepare.get("returncode") or 0) != 0:
+            paper.setdefault("limitations", []).append(
+                "Native prepare_paper_source.py did not complete; parser fallback evidence was retained."
+            )
+    return paper
+
+
+def _native_prepare_paper_source(
+    envelope: dict[str, Any],
+    source_path: Path,
+    raw_root: Path,
+    *,
+    allow_network_fetch: bool,
+) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    output_dir = _output_dir(envelope, "ingest_paper")
+    args = [
+        "--raw-root",
+        str(raw_root),
+        "--source",
+        str(source_path),
+        "--workspace-root",
+        str(HARNESS_DIR),
+        "--repository-root",
+        str(REPO_HARNESS_DIR),
+    ]
+    title = str(inputs.get("paper_title") or inputs.get("title") or inputs.get("pdf_title") or "").strip()
+    if title:
+        args.extend(["--title", title])
+    arxiv_id = str(inputs.get("arxiv_id") or "").strip()
+    if arxiv_id:
+        args.extend(["--arxiv-id", arxiv_id])
+    if not allow_network_fetch:
+        args.append("--no-network-fetch")
+    run = _run_root_tool_json(
+        "prepare_paper_source.py",
+        args,
+        output_dir=output_dir,
+        artifact_prefix="prepare_paper_source_native",
+        timeout_env="AUTOSCI_PREPARE_PAPER_SOURCE_TIMEOUT_SECONDS",
+    )
+    payload = run.get("payload") if isinstance(run.get("payload"), dict) else {}
+    payload_path = output_dir / "prepare_paper_source_native_payload.json"
+    payload_artifact = _artifact("prepare_paper_source_native_payload_json", payload_path)
+    _write_json_sidecar(payload_path, payload)
+    run.setdefault("artifacts", []).append(payload_artifact)
+    return run
 
 
 def _rel(path: Path) -> str:

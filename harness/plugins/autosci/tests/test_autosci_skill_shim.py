@@ -383,6 +383,12 @@ def test_autosci_skill_shim_maps_positional_ingest_source(tmp_path: Path) -> Non
     paper = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
     assert "Fixture abstract" not in json.dumps(paper)
     assert "SKILLGEN" in paper["outputs"]["paper"]["title"]
+    preparation = paper["outputs"]["paper"]["preparation"]
+    assert preparation["native_prepare_paper_source"]["schema"] == "autosci_prepare_paper_source_cli.v1"
+    assert preparation["native_prepare_paper_source"]["status"] == "completed"
+    artifact_types = {artifact["type"] for artifact in paper["artifacts"]}
+    assert "prepare_paper_source_native_payload_json" in artifact_types
+    assert "prepare_paper_source_native_stdout_json" in artifact_types
     artifact_paths = [artifact["path"] for artifact in paper["artifacts"]]
     assert not any("/OpenSolar/harness/artifacts/autosci/workspace/raw" in path for path in artifact_paths)
 
@@ -422,6 +428,8 @@ def test_autosci_skill_shim_ingests_pdf_with_extracted_text_and_no_fixture_leaka
     assert preparation["original_format"] == "pdf"
     assert preparation["extracted_text_path"]
     assert preparation["source_fetch_status"] == "skipped_network_disabled"
+    assert preparation["native_prepare_paper_source"]["schema"] == "autosci_prepare_paper_source_cli.v1"
+    assert preparation["native_prepare_paper_source"]["status"] == "completed"
     assert paper["parse_status"] == "parsed"
     assert "SKILLGEN" in paper["title"]
     assert "Fixture abstract" not in json.dumps(evidence)
@@ -432,6 +440,8 @@ def test_autosci_skill_shim_ingests_pdf_with_extracted_text_and_no_fixture_leaka
         "research_graph_update_json",
         "research_memory_update_json",
         "provider_source_runtime_proof_manifest_json",
+        "prepare_paper_source_native_payload_json",
+        "prepare_paper_source_native_stdout_json",
         "synthetic_latex",
     } <= artifact_types
     artifacts = {artifact["type"]: artifact["path"] for artifact in evidence["artifacts"]}

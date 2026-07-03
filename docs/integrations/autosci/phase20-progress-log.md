@@ -73,3 +73,35 @@ AutoSci tool that owns the command semantics.
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_discover_runtime_requires_provider_boundary harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_discover_runtime_attaches_provider_runtime_proof harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_discover_wiki_runtime_proof_is_not_live_provider harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_init_uses_verified_runtime_source_manifest harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_init_write_fans_runtime_sources_into_wiki` | ok: 5 passed |
 | `pytest -q harness/plugins/autosci/tests/test_source_cli_tools.py harness/plugins/autosci/tests/test_root_tool_abi.py::test_side_effect_root_tools_emit_truthful_non_mutating_evidence` | ok: 8 passed |
 | `pytest -q harness/plugins/autosci/tests/test_literature_discover.py` | ok: 2 passed |
+
+## Agent B First-Class Native Execution Parity Audit: Ingest
+
+Logged: 2026-07-03 EDT
+
+Intent: audit whether any first-class command execution path still bypassed a
+native AutoSci root tool after the `$visualize`, `$poster`, `$daily-arxiv`,
+`$init`, and `$discover` native-path fixes.
+
+| Item | Status | Evidence |
+|---|---|---|
+| `$ingest` native source prepare | ok | `$ingest` now invokes `tools/prepare_paper_source.py` before bridge parsing; native payload/stdout artifacts are archived and preparation records `native_prepare_paper_source`. |
+| Parser compatibility | ok | Existing `read_paper_source` parser remains responsible for the Solar `research_paper.v1` body/sections so parse quality and ABI output do not regress. |
+| Remaining first-class audit | ok | Explicit root-tool commands now have native invocation or remain approval-gated remote/provider paths: visualize, poster, daily-arxiv, init, discover, ingest, check, reset, and remote execution. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| `$ingest` source normalization used only the OpenSolar backend. | fixed | Route now runs native `prepare_paper_source.py` and archives native payload/stdout. |
+| Replacing the parser wholesale could alter `research_paper.v1` ABI and parse quality. | guarded | Native CLI is the source-normalization authority; existing parser still emits paper body/sections. |
+| `research_wiki.py` calls appear in many native skills. | deferred | Treat as command-internal wiki mutation/UX parity unless the slash route has an explicit native root tool that is bypassed. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py` | ok |
+| `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_maps_positional_ingest_source test_autosci_skill_shim.py::test_autosci_skill_shim_ingests_pdf_with_extracted_text_and_no_fixture_leakage` | ok: 2 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k ingest` | ok: 8 passed, 146 deselected |
+| `pytest -q harness/plugins/autosci/tests/test_source_cli_tools.py harness/plugins/autosci/tests/test_paper_prepare.py` | ok: 11 passed |
+| `git diff --check -- harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/tests/test_autosci_skill_shim.py docs/integrations/autosci/phase20-progress-log.md` | ok |
