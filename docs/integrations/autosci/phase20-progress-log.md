@@ -284,3 +284,46 @@ behavior.
 | `pytest -q harness/tests/evaluators/scientific/test_workflow_evolution_gate.py harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 11 passed |
 | `pytest -q test_autosci_skill_shim.py::test_autosci_skill_shim_refine_applies_approved_after_artifact` | ok: 1 passed |
 | `git diff --check -- <changed AutoSci setup/reset problem3 files>` | ok |
+
+## Agent B Problem 3 Side-Effect Parity: Remaining Commands
+
+Logged: 2026-07-03 EDT
+
+Intent: finish the remaining problem-3 class for commands whose native AutoSci
+behavior has real side effects. The goal was not to make every command succeed
+without prerequisites; it was to let approved local/writeback/execution paths
+perform the same kind of side effects and leave typed runtime proof, while
+keeping provider, remote, and workflow mutation boundaries truthful.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Shared policy contract helpers | ok | Added bridge helpers for policy-auto approval contracts, existing-contract updates, local mutation runtime evidence, and policy decision attachment. |
+| Local wiki/artifact writebacks | ok | `$prefill`, `$edit`, `$ask --crystallize`, and `$refine` can now apply approved local after artifacts and register concrete mutation runtime proof in the approval contract. |
+| Claim and pilot verdict writeback | ok | `$exp-eval` and `$exp-pilot-eval` can now use policy-auto approval to write local wiki verdict state, log/edge/view updates, approval proof, side-effect proof, and mutation proof manifests. |
+| Pilot runtime execution | ok | `$exp-pilot-run` can now execute an allowlisted local pilot command through the existing approved executor path and emit runtime/result/stdout/stderr/deploy/run-report evidence without writing wiki verdict state. |
+| Status and collect side effects | ok | `$exp-status` and `$exp-run --collect` have high-risk policy paths for command/status/collect side effects, but remote execution requires policy allowlist plus `SOLAR_AUTOSCI_ALLOW_REMOTE=1`. |
+| Research workflow evolution | guarded | Fixed a regression in the research workflow-evolution raw payload, but did not auto-apply workflow patch candidates. Workflow patch application remains proposed-only until a verified explicit patch path exists. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Some remaining commands could be "proved" by sidecar evidence while still never performing the local mutation. | fixed | Local writeback commands now add concrete after artifacts and mutation runtime evidence to the approval contract before emitting approved mutation proof. |
+| Claim/pilot verdict routes needed side effects, but pass/fail judgment belongs to eval routes, not run routes. | guarded | `$exp-pilot-run` produces runtime evidence only; `$exp-pilot-eval` owns verdict and wiki writeback. |
+| Remote/status commands are high-risk and can be confused with local proof. | guarded | Remote/status/collect execution now requires both gate policy approval and `SOLAR_AUTOSCI_ALLOW_REMOTE=1`; otherwise the bridge reports gated/blocked state instead of faking provider proof. |
+| Workflow evolution mutation would touch shared route/gate/workflow behavior. | guarded | The command still emits proposal/evidence only. No silent workflow, route, operator, or gate mutation was introduced in this pass. |
+| Research workflow-evolution raw payload referenced an undefined setup execution variable. | fixed | The payload now remains proposed-only and no longer depends on an undefined local variable. |
+| Codex sandbox denies localhost socket binding for provider/server probe tests. | environment | The full shim suite was split: non-socket tests passed in sandbox, then the three socket-bound tests passed with elevated permissions. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/tests/test_autosci_skill_shim.py` | ok |
+| `pytest -q test_autosci_skill_shim.py::<prefill/edit/ask/refine problem3 tests>` | ok: 4 passed |
+| `pytest -q test_autosci_skill_shim.py::<pilot-eval/exp-eval/pilot-run/status/collect problem3 tests>` | ok: 5 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'exp_pilot_run or exp_status or exp_collect or pilot_eval or exp_eval'` | ok: 25 passed, 145 deselected |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'not visualize_parity_demo_auto_runs_server_probe and not novelty_http_provider_marks_external_runtime and not review_invokes_openai_compatible_provider'` | ok: 167 passed, 3 deselected |
+| elevated rerun of socket-bound shim tests: visualize server probe, novelty HTTP provider, Review LLM OpenAI-compatible provider | ok: 3 passed |
+| `git diff --check -- harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/tests/test_autosci_skill_shim.py` | ok |
