@@ -1,0 +1,1006 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-approval-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-side-effect-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-source-provider-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-wiki-mutation-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-prefill-full",
+      "type": "semantic_audit_dir"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "prefill",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [],
+    "runtime_proof_manifest_paths": [
+      "artifacts/autosci/phase19/prefill-approval-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/prefill-side-effect-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/prefill-source-provider-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/prefill-wiki-mutation-runtime-proof-20260630.json"
+    ],
+    "runtime_proof_manifests": [
+      "artifacts/autosci/phase19/prefill-approval-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/prefill-side-effect-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/prefill-source-provider-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/prefill-wiki-mutation-runtime-proof-20260630.json"
+    ],
+    "semantic_audit_dirs": [
+      "artifacts/autosci/phase19/semantic-audits-prefill-full"
+    ],
+    "semantic_audit_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json"
+    ],
+    "semantic_audits": []
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-prefill",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 1,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 0,
+      "gated_count": 1,
+      "items": [
+        {
+          "autosci_command": "/prefill",
+          "autosci_feature": "/prefill",
+          "backend_mode": "side_effect_gated",
+          "coverage_status": "gated",
+          "evidence_ids": [
+            "route:prefill",
+            "native:prefill"
+          ],
+          "evidence_schema": "research_memory_update.v1",
+          "execution_policy": "approval_required",
+          "feature_kind": "skill",
+          "limitations": [
+            "Foundation creation mutates local wiki state only with explicit approval; no-approval runs remain proposal evidence. Prefill now records add/catalog mode, domain resolution, selected seeds, existing-foundation dedup state, supplied source/Wikipedia evidence status, Wikipedia fetch attempts, and terminal foundation page metadata before any approved writeback. Failed or disabled live fetches remain visible in prefill_plan.json and are not promoted to source-backed rendering."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/prefill/SKILL.md"
+          ],
+          "native_skill": "prefill",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/fetch_wikipedia.py",
+              "ref": "tools/fetch_wikipedia.py summary",
+              "status": "ok",
+              "token": "tools/fetch_wikipedia.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/fetch_wikipedia.py",
+              "ref": "tools/fetch_wikipedia.py sections",
+              "status": "ok",
+              "token": "tools/fetch_wikipedia.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/fetch_wikipedia.py",
+              "ref": "tools/fetch_wikipedia.py section",
+              "status": "ok",
+              "token": "tools/fetch_wikipedia.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/fetch_wikipedia.py",
+              "ref": "tools/fetch_wikipedia.py wikitext",
+              "status": "ok",
+              "token": "tools/fetch_wikipedia.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/research_wiki.py",
+              "ref": "tools/research_wiki.py log",
+              "status": "ok",
+              "token": "tools/research_wiki.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/research_wiki.py",
+              "ref": "tools/research_wiki.py rebuild-index",
+              "status": "ok",
+              "token": "tools/research_wiki.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/approval_runtime_proof.py",
+              "ref": "tools/approval_runtime_proof.py from-contract",
+              "status": "ok",
+              "token": "tools/approval_runtime_proof.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/wiki_mutation_runtime_proof.py",
+              "ref": "tools/wiki_mutation_runtime_proof.py from-writeback",
+              "status": "ok",
+              "token": "tools/wiki_mutation_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "tools/fetch_wikipedia.py summary",
+            "tools/fetch_wikipedia.py sections",
+            "tools/fetch_wikipedia.py section",
+            "tools/fetch_wikipedia.py wikitext",
+            "tools/research_wiki.py log",
+            "tools/research_wiki.py rebuild-index",
+            "tools/approval_runtime_proof.py from-contract",
+            "tools/wiki_mutation_runtime_proof.py from-writeback"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:prefill",
+            "native:prefill"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:prefill"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:prefill"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "tools/fetch_wikipedia.py summary",
+                "tools/fetch_wikipedia.py sections",
+                "tools/fetch_wikipedia.py section",
+                "tools/fetch_wikipedia.py wikitext",
+                "tools/research_wiki.py log",
+                "tools/research_wiki.py rebuild-index",
+                "tools/approval_runtime_proof.py from-contract",
+                "tools/wiki_mutation_runtime_proof.py from-writeback"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:prefill:approval-contract:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "runtime:prefill:approved-mutation:20260630T150714Z",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "runtime:prefill:wiki-writeback:20260630T150714Z",
+                "runtime:prefill:semantic-audit:prefill.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/prefill/SKILL.md",
+                ".agents/skills/prefill/foundations-catalog.yaml",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tools/fetch_wikipedia.py",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:prefill:approval-contract:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "runtime:prefill:approved-mutation:20260630T150714Z",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "runtime:prefill:wiki-writeback:20260630T150714Z",
+                "runtime:prefill:semantic-audit:prefill.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/prefill/SKILL.md",
+                ".agents/skills/prefill/foundations-catalog.yaml",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tools/fetch_wikipedia.py",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "approval_boundary_evidence",
+              "description": "Side-effecting route requires durable approval, allowlist, before/after, and result evidence.",
+              "evidence_refs": [
+                "runtime:prefill:approval-contract:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "runtime:prefill:approved-mutation:20260630T150714Z",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "runtime:prefill:wiki-writeback:20260630T150714Z",
+                "runtime:prefill:semantic-audit:prefill.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/prefill/SKILL.md",
+                ".agents/skills/prefill/foundations-catalog.yaml",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tools/fetch_wikipedia.py",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "side_effect_execution_evidence",
+              "description": "Gated side-effect route needs approved execution or provider delivery proof.",
+              "evidence_refs": [
+                "runtime:prefill:approval-contract:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "runtime:prefill:approved-mutation:20260630T150714Z",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "runtime:prefill:wiki-writeback:20260630T150714Z",
+                "runtime:prefill:semantic-audit:prefill.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/prefill/SKILL.md",
+                ".agents/skills/prefill/foundations-catalog.yaml",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tools/fetch_wikipedia.py",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "provider_source_evidence",
+              "description": "Source-dependent route needs non-fixture provider/source-channel evidence.",
+              "evidence_refs": [
+                "runtime:prefill:approval-contract:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "runtime:prefill:approved-mutation:20260630T150714Z",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "runtime:prefill:wiki-writeback:20260630T150714Z",
+                "runtime:prefill:semantic-audit:prefill.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/prefill/SKILL.md",
+                ".agents/skills/prefill/foundations-catalog.yaml",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tools/fetch_wikipedia.py",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "wiki_mutation_evidence",
+              "description": "Wiki-mutating route needs approved before/after mutation and rebuild evidence.",
+              "evidence_refs": [
+                "runtime:prefill:approval-contract:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "runtime:prefill:approved-mutation:20260630T150714Z",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "runtime:prefill:wiki-writeback:20260630T150714Z",
+                "runtime:prefill:semantic-audit:prefill.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/prefill/SKILL.md",
+                ".agents/skills/prefill/foundations-catalog.yaml",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tools/fetch_wikipedia.py",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "native add mode",
+            "domain/catalog seed selection",
+            "foundation catalog read",
+            "Wikipedia fetch attempt evidence",
+            "source evidence rendering",
+            "foundation page proposal",
+            "terminal foundation template",
+            "wiki foundation mutation proof",
+            "dedup guard"
+          ],
+          "runtime_proof_refs": [
+            "runtime:prefill:approval-contract:20260630T150714Z",
+            "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+            "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+            "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+            "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+            "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+            "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+            "runtime:prefill:approved-mutation:20260630T150714Z",
+            "artifacts/autosci/workspace/wiki/log.md",
+            "artifacts/autosci/workspace/wiki/index.md",
+            "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+            "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+            "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+            "runtime:prefill:wiki-writeback:20260630T150714Z",
+            "runtime:prefill:semantic-audit:prefill.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/prefill/SKILL.md",
+            ".agents/skills/prefill/foundations-catalog.yaml",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "plugins/autosci/bin/autosci_skill_shim.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "tools/fetch_wikipedia.py",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+            "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "external_runtime_evidence",
+                "approval_boundary_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Verified approval/runtime evidence for AutoSci `prefill` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "ref": "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                  "ref": "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                  "ref": "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                  "ref": "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "ref": "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_contract.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/allowlist-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/runtime-20260630.json",
+                "artifacts/autosci/phase19/prefill-live-fetch-proof-inputs/before-20260630.md",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-approval-runtime-proof-20260630.json",
+              "native_skill": "prefill",
+              "production_ready": true,
+              "proof_id": "runtime:prefill:approval-contract:20260630T150714Z",
+              "provenance": {
+                "artifact_kind": "wiki_foundation_prefill",
+                "captured_at": "2026-06-30T15:07:14Z",
+                "command": "prefill_foundations:approved_mutation",
+                "source": "approval_contract"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "side_effect_execution_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Completed approved side-effect execution evidence for AutoSci `prefill` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "ref": "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "ref": "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/log.md",
+                  "ref": "artifacts/autosci/workspace/wiki/log.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/index.md",
+                  "ref": "artifacts/autosci/workspace/wiki/index.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                  "ref": "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-side-effect-runtime-proof-20260630.json",
+              "native_skill": "prefill",
+              "production_ready": true,
+              "proof_id": "runtime:prefill:approved-mutation:20260630T150714Z",
+              "provenance": {
+                "artifact_kind": "wiki_foundation_prefill",
+                "captured_at": "2026-06-30T15:07:14Z",
+                "command": "prefill_foundations:approved_mutation",
+                "source": "approved_mutation"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "provider_source_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Verified source-provider evidence for AutoSci `prefill` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "ref": "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                  "ref": "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-source-provider-runtime-proof-20260630.json",
+              "native_skill": "prefill",
+              "production_ready": true,
+              "proof_id": "runtime:prefill:approved-prefill-foundation:20260630T150714Z",
+              "provenance": {
+                "artifact_kind": "wiki_foundation_prefill",
+                "captured_at": "2026-06-30T15:07:14Z",
+                "command": "prefill_foundations:approved_mutation",
+                "source": "approved_prefill_foundation"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "wiki_mutation_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Completed approved wiki mutation evidence for AutoSci `prefill` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "ref": "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "ref": "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/log.md",
+                  "ref": "artifacts/autosci/workspace/wiki/log.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/index.md",
+                  "ref": "artifacts/autosci/workspace/wiki/index.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                  "ref": "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-wiki-mutation-runtime-proof-20260630.json",
+              "native_skill": "prefill",
+              "production_ready": true,
+              "proof_id": "runtime:prefill:wiki-writeback:20260630T150714Z",
+              "provenance": {
+                "artifact_kind": "wiki_foundation_prefill",
+                "captured_at": "2026-06-30T15:07:14Z",
+                "command": "prefill_foundations:approved_mutation",
+                "source": "wiki_writeback"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/prefill/SKILL.md",
+                  "ref": ".agents/skills/prefill/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/prefill/foundations-catalog.yaml",
+                  "ref": ".agents/skills/prefill/foundations-catalog.yaml",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/fetch_wikipedia.py",
+                  "ref": "tools/fetch_wikipedia.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "ref": "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/index.md",
+                  "ref": "artifacts/autosci/workspace/wiki/index.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/log.md",
+                  "ref": "artifacts/autosci/workspace/wiki/log.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                  "ref": "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                  "ref": "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/prefill/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/prefill/SKILL.md",
+                ".agents/skills/prefill/foundations-catalog.yaml",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tools/fetch_wikipedia.py",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-add-catalog-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-source-proof-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-fetch-disabled-proof-20260630/prefill_wikipedia_lora-disabled-fetch-20260630_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_plan.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_wikipedia_transformer-deep-learning-architecture_summary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/research_memory_update.prefill.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_source_provider_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-prefill-live-fetch-proof-transformer-20260630/prefill_foundations_wiki_mutation_runtime_proof.json",
+                "artifacts/autosci/workspace/wiki/foundations/foundation-transformer-deep-learning-architecture.md",
+                "artifacts/autosci/workspace/wiki/index.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/context_brief.md",
+                "artifacts/autosci/phase19/prefill-route-after-wikipedia-fetch-tool.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/phase19/current-parity-inventory-after-prefill-wikipedia-fetch-tool.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json",
+              "native_skill": "prefill",
+              "production_ready": true,
+              "proof_id": "runtime:prefill:semantic-audit:prefill.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-06-30T15:08:47Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-prefill-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "artifacts/autosci/phase19/semantic-audits-prefill-full/prefill.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "approval_required",
+          "solar_backend_action": "prefill_foundations",
+          "solar_capability": "cap.research-memory-update",
+          "solar_logical_operator": "ScientificMemoryUpdater",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "prefill"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 6
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-07-03T01:01:35.742765Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

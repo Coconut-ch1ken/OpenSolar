@@ -1,0 +1,119 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "exp-pilot-eval": {
+      "semantic_parity": "full",
+      "auditor": "phase19-exp-pilot-eval-semantic-audit",
+      "summary": "Solar $exp-pilot-eval preserves native AutoSci pilot verdict semantics behind an explicit approval boundary: it accepts pilot runtime/result evidence, applies lenient pilot verdict mapping, records final acceptance only when runtime evidence, a non-inconclusive verdict, and approved wiki writeback are all complete, and emits approval plus wiki-mutation runtime proof without mutating the original AutoSci repo.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/exp-pilot-eval/SKILL.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/exp-pilot-eval/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "artifacts/autosci/phase19/pilot-proof-inputs/pilot-eval-allowlist-20260630.json",
+        "artifacts/autosci/phase19/pilot-proof-inputs/pilot-eval-runtime-20260630.json",
+        "artifacts/autosci/phase19/pilot-proof-inputs/pilot-eval-before-20260630.md",
+        "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/claim_verdict.pilot.json",
+        "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/pilot_final_acceptance_boundary.json",
+        "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/claim_verdict_writeback.json",
+        "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_approval_contract.json",
+        "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_approval_runtime_proof.json",
+        "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_wiki_mutation_runtime_proof.json",
+        "artifacts/autosci/workspace/wiki/ideas/pilot-claim-proof-20260630.md",
+        "artifacts/autosci/workspace/wiki/log.md",
+        "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+        "artifacts/autosci/workspace/wiki/index.md",
+        "artifacts/autosci/workspace/wiki/graph/context_brief.md"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $exp-pilot-eval preserves the native idea-slug target, auto/approval-driven execution boundary, pilot result consumption, verdict report, and idea-page update semantics while routing through Solar-managed evidence paths.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/exp-pilot-eval/SKILL.md",
+            ".agents/skills/exp-pilot-eval/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "pilot_runtime_result_boundary",
+          "status": "ok",
+          "detail": "Pilot verdicts are derived from experiment_result.v1 or supplied runtime evidence; missing or unreadable pilot evidence remains inconclusive rather than guessed.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "artifacts/autosci/phase19/pilot-proof-inputs/pilot-eval-runtime-20260630.json",
+            "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/claim_verdict.pilot.json"
+          ]
+        },
+        {
+          "check": "lenient_verdict_mapping",
+          "status": "ok",
+          "detail": "The Solar bridge maps supportive pilot outcomes to supported/partially_supported verdicts, treats failed outcomes as inconclusive for pilot acceptance, and records confidence/metrics/evidence ids in claim_verdict.v1.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/claim_verdict.pilot.json"
+          ]
+        },
+        {
+          "check": "approval_writeback_boundary",
+          "status": "ok",
+          "detail": "Native wiki update semantics are preserved behind Solar approval: writeback is completed only with --write, approval evidence, allowlist, before/after artifacts, and execute-approved state.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "artifacts/autosci/phase19/pilot-proof-inputs/pilot-eval-allowlist-20260630.json",
+            "artifacts/autosci/phase19/pilot-proof-inputs/pilot-eval-before-20260630.md",
+            "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/claim_verdict_writeback.json",
+            "artifacts/autosci/workspace/wiki/ideas/pilot-claim-proof-20260630.md"
+          ]
+        },
+        {
+          "check": "final_acceptance_boundary",
+          "status": "ok",
+          "detail": "pilot_eval_final_acceptance_boundary requires linked runtime evidence, a non-inconclusive verdict, and completed approved wiki writeback before final_pilot_acceptance_ready is true.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/pilot_final_acceptance_boundary.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "runtime_proof_coverage",
+          "status": "ok",
+          "detail": "Approved pilot evaluation emits route-level approval_boundary/external_runtime proof and wiki_mutation proof with existing evidence refs.",
+          "evidence_refs": [
+            "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_approval_runtime_proof.json",
+            "artifacts/autosci/runs/codex-pilot-eval-proof-check-20260630/evaluate_pilot_result_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "original_repo_is_read_only",
+          "status": "ok",
+          "detail": "The Solar wrapper explicitly routes execution through Solar Harness and does not mutate the source AutoSci repo; writes land only in Solar-managed workspace artifacts after approval.",
+          "evidence_refs": [
+            ".agents/skills/exp-pilot-eval/SKILL.md",
+            "artifacts/autosci/workspace/wiki/log.md",
+            "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+            "artifacts/autosci/workspace/wiki/index.md"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "$exp-pilot-eval can be treated as semantically full for the approved pilot verdict/writeback path represented by the supplied route evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "Unapproved or missing-runtime runs remain inconclusive/proposed, matching the native requirement that pilot results exist before idea state is updated."
+        }
+      ]
+    }
+  }
+}

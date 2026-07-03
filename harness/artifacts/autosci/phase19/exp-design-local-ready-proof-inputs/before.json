@@ -1,0 +1,7 @@
+{
+  "schema": "autosci_experiment_design_before_state.v1",
+  "idea_id": "idea-local-design",
+  "workspace": "prepared",
+  "review_llm_required": true,
+  "remote_provider_required": false
+}

@@ -10,6 +10,12 @@ from pathlib import Path
 HARNESS = Path(__file__).resolve().parents[3]
 SMOKE = HARNESS / "tools" / "run_scientific_lifecycle_smoke.py"
 LIFECYCLE_GATE = HARNESS / "evaluators" / "scientific" / "lifecycle_runtime_gate.py"
+MINIMAL_STRUCTURAL_PDF = (
+    b"%PDF-1.4\n"
+    b"1 0 obj\n<< /Type /Catalog >>\nendobj\n"
+    b"xref\n0 1\n0000000000 65535 f \n"
+    b"trailer\n<<>>\nstartxref\n9\n%%EOF\n"
+)
 
 
 def _prepare_isolated_harness(tmp_path: Path) -> Path:
@@ -21,6 +27,42 @@ def _prepare_isolated_harness(tmp_path: Path) -> Path:
     (tmp_path / "run").mkdir(exist_ok=True)
     (tmp_path / "artifacts").mkdir(exist_ok=True)
     return tmp_path
+
+
+def _seed_scheduler_lifecycle_paper_plan_wiki(harness_dir: Path) -> Path:
+    wiki_root = harness_dir / "artifacts/autosci/workspace/wiki"
+    for name in ("ideas", "experiments", "methods", "concepts", "topics", "papers", "graph", "outputs"):
+        (wiki_root / name).mkdir(parents=True, exist_ok=True)
+    (wiki_root / "ideas/scheduler-lifecycle-resume.md").write_text(
+        "---\n"
+        "status: validated\n"
+        "novelty_score: 4\n"
+        "linked_experiments: [exp-supported-001]\n"
+        "---\n"
+        "# Scheduler Lifecycle Resume\n\n"
+        "Use [[scheduler-lifecycle-evidence-boundary]] to preserve source, review, and compile evidence.\n",
+        encoding="utf-8",
+    )
+    (wiki_root / "experiments/exp-supported-001.md").write_text(
+        "---\n"
+        "status: succeeded\n"
+        "key_result: source, review, and compile evidence passed the lifecycle smoke boundary\n"
+        "---\n"
+        "# Supported Scheduler Experiment\n\n"
+        "The experiment succeeded with verified lifecycle evidence.\n",
+        encoding="utf-8",
+    )
+    (wiki_root / "methods/scheduler-lifecycle-evidence-boundary.md").write_text(
+        "# Scheduler Lifecycle Evidence Boundary\n\n"
+        "A method page used by the scheduler lifecycle paper-plan fixture.\n",
+        encoding="utf-8",
+    )
+    return wiki_root
+
+
+def _write_structural_pdf(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(MINIMAL_STRUCTURAL_PDF)
 
 
 def test_scientific_lifecycle_smoke_blocks_configured_publication_tail_without_external_evidence(tmp_path: Path) -> None:
@@ -482,6 +524,7 @@ def test_scientific_lifecycle_smoke_strict_online_mode_rejects_offline_fixture(t
 
 def test_scientific_lifecycle_smoke_accepts_combined_full_external_evidence(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
+    _seed_scheduler_lifecycle_paper_plan_wiki(harness_dir)
     env = os.environ.copy()
     env["HARNESS_DIR"] = str(harness_dir)
 
@@ -594,7 +637,7 @@ def test_scientific_lifecycle_smoke_accepts_combined_full_external_evidence(tmp_
         "\\documentclass{article}\\begin{document}Full external lifecycle compile target.\\end{document}\n",
         encoding="utf-8",
     )
-    (compile_target / "main.pdf").write_bytes(b"%PDF-1.4\n% full external lifecycle test\n")
+    _write_structural_pdf(compile_target / "main.pdf")
 
     proc = subprocess.run(
         [
@@ -654,6 +697,7 @@ def test_scientific_lifecycle_smoke_accepts_combined_full_external_evidence(tmp_
 
 def test_scientific_lifecycle_smoke_executes_approved_publication_compile(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
+    _seed_scheduler_lifecycle_paper_plan_wiki(harness_dir)
     env = os.environ.copy()
     env["HARNESS_DIR"] = str(harness_dir)
 
@@ -707,7 +751,7 @@ def test_scientific_lifecycle_smoke_executes_approved_publication_compile(tmp_pa
     fake_latexmk.write_text(
         "#!/usr/bin/env python3\n"
         "from pathlib import Path\n"
-        "Path('main.pdf').write_text('%PDF-1.4\\n', encoding='utf-8')\n"
+        f"Path('main.pdf').write_bytes({MINIMAL_STRUCTURAL_PDF!r})\n"
         "print('fake scheduler latexmk completed')\n",
         encoding="utf-8",
     )
@@ -955,6 +999,7 @@ def test_scientific_lifecycle_smoke_executes_approved_experiment_command(tmp_pat
 
 def test_scientific_lifecycle_smoke_can_resume_external_blocked_nodes(tmp_path: Path) -> None:
     harness_dir = _prepare_isolated_harness(tmp_path)
+    _seed_scheduler_lifecycle_paper_plan_wiki(harness_dir)
     env = os.environ.copy()
     env["HARNESS_DIR"] = str(harness_dir)
 
@@ -1039,7 +1084,7 @@ def test_scientific_lifecycle_smoke_can_resume_external_blocked_nodes(tmp_path: 
         "\\documentclass{article}\\begin{document}Scheduler resume compile target.\\end{document}\n",
         encoding="utf-8",
     )
-    (compile_target / "main.pdf").write_bytes(b"%PDF-1.4\n% scheduler resume test\n")
+    _write_structural_pdf(compile_target / "main.pdf")
 
     resume_proc = subprocess.run(
         [

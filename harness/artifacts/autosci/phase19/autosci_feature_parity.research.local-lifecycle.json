@@ -1,0 +1,1741 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/design_experiment_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_model_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_workspace_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof-20260702/init_sources_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof-20260702/init_sources_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof-20260702/init_sources_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-proof-20260702/init_sources_approval_boundary_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-proof-20260702/init_sources_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-proof-20260702/init_sources_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/runs",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "research",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [
+      "runs",
+      "harness/artifacts/autosci/runs",
+      "harness/artifacts/autosci/phase19/semantic-audits-research-local-full"
+    ],
+    "runtime_proof_manifest_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/design_experiment_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_model_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_workspace_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof-20260702/init_sources_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof-20260702/init_sources_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof-20260702/init_sources_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-proof-20260702/init_sources_approval_boundary_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-proof-20260702/init_sources_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-init-local-fan-in-proof-20260702/init_sources_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-proof.json"
+    ],
+    "runtime_proof_manifests": [],
+    "semantic_audit_dirs": [],
+    "semantic_audit_paths": [
+      "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json"
+    ],
+    "semantic_audits": [
+      "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json"
+    ]
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-research",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 1,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 0,
+      "gated_count": 1,
+      "items": [
+        {
+          "autosci_command": "/research",
+          "autosci_feature": "/research",
+          "backend_mode": "route_plan",
+          "coverage_status": "gated",
+          "evidence_ids": [
+            "route:research",
+            "native:research"
+          ],
+          "evidence_schema": "workflow_evolution.v1",
+          "execution_policy": "approval_required",
+          "feature_kind": "skill",
+          "limitations": [
+            "Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied.",
+            "`$research --scheduler-run` now defaults to `run_scientific_workflow.py`, a config-driven generic workflow runner that dispatches selected workflow nodes through operator_runtime and records `runner_contract=generic_workflow_runner`; the old bounded lifecycle smoke runner remains available only through `--scheduler-legacy-smoke-runner`.",
+            "Scheduler resume runs on the legacy smoke path still emit `autosci_scheduler_resume_boundary.v1` with reused-node fingerprints and no-rerun checks; generic workflow lifecycle summaries emit `scientific_workflow_runtime_manifest.v1`, but production scheduler parity still requires complete non-fixture node selection plus distributed lease/quota/runtime audit.",
+            "`--scheduler-require-workflow-config-alignment` passes only for the full supplied-evidence tail; partial/default runs surface workflow_config_alignment drift or inconclusive status rather than full parity.",
+            "`--scheduler-require-production-dispatch` now fails when the selected scheduler runner reports fixture/smoke input markers or blocked provider/runtime evidence.",
+            "`--scheduler-include-human-gates` records idea/results approval pauses as scheduler-visible blocked nodes, `--online` can carry supplied approval/runtime source evidence into strict scheduler source mode with non-fixture provider channel boundary checks, scheduler experiment stages can carry explicit `--experiment-*` approval/runtime evidence without reusing source evidence paths, `--experiment-execute-approved` can run an allowlisted approved local experiment command, and scheduler publication compile can use compile-specific approved runtime evidence or `--compile-execute-approved`.",
+            "Full parity still requires real provider evidence, audited remote/session stage runners, production scheduler dispatch, and submission/anonymity checks."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/research/SKILL.md"
+          ],
+          "native_skill": "research",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/workflows/scientific_research_lifecycle_full_v1.json",
+              "ref": "harness/workflows/scientific_research_lifecycle_full_v1.json",
+              "status": "ok",
+              "token": "harness/workflows/scientific_research_lifecycle_full_v1.json"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tools/run_scientific_workflow.py",
+              "ref": "harness/tools/run_scientific_workflow.py",
+              "status": "ok",
+              "token": "harness/tools/run_scientific_workflow.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tools/run_scientific_lifecycle_smoke.py",
+              "ref": "harness/tools/run_scientific_lifecycle_smoke.py",
+              "status": "ok",
+              "token": "harness/tools/run_scientific_lifecycle_smoke.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/review_model_runtime_proof.py",
+              "ref": "tools/review_model_runtime_proof.py from-evidence",
+              "status": "ok",
+              "token": "tools/review_model_runtime_proof.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/approval_runtime_proof.py",
+              "ref": "tools/approval_runtime_proof.py from-contract",
+              "status": "ok",
+              "token": "tools/approval_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "harness/workflows/scientific_research_lifecycle_full_v1.json",
+            "harness/tools/run_scientific_workflow.py",
+            "harness/tools/run_scientific_lifecycle_smoke.py",
+            "tools/review_model_runtime_proof.py from-evidence",
+            "tools/approval_runtime_proof.py from-contract"
+          ],
+          "proof_level": "E4",
+          "proof_refs": [
+            "route:research",
+            "native:research"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:research"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:research"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "harness/workflows/scientific_research_lifecycle_full_v1.json",
+                "harness/tools/run_scientific_workflow.py",
+                "harness/tools/run_scientific_lifecycle_smoke.py",
+                "tools/review_model_runtime_proof.py from-evidence",
+                "tools/approval_runtime_proof.py from-contract"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:research:approved-runtime:20260702T233844Z",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "runtime:research:review-llm:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "runtime:research:literature-discovery-external-novelty-paper-source:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/research/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/tools/run_scientific_workflow.py",
+                "harness/tools/run_scientific_lifecycle_smoke.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "harness/artifacts/autosci/workspace/paper/main.pdf",
+                "runtime:research:semantic-audit:research.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "tools/run_scientific_workflow.py",
+                "tools/run_scientific_lifecycle_smoke.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "artifacts/autosci/workspace/paper/main.pdf"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:research:approved-runtime:20260702T233844Z",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "runtime:research:review-llm:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "runtime:research:literature-discovery-external-novelty-paper-source:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/research/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/tools/run_scientific_workflow.py",
+                "harness/tools/run_scientific_lifecycle_smoke.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "harness/artifacts/autosci/workspace/paper/main.pdf",
+                "runtime:research:semantic-audit:research.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "tools/run_scientific_workflow.py",
+                "tools/run_scientific_lifecycle_smoke.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "artifacts/autosci/workspace/paper/main.pdf"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "approval_boundary_evidence",
+              "description": "Side-effecting route requires durable approval, allowlist, before/after, and result evidence.",
+              "evidence_refs": [
+                "runtime:research:approved-runtime:20260702T233844Z",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "runtime:research:review-llm:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "runtime:research:literature-discovery-external-novelty-paper-source:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/research/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/tools/run_scientific_workflow.py",
+                "harness/tools/run_scientific_lifecycle_smoke.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "harness/artifacts/autosci/workspace/paper/main.pdf",
+                "runtime:research:semantic-audit:research.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "tools/run_scientific_workflow.py",
+                "tools/run_scientific_lifecycle_smoke.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "artifacts/autosci/workspace/paper/main.pdf"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "review_llm_or_model_evidence",
+              "description": "Model/Review LLM-dependent route needs persisted request/response or supplied review evidence.",
+              "evidence_refs": [
+                "runtime:research:approved-runtime:20260702T233844Z",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "runtime:research:review-llm:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "runtime:research:literature-discovery-external-novelty-paper-source:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/research/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/tools/run_scientific_workflow.py",
+                "harness/tools/run_scientific_lifecycle_smoke.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "harness/artifacts/autosci/workspace/paper/main.pdf",
+                "runtime:research:semantic-audit:research.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "tools/run_scientific_workflow.py",
+                "tools/run_scientific_lifecycle_smoke.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "artifacts/autosci/workspace/paper/main.pdf"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "provider_source_evidence",
+              "description": "Source-dependent route needs non-fixture provider/source-channel evidence.",
+              "evidence_refs": [
+                "runtime:research:approved-runtime:20260702T233844Z",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "runtime:research:review-llm:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "runtime:research:literature-discovery-external-novelty-paper-source:20260702T233844Z",
+                "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/research/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/tools/run_scientific_workflow.py",
+                "harness/tools/run_scientific_lifecycle_smoke.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "harness/artifacts/autosci/workspace/paper/main.pdf",
+                "runtime:research:semantic-audit:research.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "tools/run_scientific_workflow.py",
+                "tools/run_scientific_lifecycle_smoke.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "artifacts/autosci/workspace/paper/main.pdf"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "idea discovery",
+            "human gates",
+            "experiment lifecycle",
+            "paper lifecycle",
+            "resume state"
+          ],
+          "runtime_proof_refs": [
+            "runtime:research:approved-runtime:20260702T233844Z",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+            "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+            "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+            "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+            "runtime:research:review-llm:20260702T233844Z",
+            "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+            "runtime:research:literature-discovery-external-novelty-paper-source:20260702T233844Z",
+            "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+            "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+            "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+            "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/research/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/tools/run_scientific_workflow.py",
+            "harness/tools/run_scientific_lifecycle_smoke.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+            "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+            "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+            "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+            "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+            "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+            "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+            "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+            "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+            "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+            "harness/artifacts/autosci/workspace/paper/main.pdf",
+            "runtime:research:semantic-audit:research.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            "plugins/autosci/bin/autosci_skill_shim.py",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "tools/run_scientific_workflow.py",
+            "tools/run_scientific_lifecycle_smoke.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+            "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+            "artifacts/autosci/workspace/paper/main.pdf"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "external_runtime_evidence",
+                "approval_boundary_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Verified approval/runtime evidence for AutoSci `research` lifecycle parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+              "native_skill": "research",
+              "production_ready": true,
+              "proof_id": "runtime:research:approved-runtime:20260702T233844Z",
+              "provenance": {
+                "artifact_kind": "research_lifecycle_approved_runtime",
+                "captured_at": "2026-07-02T23:38:44Z",
+                "command": "run_research_lifecycle:approval_runtime_evidence_report",
+                "source": "approval_contract"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "review_llm_or_model_evidence",
+                "external_runtime_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed Review LLM evidence for AutoSci `research` lifecycle parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+              "native_skill": "research",
+              "production_ready": true,
+              "proof_id": "runtime:research:review-llm:20260702T233844Z",
+              "provenance": {
+                "artifact_kind": "research_lifecycle_review_evidence",
+                "captured_at": "2026-07-02T23:38:44Z",
+                "command": "run_research_lifecycle:review_llm_evidence_report",
+                "source": "review_llm"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "provider_source_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed source evidence for AutoSci `research` lifecycle parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/research_lifecycle_recommended_changes.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+              "native_skill": "research",
+              "production_ready": true,
+              "proof_id": "runtime:research:literature-discovery-external-novelty-paper-source:20260702T233844Z",
+              "provenance": {
+                "artifact_kind": "research_lifecycle_source_evidence",
+                "captured_at": "2026-07-02T23:38:44Z",
+                "command": "run_research_lifecycle:source_evidence_report",
+                "source": "literature_discovery+external_novelty+paper_source"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Completed semantic parity audit for AutoSci route equivalence.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                  "ref": "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/research/SKILL.md",
+                  "ref": ".agents/skills/research/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "harness/plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tools/run_scientific_workflow.py",
+                  "ref": "harness/tools/run_scientific_workflow.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tools/run_scientific_lifecycle_smoke.py",
+                  "ref": "harness/tools/run_scientific_lifecycle_smoke.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                  "ref": "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                  "ref": "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "ref": "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "ref": "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "ref": "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/paper/main.pdf",
+                  "ref": "harness/artifacts/autosci/workspace/paper/main.pdf",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/research/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/tools/run_scientific_workflow.py",
+                "harness/tools/run_scientific_lifecycle_smoke.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "harness/artifacts/autosci/workspace/paper/main.pdf"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-proof.json",
+              "native_skill": "research",
+              "production_ready": true,
+              "proof_id": "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-07-02T23:39:52Z",
+                "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json --native-skill research --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-proof.json",
+                "source": "phase19-research-local-supplied-evidence-lifecycle-semantic-audit"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/research/SKILL.md",
+                  "ref": ".agents/skills/research/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tools/run_scientific_workflow.py",
+                  "ref": "tools/run_scientific_workflow.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tools/run_scientific_lifecycle_smoke.py",
+                  "ref": "tools/run_scientific_lifecycle_smoke.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                  "ref": "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                  "ref": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "ref": "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/paper/main.pdf",
+                  "ref": "artifacts/autosci/workspace/paper/main.pdf",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/research/SKILL.md",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "tools/run_scientific_workflow.py",
+                "tools/run_scientific_lifecycle_smoke.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+                "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+                "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+                "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+                "artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+                "artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+                "artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+                "artifacts/autosci/workspace/paper/main.pdf"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+              "native_skill": "research",
+              "production_ready": true,
+              "proof_id": "runtime:research:semantic-audit:research.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-07-02T23:39:52Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-research-local-supplied-evidence-lifecycle-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "approval_required",
+          "solar_backend_action": "run_research_lifecycle",
+          "solar_capability": "cap.research-workflow-evolve",
+          "solar_logical_operator": "ScientificWorkflowEvolver",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "research"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 0,
+        "E4": 1,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 5
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-07-02T23:40:12.637415Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

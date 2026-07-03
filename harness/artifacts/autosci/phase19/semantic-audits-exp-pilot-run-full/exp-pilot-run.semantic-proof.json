@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-02T19:18:40Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/exp-pilot-run/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+      ],
+      "native_skill": "exp-pilot-run",
+      "production_ready": true,
+      "proof_id": "runtime:exp-pilot-run:phase19-exp-pilot-run-semantic-audit:20260702T191840Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T19:18:40Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json --native-skill exp-pilot-run --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-proof.json",
+        "source": "phase19-exp-pilot-run-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

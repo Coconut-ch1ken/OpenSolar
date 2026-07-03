@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-06-30T18:45:16Z",
+  "proofs": [
+    {
+      "categories": [
+        "external_runtime_evidence",
+        "approval_boundary_evidence"
+      ],
+      "collection_mode": "approved_side_effect",
+      "description": "Verified approval/runtime evidence for AutoSci `poster` parity.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+        "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+        "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+        "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+        "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+        "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+        "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json"
+      ],
+      "native_skill": "poster",
+      "production_ready": true,
+      "proof_id": "runtime:poster:approval-contract:20260630T184516Z",
+      "provenance": {
+        "artifact_kind": "poster_render_export",
+        "captured_at": "2026-06-30T18:45:16Z",
+        "command": "build_poster:approved_mutation",
+        "source": "approval_contract"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

@@ -1,0 +1,1013 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-approval-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-side-effect-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-review-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-poster-full",
+      "type": "semantic_audit_dir"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "poster",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [],
+    "runtime_proof_manifest_paths": [
+      "artifacts/autosci/phase19/poster-approval-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/poster-side-effect-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/poster-review-runtime-proof-20260630.json"
+    ],
+    "runtime_proof_manifests": [
+      "artifacts/autosci/phase19/poster-approval-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/poster-side-effect-runtime-proof-20260630.json",
+      "artifacts/autosci/phase19/poster-review-runtime-proof-20260630.json"
+    ],
+    "semantic_audit_dirs": [
+      "artifacts/autosci/phase19/semantic-audits-poster-full"
+    ],
+    "semantic_audit_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json"
+    ],
+    "semantic_audits": []
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-poster",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 1,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 0,
+      "gated_count": 1,
+      "items": [
+        {
+          "autosci_command": "/poster",
+          "autosci_feature": "/poster",
+          "backend_mode": "side_effect_gated",
+          "coverage_status": "gated",
+          "evidence_ids": [
+            "route:poster",
+            "native:poster"
+          ],
+          "evidence_schema": "publication_bundle.v1",
+          "execution_policy": "approval_required",
+          "feature_kind": "skill",
+          "limitations": [
+            "Browser rendering and image conversion run only through explicit approved renderer configuration; root and bridge render paths emit runtime evidence and keep unavailable renderers inconclusive."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/poster/SKILL.md",
+            "tools/wiki2dag.py",
+            "tools/poster.py"
+          ],
+          "native_skill": "poster",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/wiki2dag.py",
+              "ref": "tools/wiki2dag.py build",
+              "status": "ok",
+              "token": "tools/wiki2dag.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/poster.py",
+              "ref": "tools/poster.py build",
+              "status": "ok",
+              "token": "tools/poster.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/poster.py",
+              "ref": "tools/poster.py validate",
+              "status": "ok",
+              "token": "tools/poster.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/poster.py",
+              "ref": "tools/poster.py render",
+              "status": "ok",
+              "token": "tools/poster.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/review_model_runtime_proof.py",
+              "ref": "tools/review_model_runtime_proof.py from-evidence",
+              "status": "ok",
+              "token": "tools/review_model_runtime_proof.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/approval_runtime_proof.py",
+              "ref": "tools/approval_runtime_proof.py from-contract",
+              "status": "ok",
+              "token": "tools/approval_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "tools/wiki2dag.py build",
+            "tools/poster.py build",
+            "tools/poster.py validate",
+            "tools/poster.py render",
+            "tools/review_model_runtime_proof.py from-evidence",
+            "tools/approval_runtime_proof.py from-contract"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:poster",
+            "native:poster"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:poster"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:poster"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "tools/wiki2dag.py build",
+                "tools/poster.py build",
+                "tools/poster.py validate",
+                "tools/poster.py render",
+                "tools/review_model_runtime_proof.py from-evidence",
+                "tools/approval_runtime_proof.py from-contract"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:poster:approval-contract:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                "runtime:poster:approved-mutation:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "runtime:poster:artifacts-autosci-phase19-poster-content-proof-inputs-poster-review-llm-20260630-json:20260630T184516Z",
+                "runtime:poster:semantic-audit:poster.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/poster/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:poster:approval-contract:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                "runtime:poster:approved-mutation:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "runtime:poster:artifacts-autosci-phase19-poster-content-proof-inputs-poster-review-llm-20260630-json:20260630T184516Z",
+                "runtime:poster:semantic-audit:poster.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/poster/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "approval_boundary_evidence",
+              "description": "Side-effecting route requires durable approval, allowlist, before/after, and result evidence.",
+              "evidence_refs": [
+                "runtime:poster:approval-contract:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                "runtime:poster:approved-mutation:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "runtime:poster:artifacts-autosci-phase19-poster-content-proof-inputs-poster-review-llm-20260630-json:20260630T184516Z",
+                "runtime:poster:semantic-audit:poster.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/poster/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "side_effect_execution_evidence",
+              "description": "Gated side-effect route needs approved execution or provider delivery proof.",
+              "evidence_refs": [
+                "runtime:poster:approval-contract:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                "runtime:poster:approved-mutation:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "runtime:poster:artifacts-autosci-phase19-poster-content-proof-inputs-poster-review-llm-20260630-json:20260630T184516Z",
+                "runtime:poster:semantic-audit:poster.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/poster/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "review_llm_or_model_evidence",
+              "description": "Model/Review LLM-dependent route needs persisted request/response or supplied review evidence.",
+              "evidence_refs": [
+                "runtime:poster:approval-contract:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                "runtime:poster:approved-mutation:20260630T184516Z",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "runtime:poster:artifacts-autosci-phase19-poster-content-proof-inputs-poster-review-llm-20260630-json:20260630T184516Z",
+                "runtime:poster:semantic-audit:poster.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/poster/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "PaperX DAG",
+            "HTML poster",
+            "figure extraction",
+            "Review LLM critique/refine",
+            "overflow probe",
+            "PNG render"
+          ],
+          "runtime_proof_refs": [
+            "runtime:poster:approval-contract:20260630T184516Z",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+            "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+            "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+            "runtime:poster:approved-mutation:20260630T184516Z",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+            "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+            "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+            "runtime:poster:artifacts-autosci-phase19-poster-content-proof-inputs-poster-review-llm-20260630-json:20260630T184516Z",
+            "runtime:poster:semantic-audit:poster.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/poster/SKILL.md",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "plugins/autosci/bin/autosci_skill_shim.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+            "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+            "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+            "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+            "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "external_runtime_evidence",
+                "approval_boundary_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Verified approval/runtime evidence for AutoSci `poster` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                  "ref": "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                  "ref": "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-approval-runtime-proof-20260630.json",
+              "native_skill": "poster",
+              "production_ready": true,
+              "proof_id": "runtime:poster:approval-contract:20260630T184516Z",
+              "provenance": {
+                "artifact_kind": "poster_render_export",
+                "captured_at": "2026-06-30T18:45:16Z",
+                "command": "build_poster:approved_mutation",
+                "source": "approval_contract"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "side_effect_execution_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Completed approved side-effect execution evidence for AutoSci `poster` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                  "ref": "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_contract.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_executor_validation.json",
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-side-effect-runtime-proof-20260630.json",
+              "native_skill": "poster",
+              "production_ready": true,
+              "proof_id": "runtime:poster:approved-mutation:20260630T184516Z",
+              "provenance": {
+                "artifact_kind": "poster_render_export",
+                "captured_at": "2026-06-30T18:45:16Z",
+                "command": "build_poster:approved_mutation",
+                "source": "approved_mutation"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "review_llm_or_model_evidence",
+                "external_runtime_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Verified review/model evidence for AutoSci `poster` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "ref": "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                  "ref": "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-review-runtime-proof-20260630.json",
+              "native_skill": "poster",
+              "production_ready": true,
+              "proof_id": "runtime:poster:artifacts-autosci-phase19-poster-content-proof-inputs-poster-review-llm-20260630-json:20260630T184516Z",
+              "provenance": {
+                "artifact_kind": "artifact_review",
+                "captured_at": "2026-06-30T18:45:16Z",
+                "command": "review_llm_evidence:artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "source": "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/poster/SKILL.md",
+                  "ref": ".agents/skills/poster/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                  "ref": "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                  "ref": "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                  "ref": "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                  "ref": "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                  "ref": "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                  "ref": "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                  "ref": "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/poster-route-after-review-llm-critique.json",
+                  "ref": "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/poster/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/poster/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/main.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/intro.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/method.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/paper/sections/results.tex",
+                "artifacts/autosci/phase19/poster-content-proof-inputs/poster-review-llm-20260630.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-allowlist-20260630.json",
+                "artifacts/autosci/phase19/poster-proof-inputs/poster-before-20260630.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/dag.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/outline.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_template.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.html",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster.png",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_generation_report.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validate_result.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_validation.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/poster_review_llm_boundary.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_review_llm_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_approval_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/build_poster_side_effect_execution_runtime_proof.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-poster-review-proof-20260630/publication_bundle.poster.json",
+                "artifacts/autosci/phase19/poster-route-after-review-llm-critique.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json",
+              "native_skill": "poster",
+              "production_ready": true,
+              "proof_id": "runtime:poster:semantic-audit:poster.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-06-30T18:46:34Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-poster-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "artifacts/autosci/phase19/semantic-audits-poster-full/poster.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "approval_required",
+          "solar_backend_action": "build_poster",
+          "solar_capability": "cap.research-publication-produce",
+          "solar_logical_operator": "ScientificPublicationProducer",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "poster"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 5
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-07-03T00:59:47.720043Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-02T19:36:50Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-ingest-full/ingest.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/prepare_paper_source.py",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/research_wiki.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/ingest/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/ingest-wiki-proof-inputs/registered_source.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/autosci_skill_run.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_paper.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_memory_update.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_graph_update.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_final_source_registration_boundary.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_source_provider_runtime_proof.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+        "harness/artifacts/autosci/workspace/wiki/log.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/workspace/wiki/index.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/context_brief.md"
+      ],
+      "native_skill": "ingest",
+      "production_ready": true,
+      "proof_id": "runtime:ingest:phase19-ingest-semantic-audit:20260702T193650Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T19:36:50Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-ingest-full/ingest.semantic-audit.json --native-skill ingest --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-ingest-full/ingest.semantic-proof.json",
+        "source": "phase19-ingest-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

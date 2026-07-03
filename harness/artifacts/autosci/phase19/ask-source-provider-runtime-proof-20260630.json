@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-06-30T14:35:03Z",
+  "proofs": [
+    {
+      "categories": [
+        "provider_source_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed workspace wiki source retrieval evidence for AutoSci `ask` parity.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/research_memory_update.ask.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_wiki_retrieval.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-ask-target-proof-20260630/ask_final_answer_boundary.json",
+        "harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-1.md",
+        "harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen.md",
+        "harness/artifacts/autosci/workspace/wiki/papers/paper-skillgen-extracted.md",
+        "harness/artifacts/autosci/workspace/wiki/outputs/what-evidence-supports-skillgen.md",
+        "harness/artifacts/autosci/workspace/wiki/log.md"
+      ],
+      "native_skill": "ask",
+      "production_ready": true,
+      "proof_id": "runtime:ask:workspace_wiki:20260630T143503Z",
+      "provenance": {
+        "artifact_kind": "workspace_wiki_retrieval",
+        "captured_at": "2026-06-30T14:35:03Z",
+        "command": "ask_wiki:wiki_retrieval",
+        "source": "workspace_wiki"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

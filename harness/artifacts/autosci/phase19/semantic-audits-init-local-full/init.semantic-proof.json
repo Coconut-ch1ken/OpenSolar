@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-07-02T21:44:57Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-init-local-full/init.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/init/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/init/references/prepare-and-discovery.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/init/references/parallel-ingest.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/init_discovery.py",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/research_wiki.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/init/SKILL.md",
+        ".agents/skills/ingest/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/init_discovery.py",
+        "tools/research_wiki.py",
+        "tools/approval_runtime_proof.py",
+        "tools/wiki_mutation_runtime_proof.py",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/after.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/runtime-source-manifest.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/literature_discovery.init.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_final_fan_in_boundary.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/source_fan_in_writeback.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_boundary_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/seed-skillgen.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/skillgen-local-source.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/index.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/log.md"
+      ],
+      "native_skill": "init",
+      "production_ready": true,
+      "proof_id": "runtime:init:phase19-init-local-fan-in-semantic-audit:20260702T214457Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T21:44:57Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-init-local-full/init.semantic-audit.json --native-skill init --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-init-local-full/init.semantic-proof.json",
+        "source": "phase19-init-local-fan-in-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

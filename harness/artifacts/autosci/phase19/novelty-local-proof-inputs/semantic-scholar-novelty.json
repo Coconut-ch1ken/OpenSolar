@@ -1,0 +1,24 @@
+{
+  "schema": "external_novelty_sources.v1",
+  "status": "completed",
+  "inputs": {
+    "query": "skillgen-novelty-proof-20260702"
+  },
+  "outputs": {
+    "sources": [
+      {
+        "id": "s2-novelty-local-proof-20260702",
+        "provider": "semantic_scholar",
+        "paperId": "s2-novelty-local-proof-20260702",
+        "title": "Generated Skills for Inference-Time Agents",
+        "summary": "Provider-shaped prior work evidence used to verify conservative novelty scoring without live network access.",
+        "url": "https://example.invalid/s2-novelty-local-proof-20260702"
+      }
+    ]
+  },
+  "provenance": {
+    "operator_id": "phase19-novelty-local-proof",
+    "implementation_package": "phase19-proof-input",
+    "timestamp": "2026-07-02T00:00:00Z"
+  }
+}

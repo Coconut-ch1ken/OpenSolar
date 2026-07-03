@@ -1,0 +1,209 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "exp-run": {
+      "semantic_parity": "full",
+      "auditor": "phase19-exp-run-local-semantic-audit",
+      "summary": "Solar $exp-run preserves the native AutoSci default local execution path behind explicit approval: local mode accepts the native target/env/review/collect surface, executes only allowlisted local commands after approval and before-state evidence, emits runtime/deploy/run evidence, mutates Solar-managed wiki experiment state only after verified runtime evidence, and records local result-dir collection as local collection rather than live SSH/provider proof. Remote/provider launch, polling, and live pull-results remain optional remote-mode proof and are not blockers for local default parity.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/exp-run/SKILL.md",
+        "../AutoSci/config/README.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/exp-run/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+        "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+        "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+        "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+        "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+        "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+        "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+        "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+        "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+        "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+        "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+        "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+        "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+        "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+        "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+        "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+        "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+        "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+        "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+        "artifacts/autosci/workspace/wiki/collections/collection-ledger.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_local_surface",
+          "status": "ok",
+          "detail": "Solar preserves the native $exp-run target, --env local, --review, and --collect controls while routing through Solar Harness instead of mutating the source AutoSci repo.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/exp-run/SKILL.md",
+            ".agents/skills/exp-run/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "remote_configuration_not_required_for_local",
+          "status": "ok",
+          "detail": "Native AutoSci documents server.yaml as remote-only configuration, and the local proof completed with remote/provider configuration absent.",
+          "evidence_refs": [
+            "../AutoSci/config/README.md",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json"
+          ]
+        },
+        {
+          "check": "approval_and_allowlist_boundary",
+          "status": "ok",
+          "detail": "The local run proof executes only after approval_ref, allowlist evidence, and before-state evidence; the selected command is recorded in approval/runtime/deploy/run evidence.",
+          "evidence_refs": [
+            "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+            "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json"
+          ]
+        },
+        {
+          "check": "local_runtime_result_and_reports",
+          "status": "ok",
+          "detail": "The approved local command returns structured experiment_result.v1 data, result_collected=true, exit_code=0, runtime evidence, deploy report, and run report.",
+          "evidence_refs": [
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json"
+          ]
+        },
+        {
+          "check": "local_collect_and_ledger_boundary",
+          "status": "ok",
+          "detail": "The collect proof uses a local result directory, records a collection ledger identity, marks the remote collection boundary as local_result_dir_collection, and explicitly avoids claiming live SSH/provider collection.",
+          "evidence_refs": [
+            "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+            "artifacts/autosci/workspace/wiki/collections/collection-ledger.json"
+          ]
+        },
+        {
+          "check": "wiki_state_handoff",
+          "status": "ok",
+          "detail": "Verified local runtime and collection evidence update only the Solar-managed experiment wiki state, leaving the source AutoSci checkout read-only.",
+          "evidence_refs": [
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+            "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+          ]
+        },
+        {
+          "check": "remote_scope_boundary",
+          "status": "ok",
+          "detail": "Remote launch, live provider pull-results, and distributed remote/session exactly-once collection remain separate optional remote-mode proof; local evidence is not counted as live remote evidence.",
+          "evidence_refs": [
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "$exp-run is semantically full for the approved local default run/collect path represented by the supplied Phase 19 evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "Remote/provider execution remains intentionally out of scope for this local assessment and must not be inferred from local result-dir collection."
+        }
+      ]
+    },
+    "exp-status": {
+      "semantic_parity": "full",
+      "auditor": "phase19-exp-status-local-semantic-audit",
+      "summary": "Solar $exp-status preserves native AutoSci local status semantics for wiki/run-state lookup after a local experiment run: it resolves the requested experiment id without default fallback, reads Solar-managed wiki experiment state, reports completed state and evidence ids, remains side-effect-free, and does not require remote/provider configuration. Live SSH/provider polling remains optional remote-mode proof and is not a local status blocker.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/exp-status/SKILL.md",
+        "../AutoSci/config/README.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/exp-status/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+        "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_status_surface",
+          "status": "ok",
+          "detail": "Solar preserves the native $exp-status experiment/pipeline status surface and routes it through monitor_experiment.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/exp-status/SKILL.md",
+            ".agents/skills/exp-status/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "local_status_read",
+          "status": "ok",
+          "detail": "The local status proof resolves exp-local-default from Solar-managed wiki experiment state and reports completed state without schema-only fallback.",
+          "evidence_refs": [
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json"
+          ]
+        },
+        {
+          "check": "side_effect_free_status",
+          "status": "ok",
+          "detail": "$exp-status remains side-effect-free for local wiki/run-state status reads and does not mutate native AutoSci state.",
+          "evidence_refs": [
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json"
+          ]
+        },
+        {
+          "check": "remote_configuration_not_required_for_local",
+          "status": "ok",
+          "detail": "Native server configuration is remote-only; the local status proof reads wiki/run-state evidence without remote/provider configuration.",
+          "evidence_refs": [
+            "../AutoSci/config/README.md",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json"
+          ]
+        },
+        {
+          "check": "remote_poll_boundary",
+          "status": "ok",
+          "detail": "Local status evidence is not counted as live SSH/provider polling; live remote/provider status remains optional remote-mode proof.",
+          "evidence_refs": [
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "$exp-status is semantically full for local wiki/run-state status reads represented by the supplied Phase 19 evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "Live remote/provider polling remains intentionally out of scope for this local assessment and must not block local status parity."
+        }
+      ]
+    }
+  }
+}

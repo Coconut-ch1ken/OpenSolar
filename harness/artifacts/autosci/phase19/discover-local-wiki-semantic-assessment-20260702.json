@@ -1,0 +1,101 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "discover": {
+      "semantic_parity": "full",
+      "auditor": "phase19-discover-local-wiki-semantic-audit",
+      "summary": "Solar $discover preserves the native non-ingesting discovery contract for the local --from-wiki path: supplied local wiki source evidence produces a ranked, deduped, source-backed shortlist, writes typed boundaries/proof, and does not label the local proof as live provider execution.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/discover/SKILL.md",
+        "../AutoSci/tools/discover.py"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/discover/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/backends/literature_discover.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_non_ingesting_contract",
+          "status": "ok",
+          "detail": "Native $discover returns a shortlist for anchor/topic/wiki/venue discovery and never auto-ingests papers into the wiki.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/discover/SKILL.md",
+            "../AutoSci/tools/discover.py"
+          ]
+        },
+        {
+          "check": "native_cli_surface_preserved",
+          "status": "ok",
+          "detail": "Solar shim accepts the native discovery seed flags including --from-wiki, --anchor, --negative, --topic, --venue, --year, --limit, --wiki-root, and --no-citation-expand.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "local_wiki_source_shortlist",
+          "status": "ok",
+          "detail": "Approved local wiki runtime evidence produces completed literature_discovery.v1 evidence with one candidate, source_channels=['wiki'], and discover_literature_runtime_verified mode.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+            "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json"
+          ]
+        },
+        {
+          "check": "final_shortlist_boundary",
+          "status": "ok",
+          "detail": "autosci_discover_final_shortlist_boundary.v1 is final_shortlist_ready with a non-empty candidate list and local wiki source channel.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+            "harness/plugins/autosci/bin/autosci_bridge.py"
+          ]
+        },
+        {
+          "check": "local_source_proof_not_live_provider",
+          "status": "ok",
+          "detail": "Local wiki source proof is categorized as native_autosci_replay instead of live_provider, preventing false remote/provider claims.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "no_synthetic_fallback",
+          "status": "ok",
+          "detail": "When provider/network evidence is unavailable, the backend emits inconclusive source evidence rather than fixture or synthetic recommendations.",
+          "evidence_refs": [
+            "harness/plugins/autosci/backends/literature_discover.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The local --from-wiki path now has source-backed runtime proof and a completed final shortlist boundary without remote/provider access."
+        },
+        {
+          "status": "warn",
+          "finding": "Live Semantic Scholar and Paper Copilot provider-mode audits remain separate optional proof; this assessment does not claim a live provider run."
+        },
+        {
+          "status": "ok",
+          "finding": "The top-level skill-run summary may remain inconclusive while the static route is partial; the underlying literature_discovery.v1 action evidence is completed and is the authority for this local proof."
+        }
+      ]
+    }
+  }
+}

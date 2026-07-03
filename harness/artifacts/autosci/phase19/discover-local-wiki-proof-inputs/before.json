@@ -1,0 +1,6 @@
+{
+  "schema": "autosci_discover_local_wiki_before.v1",
+  "state": "before-local-wiki-discovery",
+  "wiki_source_count": 1,
+  "remote_provider_required": false
+}

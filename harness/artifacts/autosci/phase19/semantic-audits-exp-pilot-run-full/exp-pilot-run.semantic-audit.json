@@ -1,0 +1,158 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/exp-pilot-run/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_command_surface",
+      "detail": "Solar $exp-pilot-run preserves the native target-driven pilot execution surface, approval/manual-inspection boundary, runtime result/log production, and delegation of verdict decisions to $exp-pilot-eval.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+        ".agents/skills/exp-pilot-run/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approved_executor_boundary",
+      "detail": "The approved pilot proof runs only after approval_ref, allowlist evidence, and before-state evidence are present; the allowlisted command writes stdout/stderr, runtime evidence, and result artifacts.",
+      "evidence_refs": [
+        "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+        "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "pilot_runtime_result_boundary",
+      "detail": "The approved command output is converted into experiment_result.v1 with metrics, evidence ids, logs, and pilot_runtime_ready=true only after semantic runtime verification passes.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "no_wiki_mutation_boundary",
+      "detail": "$exp-pilot-run emits pilot runtime/result artifacts and side-effect execution proof, but no wiki_mutation_runtime_proof_manifest_json and no wiki_experiment_state artifact; wiki verdict/writeback remains owned by $exp-pilot-eval.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "runtime_proof_coverage",
+      "detail": "The route emits approval_boundary/external_runtime proof and side_effect_execution proof with concrete runtime/result/stdout/stderr evidence refs.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "original_repo_is_read_only",
+      "detail": "The Solar wrapper routes pilot execution through Solar Harness artifacts and does not mutate the source AutoSci repo; the native AutoSci checkout is evidence only.",
+      "evidence_refs": [
+        ".agents/skills/exp-pilot-run/SKILL.md",
+        "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-07-02T19:18:40Z",
+  "auditor": "phase19-exp-pilot-run-semantic-audit",
+  "findings": [
+    {
+      "finding": "$exp-pilot-run can be treated as semantically full for the approved pilot runtime execution/result path represented by the supplied route evidence.",
+      "status": "ok"
+    },
+    {
+      "finding": "Unapproved, missing-command, missing-runtime, or result-less pilot runs remain incomplete; final pilot verdict/writeback readiness remains outside this route and belongs to $exp-pilot-eval.",
+      "status": "ok"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+    "../AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md"
+  ],
+  "native_skill": "exp-pilot-run",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-07-02T19:18:40Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/exp-pilot-run",
+    "backend_mode": "side_effect_gated",
+    "coverage_status": "gated",
+    "limitations": [
+      "Code execution and remote execution require approval; approved runtime evidence can be supplied or produced by an allowlisted local/remote command before marking pilot runtime complete. $exp-pilot-run writes pilot runtime/result evidence only, does not judge pass/fail, and does not mutate wiki pages; $exp-pilot-eval owns verdict assessment and approved wiki updates."
+    ],
+    "required_capabilities": [
+      "pilot code preparation",
+      "local execution",
+      "remote execution",
+      "result collection"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "run_pilot_experiment"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/exp-pilot-run/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+    "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+    "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+    "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $exp-pilot-run preserves native AutoSci pilot runtime semantics behind an explicit approval boundary: an allowlisted local or remote command may execute only after approval preflight, the command output is converted into experiment_result.v1 runtime/result/log evidence, pilot runtime readiness is recorded only when approval/runtime/result checks pass, and the route does not judge pass/fail or mutate wiki pages because $exp-pilot-eval owns verdict assessment and approved wiki writeback."
+}

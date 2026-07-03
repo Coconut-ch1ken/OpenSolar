@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-06-30T12:40:45Z",
+  "proofs": [
+    {
+      "categories": [
+        "provider_source_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed target artifact source evidence for AutoSci `review` parity.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.json",
+        "harness/artifacts/autosci/phase19/model-external-proof-inputs/review-target-20260630.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-external-proof-20260630/artifact_review.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-review-external-proof-20260630/review_final_acceptance_boundary.json"
+      ],
+      "native_skill": "review",
+      "production_ready": true,
+      "proof_id": "runtime:review:target-artifact:20260630T124045Z",
+      "provenance": {
+        "artifact_kind": "review_target",
+        "captured_at": "2026-06-30T12:40:45Z",
+        "command": "review_artifact:target_source",
+        "source": "review_target_artifact"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

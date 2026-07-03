@@ -1,0 +1,8 @@
+{
+  "schema": "autosci_experiment_before_state.v1",
+  "approved": true,
+  "experiment_id": "exp-local-default",
+  "state": "running",
+  "scope": "local-result-dir-collection-proof",
+  "remote_provider_required": false
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "autosci_command_allowlist.v1",
+  "executables": [
+    "python3"
+  ],
+  "scope": "phase19-exp-design-local-readiness-proof",
+  "notes": [
+    "This allowlist is used only to prove exp-design approval preflight readiness.",
+    "The exp-design route remains dry-run-only and does not execute experiment code."
+  ]
+}

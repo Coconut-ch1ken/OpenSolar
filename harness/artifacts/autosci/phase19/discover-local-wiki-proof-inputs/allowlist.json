@@ -1,0 +1,8 @@
+{
+  "allowed": [
+    "workspace_wiki",
+    "discover_literature:from_wiki"
+  ],
+  "approval_scope": "local wiki discovery source replay",
+  "remote_provider_required": false
+}

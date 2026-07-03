@@ -1,0 +1,97 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "daily-arxiv": {
+      "semantic_parity": "full",
+      "auditor": "agent-b-phase19-daily-arxiv-local-final",
+      "audited_at": "2026-07-03T00:12:00Z",
+      "summary": "Daily arXiv native semantics are preserved for one-off inform digest runs behind explicit approval/provider boundaries. Solar proof verifies provider candidates, Review LLM ranking evidence, approval contract evidence, and explicit digest delivery evidence without executing live network, SMTP, scheduler, or auto-ingest side effects.",
+      "additional_native_evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/daily-arxiv/SKILL.md"
+      ],
+      "additional_solar_evidence_refs": [
+        "tools/daily_arxiv.py",
+        "tools/send_email.py",
+        "tools/review_model_runtime_proof.py",
+        "tools/approval_runtime_proof.py",
+        "tools/wiki_mutation_runtime_proof.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/literature_discovery.daily_arxiv.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_final_provider_delivery_boundary.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/after.json",
+        "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/runtime-provider-delivery.json",
+        "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/review-llm.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_one_off_inform_semantics_preserved",
+          "status": "ok",
+          "detail": "Native /daily-arxiv one-off inform semantics require prepare, LLM decisions, finalize, and digest reporting without auto-ingest unless explicitly requested.",
+          "evidence_refs": [
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/daily-arxiv/SKILL.md",
+            "tools/daily_arxiv.py"
+          ]
+        },
+        {
+          "check": "solar_prepare_finalize_route_verified",
+          "status": "ok",
+          "detail": "Solar maps $daily-arxiv to daily_arxiv_prepare_finalize with native mode, hours, categories, max recommendation, send-email, and Review LLM evidence inputs preserved.",
+          "evidence_refs": [
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/daily-arxiv/SKILL.md",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/literature_discovery.daily_arxiv.json"
+          ]
+        },
+        {
+          "check": "provider_candidates_and_ranking_verified",
+          "status": "ok",
+          "detail": "Runtime evidence supplied non-fixture arXiv/Semantic Scholar candidates with ranking scores and rationales, and the provider boundary completed.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/runtime-provider-delivery.json",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_final_provider_delivery_boundary.json"
+          ]
+        },
+        {
+          "check": "review_llm_digest_selection_verified",
+          "status": "ok",
+          "detail": "Review LLM ranking evidence was supplied and the review runtime proof completed.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/review-llm.json",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_review_llm_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "approval_and_delivery_boundary_verified",
+          "status": "ok",
+          "detail": "Approval contract, before/after evidence, runtime evidence, and explicit digest delivery evidence completed the daily_arxiv_final_provider_delivery_boundary.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_contract.json",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_side_effect_execution_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_final_provider_delivery_boundary.json"
+          ]
+        },
+        {
+          "check": "live_side_effects_remain_approval_gated",
+          "status": "ok",
+          "detail": "The proof records delivery from supplied evidence; live fetch, SMTP send, GitHub Actions scheduling, and auto-ingest remain approval/provider-gated and were not executed by the bridge.",
+          "evidence_refs": [
+            ".agents/skills/daily-arxiv/SKILL.md",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/literature_discovery.daily_arxiv.json"
+          ]
+        }
+      ],
+      "findings": []
+    }
+  }
+}

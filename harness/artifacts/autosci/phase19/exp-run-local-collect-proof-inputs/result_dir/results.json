@@ -1,0 +1,16 @@
+{
+  "outcome": "supports",
+  "metrics": [
+    {
+      "name": "local_accuracy",
+      "value": 0.93
+    }
+  ],
+  "evidence_ids": [
+    "result:exp-local-default:local-result-dir"
+  ],
+  "logs": [
+    "local result-dir collection completed",
+    "no SSH/provider transport was used"
+  ]
+}

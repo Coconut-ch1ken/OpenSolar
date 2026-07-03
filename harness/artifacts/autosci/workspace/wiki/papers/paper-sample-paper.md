@@ -2,8 +2,8 @@
 entity_type: "paper"
 entity_id: "paper-sample-paper"
 title: "AutoSci Adapter Fixture Paper"
-run_id: "repro"
-source_evidence: "artifacts/autosci/runs/repro/research_paper.json"
+run_id: "codex-exp-run-local-approved-proof-20260702"
+source_evidence: "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/research_paper.json"
 managed_by: "solar-autosci-workspace-projector"
 ---
 # AutoSci Adapter Fixture Paper
@@ -14,7 +14,7 @@ managed_by: "solar-autosci-workspace-projector"
 - Source ref: `plugins/autosci/tests/fixtures/sample_paper.md`
 - Source type: `markdown`
 - Parse status: `parsed`
-- Evidence: `artifacts/autosci/runs/repro/research_paper.json`
+- Evidence: `artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/research_paper.json`
 
 ## Abstract
 

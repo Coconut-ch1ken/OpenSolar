@@ -1,0 +1,20 @@
+{
+  "schema": "artifact_review.v1",
+  "task_id": "review-exp-design-local-ready-20260702",
+  "status": "completed",
+  "outputs": {
+    "review": {
+      "artifact_id": "artifact:idea-local-design",
+      "target": "idea-local-design",
+      "review_mode": "review_llm",
+      "review_available": true,
+      "difficulty": "hard",
+      "focus": "method",
+      "score": 0.9,
+      "recommendation": "accept",
+      "evidence_ids": [
+        "review:exp-design-local-ready-20260702"
+      ]
+    }
+  }
+}

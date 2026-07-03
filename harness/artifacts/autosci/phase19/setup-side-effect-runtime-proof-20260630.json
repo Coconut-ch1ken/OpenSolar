@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-06-30T12:30:26Z",
+  "proofs": [
+    {
+      "categories": [
+        "side_effect_execution_evidence"
+      ],
+      "collection_mode": "approved_side_effect",
+      "description": "Completed approved setup side-effect boundary evidence for AutoSci parity; protected edits remained proposed-only.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/workflow_evolution.setup.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_recommended_changes.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/patch_candidates",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-setup-proof-check-20260630/setup_status_approval_contract.json",
+        "harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-runtime-20260630.json",
+        "harness/artifacts/autosci/phase19/setup-reset-proof-inputs/setup-after-20260630.json"
+      ],
+      "native_skill": "setup",
+      "production_ready": true,
+      "proof_id": "runtime:setup:approved-mutation:20260630T123026Z",
+      "provenance": {
+        "artifact_kind": "setup_status_external_runtime",
+        "captured_at": "2026-06-30T12:30:26Z",
+        "command": "setup_status:approved_mutation",
+        "source": "approved_mutation"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

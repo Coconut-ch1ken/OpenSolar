@@ -1,0 +1,5 @@
+{
+  "commands": [
+    "python3 artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py --experiment-id {experiment_id} --marker artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot-marker.txt"
+  ]
+}

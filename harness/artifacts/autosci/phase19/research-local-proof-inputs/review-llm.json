@@ -1,0 +1,19 @@
+{
+  "schema": "artifact_review.v1",
+  "status": "completed",
+  "outputs": {
+    "review": {
+      "review_mode": "review_llm",
+      "review_available": true,
+      "score": 0.82,
+      "recommendation": "pass_with_caveats",
+      "evidence_ids": [
+        "review-llm:research-local-proof-20260702"
+      ],
+      "review_llm": {
+        "status": "completed"
+      }
+    },
+    "findings": []
+  }
+}

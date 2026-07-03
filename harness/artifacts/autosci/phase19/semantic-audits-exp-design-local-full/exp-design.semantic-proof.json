@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-07-02T23:28:20Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-exp-design-local-full/exp-design.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/exp-design/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/review_model_runtime_proof.py",
+        "harness/artifacts/autosci/phase19/exp-design-local-ready-proof-inputs/review.json",
+        "harness/artifacts/autosci/phase19/exp-design-local-ready-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/exp-design-local-ready-proof-inputs/before.json",
+        "harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/design_experiment.result.json",
+        "harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/experiment_plan.json",
+        "harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/experiment_design_final_execution_boundary.json",
+        "harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/design_experiment_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/wiki_state_resolver.json",
+        "harness/artifacts/autosci/workspace/wiki/experiments/exp-idea-local-design.md",
+        "harness/artifacts/autosci/workspace/wiki/outputs/experiment.md"
+      ],
+      "native_skill": "exp-design",
+      "production_ready": true,
+      "proof_id": "runtime:exp-design:phase19-exp-design-local-readiness-semantic-audit:20260702T232820Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T23:28:20Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-exp-design-local-full/exp-design.semantic-audit.json --native-skill exp-design --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-exp-design-local-full/exp-design.semantic-proof.json",
+        "source": "phase19-exp-design-local-readiness-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

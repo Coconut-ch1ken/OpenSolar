@@ -1,21 +1,21 @@
 ---
 entity_type: "idea"
 entity_id: "idea-wiki-discovery-002"
-title: "Stress-test method transfer from Runtime Verified Skill Generation Source"
-run_id: "codex-ideate-model-external-proof-quoted-20260630"
-source_evidence: "artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-20260630/idea_candidate.json"
+title: "Stress-test method transfer from Registered SkillGen Source"
+run_id: "codex-exp-run-local-approved-proof-20260702"
+source_evidence: "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/idea_candidate.json"
 managed_by: "solar-autosci-workspace-projector"
 ---
-# Stress-test method transfer from Runtime Verified Skill Generation Source
+# Stress-test method transfer from Registered SkillGen Source
 
 - Idea id: `idea-wiki-discovery-002`
-- Status: `candidate`
-- Duplicate status: `new`
-- Evidence: `artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-20260630/idea_candidate.json`
+- Status: `filtered`
+- Duplicate status: `duplicate`
+- Evidence: `artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/idea_candidate.json`
 
 ## Hypothesis
 
-A mechanism or limitation in `Runtime Verified Skill Generation Source` can be transferred to the context of `AutoSci Adapter Fixture Paper` and evaluated with a bounded pilot.
+A mechanism or limitation in `Registered SkillGen Source` can be transferred to the context of `Research Proof Paper` and evaluated with a bounded pilot.
 
 ## Approach
 
@@ -23,4 +23,4 @@ Extract the reusable mechanism from the first source, map assumptions against th
 
 ## Grounding
 
-Transfer source: Runtime Verified Skill Generation Source; target context: AutoSci Adapter Fixture Paper.
+Transfer source: Registered SkillGen Source; target context: Research Proof Paper.

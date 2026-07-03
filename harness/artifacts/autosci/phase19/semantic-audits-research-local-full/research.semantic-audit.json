@@ -1,0 +1,212 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/research/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_research_lifecycle_contract",
+      "detail": "Native /research defines a resumable Stage 0-5 pipeline with two human gates, progress/report artifacts, stage recovery, experiment deploy/collect, verdict, and paper-writing stages delegated to sub-skills.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "resumable_pipeline_artifacts",
+      "detail": "The proof run wrote pipeline progress, pipeline report, and machine-readable pipeline state artifacts, and the workflow evidence records a completed pipeline status and completed current stage.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+        "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+        "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "source_discovery_and_novelty_evidence",
+      "detail": "Supplied local source paper, completed literature_discovery.v1, and completed external_novelty.v1 evidence satisfy the non-remote source/discovery/novelty stages without claiming live provider freshness.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_evidence",
+      "detail": "Completed Review LLM evidence is attached and produces a runtime proof manifest with review_llm_or_model_evidence plus external_runtime_evidence categories.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approved_experiment_and_collect_evidence",
+      "detail": "The approval contract verifies allowlist, before, after, and runtime evidence; experiment runtime semantic verification is verified, including successful exit and result_collected=true.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approved_compile_and_integrated_pdf",
+      "detail": "The compile runtime evidence verifies compile success, structurally valid PDF output, and integrated PDF materialization to the Solar workspace paper path.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+        "harness/artifacts/autosci/workspace/paper/main.pdf",
+        "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "scheduler_boundaries_truthful",
+      "detail": "The route retains generic scheduler and legacy smoke runner boundaries, but this proof does not claim distributed scheduler lease/quota/runtime audit, remote sessions, or production dispatch.",
+      "evidence_refs": [
+        "harness/tools/run_scientific_workflow.py",
+        "harness/tools/run_scientific_lifecycle_smoke.py",
+        "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "missing_evidence_truthfulness",
+      "detail": "Regression coverage preserves inconclusive behavior when stage evidence, scheduler lifecycle summaries, workflow config alignment, production dispatch, Review LLM evidence, experiment runtime, or compile/PDF evidence is missing or weak.",
+      "evidence_refs": [
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-07-02T23:39:52Z",
+  "auditor": "phase19-research-local-supplied-evidence-lifecycle-semantic-audit",
+  "findings": [
+    {
+      "finding": "The non-remote supplied-evidence $research lifecycle path now has route-level semantic proof and worktree-local runtime proof manifests for source, Review LLM, and approved runtime/approval evidence.",
+      "status": "ok"
+    },
+    {
+      "finding": "This audit does not claim fresh live provider fetches, automatic bootstrap network search, remote/session stage runners, distributed scheduler lease/quota behavior, SMTP/browser side effects, or unapproved sub-skill execution.",
+      "status": "warn"
+    },
+    {
+      "finding": "The top-level skill-run summary remains inconclusive while static route coverage is partial/approval-gated; action-level workflow_evolution evidence is completed and passed.",
+      "status": "warn"
+    },
+    {
+      "finding": "The proof attempted to isolate outputs with --wiki-root, but pipeline progress/report/state were still written to the default Solar workspace outputs; those paths are retained as proof refs and logged for future cleanup.",
+      "status": "warn"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md"
+  ],
+  "native_skill": "research",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-07-02T23:39:52Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/research",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "Evidence-aware lifecycle completion is supported when wiki/source, Review LLM, experiment runtime, collection, and compile/PDF evidence are supplied.",
+      "`$research --scheduler-run` now defaults to `run_scientific_workflow.py`, a config-driven generic workflow runner that dispatches selected workflow nodes through operator_runtime and records `runner_contract=generic_workflow_runner`; the old bounded lifecycle smoke runner remains available only through `--scheduler-legacy-smoke-runner`.",
+      "Scheduler resume runs on the legacy smoke path still emit `autosci_scheduler_resume_boundary.v1` with reused-node fingerprints and no-rerun checks; generic workflow lifecycle summaries emit `scientific_workflow_runtime_manifest.v1`, but production scheduler parity still requires complete non-fixture node selection plus distributed lease/quota/runtime audit.",
+      "`--scheduler-require-workflow-config-alignment` passes only for the full supplied-evidence tail; partial/default runs surface workflow_config_alignment drift or inconclusive status rather than full parity.",
+      "`--scheduler-require-production-dispatch` now fails when the selected scheduler runner reports fixture/smoke input markers or blocked provider/runtime evidence.",
+      "`--scheduler-include-human-gates` records idea/results approval pauses as scheduler-visible blocked nodes, `--online` can carry supplied approval/runtime source evidence into strict scheduler source mode with non-fixture provider channel boundary checks, scheduler experiment stages can carry explicit `--experiment-*` approval/runtime evidence without reusing source evidence paths, `--experiment-execute-approved` can run an allowlisted approved local experiment command, and scheduler publication compile can use compile-specific approved runtime evidence or `--compile-execute-approved`.",
+      "Full parity still requires real provider evidence, audited remote/session stage runners, production scheduler dispatch, and submission/anonymity checks."
+    ],
+    "required_capabilities": [
+      "idea discovery",
+      "human gates",
+      "experiment lifecycle",
+      "paper lifecycle",
+      "resume state"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "run_research_lifecycle"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/research/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/tools/run_scientific_workflow.py",
+    "harness/tools/run_scientific_lifecycle_smoke.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+    "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+    "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+    "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+    "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+    "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+    "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+    "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+    "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+    "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+    "harness/artifacts/autosci/workspace/paper/main.pdf"
+  ],
+  "status": "completed",
+  "summary": "Solar $research preserves the non-remote supplied-evidence lifecycle completion path of native /research: it records resumable pipeline progress/report/state, verifies source/discovery/novelty evidence, consumes completed Review LLM evidence, verifies approved experiment runtime and collection evidence, verifies approved compile/PDF evidence, materializes an integrated paper PDF, and marks every lifecycle stage completed. This scoped audit does not claim live provider freshness, automatic bootstrap network fetch, distributed scheduler lease/quota behavior, remote/session stage runners, SMTP/browser side effects, or actual unapproved sub-skill execution."
+}

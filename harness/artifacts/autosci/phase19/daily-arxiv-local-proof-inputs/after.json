@@ -1,0 +1,8 @@
+{
+  "schema": "autosci_daily_arxiv_state.v1",
+  "state": "after",
+  "digest_id": "daily-arxiv-local-final-20260702",
+  "delivered": true,
+  "candidate_count": 2,
+  "delivery_id": "smtp-digest-proof-daily-arxiv-local-final-20260702"
+}

@@ -1,21 +1,21 @@
 ---
 entity_type: "idea"
 entity_id: "idea-wiki-discovery-001"
-title: "Close the evidence gap around agent skill learning"
-run_id: "codex-ideate-model-external-proof-quoted-20260630"
-source_evidence: "artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-20260630/idea_candidate.json"
+title: "Close the evidence gap around exp-local-default"
+run_id: "codex-exp-run-local-approved-proof-20260702"
+source_evidence: "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/idea_candidate.json"
 managed_by: "solar-autosci-workspace-projector"
 ---
-# Close the evidence gap around agent skill learning
+# Close the evidence gap around exp-local-default
 
 - Idea id: `idea-wiki-discovery-001`
-- Status: `candidate`
-- Duplicate status: `new`
-- Evidence: `artifacts/autosci/runs/codex-ideate-model-external-proof-quoted-20260630/idea_candidate.json`
+- Status: `filtered`
+- Duplicate status: `duplicate`
+- Evidence: `artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/idea_candidate.json`
 
 ## Hypothesis
 
-Combining `Runtime Verified Skill Generation Source` with `AutoSci Adapter Fixture Paper` can expose a testable gap that is not captured by single-source reading.
+Combining `Registered SkillGen Source` with `Registered SkillGen Source` can expose a testable gap that is not captured by single-source reading.
 
 ## Approach
 
@@ -23,4 +23,4 @@ Build an experiment plan from the shared assumptions and limitations in the cite
 
 ## Grounding
 
-Primary source: Runtime Verified Skill Generation Source; secondary source: AutoSci Adapter Fixture Paper.
+Primary source: Registered SkillGen Source; secondary source: Registered SkillGen Source.

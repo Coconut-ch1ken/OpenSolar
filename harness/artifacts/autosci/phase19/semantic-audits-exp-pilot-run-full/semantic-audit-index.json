@@ -1,0 +1,29 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json"
+  ],
+  "generated_at": "2026-07-02T19:18:40Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "approved_executor_boundary": "ok",
+        "native_command_surface": "ok",
+        "native_skill_doc_exists": "ok",
+        "no_wiki_mutation_boundary": "ok",
+        "original_repo_is_read_only": "ok",
+        "pilot_runtime_result_boundary": "ok",
+        "runtime_proof_coverage": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+      "native_skill": "exp-pilot-run",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

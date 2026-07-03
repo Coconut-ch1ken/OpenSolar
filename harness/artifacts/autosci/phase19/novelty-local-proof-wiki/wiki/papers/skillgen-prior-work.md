@@ -1,0 +1,7 @@
+---
+title: SkillGen Prior Work
+---
+
+# SkillGen Prior Work
+
+Prior work studies generated skills for inference-time agents and serves as local wiki overlap evidence for the novelty proof.

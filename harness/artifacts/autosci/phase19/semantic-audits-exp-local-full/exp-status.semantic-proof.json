@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-07-02T20:18:35Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/exp-status/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+        "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+        "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+      ],
+      "native_skill": "exp-status",
+      "production_ready": true,
+      "proof_id": "runtime:exp-status:phase19-exp-status-local-semantic-audit:20260702T201835Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T20:18:35Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json --native-skill exp-status --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-proof.json",
+        "source": "phase19-exp-status-local-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

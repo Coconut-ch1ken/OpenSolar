@@ -1,0 +1,144 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/daily-arxiv/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/daily-arxiv/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_one_off_inform_semantics_preserved",
+      "detail": "Native /daily-arxiv one-off inform semantics require prepare, LLM decisions, finalize, and digest reporting without auto-ingest unless explicitly requested.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/daily-arxiv/SKILL.md",
+        "tools/daily_arxiv.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_prepare_finalize_route_verified",
+      "detail": "Solar maps $daily-arxiv to daily_arxiv_prepare_finalize with native mode, hours, categories, max recommendation, send-email, and Review LLM evidence inputs preserved.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/daily-arxiv/SKILL.md",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/literature_discovery.daily_arxiv.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "provider_candidates_and_ranking_verified",
+      "detail": "Runtime evidence supplied non-fixture arXiv/Semantic Scholar candidates with ranking scores and rationales, and the provider boundary completed.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/runtime-provider-delivery.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_final_provider_delivery_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "review_llm_digest_selection_verified",
+      "detail": "Review LLM ranking evidence was supplied and the review runtime proof completed.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/review-llm.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_review_llm_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approval_and_delivery_boundary_verified",
+      "detail": "Approval contract, before/after evidence, runtime evidence, and explicit digest delivery evidence completed the daily_arxiv_final_provider_delivery_boundary.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_side_effect_execution_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_final_provider_delivery_boundary.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "live_side_effects_remain_approval_gated",
+      "detail": "The proof records delivery from supplied evidence; live fetch, SMTP send, GitHub Actions scheduling, and auto-ingest remain approval/provider-gated and were not executed by the bridge.",
+      "evidence_refs": [
+        ".agents/skills/daily-arxiv/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/literature_discovery.daily_arxiv.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-07-03T00:12:00Z",
+  "auditor": "agent-b-phase19-daily-arxiv-local-final",
+  "findings": [],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/daily-arxiv/SKILL.md"
+  ],
+  "native_skill": "daily-arxiv",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-07-03T00:12:36Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/daily-arxiv",
+    "backend_mode": "side_effect_gated",
+    "coverage_status": "gated",
+    "limitations": [
+      "Native daily arXiv recommendation semantics are complete behind explicit approval/provider boundaries: one-off inform runs can use provider/runtime evidence plus Review LLM ranking, while SMTP delivery, GitHub Actions scheduling, and auto-ingest fan-in remain approval/provider-gated side effects. daily_arxiv_final_provider_delivery_boundary must verify provider candidates, ranking evidence, and either explicit delivery or approved wiki ingest/fan-in before a digest is final; semantic full parity is attached only through route-level audit evidence."
+    ],
+    "required_capabilities": [
+      "arXiv feed collection",
+      "Semantic Scholar enrichment",
+      "LLM ranking",
+      "email digest",
+      "optional ingest"
+    ],
+    "side_effect_policy": "approval_required",
+    "solar_backend_action": "daily_arxiv_prepare_finalize"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/daily-arxiv/SKILL.md",
+    "tools/daily_arxiv.py",
+    "tools/send_email.py",
+    "tools/review_model_runtime_proof.py",
+    "tools/approval_runtime_proof.py",
+    "tools/wiki_mutation_runtime_proof.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/literature_discovery.daily_arxiv.json",
+    "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_contract.json",
+    "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_final_provider_delivery_boundary.json",
+    "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_approval_boundary_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-daily-local-final-proof-20260702/daily_arxiv_prepare_finalize_side_effect_execution_runtime_proof.json",
+    "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/allowlist.json",
+    "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/before.json",
+    "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/after.json",
+    "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/runtime-provider-delivery.json",
+    "harness/artifacts/autosci/phase19/daily-arxiv-local-proof-inputs/review-llm.json"
+  ],
+  "status": "completed",
+  "summary": "Daily arXiv native semantics are preserved for one-off inform digest runs behind explicit approval/provider boundaries. Solar proof verifies provider candidates, Review LLM ranking evidence, approval contract evidence, and explicit digest delivery evidence without executing live network, SMTP, scheduler, or auto-ingest side effects."
+}

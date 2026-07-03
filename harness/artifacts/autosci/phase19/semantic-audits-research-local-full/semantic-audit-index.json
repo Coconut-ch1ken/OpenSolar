@@ -1,0 +1,31 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json"
+  ],
+  "generated_at": "2026-07-02T23:39:52Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "approved_compile_and_integrated_pdf": "ok",
+        "approved_experiment_and_collect_evidence": "ok",
+        "missing_evidence_truthfulness": "ok",
+        "native_research_lifecycle_contract": "ok",
+        "native_skill_doc_exists": "ok",
+        "resumable_pipeline_artifacts": "ok",
+        "review_llm_evidence": "ok",
+        "scheduler_boundaries_truthful": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "source_discovery_and_novelty_evidence": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+      "native_skill": "research",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

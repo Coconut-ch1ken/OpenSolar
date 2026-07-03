@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-07-02T20:33:43Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/discover/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/backends/literature_discover.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+        "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+        "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+      ],
+      "native_skill": "discover",
+      "production_ready": true,
+      "proof_id": "runtime:discover:phase19-discover-local-wiki-semantic-audit:20260702T203343Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T20:33:43Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json --native-skill discover --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-proof.json",
+        "source": "phase19-discover-local-wiki-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

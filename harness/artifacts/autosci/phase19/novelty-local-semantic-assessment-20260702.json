@@ -1,0 +1,130 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "novelty": {
+      "semantic_parity": "full",
+      "auditor": "phase19-novelty-local-semantic-audit",
+      "summary": "Solar $novelty preserves the native non-remote novelty workflow when source evidence and Review LLM evidence are supplied: it reads wiki state, checks local anti-repetition signals, consumes provider-shaped external novelty evidence without live network fetch, requires completed Review LLM evidence, writes only novelty_score/log/edge on --write, and records final acceptance plus runtime proof sidecars.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/novelty/SKILL.md",
+        "../AutoSci/tools/fetch_s2.py",
+        "../AutoSci/tools/fetch_deepxiv.py",
+        "../AutoSci/tools/research_wiki.py"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/novelty/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/backends/novelty_review.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/fetch_s2.py",
+        "tools/fetch_deepxiv.py",
+        "tools/research_wiki.py",
+        "tools/review_model_runtime_proof.py",
+        "tools/wiki_mutation_runtime_proof.py",
+        "harness/artifacts/autosci/phase19/novelty-local-proof-inputs/semantic-scholar-novelty.json",
+        "harness/artifacts/autosci/phase19/novelty-local-proof-inputs/review-llm-novelty.json",
+        "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/ideas/skillgen-novelty-proof-20260702.md",
+        "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/ideas/failed-skillgen-duplicate.md",
+        "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/papers/skillgen-prior-work.md",
+        "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/log.md",
+        "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/idea_evaluation.json",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/novelty_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/novelty_writeback.json",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/wiki_state_resolver.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_read_write_contract",
+          "status": "ok",
+          "detail": "Native $novelty is read-only by default and writes only novelty_score plus log when --write targets an existing idea slug.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/novelty/SKILL.md",
+            "../AutoSci/tools/research_wiki.py"
+          ]
+        },
+        {
+          "check": "wiki_state_and_antirepetition",
+          "status": "ok",
+          "detail": "The proof run resolved a wiki idea target, local prior-work paper, graph context, and failed idea anti-repetition signal before scoring.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/ideas/skillgen-novelty-proof-20260702.md",
+            "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/ideas/failed-skillgen-duplicate.md",
+            "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/papers/skillgen-prior-work.md",
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/wiki_state_resolver.json"
+          ]
+        },
+        {
+          "check": "external_novelty_source_provenance",
+          "status": "ok",
+          "detail": "Supplied external novelty evidence completed with provider-shaped Semantic Scholar provenance and archived payload digest, without live network execution.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/novelty-local-proof-inputs/semantic-scholar-novelty.json",
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/idea_evaluation.json",
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "review_llm_required_and_completed",
+          "status": "ok",
+          "detail": "Independent Review LLM evidence was supplied and completed; the final acceptance boundary did not rely on a local surrogate.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/novelty-local-proof-inputs/review-llm-novelty.json",
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/idea_evaluation.json"
+          ]
+        },
+        {
+          "check": "final_acceptance_boundary",
+          "status": "ok",
+          "detail": "autosci_novelty_final_acceptance_boundary.v1 reached final_acceptance_ready with completed external novelty evidence, passed provenance, completed Review LLM status, and numeric novelty score.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/novelty_final_acceptance_boundary.json",
+            "harness/plugins/autosci/bin/autosci_bridge.py"
+          ]
+        },
+        {
+          "check": "writeback_scope",
+          "status": "ok",
+          "detail": "The approved --write path updated only novelty_score and wrote the expected log/novelty_evaluated graph edge plus rebuild artifacts in an isolated Phase19 wiki root.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/novelty_writeback.json",
+            "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/ideas/skillgen-novelty-proof-20260702.md",
+            "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/log.md",
+            "harness/artifacts/autosci/phase19/novelty-local-proof-wiki/wiki/graph/edges.jsonl",
+            "harness/artifacts/autosci/runs/codex-novelty-local-full-proof-20260702/evaluate_ideas_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "missing_evidence_truthfulness",
+          "status": "ok",
+          "detail": "Regression coverage preserves inconclusive behavior for missing external novelty evidence, missing Review LLM evidence, disabled network fetch, and failed provider provenance.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/plugins/autosci/backends/novelty_review.py"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The non-remote supplied-evidence novelty path now has complete semantic, source, Review LLM, and wiki mutation proof without live provider execution."
+        },
+        {
+          "status": "warn",
+          "finding": "This audit does not claim a fresh live Semantic Scholar, DeepXiv, WebSearch, or MCP Review LLM invocation; it proves the native-compatible supplied evidence path and writeback boundary."
+        },
+        {
+          "status": "ok",
+          "finding": "The top-level skill-run summary can remain inconclusive while static route config is partial; the underlying idea_evaluation.v1 action evidence is completed and final_acceptance_ready."
+        }
+      ]
+    }
+  }
+}

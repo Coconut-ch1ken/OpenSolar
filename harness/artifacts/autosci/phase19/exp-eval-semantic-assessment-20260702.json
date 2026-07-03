@@ -1,0 +1,138 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "exp-eval": {
+      "semantic_parity": "full",
+      "auditor": "phase19-exp-eval-semantic-audit",
+      "summary": "Solar $exp-eval preserves native AutoSci experiment verdict semantics behind an explicit approval boundary: it links completed experiment result, claim, code, and Review LLM evidence, records final verdict readiness only after approved wiki writeback completes, writes idea/log/graph/index/context/open-questions wiki artifacts, and emits Review LLM, approval, and wiki-mutation runtime proof without mutating the original AutoSci repo.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+        "../AutoSci/tools/research_wiki.py",
+        "../AutoSci/.agents/skills/shared-references/cross-model-review.md"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/exp-eval/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_workspace_projector.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/claims.json",
+        "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/result.json",
+        "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/code.json",
+        "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/review.json",
+        "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/allowlist.json",
+        "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/runtime.json",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-inputs/before.md",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/ideas/claim-skillgen-write-20260630.md",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/topics/skillgen-write.md",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/log.md",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/graph/edges.jsonl",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/index.md",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/graph/context_brief.md",
+        "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/graph/open_questions.md",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/autosci_skill_run.json",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/claim_verdict.json",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/experiment_evaluation_final_verdict_boundary.json",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/claim_verdict_writeback.json",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_approval_contract.json",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_approval_runtime_proof.json",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_review_llm_runtime_proof.json",
+        "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_wiki_mutation_runtime_proof.json"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $exp-eval preserves the native experiment/claim target, auto/write controls, Review LLM evidence input, and approval-gated wiki update boundary while routing through Solar-managed evidence paths.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+            "../AutoSci/.agents/skills/shared-references/cross-model-review.md",
+            ".agents/skills/exp-eval/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "experiment_claim_code_review_fan_in",
+          "status": "ok",
+          "detail": "The verdict links completed experiment_result.v1, research_claims.v1, code_evidence_map.v1, and completed Review LLM evidence before final readiness can pass.",
+          "evidence_refs": [
+            "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/claims.json",
+            "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/result.json",
+            "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/code.json",
+            "artifacts/autosci/phase19/exp-eval-writeback-proof-inputs/review.json",
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/claim_verdict.json"
+          ]
+        },
+        {
+          "check": "review_llm_independence_boundary",
+          "status": "ok",
+          "detail": "Review LLM evidence is persisted and emitted as a route-level runtime proof; missing Review LLM evidence keeps final verdict readiness incomplete.",
+          "evidence_refs": [
+            "../AutoSci/.agents/skills/shared-references/cross-model-review.md",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_review_llm_runtime_proof.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "four_path_verdict_and_final_boundary",
+          "status": "ok",
+          "detail": "Solar maps experiment outcomes to supported, partially_supported, not_supported, or inconclusive verdicts and records final_verdict_ready only after non-inconclusive verdict, experiment/claim/code evidence, Review LLM proof, and approved writeback are complete.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/experiment_evaluation_final_verdict_boundary.json",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "approval_writeback_and_wiki_views",
+          "status": "ok",
+          "detail": "Approved writeback updates the linked wiki idea, log, graph edges, index, context brief, and open-questions gap map while unapproved writes remain blocked.",
+          "evidence_refs": [
+            "../AutoSci/tools/research_wiki.py",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/plugins/autosci/bin/autosci_workspace_projector.py",
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/claim_verdict_writeback.json",
+            "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/ideas/claim-skillgen-write-20260630.md",
+            "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/log.md",
+            "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/graph/edges.jsonl",
+            "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/index.md",
+            "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/graph/context_brief.md",
+            "artifacts/autosci/phase19/exp-eval-open-questions-proof-wiki/graph/open_questions.md"
+          ]
+        },
+        {
+          "check": "runtime_proof_coverage",
+          "status": "ok",
+          "detail": "The approved route emits Review LLM, approval/runtime, and wiki mutation proof manifests with existing evidence refs.",
+          "evidence_refs": [
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_review_llm_runtime_proof.json",
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_approval_runtime_proof.json",
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "original_repo_is_read_only",
+          "status": "ok",
+          "detail": "The Solar wrapper explicitly routes execution through Solar Harness and does not mutate the source AutoSci repo; writes land only in Solar-managed artifact roots after approval.",
+          "evidence_refs": [
+            ".agents/skills/exp-eval/SKILL.md",
+            "artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/autosci_skill_run.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "$exp-eval is semantically full for the approved experiment verdict/writeback path represented by the supplied route evidence."
+        },
+        {
+          "status": "ok",
+          "finding": "Unapproved, missing-result, missing-code, or missing-Review-LLM runs remain incomplete rather than being promoted to final verdict readiness."
+        }
+      ]
+    }
+  }
+}

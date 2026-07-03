@@ -1,0 +1,452 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-status-local-source-runtime-proof-20260702.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full",
+      "type": "semantic_audit_dir"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "exp-status",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [],
+    "runtime_proof_manifest_paths": [
+      "artifacts/autosci/phase19/exp-status-local-source-runtime-proof-20260702.json"
+    ],
+    "runtime_proof_manifests": [
+      "artifacts/autosci/phase19/exp-status-local-source-runtime-proof-20260702.json"
+    ],
+    "semantic_audit_dirs": [
+      "artifacts/autosci/phase19/semantic-audits-exp-local-full"
+    ],
+    "semantic_audit_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json"
+    ],
+    "semantic_audits": []
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-exp-status",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 0,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 1
+      },
+      "full_count": 1,
+      "gated_count": 0,
+      "items": [
+        {
+          "autosci_command": "/exp-status",
+          "autosci_feature": "/exp-status",
+          "backend_mode": "route_plan",
+          "coverage_status": "full",
+          "evidence_ids": [
+            "route:exp-status",
+            "native:exp-status"
+          ],
+          "evidence_schema": "experiment_status.v1",
+          "execution_policy": "pure",
+          "feature_kind": "skill",
+          "limitations": [
+            "Local status parity covers wiki/run-state lookup, local session registry status, supplied approved runtime evidence, collect-ready detection, and local collection identity evidence without requiring remote/provider configuration. `$exp-status` emits an explicit remote poll boundary so local run-dir status-file checks are not counted as live SSH/provider polling; live SSH/provider polling, approved provider status commands, and distributed exactly-once remote collection remain optional remote-mode follow-up proof."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/exp-status/SKILL.md"
+          ],
+          "native_skill": "exp-status",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+              "ref": "plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment",
+              "status": "ok",
+              "token": "plugins/autosci/bin/autosci_bridge.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/remote.py",
+              "ref": "tools/remote.py check",
+              "status": "ok",
+              "token": "tools/remote.py"
+            }
+          ],
+          "primary_tools": [
+            "plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment",
+            "tools/remote.py check"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:exp-status",
+            "native:exp-status"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:exp-status"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:exp-status"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "plugins/autosci/bin/autosci_bridge.py run --action monitor_experiment",
+                "tools/remote.py check"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:exp-status:local-wiki-status-source:20260703T002806Z",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                "runtime:exp-status:semantic-audit:exp-status.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-status/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:exp-status:local-wiki-status-source:20260703T002806Z",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                "runtime:exp-status:semantic-audit:exp-status.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-status/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "provider_source_evidence",
+              "description": "Source-dependent route needs non-fixture provider/source-channel evidence.",
+              "evidence_refs": [
+                "runtime:exp-status:local-wiki-status-source:20260703T002806Z",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                "runtime:exp-status:semantic-audit:exp-status.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-status/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "status read",
+            "collect-ready detection",
+            "anomaly summary"
+          ],
+          "runtime_proof_refs": [
+            "runtime:exp-status:local-wiki-status-source:20260703T002806Z",
+            "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+            "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+            "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+            "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+            "runtime:exp-status:semantic-audit:exp-status.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/exp-status/SKILL.md",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "plugins/autosci/bin/autosci_skill_shim.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+            "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+            "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "provider_source_evidence",
+                "external_runtime_evidence"
+              ],
+              "collection_mode": "manual_review",
+              "description": "Completed local wiki/status source inspection evidence for AutoSci `exp-status` parity without claiming live remote/provider polling.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                  "ref": "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-status-local-source-runtime-proof-20260702.json",
+              "native_skill": "exp-status",
+              "production_ready": true,
+              "proof_id": "runtime:exp-status:local-wiki-status-source:20260703T002806Z",
+              "provenance": {
+                "artifact_kind": "experiment_status.local_wiki_state",
+                "captured_at": "2026-07-03T00:28:06Z",
+                "command": "autosci_skill_shim.py $exp-status exp-local-default --run-id codex-exp-status-local-after-run-proof-20260702",
+                "source": "local_wiki_status_resolver"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/exp-status/SKILL.md",
+                  "ref": ".agents/skills/exp-status/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                  "ref": "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-status/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+              "native_skill": "exp-status",
+              "production_ready": true,
+              "proof_id": "runtime:exp-status:semantic-audit:exp-status.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-07-02T20:18:35Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-exp-status-local-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "none",
+          "solar_backend_action": "monitor_experiment",
+          "solar_capability": "cap.research-experiment-monitor",
+          "solar_logical_operator": "ScientificExperimentMonitor",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "exp-status"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 3
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-07-03T00:29:00.683696Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

@@ -298,6 +298,8 @@ def native_options(args: argparse.Namespace) -> dict[str, Any]:
         "code_evidence": list(args.code_evidence or []),
         "source_evidence": list(args.source_evidence or []),
         "novelty_evidence": list(args.novelty_evidence or []),
+        "pilot_handoff_evidence": list(args.pilot_handoff_evidence or []),
+        "pilot_runtime_evidence": list(args.pilot_runtime_evidence or []),
         "difficulty": str(args.difficulty or ""),
         "focus": str(args.focus or ""),
         "depth": int(args.depth or 0),
@@ -595,6 +597,10 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
         inputs["discovery_evidence"] = list(args.discovery_evidence)
     if args.novelty_evidence:
         inputs["novelty_evidence"] = list(args.novelty_evidence)
+    if args.pilot_handoff_evidence:
+        inputs["pilot_handoff_evidence"] = list(args.pilot_handoff_evidence)
+    if args.pilot_runtime_evidence:
+        inputs["pilot_runtime_evidence"] = list(args.pilot_runtime_evidence)
     if args.review_llm_evidence:
         inputs["review_llm_evidence"] = list(args.review_llm_evidence)
     if args.review_llm_command:
@@ -670,6 +676,8 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["online_novelty"] = True
         elif not args.quick and not args.skip_validation:
             inputs["online_novelty"] = True
+        if args.write:
+            inputs["write"] = True
         if (
             args.review
             or args.review_llm_evidence
@@ -696,6 +704,10 @@ def maybe_customize_envelope(envelope: dict[str, Any], action: str, args: argpar
             inputs["skip_validation"] = True
         if args.skip_pilot:
             inputs["skip_pilot"] = True
+        if args.pilot_handoff_evidence:
+            inputs["pilot_handoff_evidence"] = list(args.pilot_handoff_evidence)
+        if args.pilot_runtime_evidence:
+            inputs["pilot_runtime_evidence"] = list(args.pilot_runtime_evidence)
     if target and action in {
         "design_experiment",
         "run_experiment",
@@ -1503,25 +1515,273 @@ def write_paper_draft_workspace_projection_proof(
     return {"type": "wiki_mutation_runtime_proof_manifest_json", "path": output_rel(proof_path)}
 
 
+def _output_path(path: str | Path) -> Path:
+    candidate = Path(str(path))
+    return candidate if candidate.is_absolute() else OUTPUT_HARNESS / candidate
+
+
+def _exp_design_execution_ready(skill_run: dict[str, Any]) -> bool:
+    for action in skill_run.get("actions", []):
+        if not isinstance(action, dict) or action.get("action") != "design_experiment":
+            continue
+        evidence_path = str(action.get("evidence_path") or "").strip()
+        if not evidence_path:
+            continue
+        try:
+            evidence = load_json(_output_path(evidence_path))
+        except (OSError, json.JSONDecodeError):
+            continue
+        plan = evidence.get("outputs", {}).get("experiment_plan")
+        if isinstance(plan, dict):
+            boundary = plan.get("source_context", {}).get("final_execution_boundary")
+            if isinstance(boundary, dict) and (
+                boundary.get("execution_ready") is True or boundary.get("status") == "execution_ready"
+            ):
+                return True
+        for artifact in evidence.get("artifacts") or []:
+            if not isinstance(artifact, dict) or artifact.get("type") != "experiment_design_final_execution_boundary_json":
+                continue
+            artifact_path = str(artifact.get("path") or "").strip()
+            if not artifact_path:
+                continue
+            try:
+                boundary = load_json(_output_path(artifact_path))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if boundary.get("execution_ready") is True or boundary.get("status") == "execution_ready":
+                return True
+    return False
+
+
+def write_exp_design_workspace_projection_proof(
+    payload: dict[str, Any],
+    out_path: Path,
+    workspace_summary: dict[str, Any],
+) -> dict[str, str] | None:
+    skill_run = payload.get("outputs", {}).get("skill_run", {})
+    if not isinstance(skill_run, dict) or skill_run.get("selected_skill") != "exp-design":
+        return None
+    if not _exp_design_execution_ready(skill_run):
+        return None
+    updated_paths = [
+        str(path)
+        for path in workspace_summary.get("updated_paths", [])
+        if str(path).strip()
+    ]
+    wiki_refs = [
+        output_rel(path)
+        for path in updated_paths
+        if "/wiki/experiments/" in str(path)
+        or "/wiki/outputs/" in str(path)
+        or str(path).endswith("/wiki/graph/context_brief.md")
+        or str(path).endswith("/wiki/index.md")
+    ]
+    if not wiki_refs:
+        return None
+    work_dir = str(payload.get("inputs", {}).get("work_dir") or "").strip()
+    run_dir = OUTPUT_HARNESS / work_dir
+    action_refs = [
+        output_rel(action.get("evidence_path"))
+        for action in skill_run.get("actions", [])
+        if isinstance(action, dict) and str(action.get("evidence_path") or "").strip()
+    ]
+    refs = [
+        output_rel(out_path),
+        *action_refs,
+        output_rel(run_dir / "experiment_plan.json"),
+        output_rel(run_dir / "experiment_design_final_execution_boundary.json"),
+        output_rel(run_dir / "wiki_state_resolver.json"),
+        *wiki_refs,
+    ]
+    deduped_refs = []
+    for ref in refs:
+        if not ref:
+            continue
+        candidate = _output_path(ref)
+        if candidate.exists():
+            deduped_refs.append(ref)
+    deduped_refs = list(dict.fromkeys(deduped_refs))
+    if not deduped_refs:
+        return None
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    stamp = timestamp.replace(":", "").replace("-", "")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "exp-design",
+                "proof_id": f"runtime:exp-design:workspace-projection:{stamp}",
+                "categories": ["wiki_mutation_evidence"],
+                "collection_mode": "manual_review",
+                "production_ready": True,
+                "provenance": {
+                    "source": "solar_autosci_workspace_projector",
+                    "captured_at": timestamp,
+                    "artifact_kind": "exp_design_workspace_projection",
+                    "command": "autosci_skill_shim:project_run_to_workspace",
+                },
+                "evidence_refs": deduped_refs,
+                "description": "Completed execution-ready exp-design workspace wiki projection evidence for AutoSci parity.",
+            }
+        ],
+    }
+    proof_path = run_dir / "exp_design_workspace_wiki_mutation_runtime_proof.json"
+    write_json(proof_path, manifest)
+    return {"type": "wiki_mutation_runtime_proof_manifest_json", "path": output_rel(proof_path)}
+
+
+def _ideate_final_promotion_ready(skill_run: dict[str, Any]) -> bool:
+    final_ready = False
+    pipeline_ready = False
+    for action in skill_run.get("actions", []):
+        if not isinstance(action, dict) or action.get("action") != "generate_ideas":
+            continue
+        evidence_path = str(action.get("evidence_path") or "").strip()
+        if not evidence_path:
+            continue
+        try:
+            evidence = load_json(_output_path(evidence_path))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for artifact in evidence.get("artifacts") or []:
+            if not isinstance(artifact, dict) or artifact.get("type") != "ideate_final_promotion_boundary_json":
+                continue
+            artifact_path = str(artifact.get("path") or "").strip()
+            if not artifact_path:
+                continue
+            try:
+                boundary = load_json(_output_path(artifact_path))
+            except (OSError, json.JSONDecodeError):
+                continue
+            final_ready = final_ready or bool(boundary.get("final_promotion_ready"))
+        for artifact in evidence.get("artifacts") or []:
+            if not isinstance(artifact, dict) or artifact.get("type") != "ideate_pipeline_report_json":
+                continue
+            artifact_path = str(artifact.get("path") or "").strip()
+            if not artifact_path:
+                continue
+            try:
+                pipeline = load_json(_output_path(artifact_path))
+            except (OSError, json.JSONDecodeError):
+                continue
+            pipeline_ready = pipeline_ready or bool(pipeline.get("pipeline_ready"))
+    return final_ready and pipeline_ready
+
+
+def ideate_idea_page_projection_allowed(payload: dict[str, Any], skill_run: dict[str, Any]) -> bool:
+    if str(skill_run.get("selected_skill") or "") != "ideate":
+        return True
+    native = payload["inputs"].get("native_options") if isinstance(payload["inputs"].get("native_options"), dict) else {}
+    approved = bool(
+        native.get("write")
+        and native.get("execute_approved")
+        and str(native.get("approval_ref") or "").strip()
+    )
+    return approved and _ideate_final_promotion_ready(skill_run)
+
+
+def write_ideate_workspace_projection_proof(
+    payload: dict[str, Any],
+    out_path: Path,
+    workspace_summary: dict[str, Any],
+) -> dict[str, str] | None:
+    skill_run = payload.get("outputs", {}).get("skill_run", {})
+    if not isinstance(skill_run, dict) or skill_run.get("selected_skill") != "ideate":
+        return None
+    if workspace_summary.get("include_idea_pages") is not True:
+        return None
+    updated_paths = [
+        str(path)
+        for path in workspace_summary.get("updated_paths", [])
+        if str(path).strip()
+    ]
+    wiki_refs = [
+        output_rel(path)
+        for path in updated_paths
+        if "/wiki/ideas/" in str(path)
+        or str(path).endswith("/wiki/graph/edges.jsonl")
+        or str(path).endswith("/wiki/index.md")
+    ]
+    if not wiki_refs:
+        return None
+    work_dir = str(payload.get("inputs", {}).get("work_dir") or "").strip()
+    run_dir = OUTPUT_HARNESS / work_dir
+    action_refs = [
+        output_rel(action.get("evidence_path"))
+        for action in skill_run.get("actions", [])
+        if isinstance(action, dict) and str(action.get("evidence_path") or "").strip()
+    ]
+    refs = [output_rel(out_path), *action_refs, output_rel(run_dir / "idea_candidate.json"), *wiki_refs]
+    deduped_refs = []
+    for ref in refs:
+        if not ref:
+            continue
+        candidate = _output_path(ref)
+        if candidate.exists():
+            deduped_refs.append(ref)
+    deduped_refs = list(dict.fromkeys(deduped_refs))
+    if not deduped_refs:
+        return None
+    timestamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    stamp = timestamp.replace(":", "").replace("-", "")
+    manifest = {
+        "schema": "autosci_runtime_proof_manifest.v1",
+        "generated_at": timestamp,
+        "proofs": [
+            {
+                "native_skill": "ideate",
+                "proof_id": f"runtime:ideate:workspace-projection:{stamp}",
+                "categories": ["wiki_mutation_evidence"],
+                "collection_mode": "approved_side_effect",
+                "production_ready": True,
+                "provenance": {
+                    "source": "solar_autosci_workspace_projector",
+                    "captured_at": timestamp,
+                    "artifact_kind": "ideate_workspace_projection",
+                    "command": "autosci_skill_shim:project_run_to_workspace",
+                },
+                "evidence_refs": deduped_refs,
+                "description": "Completed approved ideate workspace wiki projection evidence for AutoSci parity.",
+            }
+        ],
+    }
+    proof_path = run_dir / "ideate_workspace_wiki_mutation_runtime_proof.json"
+    write_json(proof_path, manifest)
+    return {"type": "wiki_mutation_runtime_proof_manifest_json", "path": output_rel(proof_path)}
+
+
 def cmd_run_skill(args: argparse.Namespace) -> int:
     payload, out_path = build_payload(args)
     write_json(out_path, payload)
     skill_run = payload["outputs"]["skill_run"]
     workspace_summary: dict[str, Any] | None = None
     if payload["status"] != "failed" and skill_run["action_count"] > 0:
+        include_idea_pages = ideate_idea_page_projection_allowed(payload, skill_run)
         workspace_summary = project_run_to_workspace(
             out_path,
             output_harness=OUTPUT_HARNESS,
             workspace_rel=output_rel(AUTOSCI_ARTIFACT_ROOT / "workspace"),
+            include_idea_pages=include_idea_pages,
         )
         skill_run["workspace"] = workspace_summary
         for path in workspace_summary.get("updated_paths", []):
             payload["artifacts"].append({"type": "human_workspace", "path": str(path)})
         payload["artifacts"].append({"type": "human_workspace_index", "path": str(workspace_summary["index_path"])})
-        projection_proof = write_paper_draft_workspace_projection_proof(payload, out_path, workspace_summary)
-        if projection_proof is not None:
+        projection_proofs = [
+            proof
+            for proof in (
+                write_paper_draft_workspace_projection_proof(payload, out_path, workspace_summary),
+                write_exp_design_workspace_projection_proof(payload, out_path, workspace_summary),
+                write_ideate_workspace_projection_proof(payload, out_path, workspace_summary),
+            )
+            if proof is not None
+        ]
+        for projection_proof in projection_proofs:
             payload["artifacts"].append(projection_proof)
-            skill_run["workspace"]["runtime_proof_artifact"] = projection_proof
+        if projection_proofs:
+            skill_run["workspace"]["runtime_proof_artifacts"] = projection_proofs
+            skill_run["workspace"]["runtime_proof_artifact"] = projection_proofs[0]
         write_json(out_path, payload)
 
     summary = {
@@ -1679,6 +1939,8 @@ def build_parser() -> argparse.ArgumentParser:
     skill.add_argument("--max-papers", type=int, help="Native survey maximum cited paper count")
     skill.add_argument("--skip-validation", action="store_true", help="Native ideate fast path without deep validation")
     skill.add_argument("--skip-pilot", action="store_true", help="Native ideate fast path without pilot execution")
+    skill.add_argument("--pilot-handoff-evidence", action="append", help="Completed pilot handoff evidence for native ideate phase 5")
+    skill.add_argument("--pilot-runtime-evidence", action="append", help="Completed pilot runtime evidence for native ideate phase 5")
     skill.add_argument("--auto", action="store_true", help="Native automatic mode for research pipelines")
     skill.add_argument("--start-from", help="Native research pipeline resume stage")
     skill.add_argument("--skip-paper", action="store_true", help="Native research pipeline mode that skips paper generation")

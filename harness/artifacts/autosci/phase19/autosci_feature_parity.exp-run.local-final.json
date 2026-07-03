@@ -1,0 +1,886 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-final-runtime-proof-20260630.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full",
+      "type": "semantic_audit_dir"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "exp-run",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [],
+    "runtime_proof_manifest_paths": [
+      "artifacts/autosci/phase19/exp-run-final-runtime-proof-20260630.json"
+    ],
+    "runtime_proof_manifests": [
+      "artifacts/autosci/phase19/exp-run-final-runtime-proof-20260630.json"
+    ],
+    "semantic_audit_dirs": [
+      "artifacts/autosci/phase19/semantic-audits-exp-local-full"
+    ],
+    "semantic_audit_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json"
+    ],
+    "semantic_audits": []
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-exp-run",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 1,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 0,
+      "gated_count": 1,
+      "items": [
+        {
+          "autosci_command": "/exp-run",
+          "autosci_feature": "/exp-run",
+          "backend_mode": "side_effect_gated",
+          "coverage_status": "gated",
+          "evidence_ids": [
+            "route:exp-run",
+            "native:exp-run"
+          ],
+          "evidence_schema": "experiment_result.v1",
+          "execution_policy": "approval_required",
+          "feature_kind": "skill",
+          "limitations": [
+            "Local default mode is approval-gated and can be proven without remote/provider configuration when approval_ref, allowlist evidence, before-state evidence, runtime evidence, deploy/run reports, collection ledger where applicable, and wiki mutation evidence are present. SSH, rsync, screen sessions, remote launch/pull-results, distributed session exactly-once collection, and live provider/remote connectivity remain optional remote-mode follow-up proof and must not block local default parity; local result-dir reads remain local collection only and must not be counted as live SSH/provider collection."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/exp-run/SKILL.md",
+            "tools/remote.py"
+          ],
+          "native_skill": "exp-run",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+              "ref": "plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
+              "status": "ok",
+              "token": "plugins/autosci/bin/autosci_bridge.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/remote.py",
+              "ref": "tools/remote.py launch",
+              "status": "ok",
+              "token": "tools/remote.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/remote.py",
+              "ref": "tools/remote.py pull-results",
+              "status": "ok",
+              "token": "tools/remote.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/approval_runtime_proof.py",
+              "ref": "tools/approval_runtime_proof.py from-contract",
+              "status": "ok",
+              "token": "tools/approval_runtime_proof.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/wiki_mutation_runtime_proof.py",
+              "ref": "tools/wiki_mutation_runtime_proof.py from-writeback",
+              "status": "ok",
+              "token": "tools/wiki_mutation_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
+            "tools/remote.py launch",
+            "tools/remote.py pull-results",
+            "tools/approval_runtime_proof.py from-contract",
+            "tools/wiki_mutation_runtime_proof.py from-writeback"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:exp-run",
+            "native:exp-run"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:exp-run"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:exp-run"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "plugins/autosci/bin/autosci_bridge.py run --action run_experiment",
+                "tools/remote.py launch",
+                "tools/remote.py pull-results",
+                "tools/approval_runtime_proof.py from-contract",
+                "tools/wiki_mutation_runtime_proof.py from-writeback"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "approval_boundary_evidence",
+              "description": "Side-effecting route requires durable approval, allowlist, before/after, and result evidence.",
+              "evidence_refs": [
+                "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "side_effect_execution_evidence",
+              "description": "Gated side-effect route needs approved execution or provider delivery proof.",
+              "evidence_refs": [
+                "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "provider_source_evidence",
+              "description": "Source-dependent route needs non-fixture provider/source-channel evidence.",
+              "evidence_refs": [
+                "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "wiki_mutation_evidence",
+              "description": "Wiki-mutating route needs approved before/after mutation and rebuild evidence.",
+              "evidence_refs": [
+                "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "deploy",
+            "monitor",
+            "collect",
+            "local default mode",
+            "optional remote mode"
+          ],
+          "runtime_proof_refs": [
+            "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+            "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+            "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+            "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+            "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+            "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+            "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+            "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+            "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+            "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+            "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+            "artifacts/autosci/workspace/wiki/log.md",
+            "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+            "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/exp-run/SKILL.md",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "plugins/autosci/bin/autosci_skill_shim.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+            "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+            "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+            "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+            "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+            "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+            "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+            "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+            "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "external_runtime_evidence",
+                "approval_boundary_evidence",
+                "side_effect_execution_evidence",
+                "provider_source_evidence",
+                "wiki_mutation_evidence"
+              ],
+              "collection_mode": "live_provider",
+              "description": "Verified final runtime audit evidence for AutoSci `exp-run` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                  "ref": "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                  "ref": "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/log.md",
+                  "ref": "artifacts/autosci/workspace/wiki/log.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                  "ref": "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/wiki_state_resolver.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-run-final-proof-check/monitor_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-compile-final-proof-inputs/live-remote-results/results.json",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                "artifacts/autosci/workspace/wiki/experiments/codex-exp-run-final-proof.md",
+                "artifacts/autosci/workspace/wiki/log.md",
+                "artifacts/autosci/workspace/wiki/graph/edges.jsonl"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-final-runtime-proof-20260630.json",
+              "native_skill": "exp-run",
+              "production_ready": true,
+              "proof_id": "runtime:exp-run:final-collect:codex-exp-run-final-proof:20260630T054312Z",
+              "provenance": {
+                "artifact_kind": "experiment_run_final_runtime_audit",
+                "captured_at": "2026-06-30T05:43:12Z",
+                "command": "monitor_experiment:final_runtime_audit",
+                "source": "final_runtime_audit_boundary"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/exp-run/SKILL.md",
+                  "ref": ".agents/skills/exp-run/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                  "ref": "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                  "ref": "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                  "ref": "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                  "ref": "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                  "ref": "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                  "ref": "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                  "ref": "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                  "ref": "artifacts/autosci/workspace/wiki/collections/collection-ledger.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/config/README.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_status.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/experiment_run_final_runtime_audit_boundary.json",
+                "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md",
+                "artifacts/autosci/workspace/wiki/collections/collection-ledger.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+              "native_skill": "exp-run",
+              "production_ready": true,
+              "proof_id": "runtime:exp-run:semantic-audit:exp-run.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-07-02T20:18:35Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-exp-run-local-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "approval_required",
+          "solar_backend_action": "run_experiment",
+          "solar_capability": "cap.research-experiment-run",
+          "solar_logical_operator": "ScientificExperimentRunner",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "exp-run"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 6
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-07-03T01:07:04.005506Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

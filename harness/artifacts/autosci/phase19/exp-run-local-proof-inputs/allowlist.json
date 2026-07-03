@@ -1,0 +1,11 @@
+{
+  "schema": "autosci_command_allowlist.v1",
+  "commands": [
+    "python3 artifacts/autosci/phase19/exp-run-local-proof-inputs/local_experiment_command.py --experiment-id {experiment_id}"
+  ],
+  "scope": "phase19-exp-run-local-default-proof",
+  "notes": [
+    "This allowlist covers only an isolated local command proof for $exp-run --env local.",
+    "It is not remote/provider proof and must not be counted as live SSH or remote collection evidence."
+  ]
+}

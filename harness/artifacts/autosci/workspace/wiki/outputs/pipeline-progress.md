@@ -38,4 +38,4 @@ Skip paper: `False`
 - Scheduler lifecycle completed: `False`
 - Experiment runtime verified: `True`
 - Compile runtime verified: `True`
-- Integrated PDF: `missing`
+- Integrated PDF: `artifacts/autosci/workspace/paper/main.pdf`

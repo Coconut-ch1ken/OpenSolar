@@ -1,0 +1,27 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "task_id": "init-local-source-manifest-20260702",
+  "status": "completed",
+  "exit_code": 0,
+  "source_mode": "native_autosci_replay",
+  "candidates": [
+    {
+      "candidate_id": "skillgen-local-source",
+      "title": "SkillGen Local Source Candidate",
+      "source_ref": "artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/seed-skillgen.md",
+      "url": "artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/seed-skillgen.md",
+      "source_channels": [
+        "local_wiki"
+      ],
+      "abstract": "Local wiki source candidate used to prove AutoSci init source fan-in without live provider or remote execution.",
+      "ranking_score": 0.91,
+      "ranking_rationale": "Selected from local wiki evidence for Phase19 non-remote init fan-in parity.",
+      "dedup_status": "new",
+      "fetch_status": "fetched"
+    }
+  ],
+  "evidence_ids": [
+    "runtime:init-local-source-manifest-20260702",
+    "artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/seed-skillgen.md"
+  ]
+}

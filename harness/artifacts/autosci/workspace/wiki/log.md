@@ -181,3 +181,20 @@
 - Target: `artifacts/autosci/workspace/wiki/outputs/related-work-topic-skillgen-2026-06-30.md`
 - Evidence ids: lit-survey-external-20260630, topic:skillgen
 - Summary: survey | topic:skillgen | 5 papers, format: latex
+- 2026-07-02T20:16:04Z | experiment | completed `exp-local-default` outcome `supports` evidence `exp-local-default, Validate evidence coverage for `exp-local-default` using an approval-gated native experiment., runtime:exp-local-default:local, task-autosci-skillgen-run_experiment, node-run-experiment, artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json`
+- 2026-07-02T20:16:56Z | experiment | completed `exp-local-default` outcome `supports` evidence `exp-local-default, runtime:exp-local-default:local, task-autosci-skillgen-run_experiment, node-run-experiment, artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/run_experiment_runtime_evidence.json`
+- 2026-07-02T20:17:37Z | experiment | completed `exp-local-default` outcome `supports` evidence `exp-local-default, remote-collect:exp-local-default, artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir/results.json, result:exp-local-default:local-result-dir, task-autosci-skillgen-monitor_experiment, node-monitor-experiment, artifacts/autosci/runs/codex-exp-run-local-result-dir-collect-proof-20260702/monitor_experiment_runtime_evidence.json`
+
+## AutoSci Visualize
+
+- Timestamp: `2026-07-03T01:12:09Z`
+- Target: `artifacts/autosci/runs/shim-visualize-serve-flag/autosci_web_graph.json`
+- Evidence ids: visualize:autosci-graph, visualize-autosci-graph, autosci graph
+- Summary: Generated visualization artifacts: autosci_web_graph_json, obsidian_graph_config_json, obsidian_app_config_json, autosci_canvas_json
+
+## AutoSci Visualize
+
+- Timestamp: `2026-07-03T02:27:12Z`
+- Target: `artifacts/autosci/runs/shim-visualize-serve-flag/autosci_web_graph.json`
+- Evidence ids: visualize:autosci-graph, visualize-autosci-graph, autosci graph
+- Summary: Generated visualization artifacts: autosci_web_graph_json, obsidian_graph_config_json, obsidian_app_config_json, autosci_canvas_json

@@ -1,0 +1,131 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/exp-status/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_status_surface",
+      "detail": "Solar preserves the native $exp-status experiment/pipeline status surface and routes it through monitor_experiment.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/exp-status/SKILL.md",
+        ".agents/skills/exp-status/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "local_status_read",
+      "detail": "The local status proof resolves exp-local-default from Solar-managed wiki experiment state and reports completed state without schema-only fallback.",
+      "evidence_refs": [
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "side_effect_free_status",
+      "detail": "$exp-status remains side-effect-free for local wiki/run-state status reads and does not mutate native AutoSci state.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "remote_configuration_not_required_for_local",
+      "detail": "Native server configuration is remote-only; the local status proof reads wiki/run-state evidence without remote/provider configuration.",
+      "evidence_refs": [
+        "../AutoSci/config/README.md",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "remote_poll_boundary",
+      "detail": "Local status evidence is not counted as live SSH/provider polling; live remote/provider status remains optional remote-mode proof.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-07-02T20:18:35Z",
+  "auditor": "phase19-exp-status-local-semantic-audit",
+  "findings": [
+    {
+      "finding": "$exp-status is semantically full for local wiki/run-state status reads represented by the supplied Phase 19 evidence.",
+      "status": "ok"
+    },
+    {
+      "finding": "Live remote/provider polling remains intentionally out of scope for this local assessment and must not block local status parity.",
+      "status": "ok"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+    "../AutoSci/i18n/en/skills/exp-status/SKILL.md",
+    "../AutoSci/config/README.md"
+  ],
+  "native_skill": "exp-status",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-07-02T20:18:35Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/exp-status",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "Local status parity covers wiki/run-state lookup, local session registry status, supplied approved runtime evidence, collect-ready detection, and local collection identity evidence without requiring remote/provider configuration. `$exp-status` emits an explicit remote poll boundary so local run-dir status-file checks are not counted as live SSH/provider polling; live SSH/provider polling, approved provider status commands, and distributed exactly-once remote collection remain optional remote-mode follow-up proof."
+    ],
+    "required_capabilities": [
+      "status read",
+      "collect-ready detection",
+      "anomaly summary"
+    ],
+    "side_effect_policy": "none",
+    "solar_backend_action": "monitor_experiment"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/exp-status/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+    "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+    "artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+    "artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+  ],
+  "status": "completed",
+  "summary": "Solar $exp-status preserves native AutoSci local status semantics for wiki/run-state lookup after a local experiment run: it resolves the requested experiment id without default fallback, reads Solar-managed wiki experiment state, reports completed state and evidence ids, remains side-effect-free, and does not require remote/provider configuration. Live SSH/provider polling remains optional remote-mode proof and is not a local status blocker."
+}

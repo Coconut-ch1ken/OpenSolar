@@ -1,0 +1,31 @@
+{
+  "schema": "autosci_artifact_review.v1",
+  "task_id": "daily-arxiv-local-final-review-20260702",
+  "status": "completed",
+  "outputs": {
+    "review": {
+      "review_mode": "review_llm",
+      "review_available": true,
+      "recommendation": "pass_with_caveats",
+      "score": 0.89,
+      "evidence_ids": [
+        "review:daily-arxiv-local-final-20260702",
+        "runtime:daily-arxiv:provider-delivery:20260702"
+      ],
+      "review_llm": {
+        "status": "completed",
+        "provider": "codex",
+        "model": "gpt-5.5",
+        "evidence_ids": [
+          "review:daily-arxiv-local-final-20260702"
+        ]
+      }
+    },
+    "findings": [
+      {
+        "severity": "minor",
+        "summary": "Digest is final only for the supplied approval-gated provider/delivery evidence; live scheduling and SMTP execution remain approval-gated."
+      }
+    ]
+  }
+}

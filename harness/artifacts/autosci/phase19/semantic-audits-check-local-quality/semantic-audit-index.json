@@ -1,0 +1,27 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-check-local-quality/check.semantic-audit.json"
+  ],
+  "generated_at": "2026-07-03T00:24:36Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "model_quality_boundary": "ok",
+        "native_lint_execution": "ok",
+        "native_lint_tool_exists": "ok",
+        "native_skill_doc_exists": "ok",
+        "regression_coverage": "ok",
+        "report_only_default": "ok",
+        "solar_route_binding_declared": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-check-local-quality/check.semantic-audit.json",
+      "native_skill": "check",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

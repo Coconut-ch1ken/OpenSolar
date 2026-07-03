@@ -1,0 +1,122 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "ingest": {
+      "semantic_parity": "full",
+      "auditor": "phase19-ingest-semantic-audit",
+      "summary": "Solar $ingest preserves native AutoSci paper ingestion semantics for source preparation, metadata parsing, memory/graph sidecars, and final wiki registration. The route now proves source preparation, parse quality, raw provenance, downstream memory/graph handoff, and wiki paper/log/graph/index/context registration before treating a source as fully registered, while keeping the original AutoSci checkout read-only.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/ingest/SKILL.md",
+        "../AutoSci/tools/prepare_paper_source.py",
+        "../AutoSci/tools/research_wiki.py"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/ingest/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "artifacts/autosci/phase19/ingest-wiki-proof-inputs/registered_source.md",
+        "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/autosci_skill_run.json",
+        "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_paper.json",
+        "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_memory_update.json",
+        "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_graph_update.json",
+        "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_final_source_registration_boundary.json",
+        "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_source_provider_runtime_proof.json",
+        "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_wiki_mutation_runtime_proof.json",
+        "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+        "artifacts/autosci/workspace/wiki/log.md",
+        "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+        "artifacts/autosci/workspace/wiki/index.md",
+        "artifacts/autosci/workspace/wiki/graph/context_brief.md"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_command_surface",
+          "status": "ok",
+          "detail": "Solar $ingest preserves the native source-oriented command surface while routing execution through Solar Harness and Solar-managed artifacts.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/ingest/SKILL.md",
+            ".agents/skills/ingest/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+          ]
+        },
+        {
+          "check": "source_preparation_and_parse_quality",
+          "status": "ok",
+          "detail": "Source preparation is completed from a real registered markdown source, PDF extraction/no-fixture-leakage is covered by focused tests, and parsed paper evidence includes paper id, title, sections, source path, and preparation metadata.",
+          "evidence_refs": [
+            "../AutoSci/tools/prepare_paper_source.py",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/phase19/ingest-wiki-proof-inputs/registered_source.md",
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_paper.json"
+          ]
+        },
+        {
+          "check": "final_source_registration_boundary",
+          "status": "ok",
+          "detail": "The final source registration boundary is ready only after source preparation, parse quality, raw artifact provenance, downstream handoff, and wiki registration checks are all ok.",
+          "evidence_refs": [
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_final_source_registration_boundary.json"
+          ]
+        },
+        {
+          "check": "memory_graph_handoff",
+          "status": "ok",
+          "detail": "The route writes memory and graph sidecars that preserve paper identity, evidence ids, source references, and graph edges for downstream wiki/native graph handoff.",
+          "evidence_refs": [
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_memory_update.json",
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/research_graph_update.json"
+          ]
+        },
+        {
+          "check": "wiki_registration_and_runtime_proof",
+          "status": "ok",
+          "detail": "The proof run records wiki paper, log, graph edges, index, and context brief registration, and emits provider-source and wiki-mutation runtime proof manifests with concrete evidence refs.",
+          "evidence_refs": [
+            "../AutoSci/tools/research_wiki.py",
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_source_provider_runtime_proof.json",
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_wiki_mutation_runtime_proof.json",
+            "artifacts/autosci/workspace/wiki/papers/paper-registered-source.md",
+            "artifacts/autosci/workspace/wiki/log.md",
+            "artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+            "artifacts/autosci/workspace/wiki/index.md",
+            "artifacts/autosci/workspace/wiki/graph/context_brief.md"
+          ]
+        },
+        {
+          "check": "runtime_proof_coverage",
+          "status": "ok",
+          "detail": "The source-provider proof covers provider_source_evidence and external_runtime_evidence; the wiki registration proof covers wiki_mutation_evidence for the completed registered-source proof run.",
+          "evidence_refs": [
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_source_provider_runtime_proof.json",
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/ingest_paper_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "original_repo_is_read_only",
+          "status": "ok",
+          "detail": "The Solar wrapper routes ingestion through Solar Harness and writes Solar-managed artifacts/workspace files; the source AutoSci repo remains an evidence snapshot.",
+          "evidence_refs": [
+            ".agents/skills/ingest/SKILL.md",
+            "artifacts/autosci/runs/codex-ingest-wiki-proof-20260630/autosci_skill_run.json"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "$ingest is semantically full for source-prepared paper ingestion through final Solar workspace wiki registration represented by the supplied proof run."
+        },
+        {
+          "status": "ok",
+          "finding": "Network source fetches remain governed by explicit source preparation policy; offline runs must continue to report network-disabled or synthetic-TeX fallback state rather than hiding it."
+        }
+      ]
+    }
+  }
+}

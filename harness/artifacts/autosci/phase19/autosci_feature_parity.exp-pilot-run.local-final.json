@@ -1,0 +1,692 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full",
+      "type": "semantic_audit_dir"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "exp-pilot-run",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [],
+    "runtime_proof_manifest_paths": [
+      "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+    ],
+    "runtime_proof_manifests": [
+      "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+    ],
+    "semantic_audit_dirs": [
+      "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full"
+    ],
+    "semantic_audit_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json"
+    ],
+    "semantic_audits": []
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-exp-pilot-run",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 1,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 0
+      },
+      "full_count": 0,
+      "gated_count": 1,
+      "items": [
+        {
+          "autosci_command": "/exp-pilot-run",
+          "autosci_feature": "/exp-pilot-run",
+          "backend_mode": "side_effect_gated",
+          "coverage_status": "gated",
+          "evidence_ids": [
+            "route:exp-pilot-run",
+            "native:exp-pilot-run"
+          ],
+          "evidence_schema": "experiment_result.v1",
+          "execution_policy": "approval_required",
+          "feature_kind": "skill",
+          "limitations": [
+            "Code execution and remote execution require approval; approved runtime evidence can be supplied or produced by an allowlisted local/remote command before marking pilot runtime complete. $exp-pilot-run writes pilot runtime/result evidence only, does not judge pass/fail, and does not mutate wiki pages; $exp-pilot-eval owns verdict assessment and approved wiki updates."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/exp-pilot-run/SKILL.md"
+          ],
+          "native_skill": "exp-pilot-run",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+              "ref": "plugins/autosci/bin/autosci_bridge.py run --action run_pilot_experiment",
+              "status": "ok",
+              "token": "plugins/autosci/bin/autosci_bridge.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/remote.py",
+              "ref": "tools/remote.py",
+              "status": "ok",
+              "token": "tools/remote.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/approval_runtime_proof.py",
+              "ref": "tools/approval_runtime_proof.py from-contract",
+              "status": "ok",
+              "token": "tools/approval_runtime_proof.py"
+            }
+          ],
+          "primary_tools": [
+            "plugins/autosci/bin/autosci_bridge.py run --action run_pilot_experiment",
+            "tools/remote.py",
+            "tools/approval_runtime_proof.py from-contract"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:exp-pilot-run",
+            "native:exp-pilot-run"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:exp-pilot-run"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:exp-pilot-run"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "plugins/autosci/bin/autosci_bridge.py run --action run_pilot_experiment",
+                "tools/remote.py",
+                "tools/approval_runtime_proof.py from-contract"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:exp-pilot-run:approval-contract:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                "runtime:exp-pilot-run:approved-mutation:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                "runtime:exp-pilot-run:semantic-audit:exp-pilot-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:exp-pilot-run:approval-contract:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                "runtime:exp-pilot-run:approved-mutation:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                "runtime:exp-pilot-run:semantic-audit:exp-pilot-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "approval_boundary_evidence",
+              "description": "Side-effecting route requires durable approval, allowlist, before/after, and result evidence.",
+              "evidence_refs": [
+                "runtime:exp-pilot-run:approval-contract:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                "runtime:exp-pilot-run:approved-mutation:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                "runtime:exp-pilot-run:semantic-audit:exp-pilot-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "side_effect_execution_evidence",
+              "description": "Gated side-effect route needs approved execution or provider delivery proof.",
+              "evidence_refs": [
+                "runtime:exp-pilot-run:approval-contract:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                "runtime:exp-pilot-run:approved-mutation:20260702T191716Z",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                "runtime:exp-pilot-run:semantic-audit:exp-pilot-run.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "pilot code preparation",
+            "local execution",
+            "remote execution",
+            "result collection"
+          ],
+          "runtime_proof_refs": [
+            "runtime:exp-pilot-run:approval-contract:20260702T191716Z",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+            "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+            "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+            "runtime:exp-pilot-run:approved-mutation:20260702T191716Z",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+            "runtime:exp-pilot-run:semantic-audit:exp-pilot-run.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/exp-pilot-run/SKILL.md",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "plugins/autosci/bin/autosci_skill_shim.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+            "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "external_runtime_evidence",
+                "approval_boundary_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Verified approval/runtime evidence for AutoSci `exp-pilot-run` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                  "ref": "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                  "ref": "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+              "native_skill": "exp-pilot-run",
+              "production_ready": true,
+              "proof_id": "runtime:exp-pilot-run:approval-contract:20260702T191716Z",
+              "provenance": {
+                "artifact_kind": "pilot_runtime_execution",
+                "captured_at": "2026-07-02T19:17:16Z",
+                "command": "run_pilot_experiment:approved_mutation",
+                "source": "approval_contract"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "side_effect_execution_evidence"
+              ],
+              "collection_mode": "approved_side_effect",
+              "description": "Completed approved side-effect execution evidence for AutoSci `exp-pilot-run` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+              "native_skill": "exp-pilot-run",
+              "production_ready": true,
+              "proof_id": "runtime:exp-pilot-run:approved-mutation:20260702T191716Z",
+              "provenance": {
+                "artifact_kind": "pilot_runtime_execution",
+                "captured_at": "2026-07-02T19:17:16Z",
+                "command": "run_pilot_experiment:approved_mutation",
+                "source": "approved_mutation"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/exp-pilot-run/SKILL.md",
+                  "ref": ".agents/skills/exp-pilot-run/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                  "ref": "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                  "ref": "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+                  "ref": "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/exp-pilot-run/SKILL.md",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/before.json",
+                "artifacts/autosci/phase19/exp-pilot-run-approved-command-proof-inputs/pilot_command.py",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_result.pilot.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_result.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_runtime_evidence.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stdout.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_executor_stderr.txt",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_deploy_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/experiment_run_report.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/pilot_final_acceptance_boundary.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_contract.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+                "artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json",
+              "native_skill": "exp-pilot-run",
+              "production_ready": true,
+              "proof_id": "runtime:exp-pilot-run:semantic-audit:exp-pilot-run.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-07-02T19:18:40Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-exp-pilot-run-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "artifacts/autosci/phase19/semantic-audits-exp-pilot-run-full/exp-pilot-run.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "approval_required",
+          "solar_backend_action": "run_pilot_experiment",
+          "solar_capability": "cap.research-experiment-run",
+          "solar_logical_operator": "ScientificExperimentRunner",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "exp-pilot-run"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 4
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-07-03T00:51:07.760541Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

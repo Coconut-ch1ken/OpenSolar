@@ -1,0 +1,30 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-exp-design-local-full/exp-design.semantic-audit.json"
+  ],
+  "generated_at": "2026-07-02T23:28:20Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "approval_preflight_and_execution_boundary": "ok",
+        "evidence_linked_plan_contract": "ok",
+        "human_workspace_projection_limited": "ok",
+        "missing_evidence_truthfulness": "ok",
+        "native_exp_design_contract_scoped": "ok",
+        "native_skill_doc_exists": "ok",
+        "review_llm_design_validation": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "target_resolution_and_wiki_readiness": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-exp-design-local-full/exp-design.semantic-audit.json",
+      "native_skill": "exp-design",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

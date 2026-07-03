@@ -1,0 +1,46 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+    "harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json"
+  ],
+  "generated_at": "2026-07-02T20:18:35Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "approval_and_allowlist_boundary": "ok",
+        "local_collect_and_ledger_boundary": "ok",
+        "local_runtime_result_and_reports": "ok",
+        "native_local_surface": "ok",
+        "native_skill_doc_exists": "ok",
+        "remote_configuration_not_required_for_local": "ok",
+        "remote_scope_boundary": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "wiki_state_handoff": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-run.semantic-audit.json",
+      "native_skill": "exp-run",
+      "semantic_parity": "full"
+    },
+    {
+      "acceptance_check_statuses": {
+        "local_status_read": "ok",
+        "native_skill_doc_exists": "ok",
+        "native_status_surface": "ok",
+        "remote_configuration_not_required_for_local": "ok",
+        "remote_poll_boundary": "ok",
+        "side_effect_free_status": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-exp-local-full/exp-status.semantic-audit.json",
+      "native_skill": "exp-status",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 2,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 2,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

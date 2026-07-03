@@ -1,0 +1,31 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-ideate-local-full/ideate.semantic-audit.json"
+  ],
+  "generated_at": "2026-07-02T21:32:26Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "approved_wiki_projection": "ok",
+        "generation_path_coverage": "ok",
+        "missing_evidence_truthfulness": "ok",
+        "native_five_phase_contract": "ok",
+        "native_skill_doc_exists": "ok",
+        "novelty_and_review_validation": "ok",
+        "pilot_skip_boundary": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "source_grounded_model_brainstorm": "ok",
+        "wiki_state_resolution_and_antirepetition": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-ideate-local-full/ideate.semantic-audit.json",
+      "native_skill": "ideate",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

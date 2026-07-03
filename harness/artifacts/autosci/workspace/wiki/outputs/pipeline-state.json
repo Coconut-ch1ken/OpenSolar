@@ -3,40 +3,40 @@
     "action": "run_research_lifecycle",
     "after_artifacts": [
       {
-        "artifact_path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/after.json",
+        "artifact_path": "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
         "exists": true,
         "kind": "file",
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/after.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
         "verifiable": true
       },
       {
-        "artifact_path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/paper-main.pdf",
+        "artifact_path": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
         "exists": true,
         "kind": "file",
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/paper-main.pdf",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
         "verifiable": true
       }
     ],
     "after_ready": true,
     "allowlist_evidence": [
       {
-        "artifact_path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/allowlist.json",
+        "artifact_path": "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
         "exists": true,
         "kind": "file",
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/allowlist.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
         "verifiable": true
       }
     ],
     "allowlist_ready": true,
-    "approval_ref": "approval-research-proof",
+    "approval_ref": "approval-research-local-proof-20260702",
     "approval_state": "verified",
     "approved": true,
     "before_artifacts": [
       {
-        "artifact_path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/before.json",
+        "artifact_path": "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
         "exists": true,
         "kind": "file",
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/before.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
         "verifiable": true
       }
     ],
@@ -46,17 +46,17 @@
     "ready_for_execution": true,
     "runtime_evidence": [
       {
-        "artifact_path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/exp-runtime.json",
+        "artifact_path": "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
         "exists": true,
         "kind": "file",
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/exp-runtime.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
         "verifiable": true
       },
       {
-        "artifact_path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/compile-runtime.json",
+        "artifact_path": "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
         "exists": true,
         "kind": "file",
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/compile-runtime.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
         "verifiable": true
       }
     ],
@@ -73,45 +73,53 @@
   "current_stage": "completed",
   "evidence_report": {
     "approval_evidence_refs": [
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/allowlist.json",
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/exp-runtime.json",
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/compile-runtime.json",
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/before.json",
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/after.json",
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/paper-main.pdf"
+      "artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+      "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+      "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+      "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+      "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+      "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf"
     ],
     "artifacts": [
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/discovery.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
         "type": "research_lifecycle_stage_evidence_json"
       },
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/novelty.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
         "type": "research_lifecycle_stage_evidence_json"
       },
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/review-llm.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
         "type": "research_lifecycle_stage_evidence_json"
       },
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/exp-runtime.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
         "type": "research_lifecycle_runtime_evidence_json"
       },
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/compile-runtime.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
         "type": "research_lifecycle_runtime_evidence_json"
       },
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/before.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/before.json",
         "type": "research_lifecycle_before_artifact"
       },
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/after.json",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/after.json",
         "type": "research_lifecycle_after_artifact"
       },
       {
-        "path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/paper-main.pdf",
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
         "type": "research_lifecycle_after_artifact"
+      },
+      {
+        "path": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+        "type": "compiled_pdf"
+      },
+      {
+        "path": "artifacts/autosci/workspace/paper/main.pdf",
+        "type": "integrated_paper_pdf"
       }
     ],
     "compile_runtime": {
@@ -134,7 +142,7 @@
         },
         {
           "check": "compiled_pdf_verified",
-          "detail": "True",
+          "detail": "At least one compiled PDF artifact passed structural integrity checks.",
           "status": "ok"
         }
       ],
@@ -143,10 +151,22 @@
         "compiled_pdf_verified": true,
         "errors": [],
         "evidence_ids": [
-          "runtime:research-exp-proof",
-          "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/exp-runtime.json",
-          "runtime:research-compile-proof",
-          "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/compile-runtime.json"
+          "runtime:research-local-exp-proof-20260702",
+          "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+          "runtime:research-local-compile-proof-20260702",
+          "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json"
+        ],
+        "pdf_integrity": [
+          {
+            "detail": "PDF artifact has a readable PDF header, xref trailer, and EOF marker.",
+            "eof_ok": true,
+            "exists": true,
+            "header_ok": true,
+            "path": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+            "size_bytes": 105,
+            "startxref_ok": true,
+            "valid": true
+          }
         ],
         "records_loaded": 2
       },
@@ -156,7 +176,7 @@
     },
     "discovery_completed": true,
     "discovery_evidence_refs": [
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/discovery.json"
+      "artifacts/autosci/phase19/research-local-proof-inputs/discovery.json"
     ],
     "errors": [],
     "experiment_runtime": {
@@ -187,13 +207,14 @@
         "command_run": "approved-runtime-evidence",
         "errors": [],
         "evidence_ids": [
-          "runtime:research-exp-proof",
-          "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/exp-runtime.json",
-          "runtime:research-compile-proof",
-          "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/compile-runtime.json"
+          "runtime:research-local-exp-proof-20260702",
+          "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+          "runtime:research-local-compile-proof-20260702",
+          "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json"
         ],
         "experiment_exit_ok": true,
         "logs": [],
+        "metric_aggregates": [],
         "metrics": [
           {
             "name": "accuracy",
@@ -211,34 +232,39 @@
     "external_novelty_completed": true,
     "has_stage_evidence": true,
     "integrated_pdf": {
-      "reason": "no verified runtime PDF path was available",
-      "status": "missing"
+      "artifact": {
+        "path": "artifacts/autosci/workspace/paper/main.pdf",
+        "type": "integrated_paper_pdf"
+      },
+      "source_path": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+      "status": "completed",
+      "target_path": "artifacts/autosci/workspace/paper/main.pdf"
     },
     "novelty_evidence_refs": [
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/novelty.json"
+      "artifacts/autosci/phase19/research-local-proof-inputs/novelty.json"
     ],
     "paper_exists": true,
-    "paper_path": "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/source-paper.md",
+    "paper_path": "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
     "review_llm_completed": true,
     "review_llm_evidence_refs": [
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/review-llm.json"
+      "artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json"
     ],
     "runtime_evidence_refs": [
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/exp-runtime.json",
-      "artifacts/autosci/runs/codex-research-lifecycle-proof-inputs/compile-runtime.json"
+      "artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+      "artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json"
     ],
     "scheduler_lifecycle": {},
     "scheduler_lifecycle_completed": false,
     "wiki_counts": {
       "compiled_pdfs": 0,
-      "experiments": 5,
-      "ideas": 7,
+      "experiments": 2,
+      "ideas": 17,
       "latex_sources": 0,
-      "outputs": 26,
-      "papers": 9
+      "outputs": 34,
+      "papers": 12
     }
   },
-  "generated_at": "2026-06-30T05:34:58.075425Z",
+  "generated_at": "2026-07-02T23:38:44.500260Z",
   "pipeline": {
     "auto": false,
     "pipeline_id": "skillgen-main",

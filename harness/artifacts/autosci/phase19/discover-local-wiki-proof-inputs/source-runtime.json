@@ -1,0 +1,28 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "task_id": "codex-discover-local-wiki-proof-20260702",
+  "status": "completed",
+  "outputs": {
+    "runtime": {
+      "action": "discover_literature",
+      "status": "completed",
+      "exit_code": 0,
+      "command_run": "approved-local-wiki-discovery",
+      "candidates": [
+        {
+          "candidate_id": "local-wiki-source-001",
+          "title": "Local Wiki Discovery Source",
+          "abstract": "A bounded local wiki source used to prove source-backed discovery without network or remote provider access.",
+          "source_ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+          "source_channels": [
+            "wiki"
+          ],
+          "ranking_score": 0.91,
+          "ranking_rationale": "Approved local wiki runtime supplied this source from an existing wiki paper.",
+          "dedup_status": "new",
+          "fetch_status": "fetched"
+        }
+      ]
+    }
+  }
+}

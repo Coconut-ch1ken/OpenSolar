@@ -1,0 +1,36 @@
+{
+  "schema": "artifact_review.v1",
+  "task_id": "review-llm-novelty-local-proof-20260702",
+  "sprint_id": "review-llm-novelty-local-proof-20260702",
+  "node_id": "review-llm-novelty-local-proof-20260702",
+  "status": "completed",
+  "inputs": {
+    "target": "skillgen-novelty-proof-20260702"
+  },
+  "outputs": {
+    "review": {
+      "artifact_id": "artifact:skillgen-novelty-proof-20260702",
+      "target": "skillgen-novelty-proof-20260702",
+      "review_mode": "review_llm",
+      "review_available": true,
+      "difficulty": "standard",
+      "focus": "novelty",
+      "score": 0.62,
+      "recommendation": "pass_with_review_required",
+      "evidence_ids": [
+        "review-llm:novelty-local-proof-20260702"
+      ]
+    },
+    "findings": [],
+    "artifact": {
+      "artifact_id": "artifact:skillgen-novelty-proof-20260702"
+    }
+  },
+  "artifacts": [],
+  "provenance": {
+    "operator_id": "phase19-review-llm-proof",
+    "implementation_package": "phase19-proof-input",
+    "timestamp": "2026-07-02T00:00:00Z"
+  },
+  "limitations": []
+}

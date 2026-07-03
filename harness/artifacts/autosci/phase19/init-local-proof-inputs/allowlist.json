@@ -1,0 +1,8 @@
+{
+  "allowed": [
+    "local_wiki_source_prepare",
+    "wiki_fan_in"
+  ],
+  "approval_ref": "approval-init-local-proof-20260702",
+  "purpose": "Phase19 local AutoSci init fan-in proof without live provider or remote execution."
+}

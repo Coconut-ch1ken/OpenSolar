@@ -1,0 +1,16 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "status": "completed",
+  "outputs": {
+    "runtime": {
+      "action": "compile_paper",
+      "status": "completed",
+      "exit_code": 0,
+      "pdf_generated": true,
+      "pdf_path": "artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+      "evidence_ids": [
+        "runtime:research-local-compile-proof-20260702"
+      ]
+    }
+  }
+}

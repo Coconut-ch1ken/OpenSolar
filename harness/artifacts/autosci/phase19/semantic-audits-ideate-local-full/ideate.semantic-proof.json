@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-07-02T21:31:14Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-ideate-local-full/ideate.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/novelty/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/review/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/research_wiki.py",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/fetch_s2.py",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/fetch_deepxiv.py",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/ideate/SKILL.md",
+        ".agents/skills/novelty/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/bin/autosci_workspace_projector.py",
+        "harness/plugins/autosci/backends/idea_source.py",
+        "harness/plugins/autosci/backends/novelty_review.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/research_wiki.py",
+        "tools/review_model_runtime_proof.py",
+        "tools/wiki_mutation_runtime_proof.py",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/model-response.json",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/external-novelty.json",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/review-llm.json",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/papers/skillgen.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/methods/adaptation.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/ideas/existing-control.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/ideas/failed-control.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/graph/open_questions.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/wiki_state_resolver.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/idea_candidate.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/idea_evaluation.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_final_promotion_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_pipeline_report.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_growth_report.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_pilot_handoff_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/novelty_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_model_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_workspace_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/research_memory_update.ideas.json"
+      ],
+      "native_skill": "ideate",
+      "production_ready": true,
+      "proof_id": "runtime:ideate:phase19-ideate-local-supplied-evidence-semantic-audit:20260702T213114Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T21:31:14Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-ideate-local-full/ideate.semantic-audit.json --native-skill ideate --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-ideate-local-full/ideate.semantic-proof.json",
+        "source": "phase19-ideate-local-supplied-evidence-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

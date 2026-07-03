@@ -1,0 +1,24 @@
+{
+  "schema": "external_novelty_sources.v1",
+  "status": "completed",
+  "inputs": {
+    "query": "agent skill learning"
+  },
+  "outputs": {
+    "sources": [
+      {
+        "id": "s2-ideate-local-proof-001",
+        "provider": "semantic_scholar",
+        "paperId": "s2-ideate-local-proof-001",
+        "title": "Agent Skill Learning Prior Work",
+        "summary": "External novelty source for source-grounded agent skill learning.",
+        "url": "https://example.invalid/s2-ideate-local-proof-001"
+      }
+    ]
+  },
+  "provenance": {
+    "operator_id": "phase19-ideate-local-proof",
+    "implementation_package": "phase19-proof-input",
+    "timestamp": "2026-07-02T00:00:00Z"
+  }
+}

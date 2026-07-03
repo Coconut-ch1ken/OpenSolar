@@ -1,0 +1,207 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_wrapper_doc_exists",
+      "detail": "Solar wrapper skill document exists.",
+      "evidence_refs": [
+        ".agents/skills/ideate/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route declares a backend action.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_five_phase_contract",
+      "detail": "Native $ideate defines landscape scan, dual-model brainstorm, filter/validation, wiki write, and pilot phases, with --skip-pilot as an explicit fast-mode boundary.",
+      "evidence_refs": [
+        "../AutoSci/i18n/en/skills/ideate/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "wiki_state_resolution_and_antirepetition",
+      "detail": "The proof run resolved a Phase19 wiki root, read graph context/open questions, active idea signals, failed idea banlist signals, papers, methods, experiments, and workspace graph state before candidate generation.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/ideas/existing-control.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/ideas/failed-control.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/graph/open_questions.md",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/wiki_state_resolver.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "source_grounded_model_brainstorm",
+      "detail": "Supplied model evidence generated five candidates with declared A-E generation paths, source evidence IDs, model/provider provenance, and promotion-ready per-idea boundaries.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/model-response.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/idea_candidate.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_final_promotion_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_model_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_source_provider_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "generation_path_coverage",
+      "detail": "The final promotion boundary and pipeline report record complete coverage for A:landscape-driven, B:incremental, C:combination, D:innovation, and E:cross-domain-transfer.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/idea_candidate.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_final_promotion_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_pipeline_report.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "novelty_and_review_validation",
+      "detail": "Phase 3 consumed provider-shaped Semantic Scholar novelty evidence and independent Review LLM evidence, archived provider payloads, and produced final_acceptance_ready boundaries for all five candidates.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/external-novelty.json",
+        "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/review-llm.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/idea_evaluation.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/novelty_final_acceptance_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "approved_wiki_projection",
+      "detail": "The approved --write path selected all five candidates for durable idea projection and recorded an approved wiki mutation runtime proof.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_growth_report.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/research_memory_update.ideas.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_workspace_wiki_mutation_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "pilot_skip_boundary",
+      "detail": "Phase 5 was intentionally skipped with --skip-pilot; the pilot boundary remains explicit rather than silently claiming pilot execution.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_pilot_handoff_boundary.json",
+        "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_pipeline_report.json",
+        "../AutoSci/i18n/en/skills/ideate/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "missing_evidence_truthfulness",
+      "detail": "Regression coverage preserves inconclusive behavior for missing source/model/review evidence and avoids fabricating live provider, Review LLM, or pilot success.",
+      "evidence_refs": [
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/plugins/autosci/backends/idea_source.py",
+        "harness/plugins/autosci/backends/novelty_review.py"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-07-02T21:32:26Z",
+  "auditor": "phase19-ideate-local-supplied-evidence-semantic-audit",
+  "findings": [
+    {
+      "finding": "The non-remote supplied-evidence $ideate path now has complete semantic proof for native Phase 1-4 plus explicit Phase 5 skip, without live provider or remote execution.",
+      "status": "ok"
+    },
+    {
+      "finding": "This audit does not claim fresh live WebSearch, Semantic Scholar, DeepXiv, MCP Review LLM, or pilot experiment execution; it proves the supplied-evidence local path and skip-pilot boundary.",
+      "status": "warn"
+    },
+    {
+      "finding": "The proof run used the custom --wiki-root for read-side resolution, while the durable idea-page projector wrote to the default AutoSci workspace wiki; this existing projector behavior is logged as a guardrail for future cleanup.",
+      "status": "warn"
+    },
+    {
+      "finding": "The top-level skill-run summary can remain inconclusive while static route config is partial; the underlying generate/evaluate action evidence is completed and final promotion/acceptance boundaries are ready.",
+      "status": "ok"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+    "../AutoSci/i18n/en/skills/ideate/SKILL.md",
+    "../AutoSci/i18n/en/skills/novelty/SKILL.md",
+    "../AutoSci/i18n/en/skills/review/SKILL.md",
+    "../AutoSci/tools/research_wiki.py",
+    "../AutoSci/tools/fetch_s2.py",
+    "../AutoSci/tools/fetch_deepxiv.py"
+  ],
+  "native_skill": "ideate",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-07-02T21:32:26Z",
+    "tool": "tools/semantic_parity_audit_matrix.py"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/ideate",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "Explicit model-command/model-evidence brainstorming is wired for source-grounded candidates with persisted request/response provenance, ideate_final_promotion_boundary records wiki maturity scan, failed-idea banlist, source evidence, model provenance, and novelty/review gate requirements before ideas are promotable, and completed pilot handoff/runtime evidence can close phase 5. Approved durable idea-page projection now requires the full ideate pipeline to be ready, projects generated_from/has_pilot_handoff graph edges, and records those graph edges in wiki mutation proof; full native ideation still requires audited provider-backed dual-model brainstorming, external discovery evidence, novelty/review gates, pilot handoff evidence or explicit --skip-pilot, and explicit bounded-test mode for sample-content runs."
+    ],
+    "required_capabilities": [
+      "idea generation",
+      "deduplication",
+      "novelty scoring",
+      "pilot handoff"
+    ],
+    "side_effect_policy": "dry_run_only",
+    "solar_backend_action": "generate_ideas"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/ideate/SKILL.md",
+    ".agents/skills/novelty/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_workspace_projector.py",
+    "harness/plugins/autosci/backends/idea_source.py",
+    "harness/plugins/autosci/backends/novelty_review.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "tools/research_wiki.py",
+    "tools/review_model_runtime_proof.py",
+    "tools/wiki_mutation_runtime_proof.py",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/model-response.json",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/external-novelty.json",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-inputs/review-llm.json",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/papers/skillgen.md",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/methods/adaptation.md",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/ideas/existing-control.md",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/ideas/failed-control.md",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/graph/open_questions.md",
+    "harness/artifacts/autosci/phase19/ideate-local-proof-wiki/wiki/graph/context_brief.md",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/autosci_skill_run.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/wiki_state_resolver.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/idea_candidate.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/idea_evaluation.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_final_promotion_boundary.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_pipeline_report.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_growth_report.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_pilot_handoff_boundary.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/novelty_final_acceptance_boundary.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_model_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_external_novelty_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/evaluate_ideas_review_llm_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/ideate_workspace_wiki_mutation_runtime_proof.json",
+    "harness/artifacts/autosci/runs/codex-ideate-local-full-proof-20260702/research_memory_update.ideas.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $ideate preserves the native non-remote five-phase ideation path when wiki/source context, model brainstorming evidence, external novelty evidence, and Review LLM evidence are supplied: it resolves wiki state, scans active and failed ideas, consumes provider-shaped source evidence without live network fetch, generates A-E structured-path candidates, runs novelty/review validation, performs approved idea-page projection, and records explicit pilot skip state."
+}

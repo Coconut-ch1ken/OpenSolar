@@ -1,0 +1,128 @@
+{
+  "acceptance_checks": [
+    {
+      "check": "native_skill_doc_exists",
+      "detail": "Original AutoSci native /check skill document exists.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/check/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_lint_tool_exists",
+      "detail": "Original AutoSci wiki lint tool exists as the native structural check reference.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/lint.py"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "solar_route_binding_declared",
+      "detail": "Solar feature parity route binds /check to check_wiki_health under cap.research-workflow-evolve.",
+      "evidence_refs": [
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/check/SKILL.md"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "native_lint_execution",
+      "detail": "Solar check_wiki_health executed tools/lint.py --wiki-root and archived autosci_wiki_lint_cli.v1 output with zero error issues.",
+      "evidence_refs": [
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/wiki_lint_report.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "report_only_default",
+      "detail": "The local proof run produced workflow evidence and recommendations without applying wiki or raw-source mutations.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/workflow_evolution.check.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "model_quality_boundary",
+      "detail": "Final quality readiness required and received completed model-command evidence with persisted request/response provenance and evidence ids.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_final_quality_boundary.json",
+        "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_wiki_health_model_request.json",
+        "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_wiki_health_model_stdout.json",
+        "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_wiki_health_model_runtime_proof.json"
+      ],
+      "status": "ok"
+    },
+    {
+      "check": "regression_coverage",
+      "detail": "Targeted $check regression coverage asserts native lint artifact emission, final quality readiness, model provenance hashes, and runtime proof category boundaries.",
+      "evidence_refs": [
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py"
+      ],
+      "status": "ok"
+    }
+  ],
+  "audited_at": "2026-07-03T00:24:36Z",
+  "auditor": "phase19-check-local-quality-audit",
+  "findings": [
+    {
+      "finding": "The check route is semantically full for report-only wiki health checks when explicit model/reviewer quality evidence is supplied.",
+      "status": "ok"
+    },
+    {
+      "finding": "Side-effecting --fix behavior remains outside this semantic-full claim because the Solar route is report-only by default and side_effect_policy is none.",
+      "status": "ok"
+    },
+    {
+      "finding": "The current local proof uses an absolute --wiki-root and an internally quoted --model-command because relative harness-prefixed roots and unquoted paths containing spaces can fall back or split incorrectly.",
+      "status": "ok"
+    }
+  ],
+  "native_evidence_refs": [
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/check/SKILL.md",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/lint.py",
+    "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/research_wiki.py"
+  ],
+  "native_skill": "check",
+  "provenance": {
+    "assessment_schema": "autosci_semantic_parity_assessment.v1",
+    "timestamp": "2026-07-03T00:24:36Z",
+    "tool": "manual_phase19_check_local_quality_audit"
+  },
+  "remaining_requirements": [],
+  "route_snapshot": {
+    "autosci_command": "/check",
+    "backend_mode": "route_plan",
+    "coverage_status": "partial",
+    "limitations": [
+      "LLM-assisted content quality checks can be backed by explicit model evidence or a model command with persisted request/response provenance; check_final_quality_boundary requires passing local wiki checks plus completed model-backed recommendation evidence, and absent model evidence is not treated as deterministic pass/fail."
+    ],
+    "required_capabilities": [
+      "wiki lint",
+      "graph consistency check",
+      "tiered recommendations"
+    ],
+    "side_effect_policy": "none",
+    "solar_backend_action": "check_wiki_health"
+  },
+  "schema": "autosci_semantic_parity_audit.v1",
+  "semantic_parity": "full",
+  "solar_evidence_refs": [
+    "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    ".agents/skills/check/SKILL.md",
+    "harness/plugins/autosci/bin/autosci_bridge.py",
+    "harness/plugins/autosci/bin/autosci_skill_shim.py",
+    "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+    "tools/lint.py",
+    "harness/artifacts/autosci/phase19/check-local-quality-proof-inputs/bin/check-model-command-20260702.py",
+    "harness/artifacts/autosci/phase19/check-local-quality-proof-inputs/wiki/papers/skillgen-check.md",
+    "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/workflow_evolution.check.json",
+    "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/wiki_lint_report.json",
+    "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_final_quality_boundary.json",
+    "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_wiki_health_model_request.json",
+    "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_wiki_health_model_stdout.json",
+    "harness/artifacts/autosci/runs/codex-check-local-quality-proof-20260702/check_wiki_health_model_runtime_proof.json"
+  ],
+  "status": "completed",
+  "summary": "Solar $check preserves the native report-only wiki health check path, executes native lint semantics through tools/lint.py --wiki-root, surfaces structural findings as gate evidence, and requires completed model/reviewer evidence before final quality readiness."
+}

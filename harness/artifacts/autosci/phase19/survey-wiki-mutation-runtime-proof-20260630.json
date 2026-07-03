@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-06-30T18:51:46Z",
+  "proofs": [
+    {
+      "categories": [
+        "wiki_mutation_evidence"
+      ],
+      "collection_mode": "approved_side_effect",
+      "description": "Completed wiki mutation writeback sidecar for AutoSci `survey` parity.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_archive_writeback.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/related-work-topic-skillgen-2026-06-30.md",
+        "harness/artifacts/autosci/workspace/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/workspace/wiki/log.md"
+      ],
+      "native_skill": "survey",
+      "production_ready": true,
+      "proof_id": "runtime:survey:wiki-writeback-sidecar:20260630T185146Z",
+      "provenance": {
+        "artifact_kind": "autosci_survey_archive_writeback.v1",
+        "captured_at": "2026-06-30T18:51:46Z",
+        "command": "write_survey:wiki_writeback",
+        "source": "wiki_writeback_sidecar"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

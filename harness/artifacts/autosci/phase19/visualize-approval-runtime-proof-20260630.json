@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-06-30T13:39:14Z",
+  "proofs": [
+    {
+      "categories": [
+        "external_runtime_evidence",
+        "approval_boundary_evidence"
+      ],
+      "collection_mode": "approved_side_effect",
+      "description": "Verified approval/runtime evidence for AutoSci `visualize` parity.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/research_graph_update.visualize.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_graph_approval_contract.json",
+        "harness/artifacts/autosci/phase19/visualize-proof-inputs/visualize-allowlist-20260630.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/visualize_web_health.json",
+        "harness/artifacts/autosci/phase19/visualize-proof-inputs/visualize-before-20260630.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-visualize-proof-check-20260630/autosci_web_graph.json",
+        "harness/artifacts/autosci/workspace/wiki/.obsidian/graph.json",
+        "harness/artifacts/autosci/workspace/wiki/canvases/knowledge-map.canvas",
+        "harness/artifacts/autosci/workspace/wiki/log.md"
+      ],
+      "native_skill": "visualize",
+      "production_ready": true,
+      "proof_id": "runtime:visualize:approval-contract:20260630T133914Z",
+      "provenance": {
+        "artifact_kind": "visualize_web_health",
+        "captured_at": "2026-06-30T13:39:14Z",
+        "command": "visualize_graph:approved_mutation",
+        "source": "approval_contract"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

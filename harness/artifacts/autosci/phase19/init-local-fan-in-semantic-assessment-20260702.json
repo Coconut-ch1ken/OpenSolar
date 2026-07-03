@@ -1,0 +1,143 @@
+{
+  "schema": "autosci_semantic_parity_assessment.v1",
+  "assessments": {
+    "init": {
+      "semantic_parity": "full",
+      "auditor": "phase19-init-local-fan-in-semantic-audit",
+      "summary": "Solar $init preserves the non-remote source-manifest and approved wiki fan-in portion of native /init: supplied local source evidence is verified through the approval/runtime contract, provider/local source-channel boundary, wiki paper fan-in, log and graph edge writes, index/context rebuild evidence, and runtime proof sidecars. This scoped audit does not claim fresh network discovery/fetch, parallel ingest subagents, or visualization refresh execution.",
+      "additional_native_evidence_refs": [
+        "../AutoSci/i18n/en/skills/init/SKILL.md",
+        "../AutoSci/i18n/en/skills/init/references/prepare-and-discovery.md",
+        "../AutoSci/i18n/en/skills/init/references/parallel-ingest.md",
+        "../AutoSci/i18n/en/skills/ingest/SKILL.md",
+        "../AutoSci/tools/init_discovery.py",
+        "../AutoSci/tools/research_wiki.py"
+      ],
+      "additional_solar_evidence_refs": [
+        ".agents/skills/init/SKILL.md",
+        ".agents/skills/ingest/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "tools/init_discovery.py",
+        "tools/research_wiki.py",
+        "tools/approval_runtime_proof.py",
+        "tools/wiki_mutation_runtime_proof.py",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/after.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-inputs/runtime-source-manifest.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/literature_discovery.init.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_final_fan_in_boundary.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/source_fan_in_writeback.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_boundary_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_wiki_mutation_runtime_proof.json",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/seed-skillgen.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/skillgen-local-source.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/graph/edges.jsonl",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/index.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/graph/context_brief.md",
+        "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/log.md"
+      ],
+      "acceptance_checks": [
+        {
+          "check": "native_init_source_manifest_contract",
+          "status": "ok",
+          "detail": "Native /init prepares source manifests, writes checkpointed source state, and delegates downstream paper ingestion to /ingest; this audit scopes the Solar proof to the source-manifest and fan-in boundary rather than live fetch or subagent fan-out.",
+          "evidence_refs": [
+            "../AutoSci/i18n/en/skills/init/SKILL.md",
+            "../AutoSci/i18n/en/skills/init/references/prepare-and-discovery.md",
+            "../AutoSci/i18n/en/skills/init/references/parallel-ingest.md"
+          ]
+        },
+        {
+          "check": "approval_runtime_contract",
+          "status": "ok",
+          "detail": "The proof run supplied approval, allowlist, before, after, and runtime evidence; the approval contract reached verified state without executing a live provider or remote command.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/init-local-proof-inputs/allowlist.json",
+            "harness/artifacts/autosci/phase19/init-local-proof-inputs/before.json",
+            "harness/artifacts/autosci/phase19/init-local-proof-inputs/after.json",
+            "harness/artifacts/autosci/phase19/init-local-proof-inputs/runtime-source-manifest.json",
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_contract.json",
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_approval_boundary_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "local_source_channel_boundary",
+          "status": "ok",
+          "detail": "The runtime manifest supplied a local_wiki source channel; source_provider_boundary completed and the source provider proof used native_autosci_replay collection mode rather than live_provider.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/phase19/init-local-proof-inputs/runtime-source-manifest.json",
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/literature_discovery.init.json",
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_source_provider_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "approved_wiki_fan_in",
+          "status": "ok",
+          "detail": "The proof run wrote one approved source candidate into the Phase19 proof wiki, appended graph/log evidence, and rebuilt index/context views.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/source_fan_in_writeback.json",
+            "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/papers/skillgen-local-source.md",
+            "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/graph/edges.jsonl",
+            "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/index.md",
+            "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/graph/context_brief.md",
+            "harness/artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki/log.md",
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_wiki_mutation_runtime_proof.json"
+          ]
+        },
+        {
+          "check": "final_fan_in_boundary",
+          "status": "ok",
+          "detail": "autosci_init_sources_final_fan_in_boundary.v1 reached init_sources_final_fan_in_ready with provider/local source candidates, approved fan-in, graph/log/index/context rebuild evidence, and verified approval/runtime evidence.",
+          "evidence_refs": [
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/init_sources_final_fan_in_boundary.json",
+            "harness/artifacts/autosci/runs/codex-init-local-fan-in-full-proof2-20260702/literature_discovery.init.json"
+          ]
+        },
+        {
+          "check": "ingest_delegation_truthfulness",
+          "status": "ok",
+          "detail": "This audit relies on the already-audited $ingest route for downstream source registration semantics and does not claim that /init executed parallel /ingest subagents in this proof run.",
+          "evidence_refs": [
+            ".agents/skills/ingest/SKILL.md",
+            "harness/artifacts/autosci/phase19/semantic-audits-ingest-full/ingest.semantic-audit.json",
+            "../AutoSci/i18n/en/skills/ingest/SKILL.md"
+          ]
+        },
+        {
+          "check": "missing_evidence_truthfulness",
+          "status": "ok",
+          "detail": "Regression coverage preserves incomplete behavior for missing approval/runtime evidence, provider/local source boundary proof, and wiki fan-in evidence.",
+          "evidence_refs": [
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/plugins/autosci/bin/autosci_bridge.py"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "status": "ok",
+          "finding": "The non-remote local source fan-in path now has complete semantic, approval, source-channel, and wiki mutation proof for the Solar init_sources route scope."
+        },
+        {
+          "status": "warn",
+          "finding": "This audit does not claim a fresh network discovery/fetch, DeepXiv/Semantic Scholar provider call, parallel /ingest subagent fan-out, or visualization refresh execution."
+        },
+        {
+          "status": "warn",
+          "finding": "An earlier proof run used an invalid fetch_status value (`local_replay`) and failed the literature_discovery.v1 schema gate; the final proof uses schema-valid `fetch_status=fetched` while preserving local_wiki source-channel provenance."
+        },
+        {
+          "status": "warn",
+          "finding": "A repeated run against the same proof wiki root lost final_fan_in_ready because unchanged index output was not counted as rebuild evidence; the final proof uses a fresh isolated proof root."
+        }
+      ]
+    }
+  }
+}

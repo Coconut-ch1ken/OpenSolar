@@ -1,0 +1,14 @@
+{
+  "schema": "autosci_approval_allowlist.v1",
+  "approval_ref": "approval-daily-arxiv-local-final-20260702",
+  "allowed": [
+    "daily-arxiv",
+    "network_feed_fetch",
+    "digest_email_send",
+    "auto_ingest"
+  ],
+  "notes": [
+    "Phase19 proof input only. No network, SMTP, scheduler, or wiki mutation is executed by this file.",
+    "The corresponding runtime evidence records the approved provider digest and delivery outcome."
+  ]
+}

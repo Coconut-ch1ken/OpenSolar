@@ -1,0 +1,16 @@
+{
+  "schema": "literature_discovery.v1",
+  "status": "completed",
+  "outputs": {
+    "candidates": [
+      {
+        "candidate_id": "paper:research-local-proof",
+        "source_channels": [
+          "local_wiki"
+        ],
+        "source_ref": "artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+        "title": "Local Research Lifecycle Proof Prior Work"
+      }
+    ]
+  }
+}

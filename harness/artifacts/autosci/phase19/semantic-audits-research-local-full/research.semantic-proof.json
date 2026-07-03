@@ -1,0 +1,64 @@
+{
+  "generated_at": "2026-07-02T23:39:52Z",
+  "proofs": [
+    {
+      "categories": [
+        "semantic_equivalence_evidence"
+      ],
+      "collection_mode": "semantic_audit",
+      "description": "Completed semantic parity audit for AutoSci route equivalence.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/research/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ingest/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/ideate/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-design/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-run/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-status/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/exp-eval/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-plan/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-draft/SKILL.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/paper-compile/SKILL.md",
+        "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+        ".agents/skills/research/SKILL.md",
+        "harness/plugins/autosci/bin/autosci_skill_shim.py",
+        "harness/plugins/autosci/bin/autosci_bridge.py",
+        "harness/tools/run_scientific_workflow.py",
+        "harness/tools/run_scientific_lifecycle_smoke.py",
+        "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+        "harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/source-paper.md",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/discovery.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/novelty.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/review-llm.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/exp-runtime.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/compile-runtime.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/allowlist.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/before.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/after.json",
+        "harness/artifacts/autosci/phase19/research-local-proof-inputs/paper-main.pdf",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle.result.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/workflow_evolution.research.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_contract.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_source_provider_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_review_llm_runtime_proof.json",
+        "harness/artifacts/autosci/runs/codex-research-local-full-proof-20260702/run_research_lifecycle_approval_runtime_proof.json",
+        "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-progress.md",
+        "harness/artifacts/autosci/workspace/wiki/outputs/PIPELINE_REPORT.md",
+        "harness/artifacts/autosci/workspace/wiki/outputs/pipeline-state.json",
+        "harness/artifacts/autosci/workspace/paper/main.pdf"
+      ],
+      "native_skill": "research",
+      "production_ready": true,
+      "proof_id": "runtime:research:phase19-research-local-supplied-evidence-lifecycle-semantic-audit:20260702T233952Z",
+      "provenance": {
+        "artifact_kind": "autosci_semantic_parity_audit.v1",
+        "captured_at": "2026-07-02T23:39:52Z",
+        "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-audit.json --native-skill research --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-research-local-full/research.semantic-proof.json",
+        "source": "phase19-research-local-supplied-evidence-lifecycle-semantic-audit"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

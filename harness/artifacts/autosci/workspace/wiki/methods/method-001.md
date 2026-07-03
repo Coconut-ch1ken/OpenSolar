@@ -2,15 +2,15 @@
 entity_type: "method"
 entity_id: "method-001"
 title: "Method protocol"
-run_id: "repro"
-source_evidence: "artifacts/autosci/runs/repro/research_method.json"
+run_id: "codex-exp-run-local-approved-proof-20260702"
+source_evidence: "artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/research_method.json"
 managed_by: "solar-autosci-workspace-projector"
 ---
 # Method protocol
 
 - Method id: `method-001`
 - Source anchor: `sample_paper.md#method`
-- Evidence: `artifacts/autosci/runs/repro/research_method.json`
+- Evidence: `artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/research_method.json`
 
 ## Summary
 

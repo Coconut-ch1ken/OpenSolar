@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-06-30T18:51:46Z",
+  "proofs": [
+    {
+      "categories": [
+        "provider_source_evidence",
+        "external_runtime_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed citation/source evidence for AutoSci `survey` parity.",
+      "evidence_refs": [
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/scientific_report.survey.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_plan.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey.md",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/write_survey_citation_map.json",
+        "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/harness/artifacts/autosci/runs/codex-survey-archive-proof-20260630/survey_final_coverage_boundary.json",
+        "harness/artifacts/autosci/phase19/publication-external-proof-inputs/survey-discovery.json",
+        "https://arxiv.org/abs/2601.01003"
+      ],
+      "native_skill": "survey",
+      "production_ready": true,
+      "proof_id": "runtime:survey:references-wiki:20260630T185146Z",
+      "provenance": {
+        "artifact_kind": "publication_citation_map",
+        "captured_at": "2026-06-30T18:51:46Z",
+        "citation_count": 5,
+        "command": "write_survey:citation_source_map",
+        "source": "references+wiki"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

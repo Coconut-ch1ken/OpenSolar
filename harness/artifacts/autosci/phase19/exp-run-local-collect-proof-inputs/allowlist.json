@@ -1,0 +1,11 @@
+{
+  "schema": "autosci_command_allowlist.v1",
+  "commands": [
+    "python3 ../tools/remote.py pull-results --result-dir artifacts/autosci/phase19/exp-run-local-collect-proof-inputs/result_dir"
+  ],
+  "scope": "phase19-exp-run-local-collect-proof",
+  "notes": [
+    "This allowlist covers local result-dir collection only.",
+    "It must not be counted as live SSH/provider collection proof."
+  ]
+}

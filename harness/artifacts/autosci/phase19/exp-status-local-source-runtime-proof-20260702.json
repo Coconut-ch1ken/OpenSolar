@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-03T00:28:06Z",
+  "proofs": [
+    {
+      "categories": [
+        "provider_source_evidence",
+        "external_runtime_evidence"
+      ],
+      "collection_mode": "manual_review",
+      "description": "Completed local wiki/status source inspection evidence for AutoSci `exp-status` parity without claiming live remote/provider polling.",
+      "evidence_refs": [
+        "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/autosci_skill_run.json",
+        "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/experiment_status.json",
+        "harness/artifacts/autosci/runs/codex-exp-status-local-after-run-proof-20260702/wiki_state_resolver.json",
+        "harness/artifacts/autosci/workspace/wiki/experiments/exp-local-default.md"
+      ],
+      "native_skill": "exp-status",
+      "production_ready": true,
+      "proof_id": "runtime:exp-status:local-wiki-status-source:20260703T002806Z",
+      "provenance": {
+        "artifact_kind": "experiment_status.local_wiki_state",
+        "captured_at": "2026-07-03T00:28:06Z",
+        "command": "autosci_skill_shim.py $exp-status exp-local-default --run-id codex-exp-status-local-after-run-proof-20260702",
+        "source": "local_wiki_status_resolver"
+      }
+    }
+  ],
+  "schema": "autosci_runtime_proof_manifest.v1"
+}

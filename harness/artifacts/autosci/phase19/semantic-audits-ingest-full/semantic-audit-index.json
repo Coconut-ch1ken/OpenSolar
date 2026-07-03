@@ -1,0 +1,30 @@
+{
+  "audit_paths": [
+    "harness/artifacts/autosci/phase19/semantic-audits-ingest-full/ingest.semantic-audit.json"
+  ],
+  "generated_at": "2026-07-02T19:39:44Z",
+  "items": [
+    {
+      "acceptance_check_statuses": {
+        "final_source_registration_boundary": "ok",
+        "memory_graph_handoff": "ok",
+        "native_command_surface": "ok",
+        "native_skill_doc_exists": "ok",
+        "original_repo_is_read_only": "ok",
+        "runtime_proof_coverage": "ok",
+        "solar_route_binding_declared": "ok",
+        "solar_wrapper_doc_exists": "ok",
+        "source_preparation_and_parse_quality": "ok",
+        "wiki_registration_and_runtime_proof": "ok"
+      },
+      "audit_path": "harness/artifacts/autosci/phase19/semantic-audits-ingest-full/ingest.semantic-audit.json",
+      "native_skill": "ingest",
+      "semantic_parity": "full"
+    }
+  ],
+  "route_count": 1,
+  "schema": "autosci_semantic_parity_audit_matrix.v1",
+  "semantic_full_count": 1,
+  "semantic_partial_count": 0,
+  "status": "completed"
+}

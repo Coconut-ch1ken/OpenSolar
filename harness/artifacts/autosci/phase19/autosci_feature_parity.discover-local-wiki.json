@@ -1,0 +1,813 @@
+{
+  "artifacts": [
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+      "type": "route_config"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/design_experiment_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_review_llm_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_source_provider_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_wiki_mutation_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-proof.json",
+      "type": "runtime_proof_manifest"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full",
+      "type": "runtime_proof_dir"
+    },
+    {
+      "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+      "type": "semantic_parity_audit"
+    }
+  ],
+  "inputs": {
+    "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+    "requested_skill": "discover",
+    "route_config": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+    "runtime_proof_dirs": [
+      "harness/artifacts/autosci/runs",
+      "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full"
+    ],
+    "runtime_proof_manifest_paths": [
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-design-local-ready-proof-20260702/design_experiment_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_review_llm_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-eval-open-questions-proof-20260702/verify_claim_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-pilot-run-approved-command-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/generate_ideas_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_source_provider_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-exp-run-local-approved-proof-20260702/ingest_paper_wiki_mutation_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_approval_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-pilot-run-no-wiki-proof-20260702/run_pilot_experiment_side_effect_execution_runtime_proof.json",
+      "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-proof.json"
+    ],
+    "runtime_proof_manifests": [],
+    "semantic_audit_dirs": [],
+    "semantic_audit_paths": [
+      "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json"
+    ],
+    "semantic_audits": [
+      "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json"
+    ]
+  },
+  "limitations": [
+    "Phase 19 parity evidence verifies Solar-native route coverage, not live execution of external services.",
+    "Side effects such as secrets, remote execution, SMTP, browser rendering, GitHub Actions, and destructive reset remain approval-gated.",
+    "Local primary tool/config references are checked for ABI existence; external executables/providers are represented as external requirements."
+  ],
+  "node_id": "autosci-feature-parity-discover",
+  "outputs": {
+    "parity": {
+      "autosci_repo": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci",
+      "blocked_count": 0,
+      "config_version": "phase19.v1",
+      "configured_route_count": 1,
+      "execution_policy_counts": {
+        "approval_required": 0,
+        "bounded_local": 0,
+        "provider_required": 0,
+        "pure": 1
+      },
+      "full_count": 1,
+      "gated_count": 0,
+      "items": [
+        {
+          "autosci_command": "/discover",
+          "autosci_feature": "/discover",
+          "backend_mode": "solar_native",
+          "coverage_status": "full",
+          "evidence_ids": [
+            "route:discover",
+            "native:discover"
+          ],
+          "evidence_schema": "literature_discovery.v1",
+          "execution_policy": "pure",
+          "feature_kind": "skill",
+          "limitations": [
+            "Live API failures must be represented as incomplete source evidence rather than synthetic recommendations.",
+            "Root discover CLI now covers topic, anchor, wiki, and venue modes; source runtime completion requires a non-placeholder source channel boundary, and discover_final_shortlist_boundary requires non-empty candidates backed by provider or local wiki source channels. Live provider proof remains optional/provider-mode; local wiki source proof must not be labeled as live_provider."
+          ],
+          "missing_primary_tools": [],
+          "native_paths": [
+            "i18n/en/skills/discover/SKILL.md",
+            "tools/discover.py"
+          ],
+          "native_skill": "discover",
+          "primary_tool_statuses": [
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/discover.py",
+              "ref": "tools/discover.py from-anchors",
+              "status": "ok",
+              "token": "tools/discover.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/discover.py",
+              "ref": "tools/discover.py from-topic",
+              "status": "ok",
+              "token": "tools/discover.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/discover.py",
+              "ref": "tools/discover.py from-wiki",
+              "status": "ok",
+              "token": "tools/discover.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/discover.py",
+              "ref": "tools/discover.py from-venue",
+              "status": "ok",
+              "token": "tools/discover.py"
+            },
+            {
+              "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/tools/fetch_paper_copilot.py",
+              "ref": "tools/fetch_paper_copilot.py venue",
+              "status": "ok",
+              "token": "tools/fetch_paper_copilot.py"
+            }
+          ],
+          "primary_tools": [
+            "tools/discover.py from-anchors",
+            "tools/discover.py from-topic",
+            "tools/discover.py from-wiki",
+            "tools/discover.py from-venue",
+            "tools/fetch_paper_copilot.py venue"
+          ],
+          "proof_level": "E3",
+          "proof_refs": [
+            "route:discover",
+            "native:discover"
+          ],
+          "proof_requirements": [
+            {
+              "category": "route_definition",
+              "description": "Solar route declaration exists in feature_parity_routes.v1.json.",
+              "evidence_refs": [
+                "route:discover"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "native_skill_presence",
+              "description": "Discovered AutoSci native skill file exists under i18n/en/skills.",
+              "evidence_refs": [
+                "native:discover"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "primary_tool_abi",
+              "description": "Primary Solar tool/config references resolve locally or are declared external.",
+              "evidence_refs": [
+                "tools/discover.py from-anchors",
+                "tools/discover.py from-topic",
+                "tools/discover.py from-wiki",
+                "tools/discover.py from-venue",
+                "tools/fetch_paper_copilot.py venue"
+              ],
+              "status": "ok"
+            },
+            {
+              "category": "semantic_equivalence_evidence",
+              "description": "Route still needs audited native AutoSci semantic equivalence proof before semantic full parity.",
+              "evidence_refs": [
+                "runtime:discover:wiki:20260702T203116Z",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_approval_contract.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "runtime:discover:phase19-discover-local-wiki-semantic-audit:20260702T203343Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/discover/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/plugins/autosci/backends/literature_discover.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+                "runtime:discover:semantic-audit:discover.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/backends/literature_discover.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "external_runtime_evidence",
+              "description": "Route needs approved provider/runtime execution evidence before external behavior can be considered complete.",
+              "evidence_refs": [
+                "runtime:discover:wiki:20260702T203116Z",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_approval_contract.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "runtime:discover:phase19-discover-local-wiki-semantic-audit:20260702T203343Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/discover/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/plugins/autosci/backends/literature_discover.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+                "runtime:discover:semantic-audit:discover.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/backends/literature_discover.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+              ],
+              "status": "supplied"
+            },
+            {
+              "category": "provider_source_evidence",
+              "description": "Source-dependent route needs non-fixture provider/source-channel evidence.",
+              "evidence_refs": [
+                "runtime:discover:wiki:20260702T203116Z",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_approval_contract.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "runtime:discover:phase19-discover-local-wiki-semantic-audit:20260702T203343Z",
+                "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/discover/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/plugins/autosci/backends/literature_discover.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+                "runtime:discover:semantic-audit:discover.semantic-audit",
+                "artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/backends/literature_discover.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+              ],
+              "status": "supplied"
+            }
+          ],
+          "remaining_requirements": [],
+          "required_capabilities": [
+            "shortlist generation",
+            "deduplication",
+            "ranking signals",
+            "source manifest"
+          ],
+          "runtime_proof_refs": [
+            "runtime:discover:wiki:20260702T203116Z",
+            "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+            "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_approval_contract.json",
+            "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+            "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+            "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+            "runtime:discover:phase19-discover-local-wiki-semantic-audit:20260702T203343Z",
+            "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+            "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+            "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+            ".agents/skills/discover/SKILL.md",
+            "harness/plugins/autosci/bin/autosci_skill_shim.py",
+            "harness/plugins/autosci/bin/autosci_bridge.py",
+            "harness/plugins/autosci/backends/literature_discover.py",
+            "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+            "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+            "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+            "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+            "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+            "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+            "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+            "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+            "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+            "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+            "runtime:discover:semantic-audit:discover.semantic-audit",
+            "artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+            "plugins/autosci/config/feature_parity_routes.v1.json",
+            "plugins/autosci/bin/autosci_skill_shim.py",
+            "plugins/autosci/bin/autosci_bridge.py",
+            "plugins/autosci/backends/literature_discover.py",
+            "plugins/autosci/tests/test_autosci_skill_shim.py",
+            "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+            "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+            "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+            "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+            "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+          ],
+          "runtime_proof_sources": [
+            {
+              "block_reasons": [],
+              "categories": [
+                "provider_source_evidence",
+                "external_runtime_evidence"
+              ],
+              "collection_mode": "native_autosci_replay",
+              "description": "Completed non-fixture local wiki/source evidence for AutoSci `discover` parity.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                  "ref": "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_approval_contract.json",
+                  "ref": "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_approval_contract.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                  "ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                  "ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_approval_contract.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+              "native_skill": "discover",
+              "production_ready": true,
+              "proof_id": "runtime:discover:wiki:20260702T203116Z",
+              "provenance": {
+                "artifact_kind": "literature_discovery",
+                "captured_at": "2026-07-02T20:31:16Z",
+                "command": "discover_literature:source_provider_boundary",
+                "source": "wiki"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Completed semantic parity audit for AutoSci route equivalence.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                  "ref": "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/discover/SKILL.md",
+                  "ref": ".agents/skills/discover/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "harness/plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/backends/literature_discover.py",
+                  "ref": "harness/plugins/autosci/backends/literature_discover.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                  "ref": "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                  "ref": "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                  "ref": "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                  "ref": "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                  "ref": "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+                  "ref": "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                "harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/discover/SKILL.md",
+                "harness/plugins/autosci/bin/autosci_skill_shim.py",
+                "harness/plugins/autosci/bin/autosci_bridge.py",
+                "harness/plugins/autosci/backends/literature_discover.py",
+                "harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-proof.json",
+              "native_skill": "discover",
+              "production_ready": true,
+              "proof_id": "runtime:discover:phase19-discover-local-wiki-semantic-audit:20260702T203343Z",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-07-02T20:33:43Z",
+                "command": "tools/semantic_parity_runtime_proof.py from-audit harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json --native-skill discover --runtime-proof-out harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-proof.json",
+                "source": "phase19-discover-local-wiki-semantic-audit"
+              },
+              "status": "supplied"
+            },
+            {
+              "block_reasons": [],
+              "categories": [
+                "semantic_equivalence_evidence"
+              ],
+              "collection_mode": "semantic_audit",
+              "description": "Semantic parity audit supplied directly to the parity inventory.",
+              "evidence_ref_statuses": [
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                  "ref": "artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                  "ref": "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/config/feature_parity_routes.v1.json",
+                  "ref": "plugins/autosci/config/feature_parity_routes.v1.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/.agents/skills/discover/SKILL.md",
+                  "ref": ".agents/skills/discover/SKILL.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_skill_shim.py",
+                  "ref": "plugins/autosci/bin/autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/bin/autosci_bridge.py",
+                  "ref": "plugins/autosci/bin/autosci_bridge.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/backends/literature_discover.py",
+                  "ref": "plugins/autosci/backends/literature_discover.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "ref": "plugins/autosci/tests/test_autosci_skill_shim.py",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                  "ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                  "ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                  "ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                  "ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                  "ref": "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                  "ref": "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                  "ref": "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                  "ref": "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                  "status": "ok"
+                },
+                {
+                  "kind": "local_path",
+                  "path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+                  "ref": "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json",
+                  "status": "ok"
+                }
+              ],
+              "evidence_refs": [
+                "artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/i18n/en/skills/discover/SKILL.md",
+                "/Users/jamesyuan/Developer/Github Repos (On Git)/AutoSci/tools/discover.py",
+                "plugins/autosci/config/feature_parity_routes.v1.json",
+                ".agents/skills/discover/SKILL.md",
+                "plugins/autosci/bin/autosci_skill_shim.py",
+                "plugins/autosci/bin/autosci_bridge.py",
+                "plugins/autosci/backends/literature_discover.py",
+                "plugins/autosci/tests/test_autosci_skill_shim.py",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/allowlist.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/before.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/after.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/source-runtime.json",
+                "artifacts/autosci/phase19/discover-local-wiki-proof-inputs/wiki-source-paper.md",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/autosci_skill_run.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/literature_discovery.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_final_shortlist_boundary.json",
+                "artifacts/autosci/runs/codex-discover-local-wiki-proof-20260702/discover_literature_source_provider_runtime_proof.json"
+              ],
+              "manifest_path": "/Users/jamesyuan/Developer/Github Repos (On Git)/OpenSolar/.worktrees/autosci-parity/harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json",
+              "native_skill": "discover",
+              "production_ready": true,
+              "proof_id": "runtime:discover:semantic-audit:discover.semantic-audit",
+              "provenance": {
+                "artifact_kind": "autosci_semantic_parity_audit.v1",
+                "captured_at": "2026-07-02T20:33:43Z",
+                "command": "autosci_parity_bridge.py semantic-audit ingestion",
+                "source": "phase19-discover-local-wiki-semantic-audit"
+              },
+              "status": "supplied"
+            }
+          ],
+          "runtime_proof_status": "verified",
+          "semantic_audit_refs": [
+            "harness/artifacts/autosci/phase19/semantic-audits-discover-local-full/discover.semantic-audit.json"
+          ],
+          "semantic_audit_status": "verified",
+          "semantic_parity": "full",
+          "side_effect_policy": "none",
+          "solar_backend_action": "discover_literature",
+          "solar_capability": "cap.research-literature-discover",
+          "solar_logical_operator": "ScientificLiteratureDiscoverer",
+          "tool_abi_status": "ok"
+        }
+      ],
+      "missing_route_count": 0,
+      "native_skill_count": 1,
+      "native_skills": [
+        "discover"
+      ],
+      "partial_count": 0,
+      "proof_level_counts": {
+        "E0": 0,
+        "E1": 0,
+        "E2": 0,
+        "E3": 1,
+        "E4": 0,
+        "E5": 0
+      },
+      "proof_requirement_status_counts": {
+        "blocked": 0,
+        "missing": 0,
+        "ok": 3,
+        "pending": 0,
+        "supplied": 3
+      },
+      "routed_count": 1,
+      "runtime_proof_status_counts": {
+        "not_required": 0,
+        "pending": 0,
+        "supplied": 0,
+        "verified": 1
+      },
+      "semantic_full_count": 1,
+      "semantic_missing_count": 0,
+      "semantic_partial_count": 0
+    }
+  },
+  "provenance": {
+    "implementation_package": "harness.plugins.autosci",
+    "operator_id": "AutoSciFeatureParityBridge",
+    "timestamp": "2026-07-02T20:33:59.118251Z"
+  },
+  "schema": "autosci_feature_parity.v1",
+  "sprint_id": "phase19",
+  "status": "completed",
+  "task_id": "phase19-autosci-feature-parity"
+}

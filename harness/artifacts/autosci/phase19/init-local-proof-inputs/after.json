@@ -1,0 +1,14 @@
+{
+  "schema": "autosci_init_local_after_state.v1",
+  "wiki_root": "artifacts/autosci/phase19/init-local-proof-wiki-final2/wiki",
+  "papers": [
+    "skillgen-local-source"
+  ],
+  "graph_edges": [
+    "source_candidate_ingested"
+  ],
+  "rebuilt_views": [
+    "wiki/index.md",
+    "wiki/graph/context_brief.md"
+  ]
+}

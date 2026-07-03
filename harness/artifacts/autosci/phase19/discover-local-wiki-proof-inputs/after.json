@@ -1,0 +1,7 @@
+{
+  "schema": "autosci_discover_local_wiki_after.v1",
+  "state": "after-local-wiki-discovery",
+  "candidate_count": 1,
+  "remote_provider_required": false,
+  "collection_mode_expected": "native_autosci_replay"
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "autosci_experiment_before_state.v1",
+  "approved": true,
+  "experiment_id": "exp-local-default",
+  "state": "planned",
+  "scope": "local-default-exp-run-proof",
+  "remote_provider_required": false
+}

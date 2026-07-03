@@ -1,0 +1,48 @@
+{
+  "schema": "autosci_runtime_evidence.v1",
+  "task_id": "daily-arxiv-local-final-provider-delivery-20260702",
+  "status": "completed",
+  "exit_code": 0,
+  "command_run": "approved-runtime-evidence:/daily-arxiv --mode inform --send-email true",
+  "delivery_status": "delivered",
+  "delivery_completed": true,
+  "digest_sent": true,
+  "email_sent": true,
+  "delivery_id": "smtp-digest-proof-daily-arxiv-local-final-20260702",
+  "evidence_ids": [
+    "runtime:daily-arxiv:provider-delivery:20260702",
+    "delivery:smtp-digest-proof-daily-arxiv-local-final-20260702"
+  ],
+  "candidates": [
+    {
+      "candidate_id": "daily-arxiv-local-transformer-routing",
+      "title": "Routing-Aware Transformers for Scientific Workflow Planning",
+      "source_ref": "https://arxiv.org/abs/2601.00005",
+      "url": "https://arxiv.org/abs/2601.00005",
+      "abstract": "Provider candidate selected for workflow-planning relevance and overlap with AutoSci scheduler research notes.",
+      "source_channels": [
+        "arxiv",
+        "semantic_scholar"
+      ],
+      "ranking_score": 0.91,
+      "ranking_rationale": "Matches active wiki interests in scientific workflow planning, operator routing, and evidence-backed experiment orchestration.",
+      "dedup_status": "new",
+      "fetch_status": "fetched"
+    },
+    {
+      "candidate_id": "daily-arxiv-local-evidence-graphs",
+      "title": "Evidence Graphs for Automated Research Agents",
+      "source_ref": "https://arxiv.org/abs/2601.00006",
+      "url": "https://arxiv.org/abs/2601.00006",
+      "abstract": "Provider candidate selected for relevance to source-backed claim verification and graph-structured scientific memory.",
+      "source_channels": [
+        "arxiv",
+        "semantic_scholar"
+      ],
+      "ranking_score": 0.87,
+      "ranking_rationale": "Connects to current AutoSci parity work on source attribution, graph fan-in, and verification boundaries.",
+      "dedup_status": "new",
+      "fetch_status": "fetched"
+    }
+  ]
+}
