@@ -399,3 +399,40 @@ Solar is not built around a single model, a single UI, or a single agent loop.
 It treats natural language as the control surface, requirements as compilable artifacts, AI products as physical operators, capabilities as schedulable capsules, and engineering work as evidence-gated DAG execution.
 
 **Solar makes AI work run like system software: compiled, scheduled, bounded, evidenced, and optimized.**
+
+---
+
+## Appendix: Implemented AutoSci Commands
+
+The following AutoSci commands are implemented in the Solar AutoSci integration. Solar exposes them through `$command` skill wrappers; the native AutoSci slash command is shown in parentheses.
+
+| Command | Function |
+|---|---|
+| `$ask` (`/ask`) | Answer questions against AutoSci wiki/research memory with context briefs, gap annotations, source attribution, and optional wiki writeback. |
+| `$check` (`/check`) | Run wiki lint, graph consistency checks, and tiered recommendations over AutoSci artifacts. |
+| `$daily-arxiv` (`/daily-arxiv`) | Collect arXiv updates, enrich/rank papers, prepare a digest, and optionally route selected items to ingest. |
+| `$discover` (`/discover`) | Generate, deduplicate, rank, and package source shortlists with manifest evidence. |
+| `$edit` (`/edit`) | Apply bounded wiki/raw-source edits with mutation audit evidence and navigation rebuilds. |
+| `$exp-design` (`/exp-design`) | Ground hypotheses, define experiment blocks, set success criteria, and prepare an artifact plan. |
+| `$exp-eval` (`/exp-eval`) | Review experiment results, produce verdict evidence, and propose idea status updates. |
+| `$exp-pilot-eval` (`/exp-pilot-eval`) | Evaluate pilot experiments using pilot-specific criteria and lenient verdict handling. |
+| `$exp-pilot-run` (`/exp-pilot-run`) | Prepare and run pilot experiment code locally or remotely, then collect result evidence. |
+| `$exp-run` (`/exp-run`) | Deploy, monitor, and collect experiment runs in supported local or remote modes. |
+| `$exp-status` (`/exp-status`) | Read experiment status, detect collect-ready state, and summarize anomalies without starting a new run. |
+| `$ideate` (`/ideate`) | Generate research ideas, deduplicate them, score novelty, and prepare pilot handoff. |
+| `$ingest` (`/ingest`) | Prepare sources, extract metadata, and write memory/graph sidecars for research artifacts. |
+| `$init` (`/init`) | Prepare raw sources, create a discovery plan, fan into ingest, and attempt best-effort visualization. |
+| `$novelty` (`/novelty`) | Check novelty using wiki comparison, web/Semantic Scholar evidence, and optional Review LLM second opinion. |
+| `$paper-compile` (`/paper-compile`) | Compile LaTeX/PDF artifacts, inspect PDF integrity, and prepare submission checklist/audit evidence. |
+| `$paper-draft` (`/paper-draft`) | Draft paper sections with evidence citations, figure/table references, and review hooks. |
+| `$paper-plan` (`/paper-plan`) | Plan paper outlines, citation coverage, figure structure, and review gates. |
+| `$poster` (`/poster`) | Build poster artifacts from PaperX DAG inputs, render HTML/PNG outputs, and run review/overflow checks. |
+| `$prefill` (`/prefill`) | Seed foundation pages from approved catalogs/sources with deduplication and wiki mutation proof. |
+| `$rebuttal` (`/rebuttal`) | Atomize review comments, map evidence, draft responses, stress-test claims, and export rebuttal materials. |
+| `$refine` (`/refine`) | Run bounded review/refinement loops with issue classification, score trajectory, and iteration reports. |
+| `$research` (`/research`) | Orchestrate the broader research lifecycle across ideas, gates, experiments, papers, and resume state. |
+| `$reset` (`/reset`) | Produce dry-run deletion plans, enforce confirmation gates, and rebuild approved wiki scaffold state. |
+| `$review` (`/review`) | Run independent review prompts with score rubrics, entity mapping, and actionable suggestions. |
+| `$setup` (`/setup`) | Check secrets/configuration readiness and provide a verification checklist for AutoSci setup. |
+| `$survey` (`/survey`) | Build citation-backed related-work surveys with gap analysis, BibTeX coverage, and wiki archive output. |
+| `$visualize` (`/visualize`) | Generate Obsidian graph config, Canvas graph artifacts, SPA graph runbooks, and visualization recommendations. |
