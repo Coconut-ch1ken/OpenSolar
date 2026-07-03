@@ -7395,6 +7395,17 @@ def test_autosci_web_visualization_compatibility_tools_generate_graph_artifacts(
     assert (REPO / "tools/serve.py").exists()
     assert (REPO / "app/index.html").exists()
     assert (REPO / "app/modules/graph.js").exists()
+    assert (REPO / "app/modules/main.js").exists()
+    assert (REPO / "app/modules/reader.js").exists()
+    assert (REPO / "app/app.css").exists()
+    index_html = (REPO / "app/index.html").read_text(encoding="utf-8")
+    reader_js = (REPO / "app/modules/reader.js").read_text(encoding="utf-8")
+    app_css = (REPO / "app/app.css").read_text(encoding="utf-8")
+    assert "OmegaWiki" in index_html
+    assert "/modules/main.js" in index_html
+    assert "renderTagWordCloud" in reader_js
+    assert "Top tags" in reader_js
+    assert ".word-cloud-section" in app_css
 
     obsidian = subprocess.run(
         [
