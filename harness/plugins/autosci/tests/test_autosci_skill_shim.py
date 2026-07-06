@@ -7304,6 +7304,76 @@ def test_autosci_skill_shim_runs_remaining_gated_backend_actions(tmp_path: Path)
             assert evidence["outputs"]["edges"][0]["operation"] == "propose"
 
 
+def test_autosci_strict_gate_emits_side_effect_access_requests_for_native_parity_commands(tmp_path: Path) -> None:
+    cases = [
+        (
+            "$daily-arxiv",
+            "agents",
+            ["--gate-mode", "strict_hitl"],
+            "daily_arxiv_prepare_finalize",
+            "daily-arxiv",
+            {"network_fetch"},
+        ),
+        (
+            "$research",
+            "skillgen lifecycle",
+            ["--gate-mode", "strict_hitl"],
+            "run_research_lifecycle",
+            "research",
+            {"network_fetch", "local_command", "wiki_mutation", "remote_execution", "tex_compile"},
+        ),
+        (
+            "$ideate",
+            "skillgen ideas",
+            ["--gate-mode", "strict_hitl", "--skip-validation"],
+            "generate_ideas",
+            "ideate",
+            {"network_fetch", "local_command", "wiki_mutation"},
+        ),
+        (
+            "$exp-run",
+            "exp-001",
+            ["--env", "local", "--gate-mode", "strict_hitl"],
+            "run_experiment",
+            "exp-run",
+            {"local_command", "wiki_mutation"},
+        ),
+    ]
+    for command, target, extra_args, expected_action, native_skill, material_effects in cases:
+        proc = run_shim(
+            tmp_path,
+            command,
+            target,
+            "--run-id",
+            f"shim-side-effect-access-{expected_action}",
+            *extra_args,
+        )
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        summary = json.loads(proc.stdout)
+        assert summary["status"] == "inconclusive"
+
+        payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+        actions = payload["outputs"]["skill_run"]["actions"]
+        action = next(item for item in actions if item["action"] == expected_action)
+        assert action["status"] == "schema_only"
+        evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+        assert evidence["status"] == "inconclusive"
+        outputs = evidence["outputs"]
+        assert outputs["side_effect_access_required"] is True
+        assert outputs["side_effect_access_status"] == "blocked_side_effect_access_required"
+        request = outputs["side_effect_access_request"]
+        assert request["schema"] == "autosci_side_effect_access_request.v1"
+        assert request["status"] == "blocked_side_effect_access_required"
+        assert request["native_skill"] == native_skill
+        assert request["gate_policy"]["mode"] == "strict_hitl"
+        assert request["gate_policy"]["execute_side_effects"] is False
+        assert material_effects.issubset(set(request["requested_side_effects"]))
+        assert any(
+            artifact["type"] == "side_effect_access_request_json"
+            for artifact in evidence["artifacts"]
+        )
+
+
 def test_autosci_skill_shim_accepts_visualize_serve_flag_without_server_execution(tmp_path: Path) -> None:
     proc = run_shim(
         tmp_path,

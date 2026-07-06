@@ -327,3 +327,40 @@ keeping provider, remote, and workflow mutation boundaries truthful.
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k 'not visualize_parity_demo_auto_runs_server_probe and not novelty_http_provider_marks_external_runtime and not review_invokes_openai_compatible_provider'` | ok: 167 passed, 3 deselected |
 | elevated rerun of socket-bound shim tests: visualize server probe, novelty HTTP provider, Review LLM OpenAI-compatible provider | ok: 3 passed |
 | `git diff --check -- harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/tests/test_autosci_skill_shim.py` | ok |
+
+## Agent B Problem 3 Side-Effect Access Requests
+
+Logged: 2026-07-06 EDT
+
+Intent: stop four native-parity commands from silently returning plan/dry-run
+evidence when their native side effects are blocked by the active AutoSci gate
+mode. The command should either use already-verified runtime evidence or emit a
+typed access request that tells the caller what approval/opt-in is required.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Shared access request sidecar | ok | Added `autosci_side_effect_access_request.v1` generation with requested side effects, gate mode, blocking reasons, approval/runtime requirements, env opt-in hints, and `side_effect_access_request_json` artifacts. |
+| `$daily-arxiv` | ok | Missing live feed access now emits `outputs.side_effect_access_required=true`; supplied verified runtime digest evidence can still complete without being downgraded. |
+| `$research` | ok | Strict/safe blocked lifecycle side effects now appear in lifecycle runtime errors, human intervention points, pipeline status, and evidence outputs. |
+| `$ideate` | ok | `generate_ideas` now uses approval-gated side-effect policy and emits access requests for model/source/wiki/pilot side-effect paths instead of a dry-run-only route. |
+| `$exp-run` | ok | Approval-gated local/remote experiment execution now emits side-effect access requests when strict policy blocks command/wiki mutation execution. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Solar Evidence ABI schemas do not allow a new top-level status value. | fixed | Evidence top-level status remains `inconclusive`; the blocking state is stored in `outputs.side_effect_access_status=blocked_side_effect_access_required` and in the sidecar. |
+| Verified daily-arxiv runtime evidence was temporarily downgraded by strict policy. | fixed | Access requests are attached only when daily runtime evidence is not already semantically verified. |
+| `ideate` route metadata still said `dry_run_only`. | fixed | Route config and skill metadata now say `approval_required`. |
+| Local harness state files were dirty before this edit. | guarded | The change set avoids committing local process/watchdog state files and only targets AutoSci bridge/config/docs/tests. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py` | ok |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_strict_gate_emits_side_effect_access_requests_for_native_parity_commands` | ok: 1 passed |
+| `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_runs_remaining_gated_backend_actions` | ok: 1 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_daily_arxiv_uses_verified_runtime_digest` | ok after verified-runtime guard fix |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_accepts_exp_run_native_options_without_fixture_fallback` | ok: 1 passed |
