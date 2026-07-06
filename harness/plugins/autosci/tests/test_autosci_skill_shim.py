@@ -7368,10 +7368,72 @@ def test_autosci_strict_gate_emits_side_effect_access_requests_for_native_parity
         assert request["gate_policy"]["mode"] == "strict_hitl"
         assert request["gate_policy"]["execute_side_effects"] is False
         assert material_effects.issubset(set(request["requested_side_effects"]))
+        continuation = request["continuation"]
+        assert continuation["schema"] == "autosci_side_effect_continuation.v1"
+        assert continuation["status"] == "awaiting_side_effect_access"
+        assert continuation["retriable"] is True
+        assert continuation["same_envelope_supported"] is True
+        assert continuation["resume_strategy"] == "rerun_same_action_with_access_patch"
+        assert continuation["non_error_contract"]["blocked_runs_exit_successfully"] is True
+        assert continuation["non_error_contract"]["evidence_status"] == "inconclusive"
+        option_names = {option["name"] for option in continuation["access_patch_options"]}
+        assert {"bounded_policy_mode", "native_policy_mode", "hitl_approval"}.issubset(option_names)
         assert any(
             artifact["type"] == "side_effect_access_request_json"
             for artifact in evidence["artifacts"]
         )
+
+
+def test_autosci_skill_shim_visualize_projects_action_graph_update_into_workspace_graph(tmp_path: Path) -> None:
+    run_id = "shim-visualize-projects-action-graph"
+    wiki_root = tmp_path / "artifacts/autosci/workspace/wiki"
+    (wiki_root / "papers").mkdir(parents=True)
+    (wiki_root / "ideas").mkdir(parents=True)
+    (wiki_root / "graph").mkdir(parents=True)
+    (wiki_root / "papers" / "source.md").write_text("---\ntitle: Source Paper\n---\n# Source Paper\n", encoding="utf-8")
+    (wiki_root / "ideas" / "skillgen.md").write_text("---\ntitle: SkillGen Idea\n---\n# SkillGen Idea\n", encoding="utf-8")
+    source_edge = {"source": "papers/source.md", "target": "ideas/skillgen.md", "relation": "inspires"}
+    edges_path = wiki_root / "graph" / "edges.jsonl"
+    edges_path.write_text(json.dumps(source_edge, sort_keys=True) + "\n", encoding="utf-8")
+
+    proc = run_shim(
+        tmp_path,
+        "$visualize",
+        "autosci graph",
+        "--wiki-root",
+        str(wiki_root),
+        "--run-id",
+        run_id,
+    )
+    assert proc.returncode == 0, proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["skill"] == "visualize"
+    assert summary["workspace_updated_count"] > 0
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    action = payload["outputs"]["skill_run"]["actions"][0]
+    assert action["action"] == "visualize_graph"
+    evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
+    assert evidence["schema"] == "research_graph_update.v1"
+    assert evidence["outputs"]["edges"]
+
+    projected_edges = [
+        json.loads(line)
+        for line in edges_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert any(
+        edge.get("run_id") == run_id
+        and str(edge.get("source_evidence") or "").endswith("research_graph_update.visualize.json")
+        for edge in projected_edges
+    )
+
+    manifest_path = wiki_root / "graph" / "projection_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["schema"] == "autosci_workspace_graph_projection.v1"
+    assert manifest["status"] == "projected"
+    assert manifest["projected_edge_count"] >= 1
+    assert any(path.endswith("research_graph_update.visualize.json") for path in manifest["source_evidence"])
 
 
 def test_autosci_skill_shim_accepts_visualize_serve_flag_without_server_execution(tmp_path: Path) -> None:

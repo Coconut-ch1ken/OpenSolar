@@ -42,6 +42,14 @@ Actions that consult the policy should attach the serialized decision to:
 - `provenance.gate_policy`
 - an optional `gate_policy_decision_json` sidecar
 
+When a policy-connected action needs native side effects but the selected mode
+does not allow them, the action should emit `autosci_side_effect_access_request.v1`
+instead of treating the block as a terminal runtime failure. The request includes
+an `autosci_side_effect_continuation.v1` object with retry patch options for a
+bounded policy mode, native mode, or HITL approval evidence. Consumers should
+surface that request and re-run the same envelope with an explicit access patch
+when the user grants permission.
+
 Auto-approved modes use a synthetic reference of the form:
 
 ```text

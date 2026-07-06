@@ -640,6 +640,85 @@ def _side_effect_access_required(decision: dict[str, Any]) -> bool:
     return bool(material and not decision.get("execute_side_effects"))
 
 
+def _side_effect_access_continuation(
+    envelope: dict[str, Any],
+    action: str,
+    decision: dict[str, Any],
+    side_effects: list[str],
+) -> dict[str, Any]:
+    inputs = dict(envelope.get("inputs") or {})
+    stable_inputs = {
+        key: value
+        for key, value in sorted(inputs.items())
+        if key not in {"approval_ref", "gate_mode", "autosci_mode", "execute_approved_side_effect", "policy_auto_execute_side_effect"}
+    }
+    fingerprint = hashlib.sha256(
+        json.dumps(
+            {
+                "action": action,
+                "side_effects": side_effects,
+                "inputs": stable_inputs,
+            },
+            sort_keys=True,
+            default=str,
+        ).encode("utf-8")
+    ).hexdigest()
+    env_opt_ins = [
+        hint
+        for effect, hint in _SIDE_EFFECT_ACCESS_ENV_HINTS.items()
+        if effect in side_effects
+    ]
+    return {
+        "schema": "autosci_side_effect_continuation.v1",
+        "status": "awaiting_side_effect_access",
+        "retriable": True,
+        "action": action,
+        "request_fingerprint": fingerprint,
+        "same_envelope_supported": True,
+        "resume_strategy": "rerun_same_action_with_access_patch",
+        "access_patch_options": [
+            {
+                "name": "bounded_policy_mode",
+                "inputs": {"gate_mode": "parity_demo"},
+                "env": env_opt_ins,
+                "limitations": [
+                    "Use only for bounded local parity side effects. Network still requires SOLAR_AUTOSCI_ALLOW_NETWORK=1."
+                ],
+            },
+            {
+                "name": "native_policy_mode",
+                "inputs": {"gate_mode": "autosci_native"},
+                "env": [],
+                "limitations": [
+                    "Bypasses Solar gate blocking; runtime evidence remains required before claiming full parity."
+                ],
+            },
+            {
+                "name": "hitl_approval",
+                "inputs": {
+                    "approval_ref": "<approval-ref>",
+                    "execute_approved_side_effect": True,
+                },
+                "env": env_opt_ins,
+                "required_artifacts": [
+                    "allowlist_evidence",
+                    "before_artifact",
+                    "runtime_evidence",
+                    "after_artifact",
+                ],
+                "limitations": [
+                    "Strict HITL resume must provide enough typed artifacts for the action approval contract to verify."
+                ],
+            },
+        ],
+        "non_error_contract": {
+            "blocked_runs_exit_successfully": True,
+            "evidence_status": "inconclusive",
+            "side_effect_access_status": SIDE_EFFECT_ACCESS_REQUIRED_STATUS,
+        },
+    }
+
+
 def _side_effect_access_request(
     envelope: dict[str, Any],
     action: str,
@@ -690,6 +769,12 @@ def _side_effect_access_request(
             "allowed_write_roots": list(decision_payload.get("allowed_write_roots") or []),
         },
         "required_inputs": [str(item) for item in required_inputs or [] if str(item).strip()],
+        "continuation": _side_effect_access_continuation(
+            envelope,
+            action,
+            decision_payload,
+            side_effects,
+        ),
         "how_to_allow": [
             "Re-run with an AutoSci gate mode that may execute the requested side effects, such as `--gate-mode parity_demo`, `--gate-mode unsafe_native`, or `--gate-mode autosci_native`, depending on risk.",
             "For risky native side effects, set the explicit SOLAR_AUTOSCI_ALLOW_* opt-in variables listed in requested_access.environment_opt_ins.",

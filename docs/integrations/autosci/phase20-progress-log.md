@@ -364,3 +364,39 @@ typed access request that tells the caller what approval/opt-in is required.
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_runs_remaining_gated_backend_actions` | ok: 1 passed |
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_daily_arxiv_uses_verified_runtime_digest` | ok after verified-runtime guard fix |
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_accepts_exp_run_native_options_without_fixture_fallback` | ok: 1 passed |
+
+## Agent B Final Deliverable Projection And Continuation Contract
+
+Logged: 2026-07-06 EDT
+
+Intent: resolve two remaining parity concerns without requiring identical
+intermediate artifact names or roots: final OmegaWiki-facing deliverables must
+materialize into the wiki files that the SPA/serve path reads, and gate-blocked
+native side effects must be resumable after explicit permission rather than
+looking like terminal failures.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Graph deliverable projection | ok | `autosci_workspace_projector.py` now discovers `research_graph_update*.json` run artifacts and graph update artifacts referenced from action evidence, then appends enriched edges into `workspace/wiki/graph/edges.jsonl`. |
+| Projection manifest | ok | When graph evidence exists, projector writes `wiki/graph/projection_manifest.json` with source evidence paths, projected/written edge counts, status, and limitations. |
+| `$visualize` final graph parity | ok | Regression proves `$visualize` graph update evidence is projected into the final OmegaWiki graph file even when the intermediate file is `research_graph_update.visualize.json`. |
+| Side-effect continuation | ok | `autosci_side_effect_access_request.v1` now embeds `autosci_side_effect_continuation.v1` with retry patch options for bounded policy mode, native mode, or strict HITL approval artifacts. |
+| Gate behavior | ok | Blocked strict/safe runs still return `status=inconclusive`, but the evidence now marks the block as retriable and gives callers enough structure to ask for permission and retry the same envelope. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Initial projector test assumed the source evidence would be the action evidence file. | fixed | The actual stronger path is direct discovery of `research_graph_update.visualize.json`; the test now asserts the final graph and projection manifest reference that source. |
+| Final UI parity can be confused with intermediate schema parity. | guarded | The regression checks the final `workspace/wiki/graph/edges.jsonl` read surface, not merely the presence of a normalized graph evidence artifact. |
+| Projection manifest could become unrelated command noise if written without graph evidence. | fixed | Manifest writing is conditional on discovered graph evidence; non-graph commands do not receive a fresh no-op graph projection manifest. |
+| Permission continuation should not weaken default policy. | guarded | Default `strict_hitl` remains blocked for side effects; continuation only exposes explicit retry/access patch options. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `python3 -m py_compile harness/plugins/autosci/bin/autosci_bridge.py harness/plugins/autosci/bin/autosci_workspace_projector.py harness/plugins/autosci/bin/autosci_skill_shim.py` | ok |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_visualize_projects_action_graph_update_into_workspace_graph` | ok: 1 passed |
+| `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_strict_gate_emits_side_effect_access_requests_for_native_parity_commands ...::test_autosci_skill_shim_visualize_projects_action_graph_update_into_workspace_graph ...::test_autosci_skill_shim_runs_remaining_gated_backend_actions` | ok: 3 passed |
+| `pytest -q harness/plugins/autosci/tests/test_gate_policy_modes.py` | ok: 9 passed |
