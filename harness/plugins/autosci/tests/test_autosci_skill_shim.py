@@ -1274,6 +1274,42 @@ def test_autosci_skill_shim_research_scheduler_run_attaches_blocked_summary(tmp_
     assert state["evidence_report"]["scheduler_lifecycle_completed"] is False
 
 
+def test_autosci_skill_shim_research_scheduler_blocked_gate_surfaces_authorization(tmp_path: Path) -> None:
+    proc = run_shim(
+        tmp_path,
+        "$research",
+        "skillgen lifecycle",
+        "--scheduler-run",
+        "--scheduler-include-blocked-external",
+        "--scheduler-node-id",
+        "literature_discover",
+        "--scheduler-timeout",
+        "20",
+        "--run-id",
+        "shim-research-generic-scheduler-authorization",
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    summary = json.loads(proc.stdout)
+    assert summary["scheduler_lifecycle_status"] == "blocked"
+    assert summary["scheduler_authorization_required"] is True
+    assert summary["scheduler_authorization_request_count"] == 1
+    assert summary["authorization_required"] is True
+    assert summary["authorization_request_count"] >= 1
+
+    scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
+    assert scheduler_summary["authorization_required"] is True
+    request = scheduler_summary["authorization_requests"][0]
+    assert request["schema"] == "scientific_workflow_gate_authorization_request.v1"
+    assert request["node_id"] == "literature_discover"
+    assert request["continuation"]["retriable"] is True
+
+    payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    requests = payload["outputs"]["authorization_requests"]
+    assert any(item.get("schema") == "autosci_route_gate_authorization_request.v1" for item in requests)
+    assert any(item.get("schema") == "scientific_workflow_gate_authorization_request.v1" for item in requests)
+
+
 def test_autosci_skill_shim_research_scheduler_demo_uses_multi_node_preset(tmp_path: Path) -> None:
     paper = tmp_path / "scheduler-demo-paper.md"
     paper.write_text(
@@ -1329,6 +1365,10 @@ def test_autosci_skill_shim_research_legacy_scheduler_run_attaches_blocked_summa
     assert summary["scheduler_lifecycle_status"] == "blocked"
     assert summary["scheduler_lifecycle_node_count"] == 14
     assert summary["scheduler_lifecycle_blocked_node_count"] == 2
+    assert summary["scheduler_authorization_required"] is True
+    assert summary["scheduler_authorization_request_count"] == 2
+    assert summary["authorization_required"] is True
+    assert summary["authorization_request_count"] == 3
     assert summary["scheduler_workflow_config_alignment_status"] == "drift"
     assert summary["scheduler_workflow_config_alignment_ok"] is False
     assert "configured_nodes_not_required_by_run" in summary["scheduler_workflow_config_alignment_issues"]
@@ -1343,10 +1383,23 @@ def test_autosci_skill_shim_research_legacy_scheduler_run_attaches_blocked_summa
     assert scheduler_summary["workflow_config_alignment"]["status"] == "drift"
     assert scheduler_summary["dispatch_boundary"]["status"] == "bounded_smoke"
     assert set(scheduler_summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
+    assert scheduler_summary["authorization_required"] is True
+    assert len(scheduler_summary["authorization_requests"]) == 2
+    assert {
+        request["node_id"]
+        for request in scheduler_summary["authorization_requests"]
+    } == {"report_plan", "publication_produce"}
+    assert all(
+        request["schema"] == "scientific_workflow_gate_authorization_request.v1"
+        and request["continuation"]["retriable"] is True
+        for request in scheduler_summary["authorization_requests"]
+    )
     assert len(scheduler_summary["node_results"]) == 14
 
     payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
     assert payload["status"] == "inconclusive"
+    assert payload["outputs"]["authorization_required"] is True
+    assert len(payload["outputs"]["authorization_requests"]) == 3
     assert any("workflow-config drift" in item for item in payload["limitations"])
     skill_run = payload["outputs"]["skill_run"]
     assert skill_run["scheduler_lifecycle"]["summary_path"] == summary["scheduler_lifecycle_summary_path"]
@@ -1443,13 +1496,24 @@ def test_autosci_skill_shim_research_scheduler_run_records_human_gate(tmp_path: 
     assert proc.returncode == 0, proc.stdout + proc.stderr
     summary = json.loads(proc.stdout)
     assert summary["scheduler_lifecycle_status"] == "blocked"
+    assert summary["scheduler_authorization_required"] is True
+    assert summary["scheduler_authorization_request_count"] == 1
+    assert summary["authorization_required"] is True
+    assert summary["authorization_request_count"] == 2
     scheduler_summary = json.loads(Path(summary["scheduler_lifecycle_summary_path"]).read_text(encoding="utf-8"))
     assert "idea_acceptance_gate" in scheduler_summary["node_results"]
     assert scheduler_summary["node_results"]["idea_acceptance_gate"]["approval_ref"] == "approval-shim-idea-gate"
     assert "results_acceptance_gate" in scheduler_summary["blocked_nodes"]
+    assert scheduler_summary["authorization_required"] is True
+    request = scheduler_summary["authorization_requests"][0]
+    assert request["schema"] == "scientific_workflow_gate_authorization_request.v1"
+    assert request["node_id"] == "results_acceptance_gate"
+    assert request["continuation"]["retriable"] is True
     assert "report_draft" not in scheduler_summary["required_nodes"]
 
     payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert payload["outputs"]["authorization_required"] is True
+    assert len(payload["outputs"]["authorization_requests"]) == 2
     scheduler_lifecycle = payload["outputs"]["skill_run"]["scheduler_lifecycle"]
     assert scheduler_lifecycle["status"] == "blocked"
     assert scheduler_lifecycle["blocked_node_count"] == 1
@@ -7466,6 +7530,12 @@ def test_autosci_skill_shim_accepts_visualize_serve_flag_without_server_executio
     contract = json.loads((tmp_path / contract_artifact["path"]).read_text(encoding="utf-8"))
     assert contract["approved"] is False
     assert "approval_ref" in contract["missing"]
+    authorization = contract["authorization_request"]
+    assert authorization["schema"] == "autosci_gate_authorization_request.v1"
+    assert authorization["status"] == "awaiting_authorization"
+    assert authorization["continuation"]["schema"] == "autosci_gate_continuation.v1"
+    assert authorization["continuation"]["retriable"] is True
+    assert authorization["continuation"]["resume_strategy"] == "rerun_same_action_with_approval_patch"
 
 
 def test_autosci_skill_shim_visualize_parity_demo_auto_runs_server_probe(tmp_path: Path) -> None:
@@ -7500,8 +7570,10 @@ def test_autosci_skill_shim_visualize_parity_demo_auto_runs_server_probe(tmp_pat
     summary = json.loads(proc.stdout)
     assert summary["skill"] == "visualize"
     assert summary["passed_count"] == 1
+    assert "authorization_required" not in summary
 
     payload = json.loads(Path(summary["evidence_path"]).read_text(encoding="utf-8"))
+    assert "authorization_required" not in payload["outputs"]
     action = payload["outputs"]["skill_run"]["actions"][0]
     evidence = json.loads(Path(action["evidence_path"]).read_text(encoding="utf-8"))
     policy = evidence["outputs"]["policy_decision"]

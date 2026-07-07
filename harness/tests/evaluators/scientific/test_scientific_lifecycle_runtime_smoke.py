@@ -124,6 +124,17 @@ def test_scientific_lifecycle_smoke_blocks_configured_publication_tail_without_e
     assert set(summary["gate_results"]) == set(expected_actions)
     assert summary["lifecycle_gate_result"]["status"] == "inconclusive"
     assert set(summary["blocked_nodes"]) == {"report_plan", "publication_produce"}
+    assert summary["authorization_required"] is True
+    assert len(summary["authorization_requests"]) == 2
+    assert {
+        request["node_id"]
+        for request in summary["authorization_requests"]
+    } == {"report_plan", "publication_produce"}
+    assert all(
+        request["schema"] == "scientific_workflow_gate_authorization_request.v1"
+        and request["continuation"]["retriable"] is True
+        for request in summary["authorization_requests"]
+    )
     assert {item["status"] for item in summary["checks"]} == {"ok"}
     assert summary["dispatch_boundary"]["status"] == "bounded_smoke"
     assert summary["dispatch_boundary"]["production_ready"] is False
@@ -1024,6 +1035,17 @@ def test_scientific_lifecycle_smoke_can_resume_external_blocked_nodes(tmp_path: 
     )
     assert blocked_proc.returncode == 3, blocked_proc.stdout + blocked_proc.stderr
     blocked_summary = json.loads(blocked_proc.stdout)
+    assert blocked_summary["authorization_required"] is True
+    assert len(blocked_summary["authorization_requests"]) == 2
+    assert {
+        request["node_id"]
+        for request in blocked_summary["authorization_requests"]
+    } == {"report_plan", "publication_produce"}
+    assert all(
+        request["schema"] == "scientific_workflow_gate_authorization_request.v1"
+        and request["continuation"]["retriable"] is True
+        for request in blocked_summary["authorization_requests"]
+    )
     blocked_summary_path = harness_dir / blocked_summary["summary_path"]
 
     external_dir = harness_dir / "artifacts/scientific/external/resume-test"

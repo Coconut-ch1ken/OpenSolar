@@ -491,6 +491,85 @@ def _missing_contract_items(label: str, entries: list[dict[str, Any]]) -> list[s
     ]
 
 
+def _approval_authorization_request(
+    *,
+    action: str,
+    side_effects: list[str],
+    missing: list[str],
+    inputs: dict[str, Any],
+    approval_state: str,
+) -> dict[str, Any]:
+    stable_inputs = {
+        key: value
+        for key, value in sorted(inputs.items())
+        if key
+        not in {
+            "approval_ref",
+            "allowlist_evidence",
+            "before_artifacts",
+            "runtime_evidence",
+            "after_artifacts",
+            "execute_approved_side_effect",
+            "policy_auto_execute_side_effect",
+            "gate_mode",
+            "autosci_mode",
+        }
+    }
+    fingerprint = hashlib.sha256(
+        json.dumps(
+            {
+                "action": action,
+                "side_effects": side_effects,
+                "missing": missing,
+                "inputs": stable_inputs,
+            },
+            sort_keys=True,
+            default=str,
+        ).encode("utf-8")
+    ).hexdigest()
+    requested = {
+        "approval_ref": "approval_ref" in missing,
+        "allowlist_evidence": any(str(item).startswith("allowlist_evidence") for item in missing),
+        "before_artifacts": any(str(item).startswith("before_artifacts") for item in missing),
+        "runtime_evidence": any(str(item).startswith("runtime_evidence") for item in missing),
+        "after_artifacts": any(str(item).startswith("after_artifacts") for item in missing),
+    }
+    return {
+        "schema": "autosci_gate_authorization_request.v1",
+        "status": "authorized" if not missing else "awaiting_authorization",
+        "action": action,
+        "approval_state": approval_state,
+        "requested_side_effects": side_effects,
+        "missing": missing,
+        "requested_access": requested,
+        "prompt": (
+            "Grant approval and provide the missing approval/runtime artifacts, "
+            "then rerun the same action with the supplied access patch."
+        ),
+        "continuation": {
+            "schema": "autosci_gate_continuation.v1",
+            "status": "ready" if not missing else "awaiting_authorization",
+            "retriable": bool(missing),
+            "same_envelope_supported": True,
+            "request_fingerprint": fingerprint,
+            "resume_strategy": "rerun_same_action_with_approval_patch",
+            "access_patch": {
+                "approval_ref": "<approval-ref>" if requested["approval_ref"] else "",
+                "allowlist_evidence": ["<allowlist-evidence.json>"] if requested["allowlist_evidence"] else [],
+                "before_artifacts": ["<before-artifact>"] if requested["before_artifacts"] else [],
+                "runtime_evidence": ["<runtime-evidence.json>"] if requested["runtime_evidence"] else [],
+                "after_artifacts": ["<after-artifact>"] if requested["after_artifacts"] else [],
+                "execute_approved_side_effect": True,
+            },
+        },
+        "non_error_contract": {
+            "blocked_runs_exit_successfully": True,
+            "evidence_status": "inconclusive",
+            "approval_state": approval_state,
+        },
+    }
+
+
 def _approval_contract(envelope: dict[str, Any], action: str, side_effects: list[str]) -> dict[str, Any]:
     inputs = envelope.get("inputs") if isinstance(envelope.get("inputs"), dict) else {}
     approval_ref = str(inputs.get("approval_ref") or "").strip()
@@ -520,7 +599,7 @@ def _approval_contract(envelope: dict[str, Any], action: str, side_effects: list
         approval_state = "approved_missing_preflight"
     else:
         approval_state = "approval_required"
-    return {
+    contract = {
         "schema": "autosci_approval_contract.v1",
         "action": action,
         "side_effects": side_effects,
@@ -539,6 +618,14 @@ def _approval_contract(envelope: dict[str, Any], action: str, side_effects: list
         "after_artifacts": after_entries,
         "missing": missing,
     }
+    contract["authorization_request"] = _approval_authorization_request(
+        action=action,
+        side_effects=side_effects,
+        missing=missing,
+        inputs=dict(inputs),
+        approval_state=approval_state,
+    )
+    return contract
 
 
 def _approval_contract_limitations(contract: dict[str, Any]) -> list[str]:
@@ -579,8 +666,15 @@ def _refresh_approval_contract(contract: dict[str, Any]) -> dict[str, Any]:
         "missing": missing,
         "approval_state": "verified"
         if execution_verified
-        else ("approved_pending_runtime" if ready_for_execution else ("approved_missing_preflight" if approved else "approval_required")),
+            else ("approved_pending_runtime" if ready_for_execution else ("approved_missing_preflight" if approved else "approval_required")),
     })
+    contract["authorization_request"] = _approval_authorization_request(
+        action=str(contract.get("action") or "unknown"),
+        side_effects=[str(item) for item in contract.get("side_effects") or []],
+        missing=missing,
+        inputs={},
+        approval_state=str(contract.get("approval_state") or "approval_required"),
+    )
     return contract
 
 
@@ -7492,10 +7586,21 @@ def _action_generate_ideas(envelope: dict[str, Any]) -> dict[str, Any]:
     wiki_state, wiki_state_artifact = _wiki_state_resolver_artifact(envelope, "generate_ideas")
     wiki_artifacts = [wiki_state_artifact] if wiki_state_artifact else []
 
+    def _ideate_policy_access_applies() -> bool:
+        if not _side_effect_access_required(policy_decision):
+            return False
+        if _policy_gate_requested(envelope):
+            return True
+        if _model_output_requested(envelope):
+            return True
+        if bool(_ideate_write_approval_state(inputs).get("requested")):
+            return True
+        return mode != "fixture" and not inputs.get("smoke_mode")
+
     def _finalize_ideate(raw: dict[str, Any], *, status: str | None = None) -> dict[str, Any]:
         evidence = convert_idea_candidate(raw, envelope, status=status)
         evidence = _attach_policy_decision(evidence, policy_decision)
-        if _side_effect_access_required(policy_decision):
+        if _ideate_policy_access_applies():
             request_payload, request_artifact = _side_effect_access_request(
                 envelope,
                 "generate_ideas",

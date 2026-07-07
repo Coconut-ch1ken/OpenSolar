@@ -50,6 +50,20 @@ bounded policy mode, native mode, or HITL approval evidence. Consumers should
 surface that request and re-run the same envelope with an explicit access patch
 when the user grants permission.
 
+All AutoSci approval contracts should also carry
+`autosci_gate_authorization_request.v1` when approval/runtime artifacts are
+missing. Route-level shim gates carry `autosci_route_gate_authorization_request.v1`
+only for blocked/schema-only route handoffs, route-only evidence with no
+runnable action, or scheduler authorization waits.
+Generic workflow-runner blocked nodes carry
+`scientific_workflow_gate_authorization_request.v1` and return a successful
+process exit for authorization-blocked lifecycles while preserving
+`lifecycle_status=blocked`. Legacy research lifecycle smoke blocked nodes use
+the same request schema; direct legacy smoke preserves its historical blocked
+exit `3`, while shim-mediated `$research --scheduler-run` can opt into a
+zero-exit authorization-blocked handoff. True failed gates, such as
+configuration drift or production dispatch boundary failures, remain errors.
+
 Auto-approved modes use a synthetic reference of the form:
 
 ```text
@@ -74,7 +88,7 @@ the bounded local side effects below:
 | `reset_plan` | `$reset --scope ...` | Executes native `tools/reset_wiki.py` scoped reset when high-risk policy mode allows destructive mutation. | Default `strict_hitl`/`safe` remain blocked; completed execution must include before snapshot, reset runtime evidence, after snapshot, and mutation proof. |
 | `setup_status` | `$setup --setup-dotenv-path ...` | Writes a supplied `.env` after-artifact to an explicit dotenv path when high-risk policy mode allows credential/config mutation. | Default `strict_hitl`/`safe` remain blocked; evidence records key names, snapshots, and hashes only, never secret values. |
 | `daily_arxiv_prepare_finalize` | `$daily-arxiv` | Attempts live native `tools/daily_arxiv.py prepare` only when network side effects are policy-allowed; supplied verified runtime digest evidence can still complete without live execution. | Strict/safe missing-live paths emit `autosci_side_effect_access_request.v1`; email, scheduler, and auto-ingest still require typed delivery/ingest proof. |
-| `generate_ideas` | `$ideate` | Applies approval-gated access semantics to source/model/wiki/pilot side-effect paths; permissive modes may synthesize approval for implemented writeback paths. | Route policy is `approval_required`, not `dry_run_only`; promotion still requires source, model, novelty/review, writeback, and pilot evidence. |
+| `generate_ideas` | `$ideate` | Applies approval-gated access semantics to explicit policy or real source/model/wiki/pilot side-effect paths; permissive modes may synthesize approval for implemented writeback paths. | Route policy is `approval_required`, not `dry_run_only`; bounded fixture smoke does not request access for side effects it did not attempt, and promotion still requires source, model, novelty/review, writeback, and pilot evidence. |
 | `run_research_lifecycle` | `$research` | Records access-required lifecycle state when network, local command, wiki mutation, remote, or compile side effects are blocked. | The bridge does not fake stage execution; lifecycle completion still requires typed stage evidence or approved stage runners. |
 
 Actions not listed here should not be assumed policy-connected until their
