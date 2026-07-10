@@ -444,3 +444,94 @@ research lifecycle smoke runner used by `$research --scheduler-run`.
 | `pytest -q harness/tests/evaluators/scientific/test_scientific_lifecycle_runtime_smoke.py::test_scientific_lifecycle_smoke_blocks_configured_publication_tail_without_external_evidence ...::test_scientific_lifecycle_smoke_can_resume_external_blocked_nodes` | ok: 2 passed |
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py -k "scheduler_blocked_gate_surfaces_authorization or accepts_visualize_serve_flag_without_server_execution or strict_gate_emits_side_effect_access_requests or research_legacy_scheduler_run_attaches_blocked_summary or research_scheduler_run_records_human_gate or research_scheduler_demo_uses_multi_node_preset"` | ok: 6 passed, 167 deselected |
 | `pytest -q harness/plugins/autosci/tests/test_autosci_skill_shim.py::test_autosci_skill_shim_exp_run_parity_demo_auto_executes_local_command ...::test_autosci_skill_shim_visualize_parity_demo_auto_runs_server_probe ...::<scheduler authorization tests> ...::test_autosci_strict_gate_emits_side_effect_access_requests_for_native_parity_commands` | ok: 6 passed |
+
+## Cross-Repo AutoSci E2E Artifact Snapshot And OmegaWiki UI Parity
+
+Logged: 2026-07-07 EDT
+
+Intent: record the non-smoke AutoSci native end-to-end verification session run from the BetterSolar worktree against the two attached literature/resource HTML documents, plus the follow-up OmegaWiki UI parity repair and pushed artifact snapshot.
+
+| Item | Status | Evidence |
+|---|---|---|
+| True E2E workflow rerun | ok | Re-ran the chain through Solar Harness AutoSci wrappers with `--gate-mode autosci_native`: `$ingest -> $research -> $review -> $ideate -> $exp-design -> $exp-run -> $exp-eval -> $exp-status -> $visualize`. The corrected run root is `BetterSolar/harness/artifacts/autosci/runs/e2e-doc-literature-20260707-idea-chain/`. |
+| Source coverage | ok | Covered all 39 literature/resource records extracted from `Claude Code vs Cursor vs GitHub Copilot in 2026.html` and `Loop & Harness Engineering Resource Radar.html`. |
+| Extracted elements | ok | Final artifacts include 117 claims and 39 methods in `autosci_native_final/extracted_elements.json` and `extracted_elements.md`. |
+| Ideation output | ok | Final artifacts include 195 generated ideas, 39 selected ideas, idea display-title catalog, and potential scoring summaries in `ideas.json`, `ideas.md`, `idea_display_catalog.json`, and `idea_display_catalog.md`. |
+| Experiment validation artifacts | ok | Final validation bundle includes 39 validation records and per-item runnable validation scripts under `autosci_native_final/validation_code_bundle/`; spot check `items/cc-01/run_validation.sh` returned a supported outcome. |
+| Final report | ok | `autosci_native_final/final_report.md` summarizes scope, claims, selected idea potential, validation commands, verdict distribution, and known readiness boundaries. |
+| OmegaWiki UI parity repair | ok | Replaced the ad-hoc static graph view with a native-style hash-routed SPA: Reader, Graph, Idea Graph, and Dashboard now render distinct views; Graph uses a native-style force-directed canvas with filters and BFS neighborhood behavior. |
+| OmegaWiki route verification | ok | Browser checks on `http://127.0.0.1:8766/#/graph` verified Reader cards=9, Graph=`521 nodes · 702 edges`, Idea Graph=`129 nodes · 117 edges`, Dashboard cards=4, and no browser console warnings/errors. |
+| Git publication | ok | BetterSolar branch `openJiuwen-Solar` was pushed to origin at commit `6d47090f Add AutoSci E2E artifact snapshot`, including final artifacts, validation bundle, OmegaWiki UI, screenshots, and generator tools. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Earlier non-E2E claim target was manually constructed. | corrected | Final accepted run used ideate-generated idea targets before exp-* stages; the earlier manual `claim-001` path is not treated as the final E2E proof. |
+| Several local model outputs had shape drift in the main batch. | fixed | Normalizer was updated and a patch batch reran the affected items (`cc-01`, `cu-05`, `ghc-01`, `r17`) before final aggregation. |
+| Raw idea titles were too formulaic. | mitigated | Raw AutoSci IDs/titles remain preserved for provenance; a separate display-title catalog provides reader-facing descriptive labels without rewriting provenance. |
+| Initial OmegaWiki page looked unlike native AutoSci and tabs did not change views. | fixed | The UI now reads `graph-data.json` and `run-status.json`, implements hash routes, and clears route-specific layout classes when moving between Reader/Graph/Idea Graph/Dashboard. |
+| Port 8766 had a stale unresponsive `python -m http.server` process. | fixed | The stale process was stopped after confirming its cwd was the target `omegawiki_ui` directory, then 8766 was restarted against the repaired UI. |
+| Artifact directories are normally gitignored. | explicit | The final deliverable snapshot and generator tools were intentionally added with `git add -f`; transient `__pycache__` files were unstaged before commit. |
+| OpenSolar worktree contains existing harness runtime dirty state. | guarded | This progress-log update only appends to `docs/integrations/autosci/phase20-progress-log.md` and does not touch harness runtime state files. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `.venv/bin/python harness/artifacts/autosci/runs/e2e-doc-literature-20260707-idea-chain/tools/generate_autosci_native_final_outputs.py` | ok: regenerated final artifacts and OmegaWiki UI from the corrected run data. |
+| `python3 -m json.tool .../omegawiki_ui/graph-data.json` | ok |
+| `python3 -m json.tool .../omegawiki_ui/run-status.json` | ok |
+| Browser route check on `127.0.0.1:8766` | ok: Reader, Graph, Idea Graph, and Dashboard each rendered distinct DOM and counts. |
+| Browser console check | ok: no error/warn entries. |
+| `bash scripts/check-privacy.sh` in BetterSolar before artifact commit | ok: no owner-identifying personal tokens in tracked files. |
+| `git push origin openJiuwen-Solar` | ok: pushed `acee81ac..6d47090f` to `https://github.com/Stellven/AI4Research.git`. |
+
+## Cross-Repo AutoSci CLI Installer Closure And mac-test Tag
+
+Logged: 2026-07-07 EDT
+
+Intent: make the script-installed CLI runtime carry the AutoSci capability
+closure needed by the BetterSolar/AI4Research source branch, then publish a
+short-lived macOS test tag for manual reinstall/download validation.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Installed CLI gap audit | ok | Verified that `harness/plugins/autosci` was copied by the default `harness` component, but AutoSci bridge routes still referenced repo-root `tools/*` and `.agents/skills/*` paths that were outside the installer closure. |
+| AutoSci installer component | ok | Added default-on `components.d/autosci/component.sh`; it requires `harness`, copies repo-root `tools/` to `$SOLAR_HOME/tools`, copies `.agents/skills` to `$SOLAR_HOME/.agents/skills`, and verifies the installed shim can run `skills list`. |
+| Default install closure | ok | Updated installer component order/defaults so a plain `install.sh --yes` resolves `kernel harness autosci` plus `core-runtime` when `bun` is available. |
+| Receipt/update/repair continuity | ok | Added AutoSci roots to `install-receipt.json` component roots so repair/update flows retain the `tools` and `.agents/skills` closure. |
+| Focused install gate | ok | Added `scripts/check-autosci-install-closure.sh` to sandbox-install the CLI, assert default selection includes `autosci`, verify installed files, run `solar harness autosci skills list`, run installed `$ingest --smoke` when dependencies are available, verify `solar repair`, and uninstall cleanly. |
+| Documentation sync | ok | Updated `README.md`, `INSTALL.md`, generated `docs/COMPONENTS.md`, and wizard smoke expectations to include the default-on AutoSci component. |
+| Git publication | ok | Committed BetterSolar/AI4Research change as `ad8799c9 Install AutoSci closure in CLI runtime`, pushed `openJiuwen-Solar`, created tag `mac-test`, and pushed the tag to `https://github.com/Stellven/AI4Research.git`. |
+
+### Issues Encountered And Guardrails
+
+| Issue | Status | Guardrail |
+|---|---|---|
+| Requested tag name `mac test` contained a space. | fixed | Git rejected the ref format; used legal tag name `mac-test`. |
+| Tagging before committing would not include installer closure changes. | guarded | Staged only the AutoSci installer closure files, left unrelated `phase20-progress-log copy.md` unstaged, committed first, then tagged the new commit. |
+| Creating the local tag needed `.git/refs/tags` write access outside the sandbox allowance. | fixed | Re-ran only `git tag mac-test` with elevated local Git metadata write permission. |
+| Normal installer dependency install can touch network/user Python state. | guarded | The focused closure gate used sandbox HOME plus `--skip-py-deps`, while placing the repo `.venv/bin` first on PATH for the installed AutoSci smoke. |
+| OpenSolar worktree already had unrelated harness runtime dirty files. | guarded | This log update is documentation-only and does not modify the harness state files. |
+
+### Verification Commands
+
+| Command | Result |
+|---|---|
+| `./scripts/check-privacy.sh` in BetterSolar | ok: no owner-identifying personal tokens in tracked files. |
+| `git diff --cached --check` | ok |
+| `bash -n components.d/autosci/component.sh scripts/check-autosci-install-closure.sh lib/installer/components.sh lib/installer/receipt.sh scripts/gen-components-doc.sh scripts/smoke-installer-wizard-pty.py` | ok |
+| `./scripts/gen-components-doc.sh --check` | ok |
+| `./scripts/check-autosci-install-closure.sh` | ok: default selection, installed AutoSci files, `skills list`, `$ingest --smoke`, repair round-trip, and clean uninstall passed. |
+| `env PYTHONPATH=harness .venv/bin/python -m pytest harness/plugins/autosci/tests/test_root_tool_abi.py -q` | ok: 8 passed. |
+| `git push origin openJiuwen-Solar` | ok: pushed `6d47090f..ad8799c9`. |
+| `git push origin mac-test` | ok: pushed new tag `mac-test`. |
+| `git ls-remote origin refs/tags/mac-test` | ok: `ad8799c91e4ba831e3dfda8a484d40d95728c6b2 refs/tags/mac-test`. |
+
+### Manual Test Command
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Stellven/AI4Research/mac-test/get-solar.sh \
+  | SOLAR_REPO=https://github.com/Stellven/AI4Research.git SOLAR_CHANNEL=mac-test bash -s -- --yes
+```
