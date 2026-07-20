@@ -2,7 +2,7 @@
 
 Human-facing research memory projected from Solar-managed evidence.
 
-Last projected run: `codex-exp-design-local-ready-proof4-20260702`
+Last projected run: `ask-c834c15332`
 
 ## Demo Entry Points
 
@@ -74,8 +74,13 @@ Last projected run: `codex-exp-design-local-ready-proof4-20260702`
 
 ## Experiments
 
-- [exp-idea-local-design](experiments/exp-idea-local-design.md)
-- [exp-local-default](experiments/exp-local-default.md)
+- [codex-exp-run-final-proof](experiments/codex-exp-run-final-proof.md)
+- [exp-001](experiments/exp-001.md)
+- [exp-idea-skillgen-design](experiments/exp-idea-skillgen-design.md)
+- [exp-native-001](experiments/exp-native-001.md)
+- [exp-research-proof](experiments/exp-research-proof.md)
+- [exp-skillgen](experiments/exp-skillgen.md)
+- [pilot-proof-20260630](experiments/pilot-proof-20260630.md)
 
 ## Outputs
 

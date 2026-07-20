@@ -5642,3 +5642,2182 @@
 - [ ] [2026-07-02T17:57:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
 - [ ] [2026-07-02T17:57:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
 - [ ] [2026-07-02T17:58:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:47:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:47:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:47:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:47:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:48:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:48:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:48:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:48:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:48:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:49:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:49:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:49:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:49:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:49:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:49:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:50:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:50:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:50:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:50:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:50:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:51:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:51:12Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:51:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:51:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:51:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:51:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:52:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:52:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:52:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:52:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:52:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:53:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:53:12Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:53:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:53:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:53:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:53:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:54:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:54:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:54:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:54:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:54:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:55:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:55:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:55:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:55:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:55:44Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:55:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:56:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:56:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:56:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:56:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:56:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:57:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:57:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:57:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:57:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:57:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T20:57:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:57:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:58:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:58:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:58:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:58:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:58:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:58:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:59:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:59:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:59:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:59:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T20:59:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:00:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:00:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:00:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:00:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:00:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:00:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:01:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:01:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:01:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:01:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:01:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:02:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:02:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:02:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:02:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:02:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:02:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:03:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:03:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:03:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:03:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:03:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:04:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:04:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:04:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:04:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:04:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:04:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:05:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:05:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:05:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:05:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:05:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:06:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:06:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:06:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:06:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:06:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:06:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T21:06:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:07:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:07:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:07:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-06T21:14:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T21:22:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T21:30:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T21:38:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T21:46:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T21:53:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T22:01:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T22:09:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T22:17:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T22:25:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T22:41:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T22:57:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T23:14:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-06T23:30:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T01:42:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:00:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:08:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:16:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:24:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:32:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:40:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:48:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T02:56:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T03:05:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T03:15:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T03:24:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T03:33:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T03:40:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T03:48:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T03:56:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:04:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:12:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:20:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:28:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:35:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:43:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:51:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T04:59:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T05:11:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:12:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:12:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:12:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:12:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:12:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:13:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:13:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:13:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:13:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:13:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:14:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:14:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:14:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:14:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:14:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:15:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:15:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:15:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:15:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:15:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:16:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:16:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:16:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:16:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:16:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:16:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:17:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:17:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:17:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:17:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:17:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:18:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:18:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:18:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:18:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:18:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:19:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:19:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:19:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:19:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:19:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:20:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:20:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:20:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:20:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:20:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:21:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:21:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:21:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:21:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:21:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:22:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:22:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:22:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T05:22:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:22:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:22:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:22:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:23:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:23:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:23:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:23:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:23:55Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:24:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:24:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:24:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:24:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:24:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:25:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:25:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:25:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:25:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:25:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:26:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:26:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:26:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:26:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:26:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:27:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:27:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:27:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:27:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:27:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:27:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:28:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:28:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:28:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:28:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:28:55Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:29:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:29:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:29:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:29:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:29:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:30:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:30:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:30:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:30:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:30:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:31:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:31:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:31:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T05:31:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:31:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:31:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:31:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:32:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:32:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:32:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-07T05:38:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T05:46:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T05:54:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:01:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:09:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:16:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:24:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:31:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:39:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:46:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T06:54:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:01:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:09:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:16:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:24:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:31:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:39:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:47:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T07:54:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:02:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:09:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:17:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:24:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:32:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:40:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:47:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T08:55:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:02:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:10:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:18:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:25:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:33:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:40:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:48:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T09:56:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:03:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:11:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:18:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:26:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:34:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:41:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:49:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T10:57:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:04:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:12:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:20:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:27:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:35:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:43:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:51:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T11:58:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T12:06:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T12:14:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T13:23:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T13:31:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T13:46:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T13:56:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T14:04:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T14:14:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T14:22:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T14:29:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T14:38:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T14:46:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T14:54:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T15:02:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T15:10:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T15:18:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T22:19:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T22:59:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:07:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:10:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:14:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:21:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:29:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:37:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:46:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-07T23:54:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:02:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:10:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:18:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:26:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:34:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:42:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:49:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T00:57:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T01:05:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T01:13:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T01:21:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T01:29:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T01:36:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T01:44:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T01:52:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:00:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:08:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:16:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:23:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:32:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:40:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:48:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T02:57:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T03:06:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T03:15:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T03:24:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T03:32:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T03:41:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T03:49:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T03:57:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T04:06:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T04:14:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T04:22:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T04:30:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T04:38:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T04:46:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T04:54:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:02:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:10:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:18:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:26:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:34:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:42:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:50:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T05:58:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T06:06:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T06:14:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T06:22:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T06:30:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T06:38:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T06:46:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T06:54:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:02:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:10:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:18:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:26:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:33:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:41:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:49:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T07:57:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T08:05:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T08:13:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T08:21:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T08:29:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T08:37:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T08:45:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T08:53:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:01:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:09:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:17:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:25:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:33:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:42:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:50:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T09:58:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T10:06:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T10:14:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T10:22:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T10:30:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T10:38:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T10:46:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T10:54:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:02:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:10:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:18:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:26:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:35:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:43:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:51:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T11:59:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T12:07:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T12:15:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T12:24:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T13:26:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T13:35:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T13:43:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T13:51:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:00:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:08:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:16:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:24:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:33:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:41:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:49:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T14:58:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T15:06:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T15:14:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T15:22:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T15:48:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T15:58:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T16:07:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T16:15:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T16:23:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T16:32:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T16:40:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T16:52:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T16:52:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:05:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T17:07:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T17:21:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T17:23:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T17:29:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:29:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:29:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:29:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:30:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:30:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:30:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:30:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:30:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:31:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:31:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:31:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:31:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:31:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:31:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:32:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:32:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:32:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:32:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:32:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:33:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:33:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:33:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:33:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:33:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:33:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:34:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:34:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:34:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:34:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:34:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:35:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:35:12Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:35:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:35:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:35:44Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:35:55Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:36:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:36:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:36:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:36:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:36:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:37:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:37:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:37:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:37:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:37:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:37:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:38:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:38:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:38:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:38:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:38:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:38:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:39:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:39:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:39:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:39:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:39:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:40:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:40:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:40:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:40:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T17:40:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:40:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:40:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:41:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:41:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:41:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:41:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:41:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:42:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:42:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:42:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:42:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:42:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:42:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:43:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:43:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:43:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:43:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:43:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:44:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:44:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:44:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:44:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:44:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:44:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:45:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:45:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:45:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:45:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:45:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:45:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:46:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:46:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:46:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:46:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:46:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:47:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:47:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:47:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:47:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:47:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:47:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:48:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:48:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:48:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:48:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:48:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:49:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:49:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:49:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:49:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:49:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:49:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:50:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:50:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:50:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:50:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:50:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T17:50:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:51:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:51:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:51:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:51:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:51:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:51:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:52:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:52:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:52:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:52:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:52:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:53:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:53:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:53:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:53:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:53:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:53:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:54:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:54:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:54:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:54:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:54:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-08T17:59:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T18:08:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T18:17:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T18:25:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T18:34:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T18:42:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T18:51:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T19:00:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T19:09:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T19:18:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T19:26:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T19:35:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T19:43:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T19:53:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T20:01:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T20:09:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T20:18:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T20:27:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T20:35:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T20:43:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T20:52:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T21:00:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T21:09:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T21:18:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T21:28:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T21:53:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-08T23:54:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T00:32:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T00:39:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T00:49:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T00:59:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T01:07:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T01:18:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T01:28:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T01:38:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T01:49:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T01:59:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T02:09:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T02:18:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T02:27:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T02:37:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T02:47:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T02:56:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T03:04:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T03:13:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T03:23:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T03:32:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T03:41:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T03:55:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:06:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:16:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:26:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:37:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:48:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:51:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:53:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:54:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:56:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:58:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T04:59:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:01:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:03:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:04:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:07:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:19:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:30:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:40:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:49:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T05:59:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T06:08:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T06:17:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T06:27:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T06:36:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T06:45:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T06:55:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T07:04:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T07:14:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T07:23:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T07:33:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T07:42:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T07:51:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T08:01:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T08:10:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T08:19:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T08:29:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T08:38:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T08:48:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T08:57:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T09:07:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T09:17:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T09:26:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T09:36:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T09:45:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T09:54:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T10:04:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T10:13:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T10:23:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T10:32:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T10:42:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T10:51:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T11:01:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T11:10:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T11:20:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T11:29:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T11:39:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T11:48:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T11:58:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T12:08:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T12:27:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T13:25:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T13:34:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T13:43:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T13:53:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T14:04:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T14:16:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T14:26:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T14:35:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T14:44:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T14:53:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T15:03:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T15:12:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T15:21:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T15:30:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T15:40:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T15:50:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T16:02:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T16:12:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T16:21:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T16:31:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T16:40:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T16:50:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T16:59:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T17:08:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T17:17:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T17:26:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T17:36:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T17:45:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T17:54:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T18:03:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T18:12:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T18:21:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T18:31:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T18:42:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T18:51:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T19:00:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T19:10:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T19:19:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T19:30:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T19:42:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T19:53:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T20:04:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T20:23:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T20:32:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T20:41:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T20:51:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T21:01:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T21:11:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T21:21:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T21:32:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T21:42:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T23:22:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-09T23:31:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T02:26:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T02:36:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T02:45:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T02:54:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T03:06:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T03:18:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T03:29:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T03:41:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T03:52:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T04:04:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T04:16:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T04:27:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T04:39:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T04:49:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T04:59:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T05:10:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T05:20:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T05:31:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T05:43:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T05:54:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T06:06:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T06:17:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T06:47:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T06:59:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T07:10:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T07:19:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T07:28:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T07:37:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T07:47:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T07:56:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T08:05:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T08:14:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T08:23:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T08:32:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T08:41:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T08:51:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T09:00:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T09:09:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T09:18:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T09:27:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T09:37:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T09:46:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T09:55:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T10:04:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T10:14:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T10:23:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T10:32:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T10:41:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T10:50:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T11:00:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T11:09:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T11:18:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T11:27:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T11:37:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T11:46:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T11:55:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T12:42:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T12:59:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T13:07:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T13:16:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T13:26:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T13:35:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T13:45:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T13:55:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T14:06:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T14:18:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T14:30:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T14:40:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T14:49:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T14:58:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T15:08:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T15:17:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T15:27:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T15:36:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T15:45:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T15:55:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T16:04:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T16:14:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T16:23:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T16:32:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T16:42:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T16:51:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T17:00:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T17:10:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T17:19:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T17:30:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T17:41:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T17:53:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T18:02:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T18:12:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T18:22:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T18:31:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T18:41:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T18:54:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T19:06:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T19:16:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T19:28:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T19:38:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T19:49:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T19:59:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T20:08:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T20:17:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T20:27:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T20:36:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T20:46:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T20:55:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T21:04:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T21:14:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T21:24:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T21:34:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T21:44:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T21:53:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T22:02:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-10T22:22:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T00:45:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T01:50:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T02:21:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T02:31:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T02:40:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T02:52:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T03:04:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T03:16:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T03:28:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T03:40:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T03:52:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T04:04:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T04:16:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T04:26:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T04:35:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T04:45:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T04:54:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T05:04:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T05:13:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T05:23:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T05:32:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T05:42:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T05:51:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T06:01:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T06:11:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T06:20:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T06:30:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T06:39:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T06:49:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T06:58:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T07:08:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T07:18:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T07:27:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T07:37:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T07:47:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T07:56:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T08:06:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T08:15:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T08:25:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T08:35:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T08:44:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T08:54:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T09:04:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T09:13:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T09:23:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T09:33:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T09:42:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T09:52:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T10:02:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T10:11:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T10:21:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T10:31:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T10:40:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T10:50:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T11:00:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T11:09:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T11:19:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T11:29:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T11:39:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T11:48:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T11:58:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T12:08:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T12:17:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T12:27:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T12:37:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T12:47:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T12:56:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T13:06:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T13:16:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T13:26:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T13:35:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T13:45:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T13:55:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T14:05:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T14:14:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T14:24:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T14:34:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T14:44:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T14:53:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T15:03:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T15:13:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T15:23:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T15:33:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T15:42:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T15:52:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T16:03:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T16:14:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T16:25:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T16:37:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T16:49:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T17:01:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T17:14:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T17:25:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T17:36:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T17:47:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T17:57:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T18:06:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T18:16:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T18:26:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T18:36:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T18:45:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T18:56:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T19:06:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T19:16:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T19:26:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T19:35:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T19:45:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T19:55:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T20:05:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T20:15:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T20:25:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T20:34:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T20:44:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T20:54:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T21:04:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T21:14:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T21:24:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T21:34:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T21:44:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T21:54:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T22:03:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T22:13:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T22:23:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T22:33:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T22:43:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T22:53:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T23:03:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T23:13:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T23:23:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T23:33:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T23:43:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-11T23:53:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T00:04:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T00:17:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T00:27:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T00:39:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T00:52:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T01:04:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T01:17:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T01:28:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T01:38:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T01:48:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T01:58:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T02:08:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T02:18:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T02:28:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T02:38:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T02:48:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T02:58:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T03:08:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T03:18:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T03:28:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T03:38:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T03:48:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T03:59:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T04:12:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T04:25:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T04:38:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T04:52:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T05:05:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T05:16:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T05:26:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T05:36:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T05:46:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T05:56:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T06:06:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T06:17:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T06:27:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T06:37:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T06:47:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T06:57:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T07:07:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T07:17:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T07:27:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T07:37:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T07:48:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T07:58:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T08:08:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T08:18:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T08:28:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T08:38:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T08:48:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T08:58:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T09:09:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T09:19:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T09:29:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T09:39:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T09:49:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T09:59:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T10:10:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T10:20:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T10:30:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T10:40:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T10:50:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T11:01:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T11:11:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T11:21:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T11:31:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T11:42:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T11:52:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T12:02:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T12:12:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T12:22:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T12:33:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T12:43:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T12:53:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T13:03:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T13:14:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T13:24:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T13:34:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T13:44:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T13:55:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T14:05:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T14:15:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T14:25:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T14:36:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T14:46:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T14:56:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T15:07:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T15:17:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T15:27:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T15:38:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T15:48:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T15:58:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T16:09:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T16:19:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T16:29:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T16:40:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T16:50:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T17:01:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T17:13:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T17:26:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T17:39:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T17:51:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T18:02:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T18:12:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T18:22:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T18:33:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T18:43:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T18:54:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T19:04:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T19:14:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T19:25:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T19:35:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T19:46:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T19:56:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T20:06:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T20:17:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T20:27:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T20:37:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T20:48:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T20:58:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T21:09:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T21:19:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T21:29:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T21:40:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T21:50:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T22:01:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T22:11:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T22:22:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T22:32:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T22:42:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T22:53:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T23:04:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T23:14:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T23:25:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T23:35:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T23:45:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-12T23:56:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T00:06:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T00:17:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T00:27:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T00:37:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T00:48:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T00:58:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T01:09:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T01:19:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T01:30:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T01:40:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T01:51:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T02:01:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T02:12:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T02:22:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T02:33:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T02:44:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T02:54:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T03:05:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T03:15:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T03:26:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T03:37:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T03:47:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T03:58:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T04:08:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T04:19:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T04:29:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T04:40:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T04:51:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T05:01:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T05:12:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T05:23:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T05:33:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T05:44:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T05:55:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T06:05:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T06:16:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T06:26:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T06:37:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T06:48:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T06:58:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T07:09:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T07:19:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T07:30:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T07:41:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T07:51:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T08:02:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T08:12:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T08:23:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T08:34:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T08:44:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T08:55:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T09:06:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T09:16:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T09:27:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T09:37:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T09:48:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T09:59:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T10:09:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T10:20:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T10:31:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T10:41:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T10:52:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T11:03:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T11:13:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T11:24:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T11:35:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T11:46:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T11:56:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T12:07:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T12:18:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T12:29:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T12:39:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T12:50:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T13:15:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T13:26:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T13:41:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T13:59:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T14:19:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T14:49:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T15:03:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T15:16:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T15:27:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T15:38:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T15:51:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T16:04:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T16:15:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T16:27:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T16:41:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T16:52:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T17:03:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T17:14:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T17:24:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T17:35:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T17:45:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T17:56:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T18:06:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T18:16:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T18:27:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T18:37:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T18:48:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T18:58:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T19:09:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T19:19:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T19:30:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T19:41:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T19:51:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T20:02:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T20:13:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T20:24:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T20:35:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T20:45:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T20:56:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T21:06:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T21:17:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T21:27:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T21:38:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-13T21:48:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T03:11:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T03:41:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T03:52:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T04:04:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T04:17:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T04:28:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T04:39:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T04:50:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T05:01:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T05:12:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T05:22:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T05:33:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T05:46:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T05:57:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T06:07:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T06:18:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T06:28:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T06:39:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T06:50:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T07:00:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T07:11:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T07:21:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T07:32:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T07:43:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T07:53:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T08:04:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T08:14:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T08:25:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T08:36:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T08:46:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T08:57:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T09:08:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T09:18:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T09:29:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T09:40:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T09:51:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T10:01:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T10:12:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T10:23:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T10:33:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T10:44:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T10:55:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T11:05:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T11:16:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T11:27:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T11:38:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T11:48:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T11:59:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T12:10:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T12:21:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T12:31:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T12:42:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T12:53:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T13:25:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T13:36:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T13:48:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T14:01:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T14:14:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T14:27:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T14:38:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T14:49:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T15:00:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T15:11:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T15:23:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T15:34:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T15:45:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T15:56:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T16:08:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T16:19:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T16:30:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T16:41:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T16:53:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T17:04:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T17:15:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T17:27:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T17:38:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T17:49:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T18:00:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T18:12:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T18:23:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T18:34:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T18:45:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T18:57:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T19:08:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T19:19:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T19:32:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T19:44:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T19:56:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T20:07:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T20:18:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T20:30:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T20:41:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T20:52:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T21:03:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T21:15:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T21:26:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T21:38:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-14T23:23:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T00:49:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T01:03:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T01:13:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T01:26:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T01:38:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T01:51:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T02:03:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T02:15:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T02:28:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T02:40:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T02:52:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T03:03:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T03:15:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T03:26:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T03:39:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T03:51:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T04:04:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T04:17:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T04:29:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T04:41:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T04:52:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T05:03:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T05:14:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T05:25:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T05:37:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T05:48:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T05:59:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T06:10:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T06:21:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T06:32:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T06:44:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T06:55:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T07:06:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T07:17:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T07:28:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T07:39:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T07:51:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T08:02:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T08:13:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T08:24:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T08:35:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T08:46:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T08:58:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T09:09:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T09:20:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T09:31:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T09:43:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T09:54:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T10:05:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T10:16:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T10:27:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T10:39:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T10:50:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T11:01:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T11:12:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T11:24:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T11:35:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T11:47:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T11:58:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T12:10:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T12:21:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T12:33:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T12:44:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T12:55:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T13:26:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T13:38:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T13:49:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T14:01:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T14:13:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T14:24:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T14:36:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T14:47:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T14:59:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T15:10:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T15:22:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T15:33:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T15:45:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T15:57:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T16:09:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T16:20:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T16:31:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T16:43:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T16:54:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T17:06:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T17:19:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T17:31:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T17:43:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T17:55:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T18:07:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T18:19:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T18:31:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T18:42:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T18:55:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T19:07:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T19:18:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T19:30:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T19:41:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T19:52:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T20:03:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T20:15:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T20:26:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T20:37:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T20:48:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T21:00:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T21:11:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T21:23:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T21:34:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T21:46:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T21:58:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T22:10:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T22:45:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T22:58:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T23:11:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T23:27:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-15T23:42:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T00:40:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T00:52:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T01:03:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T01:15:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T01:28:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T01:40:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T01:50:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:50:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:50:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:50:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:50:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:50:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:51:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:51:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:51:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:51:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:51:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:52:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:52:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:52:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:52:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:52:55Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:53:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:53:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:53:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:53:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:53:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:54:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:54:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:54:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:54:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:54:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:55:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:55:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:55:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:55:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:55:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:56:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:56:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:56:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:56:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:56:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:56:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:57:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:57:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:57:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:57:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:57:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:58:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:58:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:58:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:58:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:58:55Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:59:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:59:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:59:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:59:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T01:59:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:00:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:00:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:00:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:00:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:00:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:01:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:01:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:01:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:01:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:01:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:02:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:02:12Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:02:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:02:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:02:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:02:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:03:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:03:22Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:03:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:03:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:03:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:04:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:04:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:04:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:04:44Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:04:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:05:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:05:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T02:05:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:05:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:05:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:05:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:06:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:06:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:06:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:06:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:06:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:07:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:07:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:07:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:07:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:07:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:07:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:08:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:08:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:08:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:08:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:08:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:09:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:09:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:09:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:09:44Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:09:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:10:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:10:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:10:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:10:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:10:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:11:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:11:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:11:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:11:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:11:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:12:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:12:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:12:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:12:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:12:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:13:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:13:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:13:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:13:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:13:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:13:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:14:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:14:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:14:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:14:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:14:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:15:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:15:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:15:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:15:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:15:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:16:01Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:16:12Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:16:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:16:34Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:16:45Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:16:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:17:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:17:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:17:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:17:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:17:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:18:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:18:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:18:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:18:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:18:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:18:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:19:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T02:19:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:19:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:19:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:19:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:19:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:20:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:20:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:20:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:20:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:20:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:21:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:21:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:21:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:21:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:21:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:22:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:22:12Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:22:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:22:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:22:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:22:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:23:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:23:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:23:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:23:44Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:23:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:24:07Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:24:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:24:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:24:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:24:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:25:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:25:17Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:25:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:25:40Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:25:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:26:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:26:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:26:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:26:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:26:50Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:27:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:27:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:27:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:27:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:27:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:28:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:28:12Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:28:23Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:28:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:28:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:28:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:29:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:29:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:29:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:29:44Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:29:56Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:30:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:30:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:30:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:30:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:30:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:31:06Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:31:18Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:31:29Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:31:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:31:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:32:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:32:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:32:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:32:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:32:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T02:32:51Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:33:02Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:33:13Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:33:24Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:33:35Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:33:46Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:33:57Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:34:08Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:34:19Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:34:30Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:34:41Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:34:52Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:35:03Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:35:14Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:35:25Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:35:36Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:35:47Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:35:58Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:36:09Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:36:20Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:36:31Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:36:42Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:36:53Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:37:04Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:37:15Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:37:26Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:37:37Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:37:48Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:37:59Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:38:10Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:38:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:38:32Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:38:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:38:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:39:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:39:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:39:27Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:39:38Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:39:49Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:40:00Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:40:11Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:40:21Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:40:33Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:40:43Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:40:54Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:41:05Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:41:16Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:41:28Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:41:39Z] [WATCHDOG-SESSION-RECOVERED] tmux session missing; watchdog attempted harness rebuild
+- [ ] [2026-07-16T02:45:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T02:57:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T03:08:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T03:20:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T03:31:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T03:42:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T03:54:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T04:06:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T04:27:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T05:41:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T07:54:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T09:35:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T11:40:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T11:48:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T11:59:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T12:13:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T13:00:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T13:09:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T13:49:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T14:00:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T14:12:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T14:24:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T14:36:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T14:47:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T14:59:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T15:11:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T15:23:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T15:34:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T15:46:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T15:58:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T16:10:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T16:22:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T16:33:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T16:45:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T16:57:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T17:09:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T17:20:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T17:32:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T17:44:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T17:56:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T18:08:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T18:20:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T18:31:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T18:43:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T18:55:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T19:07:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T19:19:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T19:31:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T19:43:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T19:55:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T20:07:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T20:18:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T20:30:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T20:41:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T20:52:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T21:04:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T21:16:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T21:28:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T21:41:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T21:53:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T22:05:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T22:20:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T22:51:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T23:05:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-16T23:18:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T01:16:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T01:29:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T01:41:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T01:53:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T02:06:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T02:20:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T02:33:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T02:46:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T03:01:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T03:14:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T03:26:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T03:40:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T03:51:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T04:03:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T04:18:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T12:29:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T12:41:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T12:53:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T13:04:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T13:16:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T14:14:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T14:31:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T14:46:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T15:02:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T15:14:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T15:26:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T15:38:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T15:50:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T16:04:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T16:19:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T16:31:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T16:42:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T18:07:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T18:18:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T18:30:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T18:42:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T18:53:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T19:05:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T19:17:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T19:29:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T19:41:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T19:54:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T20:06:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T20:19:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T20:32:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T20:44:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T20:56:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T21:09:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T21:22:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T21:34:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T21:56:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T22:21:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T23:04:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T23:17:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T23:33:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-17T23:50:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T00:05:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T00:17:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T00:29:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T00:41:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T00:53:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T01:05:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T01:17:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T01:29:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T01:42:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T01:55:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T02:07:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T02:20:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T02:32:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T02:44:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T02:58:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T03:11:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T03:23:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T03:36:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T03:49:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T04:03:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T04:16:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T04:30:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T04:46:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T05:00:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T05:12:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T05:24:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T05:36:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T05:48:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T06:01:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T06:13:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T06:26:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T06:39:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T06:51:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T07:04:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T07:16:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T07:28:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T07:40:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T07:52:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T08:04:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T08:17:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T08:29:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T08:41:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T08:53:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T09:05:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T09:17:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T09:30:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T09:42:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T09:54:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T10:06:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T10:18:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T10:30:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T10:43:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T10:55:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T11:07:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T11:19:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T11:32:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T11:44:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T11:56:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T12:08:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T12:20:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T12:33:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T12:45:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T12:57:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T13:09:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T13:22:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T13:34:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T13:46:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T13:58:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T14:11:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T14:23:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T14:35:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T14:48:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T15:00:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T15:12:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T15:25:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T15:37:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T15:50:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T16:04:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T16:18:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T16:33:01Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T16:46:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T16:59:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T17:11:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T17:24:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T17:36:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T17:49:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T18:02:10Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T18:14:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T18:27:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T18:39:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T18:51:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T19:04:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T19:17:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T19:29:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T19:42:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T19:55:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T20:08:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T20:20:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T20:34:19Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T20:46:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T20:59:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T21:11:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T21:23:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T21:36:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T21:48:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T22:01:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T22:13:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T22:26:08Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T22:38:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T22:50:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T23:03:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T23:15:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T23:28:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T23:40:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-18T23:53:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T00:05:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T00:18:23Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T00:30:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T00:43:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T00:55:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T01:08:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T01:20:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T01:33:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T01:46:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T01:59:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T02:12:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T02:25:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T02:38:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T02:51:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T03:03:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T03:16:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T03:29:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T03:42:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T03:55:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T04:08:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T04:21:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T04:35:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T04:48:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T05:01:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T05:14:13Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T05:26:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T05:39:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T05:51:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T06:04:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T06:17:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T06:29:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T06:42:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T06:54:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T07:07:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T07:19:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T07:32:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T07:45:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T07:57:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T08:10:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T08:22:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T08:35:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T08:48:02Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T09:00:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T09:13:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T09:25:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T09:38:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T09:51:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T10:03:39Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T10:16:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T10:28:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T10:41:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T10:54:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T11:06:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T11:19:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T11:31:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T11:44:33Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T11:57:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T12:09:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T12:22:29Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T12:35:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T12:47:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T13:00:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T13:13:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T13:25:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T13:38:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T13:51:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T14:03:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T14:16:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T14:29:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T14:41:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T14:55:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T15:08:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T15:21:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T15:33:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T15:46:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T15:59:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T16:12:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T16:24:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T16:37:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T16:50:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T17:03:06Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T17:15:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T17:28:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T17:41:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T17:53:55Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T18:06:42Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T18:19:28Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T18:32:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T18:44:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T18:57:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T19:10:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T19:23:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T19:36:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T19:48:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T20:01:40Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T20:14:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T20:27:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T20:40:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T20:52:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T21:05:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T21:18:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T21:31:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T21:44:00Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T21:56:50Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T22:09:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T22:22:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T22:35:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T22:48:05Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T23:00:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T23:13:47Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T23:26:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T23:39:27Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-19T23:52:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T00:05:09Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T00:17:59Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T00:30:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T00:43:43Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T00:56:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T01:09:34Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T01:22:25Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T01:35:17Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T01:48:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T02:01:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T02:13:57Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T02:26:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T02:39:45Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T02:52:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T03:05:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T03:18:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T03:31:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T03:44:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T03:56:54Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T04:09:52Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T04:22:49Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T04:35:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T04:48:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T05:01:35Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T05:14:32Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T05:27:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T05:40:24Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T05:53:20Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T06:06:18Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T06:19:16Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T06:32:12Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T06:45:07Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T06:58:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T07:10:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T07:23:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T07:36:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T07:49:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T08:02:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T08:15:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T08:27:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T08:40:31Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T08:53:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T09:05:56Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T09:18:38Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T09:31:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T09:44:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T09:56:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T10:09:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T10:22:14Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T10:34:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T10:47:44Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T11:00:30Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T11:13:15Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T11:26:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T11:38:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T11:51:48Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T12:04:36Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T12:17:22Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T12:59:37Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T13:15:58Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T13:26:53Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T13:39:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T13:52:26Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T14:05:11Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T14:18:21Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T14:31:46Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T14:46:04Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T15:03:41Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T15:19:51Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
+- [ ] [2026-07-20T15:34:03Z] [DRAFTING-DISPATCH-COOLDOWN] sprint-20260609-032427-intent-installed-solar-codex-smoke--d513acf4 planner dispatch failed (pane_busy); cooldown 90s, no pane spam
