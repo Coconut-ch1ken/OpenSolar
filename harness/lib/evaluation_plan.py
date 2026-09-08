@@ -229,6 +229,19 @@ def compile_evaluation_plan(
     unresolved: list[dict[str, str]] = []
     compiled_nodes: list[dict[str, Any]] = []
     deferred_semantic_criteria: list[str] = []
+    # Composition expansion splits one logical node into support nodes
+    # (``<parent>__<digest>_cNN``) plus the terminal parent. Requirements stay
+    # on the parent, but the output that carries a requirement's verifier may
+    # now be produced by a support node. Bind against the whole family.
+    all_graph_nodes = [row for row in task_graph.get("nodes") or [] if isinstance(row, dict)]
+    family_outputs: dict[str, list[dict[str, Any]]] = {}
+    for row in all_graph_nodes:
+        row_id = str(row.get("id") or "")
+        parent_id = row_id.split("__", 1)[0] if "__" in row_id else row_id
+        contract = row.get("semantic_artifact_contract") if isinstance(row.get("semantic_artifact_contract"), dict) else {}
+        family_outputs.setdefault(parent_id, []).extend(
+            item for item in contract.get("produces") or [] if isinstance(item, dict)
+        )
     for graph_node in task_graph.get("nodes") or []:
         if not isinstance(graph_node, dict):
             continue
@@ -271,9 +284,12 @@ def compile_evaluation_plan(
             if check is None:
                 unresolved.append({"code": "CHECK_UNREGISTERED", "node_id": node_id, "detail": check_id})
                 continue
+            binding_candidates = list(outputs) + [
+                row for row in family_outputs.get(node_id, []) if row not in outputs
+            ]
             bound_outputs = [
                 str(output.get("artifact_type") or "")
-                for output in outputs
+                for output in binding_candidates
                 if check_id in [str(value) for value in output.get("verifier_ids") or []]
             ]
             if not bound_outputs:

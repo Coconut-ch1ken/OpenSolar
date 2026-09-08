@@ -819,6 +819,30 @@ def _production_service_overrides(
     }
 
 
+DEFAULT_TIMEOUT_RETRY_POLICY = {"timeout_seconds": 900, "max_attempts": 1, "retry_on": []}
+
+
+def _frozen_timeout_retry_policy(node: dict[str, Any]) -> dict[str, Any]:
+    """Return the Planner's per-node budget, narrowed never widened."""
+    declared = node.get("timeout_retry_policy")
+    if not isinstance(declared, dict):
+        return dict(DEFAULT_TIMEOUT_RETRY_POLICY)
+    policy = dict(DEFAULT_TIMEOUT_RETRY_POLICY)
+    try:
+        timeout = int(declared.get("timeout_seconds") or policy["timeout_seconds"])
+    except (TypeError, ValueError):
+        timeout = policy["timeout_seconds"]
+    try:
+        attempts = int(declared.get("max_attempts") or policy["max_attempts"])
+    except (TypeError, ValueError):
+        attempts = policy["max_attempts"]
+    policy["timeout_seconds"] = max(1, min(timeout, policy["timeout_seconds"]))
+    policy["max_attempts"] = max(1, attempts)
+    retry_on = declared.get("retry_on")
+    policy["retry_on"] = [str(item) for item in retry_on if str(item).strip()] if isinstance(retry_on, list) else []
+    return policy
+
+
 def execute(envelope: dict[str, Any], *, receipt_path: Path) -> dict[str, Any]:
     expected = _validated_binding(envelope)
     operator_id = expected["operator_id"]
@@ -882,7 +906,11 @@ def execute(envelope: dict[str, Any], *, receipt_path: Path) -> dict[str, Any]:
         if len(experiment_write_scope) != 1:
             raise RegistryAdapterError("dataset preparation requires one frozen experiment-run output scope")
         payload["experiment_result_scope"] = str(Path(experiment_write_scope[0]) / "raw_measurement.json")
-    network_mode = str((node.get("resource_requirements") or {}).get("network") or "optional")
+    # The frozen node is the authority on network policy and retry budget.
+    # An unspecified network policy is forbidden, not optional: the Planner
+    # had every chance to declare it and the adapter must not widen a plan.
+    network_mode = str((node.get("resource_requirements") or {}).get("network") or "forbidden")
+    timeout_retry_policy = _frozen_timeout_retry_policy(node)
     if expected["node_id"] == "discovery_ingest":
         payload["max_sources"] = min(10, len(documents[0].get("outputs", {}).get("candidates") or []))
     if expected["node_id"] == "literature_discover":
@@ -960,7 +988,7 @@ def execute(envelope: dict[str, Any], *, receipt_path: Path) -> dict[str, Any]:
         },
         "read_scope": read_scope,
         "write_scope": write_scope,
-        "timeout_retry_policy": {"timeout_seconds": 900, "max_attempts": 1, "retry_on": []},
+        "timeout_retry_policy": timeout_retry_policy,
     }
     services = _production_service_overrides(
         expected["node_id"],

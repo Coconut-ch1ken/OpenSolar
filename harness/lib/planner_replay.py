@@ -24,6 +24,15 @@ from intent_compiler import IntentCompilerError, write_json
 
 REPLAY_ROOT_ENV = "SOLAR_PLANNER_REPLAY_ROOT"
 REPLAY_FALLBACK_ENV = "SOLAR_PLANNER_REPLAY_FALLBACK"
+# Comma-separated call directory names (e.g. composition_fit_review_call) that
+# must go live even when retained: used to re-verify one changed prompt
+# against an otherwise retained run.
+REPLAY_SKIP_ENV = "SOLAR_PLANNER_REPLAY_SKIP"
+
+
+def replay_skip_calls(env: dict[str, str] | None = None) -> set[str]:
+    raw = str((env if env is not None else os.environ).get(REPLAY_SKIP_ENV) or "")
+    return {item.strip() for item in raw.split(",") if item.strip()}
 
 
 def replay_fallback_live(env: dict[str, str] | None = None) -> bool:
@@ -53,6 +62,7 @@ class ReplayJsonModel:
     model: str = "retained"
     calls: list[str] = field(default_factory=list)
     fallback: Any = None
+    skip: set[str] = field(default_factory=set)
 
     def _relative_call_dir(self, work_dir: Path) -> Path:
         work_dir = Path(work_dir).resolve()
@@ -87,6 +97,9 @@ class ReplayJsonModel:
             "error": None,
             "replay_source": str(source_dir),
         }
+        if self.fallback is not None and relative.name in self.skip:
+            self.calls[-1] = f"{relative} (live, forced)"
+            return self.fallback.generate(prompt, schema_path, work_dir)
         if not retained_receipt.is_file() and self.fallback is not None:
             self.calls[-1] = f"{relative} (live)"
             return self.fallback.generate(prompt, schema_path, work_dir)

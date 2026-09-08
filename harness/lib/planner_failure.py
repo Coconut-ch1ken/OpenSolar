@@ -30,11 +30,14 @@ _SEMANTIC_REJECTIONS = (
     ("plan_fidelity.json", "fidelity"),
     ("direct_response_review.json", "direct_response_review"),
 )
+# Pipeline order: composition search and review run first; the single-capsule
+# selection is the fallback that runs only after composition failed. The first
+# rejection in this order is the cause; later ones are consequences.
 _EXECUTION_REJECTIONS = (
-    ("capsule_selection_validation.json", "capsule_selection"),
-    ("capsule_fit_review.json", "capsule_fit"),
     ("composition_selection_validation.json", "composition_selection"),
     ("composition_fit_review.json", "composition_fit"),
+    ("capsule_selection_validation.json", "capsule_selection"),
+    ("capsule_fit_review.json", "capsule_fit"),
     ("capsule_binding_validation.json", "capsule_binding"),
     ("evaluation_plan_validation.json", "evaluation_plan"),
 )

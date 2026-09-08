@@ -3772,6 +3772,47 @@ def _canonical_sprint_artifact_path(raw: str) -> Path | None:
     return None
 
 
+def _output_contracts_block(node: dict[str, Any]) -> str:
+    """Tell the worker exactly what each produced artifact must be.
+
+    A generic builder can write a file at the right path and still fail the
+    deterministic gate because nothing told it the schema. Every produced
+    artifact type is listed with its materialized path, the schema file it
+    must validate against (for ``schema:`` types), and the verifier ids that
+    will judge it. The evaluator decides; the worker is told the contract.
+    """
+    contract = node.get("semantic_artifact_contract")
+    produces = (contract or {}).get("produces") if isinstance(contract, dict) else None
+    rows: list[str] = []
+    for item in produces or []:
+        if not isinstance(item, dict):
+            continue
+        artifact_type = str(item.get("artifact_type") or "").strip()
+        if not artifact_type:
+            continue
+        materialization = item.get("materialization") if isinstance(item.get("materialization"), dict) else {}
+        path = str(materialization.get("path") or "").strip()
+        route = str(materialization.get("route") or "").strip()
+        verifiers = [str(v) for v in item.get("verifier_ids") or [] if str(v).strip()]
+        line = f"- `{artifact_type}`"
+        if path:
+            line += f" -> `{path}`" + (f" ({route})" if route else "")
+        if artifact_type.startswith("schema:"):
+            schema_file = HARNESS_DIR / artifact_type[len("schema:"):]
+            line += f"\n  - must validate against `{schema_file}` (read it before writing; `additionalProperties` is false)"
+        if verifiers:
+            line += "\n  - gated by: " + ", ".join(f"`{v}`" for v in verifiers)
+        rows.append(line)
+    if not rows:
+        return ""
+    return (
+        "## Output Contracts\n\n"
+        "Each artifact below is judged by a deterministic gate after you finish. "
+        "Write the exact JSON shape the schema requires; a well-written file in the wrong shape fails.\n\n"
+        + "\n".join(rows)
+    )
+
+
 def _canonical_output_paths_block(node: dict[str, Any]) -> str:
     seen: set[tuple[str, str]] = set()
     rows: list[str] = []
@@ -8719,6 +8760,7 @@ def build_dispatch_text(payload: dict[str, Any], pane: str) -> str:
     )
     write_scope_preflight = _write_scope_preflight_block(str(sid), node)
     canonical_output_paths = _canonical_output_paths_block(node)
+    output_contracts = _output_contracts_block(node)
     generic_workdir_block = _generic_workdir_block(str(sid), graph_for_policy, node)
     repair_context_block = _node_repair_context_block(node)
 
@@ -8770,6 +8812,8 @@ Graph: `{graph_path}`
 {_scope_lines(node.get("write_scope"))}
 
 {canonical_output_paths}
+
+{output_contracts}
 
 {generic_workdir_block}
 

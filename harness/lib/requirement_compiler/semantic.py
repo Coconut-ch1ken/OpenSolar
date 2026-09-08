@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[2]
 BODY_SCHEMA = ROOT / "schemas/compiler/requirement-semantics.v2.schema.json"
 REVIEW_SCHEMA = ROOT / "schemas/compiler/requirement-semantic-review.v2.schema.json"
 _NAMED_DELIVERABLE_PATTERN = re.compile(
-    r"(?<![A-Za-z0-9_.-])([A-Za-z0-9][A-Za-z0-9_.-]*\.(?:md|markdown|csv|json|html|htm|txt))(?![A-Za-z0-9_.-])",
+    r"(?<![A-Za-z0-9_.-])([A-Za-z0-9][A-Za-z0-9_.-]*\.(?:md|markdown|csv|jsonl|json|html|htm|txt|py|svg))(?![A-Za-z0-9_-])(?!\.[A-Za-z0-9_-])",
     re.IGNORECASE,
 )
 

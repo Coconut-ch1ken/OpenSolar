@@ -12,7 +12,7 @@
     "schema_version": {"const": "solar.intent_ir.v3"},
         "artifact_role": {"enum": ["runtime_artifact", "metadata_contract_example_not_live_execution"]},
         "intent_ir_id": {"type": "string", "minLength": 1},
-        "generation": {"type": "integer", "minimum": 0, "maximum": 1},
+        "generation": {"type": "integer", "minimum": 0, "maximum": 4},
         "raw_intent_ref": {
           "type": "object",
           "additionalProperties": false,

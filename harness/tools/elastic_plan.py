@@ -15,10 +15,15 @@ LIB_DIR = HARNESS_DIR / "lib"
 if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
-from elastic_planner import run_elastic_planning_request  # noqa: E402
+from elastic_planner import ElasticPlannerError, run_elastic_planning_request  # noqa: E402
 from intent_compiler import IntentCompilerError, JsonModel  # noqa: E402
 from planner_failure import ensure_planner_failure  # noqa: E402
-from planner_replay import ReplayJsonModel, replay_fallback_live, replay_root_from_environment  # noqa: E402
+from planner_replay import (  # noqa: E402
+    ReplayJsonModel,
+    replay_fallback_live,
+    replay_root_from_environment,
+    replay_skip_calls,
+)
 from structured_model import StructuredModelError, stage_model  # noqa: E402
 from structured_output import OutputContractError  # noqa: E402
 
@@ -56,6 +61,7 @@ def _codex_model(role: str, output_root: Path | None = None) -> JsonModel:
             replay_root=replay_root,
             output_root=output_root,
             fallback=fallback,
+            skip=replay_skip_calls(),
         )
     return stage_model("planner", role, timeout_seconds=timeout)
 
@@ -80,15 +86,42 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     output_root = Path(args.output_root).expanduser().resolve()
     try:
+        compiler_model = _codex_model("compiler", output_root)
+        reviewer_model = _codex_model("reviewer", output_root)
+        # Independence is a fact about model identity, recorded on every review
+        # artifact, never an assumption baked into an artifact name.
+        reviewer_model.independence = (
+            "distinct_model"
+            if (reviewer_model.provider, reviewer_model.model) != (compiler_model.provider, compiler_model.model)
+            else "same_model"
+        )
         result = run_elastic_planning_request(
             _load_object(args.requirement_ir),
             output_root,
-            _codex_model("compiler", output_root),
-            _codex_model("reviewer", output_root),
+            compiler_model,
+            reviewer_model,
             sprint_id=args.sprint_id,
             workspace_root=args.workspace_root,
             upstream_artifacts=_load_context_artifacts(args.context_artifact),
         )
+    except ElasticPlannerError as exc:
+        # The planner's own deterministic code rejected an artifact it built.
+        # That is a contract bug, not a model failure; say so, typed, instead
+        # of leaving a traceback with no sidecar for the dashboard to show.
+        failure = ensure_planner_failure(
+            output_root,
+            fallback_stage="planner_contract",
+            fallback_code="planner_contract_violation",
+            fallback_detail=str(exc),
+        )
+        print(
+            json.dumps(
+                {"status": "failed", "failure": failure, "output_root": str(output_root)},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 2
     except (IntentCompilerError, StructuredModelError, OutputContractError) as exc:
         failure = ensure_planner_failure(
             output_root,

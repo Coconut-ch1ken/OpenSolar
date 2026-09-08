@@ -1694,3 +1694,23 @@ def test_drain_builder_ready_submits_and_marks_graph(monkeypatch, tmp_path):
     assert graph["nodes"][0]["status"] == "dispatched"
     assert graph["node_results"]["B1"]["dispatched_via"] == "pm_dispatch"
     assert graph["node_results"]["B1"]["pm_task_id"] == "pm-sprint-drain-B1-test"
+
+
+def test_reconcile_never_re_fails_a_closed_sprint_from_a_stale_planner_record(tmp_path, monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", sprints)
+    projected: list[str] = []
+    stub = types.ModuleType("elastic_planner_runtime")
+    stub.project_planner_failure = lambda _sprints, sprint_id, **_kwargs: projected.append(sprint_id) or {"sprint_id": sprint_id}
+    monkeypatch.setitem(sys.modules, "elastic_planner_runtime", stub)
+    record = {"closeout_kind": "elastic_planner", "sprint_id": "sprint-closed", "task_id": "pm-1", "status": "failed"}
+
+    (sprints / "sprint-closed.status.json").write_text(json.dumps({"status": "completed"}), encoding="utf-8")
+    assert pm_dispatch._project_elastic_planner_failure(record) is None
+    assert projected == []
+
+    (sprints / "sprint-closed.status.json").write_text(json.dumps({"status": "blocked"}), encoding="utf-8")
+    assert pm_dispatch._project_elastic_planner_failure(record) == {"sprint_id": "sprint-closed"}
+    assert projected == ["sprint-closed"]

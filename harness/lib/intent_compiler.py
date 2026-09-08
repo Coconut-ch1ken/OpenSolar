@@ -207,6 +207,16 @@ def effective_call_timeout(timeout_seconds: int, *, now: float | None = None) ->
     return min(float(timeout_seconds), remaining)
 
 
+def _configured_intent_max_repairs() -> int:
+    """Bounded Intent repairs per boundary (default 1, capped at 4)."""
+    raw = str(os.environ.get("SOLAR_INTENT_MAX_REPAIRS") or "").strip()
+    try:
+        value = int(raw) if raw else 1
+    except ValueError:
+        value = 1
+    return max(0, min(value, 4))
+
+
 @dataclass
 class CodexJsonModel:
     """Fresh, schema-bound Codex invocation for one semantic boundary."""
@@ -1071,6 +1081,10 @@ approval-before-action, and stop/rollback triggers.
 An exact literal expression is valid when the bounded expression language has no operator for the source relation;
 do not demand unsupported quantifiers or per-item matching. Reject an operator formula that falsely approximates
 such a relation, but accept a literal that preserves the source condition without claiming machine precision.
+A qualitative property of a deliverable (for example "in-depth", "concise", "short") has no property operator in
+the bounded language; encoding it as a literal attached to that deliverable's reference is the correct encoding.
+Do not report an error because the literal is compared against the deliverable reference rather than a field of
+it; at most a warning. Errors are for changed or omitted meaning, not for the shape of an unexpressible property.
 The language has no subset-of or universal-membership operator. An "only these values/purposes are allowed"
 whitelist must therefore remain an exact literal; contains_none over a synthetic outside/disallowed-set reference
 does not prove that every actual value belongs to the allowed set.
@@ -1325,7 +1339,7 @@ def decide_acceptance(
         "fidelity_ref": _artifact_ref(fidelity, "fidelity_id") if fidelity else None,
         "decision": decision,
         "final_generation": intent_ir.get("generation") if intent_ir else None,
-        "repair": {"attempted": repair_attempted, "maximum_attempts": 1},
+        "repair": {"attempted": repair_attempted, "maximum_attempts": _configured_intent_max_repairs()},
         "reasons": reasons,
         "clarification_questions": questions,
         "requirement_compiler_handoff_allowed": decision == "accepted",
@@ -1366,10 +1380,10 @@ def run_pipeline(
     repair_attempted = False
     repair_completed = False
     try:
-        for generation in (0, 1):
+        for generation in range(_configured_intent_max_repairs() + 1):
             generation_dir = output_dir / f"generation-{generation}"
             defects = _repairable_errors(validation, fidelity)
-            if generation == 1:
+            if generation >= 1:
                 if not defects:
                     break
                 repair_attempted = True
@@ -1379,12 +1393,12 @@ def run_pipeline(
                         "schema_version": "solar.repair_record.v1",
                         "repair_id": f"intent-repair-{raw_input['raw_intent_id']}",
                         "target_artifact_id": intent_ir.get("intent_ir_id") if intent_ir else None,
-                        "generation": 1,
+                        "generation": generation,
                         "defects": defects,
                         "requested_from": "intent_compiler",
                         "result_artifact_id": None,
                         "status": "requested",
-                        "budget": {"maximum_repairs_per_boundary": 1, "on_exhaustion": "clarify_or_reject"},
+                        "budget": {"maximum_repairs_per_boundary": _configured_intent_max_repairs(), "on_exhaustion": "clarify_or_reject"},
                     },
                 )
             previous = intent_ir
@@ -1397,7 +1411,7 @@ def run_pipeline(
                 defects=defects,
                 include_schema_errors=True,
             )
-            if generation == 1:
+            if generation >= 1:
                 repair_completed = True
             write_json(generation_dir / "intent_ir.json", intent_ir)
             validation = validate_intent(

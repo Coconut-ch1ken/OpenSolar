@@ -19,7 +19,7 @@
     "schema_version": {"const": "solar.composition_selection.v1"},
     "artifact_role": {"const": "planner_selection_artifact"},
     "selection_id": {"type": "string", "minLength": 1},
-    "generation": {"type": "integer", "minimum": 0, "maximum": 1},
+    "generation": {"type": "integer", "minimum": 0, "maximum": 4},
     "requirement_ir_ref": {"$ref": "#/$defs/ref"},
     "planning_context_ref": {"$ref": "#/$defs/ref"},
     "plan_ir_ref": {"$ref": "#/$defs/ref"},

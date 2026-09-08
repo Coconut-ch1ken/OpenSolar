@@ -8,7 +8,7 @@
     "schema_version": {"const": "solar.direct_response.v1"},
     "artifact_role": {"const": "runtime_artifact"},
     "response_id": {"type": "string", "minLength": 1},
-    "generation": {"type": "integer", "minimum": 0, "maximum": 1},
+    "generation": {"type": "integer", "minimum": 0, "maximum": 4},
     "requirement_ir_ref": {"type": "object"},
     "planning_decision_ref": {"type": "object"},
     "producer": {

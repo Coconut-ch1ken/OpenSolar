@@ -750,6 +750,72 @@ capsules:
     - report
     owner: opensolar
     default_operator_profile: codex-builder
+  - capability_capsule_id: cap.research-metric-recompute
+    version: 0.1.0
+    capsule_kind: capability
+    status: stable
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: "../capability-capsules/cap.research-metric-recompute.yaml"
+    tags:
+    - research
+    - scientific
+    - autosci
+    - metrics
+    owner: opensolar
+    default_operator_profile: codex-builder
+  - capability_capsule_id: cap.research-hypothesis-formulate
+    version: 0.1.0
+    capsule_kind: capability
+    status: stable
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: "../capability-capsules/cap.research-hypothesis-formulate.yaml"
+    tags:
+    - research
+    - scientific
+    - autosci
+    - hypothesis
+    owner: opensolar
+    default_operator_profile: codex-builder
+  - capability_capsule_id: cap.research-claim-verify-experimental
+    version: 0.1.0
+    capsule_kind: capability
+    status: stable
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: "../capability-capsules/cap.research-claim-verify-experimental.yaml"
+    tags:
+    - research
+    - scientific
+    - autosci
+    - verification
+    owner: opensolar
+    default_operator_profile: codex-builder
+  - capability_capsule_id: cap.scientific-report-deliver
+    version: 0.1.0
+    capsule_kind: capability
+    status: stable
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: "../capability-capsules/cap.scientific-report-deliver.yaml"
+    tags:
+    - research
+    - scientific
+    - autosci
+    - report
+    owner: opensolar
+    default_operator_profile: codex-builder
+  - capability_capsule_id: cap.scientific-report-synthesize
+    version: 0.1.0
+    capsule_kind: capability
+    status: stable
+    schema_ref: schemas/draft/capability-capsule.v1.draft.json
+    manifest_path: "../capability-capsules/cap.scientific-report-synthesize.yaml"
+    tags:
+    - research
+    - scientific
+    - autosci
+    - report
+    - synthesis
+    owner: opensolar
+    default_operator_profile: codex-builder
   - capability_capsule_id: cap.scientific-method-aware-report-draft
     version: 0.1.0
     capsule_kind: capability

@@ -396,6 +396,101 @@ def _capsule_mandatory_proof_classes(capsule: dict[str, Any]) -> set[str]:
     )
 
 
+REASONING_CLASSES = ("model", "deterministic")
+# Requirement checks whose acceptance is a semantic outcome: the artifact that
+# answers the requirement must be produced by a capsule whose implementation
+# reasons. A deterministic renderer can format evidence; it cannot compare,
+# resolve an open question, or recommend.
+SYNTHESIS_CHECK_IDS = frozenset(
+    {
+        "check.information_outcome_completeness.v1",
+        "check.artifact_outcome_completeness.v1",
+        "check.goal_satisfaction.v1",
+    }
+)
+# action_outcome_completeness is absent on purpose: an action (run the
+# experiment) is satisfied by the sandboxed executor, which is deterministic.
+# unknown_resolution_trace and ambiguity_disclosure are absent too: a typed
+# evidence artifact (a literature list, a verdict) can resolve or report an
+# unknown without prose reasoning.
+_MODEL_BACKENDS = frozenset({"claude-cli", "codex-cli", "print_once", "print"})
+
+
+def _operator_reasoning_class(spec: dict[str, Any]) -> str:
+    """Classify one physical operator by whether it reasons with a model."""
+    declared = str(spec.get("reasoning") or "").strip().lower()
+    if declared in REASONING_CLASSES:
+        return declared
+    if str(spec.get("backend") or "") == "research_operator_registry":
+        return "deterministic"
+    if spec.get("provider") or spec.get("model") or spec.get("vendor"):
+        return "model"
+    if str(spec.get("backend") or "") in _MODEL_BACKENDS:
+        return "model"
+    return "deterministic"
+
+
+def _capsule_reasoning_class(
+    capsule_id: str,
+    implementation: dict[str, Any],
+    preferred: list[str],
+    physical_rows: dict[str, Any],
+) -> str:
+    """A capsule reasons only if its manifest says so or a preferred operator does.
+
+    Fail closed: a capsule with no preferred operator and no declaration is
+    deterministic, so it can never be selected to satisfy a synthesis
+    requirement by accident.
+    """
+    declared = str(implementation.get("reasoning") or "").strip().lower()
+    if declared:
+        if declared not in REASONING_CLASSES:
+            raise ElasticPlannerError(
+                f"capsule {capsule_id!r} declares unknown reasoning class {declared!r}"
+            )
+        return declared
+    for operator_id in preferred:
+        spec = physical_rows.get(operator_id)
+        if isinstance(spec, dict) and _operator_reasoning_class(spec) == "model":
+            return "model"
+    return "deterministic"
+
+
+def synthesis_requirement_ids(
+    requirement_ir: dict[str, Any] | None, owned_ids: list[str] | set[str]
+) -> list[str]:
+    """Owned requirement ids whose acceptance needs reasoning, in stable order."""
+    if not requirement_ir:
+        return []
+    owned = {str(value) for value in owned_ids}
+    result: list[str] = []
+    for row in requirements(requirement_ir):
+        rid = _requirement_id(row)
+        if rid not in owned:
+            continue
+        check = str(row.get("check") or "")
+        if isinstance(row.get("check"), dict):
+            check = str(row["check"].get("check_id") or row["check"].get("id") or "")
+        if check in SYNTHESIS_CHECK_IDS:
+            result.append(rid)
+    return result
+
+
+def _review_method(reviewer: JsonModel) -> str:
+    """Name the review honestly: only a distinct model is an independent call."""
+    independence = str(getattr(reviewer, "independence", "") or "").strip()
+    return "independent_model_call" if independence == "distinct_model" else "same_model_second_pass"
+
+
+def _reviewer_record(reviewer: JsonModel) -> dict[str, Any]:
+    independence = str(getattr(reviewer, "independence", "") or "").strip() or "unknown"
+    return {
+        "provider": reviewer.provider,
+        "model": reviewer.model or "configured_default",
+        "independence": independence,
+    }
+
+
 def _capsule_summaries(
     capsule_registry_path: Path = CAPSULE_REGISTRY_PATH,
     physical_operators_path: Path = PHYSICAL_OPERATORS_PATH,
@@ -439,6 +534,9 @@ def _capsule_summaries(
             )
         skills = bindings.get("skills") if isinstance(bindings.get("skills"), dict) else {}
         preferred = sorted(str(value) for value in compatibility.get("preferred") or [] if str(value))
+        reasoning_class = _capsule_reasoning_class(
+            entry.capability_capsule_id, implementation, preferred, physical_rows
+        )
         declared_implementation = bool(
             preferred
             or effects.get("execute")
@@ -508,6 +606,7 @@ def _capsule_summaries(
                     ),
                     "selectable_preferred": sorted(set(preferred) & selectable_operator_ids),
                 },
+                "reasoning_class": reasoning_class,
                 "manifest_sha256": _file_sha256(manifest_path),
             }
         )
@@ -1195,10 +1294,9 @@ def review_direct_response(
             "generation": response.get("generation"),
             "sha256": sha256_payload(response),
         },
-        "review_method": "independent_model_call",
+        "review_method": _review_method(reviewer),
         "reviewer": {
-            "provider": reviewer.provider,
-            "model": reviewer.model or "configured_default",
+            **_reviewer_record(reviewer),
             "role": "evaluator",
             "component": "direct_response_reviewer",
         },
@@ -3001,7 +3099,9 @@ def validate_plan_ir(
             candidate_row = _hard_capsule_candidate_row(node, catalog)
             composition_row = composition_by_node.get(node_id)
             if composition_row is None:
-                composition_row = _node_composition_row(node, catalog)
+                composition_row = _node_composition_row(
+                    node, catalog, requirement_ir=requirement_ir
+                )
             if not composition_row.get("admitted_candidate_ids"):
                 ranked_exclusions = sorted(
                     candidate_row["exclusions"],
@@ -3395,6 +3495,8 @@ when removing it leaves the artifact, effect, verification, and dependency contr
 downstream node consumes a unique output from it. An implementation-only step may instead remain
 inside one logical node's capsule composition; do not reject that internal step merely because it has
 no direct RequirementIR owner.
+A direct dependency that is already implied transitively (A -> B -> C plus A -> C) is a style
+warning, never an error: it changes no artifact, effect, or order. Report it under warnings only.
 Check that each logical operator's defining semantic action is actually represented by its objective and
 produced-artifact boundary. An evidence-preparation node that only ingests, extracts, and verifies cannot
 own cross-source comparison or synthesis requirements; those belong to a downstream synthesis/report node
@@ -3544,11 +3646,8 @@ def review_plan_fidelity(
             "sha256": sha256_payload(plan_ir),
         },
         "status": "pass_with_warnings" if advisory_warnings else "pass",
-        "review_method": "independent_model_call",
-        "reviewer": {
-            "provider": reviewer.provider,
-            "model": reviewer.model or "configured_default",
-        },
+        "review_method": _review_method(reviewer),
+        "reviewer": _reviewer_record(reviewer),
         "checks": advisory_checks,
         "errors": [],
         "warnings": advisory_warnings,
@@ -3880,7 +3979,58 @@ def run_semantic_planning_pipeline(
             if validation.get("status") == "pass":
                 binding_trace = build_binding_trace(requirement_ir, plan_ir)
             fidelity = build_consolidated_plan_fidelity(requirement_ir, plan_ir)
-        else:
+            reuse_defects = _repairable_errors(validation, fidelity)
+            if reuse_defects:
+                # A registered workflow is a fixed projection: nothing in it
+                # can be repaired. The honest next step is to re-ask the
+                # strategy stage with the rejection in hand; if it now chooses
+                # to generate, the generated branch below runs. Otherwise the
+                # rejection stands as the terminal verdict.
+                repair_attempted = True
+                rejection = {
+                    "code": "REGISTERED_WORKFLOW_REJECTED",
+                    "path": "workflow_ref",
+                    "message": (
+                        "The registered workflow's projected plan was rejected by deterministic "
+                        "validation or independent fidelity review; registered workflows cannot be "
+                        "repaired. Choose generate unless a different registered workflow fits exactly."
+                    ),
+                    "repairable": True,
+                }
+                write_json(
+                    output_dir / "reuse_rejection_record.json",
+                    {
+                        "schema_version": "solar.repair_record.v1",
+                        "repair_id": f"reuse-rejection-{requirement_ir_id(requirement_ir)}",
+                        "generation": 2,
+                        "defects": [rejection, *reuse_defects],
+                        "maximum_repairs": MAX_REPAIRS,
+                        "status": "requested",
+                    },
+                )
+                fallback_decision = compile_planning_decision(
+                    requirement_ir,
+                    catalog,
+                    planning_context,
+                    planning_inputs,
+                    planner_model,
+                    output_dir / "strategy-generation-2",
+                    generation=2,
+                    previous=decision,
+                    defects=[rejection, *reuse_defects],
+                )
+                write_json(output_dir / "strategy-generation-2" / "planning_decision.json", fallback_decision)
+                fallback_errors = validate_planning_decision(
+                    requirement_ir, fallback_decision, catalog, planning_context, planning_inputs
+                )
+                if not fallback_errors and fallback_decision.get("decision") == "generate":
+                    decision = fallback_decision
+                    write_json(output_dir / "planning_decision.json", decision)
+                    plan_ir = None
+                    validation = None
+                    fidelity = None
+                    binding_trace = None
+        if decision.get("decision") == "generate" and not decision_errors:
             evaluation_check_registry = (
                 evaluation_planning.load_evaluation_check_registry()
             )
@@ -4072,6 +4222,13 @@ _CONTROLLER_INPUT_TYPES = {
     "schema:request-envelope.schema.json",
 }
 _NO_EFFECT_TOKENS = {"", "none", "none by default", "no network", "disabled", "forbidden"}
+# Evidence a node may already hold; when present, claims must derive from it.
+_EVIDENCE_INPUT_TYPES = {
+    "schema:schemas/evidence/literature_discovery.v1.schema.json",
+    "schema:schemas/evidence/research_paper.v1.schema.json",
+    "schema:schemas/evidence/research_claims.v1.schema.json",
+}
+_HYPOTHESIS_CAPSULE_ID = "cap.research-hypothesis-formulate"
 
 
 def _effect_is_active(values: Any) -> bool:
@@ -4084,11 +4241,31 @@ def _node_composition_row(
     *,
     artifact_registry: dict[str, Any] | None = None,
     conversion_registry: dict[str, Any] | None = None,
+    requirement_ir: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Prove exact typed composition feasibility for one semantic PlanIR node."""
     artifact_registry = artifact_registry or capsule_composition.load_artifact_type_registry()
     conversion_registry = conversion_registry or capsule_composition.load_conversion_registry()
     node_id = str(node.get("node_id") or "")
+    synthesis_ids = synthesis_requirement_ids(
+        requirement_ir, [str(value) for value in node.get("requirement_ids") or []]
+    )
+    # Outputs whose verifiers include a synthesis check answer the requirement;
+    # the last declared output is the terminal fallback when none is tagged.
+    synthesis_targets = [
+        str((value or {}).get("artifact_type") or "")
+        for value in node.get("produces") or []
+        if str((value or {}).get("artifact_type") or "")
+        and any(str(v) in SYNTHESIS_CHECK_IDS for v in (value or {}).get("verifier_ids") or [])
+    ]
+    terminal_target = next(
+        (
+            str((value or {}).get("artifact_type") or "")
+            for value in reversed(node.get("produces") or [])
+            if str((value or {}).get("artifact_type") or "")
+        ),
+        "",
+    )
     available_inputs = sorted(
         _CONTROLLER_INPUT_TYPES
         | {str(value) for value in node.get("consumes") or [] if str(value)}
@@ -4227,6 +4404,34 @@ def _node_composition_row(
             )
             if candidate_trust < trust_rank[declared_trust]:
                 reasons.append("DECLARED_EXECUTION_TRUST_UNSATISFIED")
+            # Safety: claims may be formulated from the request only when the
+            # node has no evidence to derive them from. With literature or
+            # extracted claims available, claims must come from the evidence.
+            if any(
+                str((step or {}).get("capsule_id") or "") == _HYPOTHESIS_CAPSULE_ID for step in steps
+            ) and (set(available_inputs) & _EVIDENCE_INPUT_TYPES):
+                reasons.append("HYPOTHESIS_SHORTCUT_WITH_EVIDENCE_PRESENT")
+            if synthesis_ids:
+                # The step that produces the answering output is the one that
+                # satisfies the requirement. A deterministic renderer there means
+                # the requirement is only formatted, never reasoned about.
+                # Intermediate typed outputs of the same node (a verdict feeding
+                # the report) may stay deterministic.
+                for artifact_type in (synthesis_targets or [terminal_target]):
+                    producer = next(
+                        (
+                            step
+                            for step in reversed(steps)
+                            if artifact_type in {str(v) for v in (step or {}).get("produces") or []}
+                        ),
+                        None,
+                    )
+                    producer_capsule = capsule_by_id.get(
+                        str((producer or {}).get("capsule_id") or ""), {}
+                    )
+                    if str(producer_capsule.get("reasoning_class") or "deterministic") != "model":
+                        reasons.append("TARGET_PRODUCER_CANNOT_SYNTHESIZE")
+                        break
             # The composition search already proves that every target output is
             # produced by the ordered chain.  Earlier outputs remain part of the
             # logical node's result envelope, so requiring the final capsule to
@@ -4242,6 +4447,26 @@ def _node_composition_row(
                 )
             else:
                 admitted.append(candidate_id)
+        # Evidence first: when any admitted chain derives claims from evidence
+        # or acquires it, chains that formulate claims from the request are
+        # excluded. The shortcut exists for nodes with no evidence path at all.
+        candidate_rows = {
+            str(c.get("candidate_id") or ""): c for c in (search.get("candidates") or []) if isinstance(c, dict)
+        }
+
+        def _uses_hypothesis(candidate_id: str) -> bool:
+            return any(
+                str((step or {}).get("capsule_id") or "") == _HYPOTHESIS_CAPSULE_ID
+                for step in candidate_rows.get(candidate_id, {}).get("steps") or []
+            )
+
+        if admitted and any(not _uses_hypothesis(cid) for cid in admitted):
+            shortcut = [cid for cid in admitted if _uses_hypothesis(cid)]
+            admitted = [cid for cid in admitted if cid not in shortcut]
+            for cid in shortcut:
+                exclusions.append(
+                    {"candidate_id": cid, "reason_codes": ["HYPOTHESIS_SHORTCUT_EVIDENCE_PATH_AVAILABLE"]}
+                )
         if errors:
             admitted = []
             status = "invalid_request"
@@ -4254,6 +4479,7 @@ def _node_composition_row(
     return {
         "node_id": node_id,
         "requirement_ids": [str(value) for value in node.get("requirement_ids") or []],
+        "synthesis_requirement_ids": synthesis_ids,
         "available_inputs": available_inputs,
         "target_outputs": target_outputs,
         "required_effects": sorted(required_effects),
@@ -4291,6 +4517,7 @@ def build_plan_composition_catalog(
             catalog,
             artifact_registry=artifact_registry,
             conversion_registry=conversion_registry,
+            requirement_ir=requirement_ir,
         )
         for node in plan_ir.get("nodes") or []
         if isinstance(node, dict)
@@ -5221,8 +5448,14 @@ def review_composition_fit(
                     "and unresolved status truthfully and traceably; do not require an unregistered "
                     "resolution operation merely because resolution is one allowed alternative. Still "
                     "fail a chain that claims resolution without the necessary operation, or when the "
-                    "requirement mandates resolution rather than allowing unresolved reporting. Do not "
-                    "rewrite."
+                    "requirement mandates resolution rather than allowing unresolved reporting. What is "
+                    "NOT your job: capsule contracts state minimum guarantees (for example 'at least one "
+                    "candidate'); completeness, counts, coverage of every source, and quality are enforced "
+                    "at runtime by the deterministic gates and the requirement verifiers bound to each "
+                    "node's outputs, and a reasoning terminal step performs comparison, reconciliation of "
+                    "agreements and disagreements, and synthesis. Do not fail a chain for a minimum "
+                    "guarantee being weaker than the node's objective, and do not require a dedicated "
+                    "deterministic capsule for comparison or synthesis. Do not rewrite."
                 ),
                 "requirement_ir": requirement_ir,
                 "upstream_artifacts": planning_inputs,
@@ -5297,11 +5530,8 @@ def review_composition_fit(
         "artifact_role": "runtime_artifact",
         "review_id": f"composition-fit-{selection.get('selection_id')}",
         "selection_ref": {"sha256": sha256_payload(selection)},
-        "review_method": "independent_model_call",
-        "reviewer": {
-            "provider": reviewer.provider,
-            "model": reviewer.model or "configured_default",
-        },
+        "review_method": _review_method(reviewer),
+        "reviewer": _reviewer_record(reviewer),
         "status": "pass_with_warnings" if advisory_warnings else "pass",
         "nodes": advisory_nodes,
         "errors": [],
@@ -5557,8 +5787,8 @@ def review_capsule_fit(
         "artifact_role": "runtime_artifact",
         "review_id": f"capsule-fit-{selection.get('selection_id')}",
         "selection_ref": {"sha256": sha256_payload(selection)},
-        "review_method": "independent_model_call",
-        "reviewer": {"provider": reviewer.provider, "model": reviewer.model or "configured_default"},
+        "review_method": _review_method(reviewer),
+        "reviewer": _reviewer_record(reviewer),
         "status": "pass_with_warnings" if advisory_warnings else "pass",
         "nodes": advisory_nodes,
         "errors": [],

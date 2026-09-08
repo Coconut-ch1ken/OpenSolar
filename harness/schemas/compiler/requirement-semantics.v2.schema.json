@@ -57,8 +57,11 @@
                       "text/markdown",
                       "text/csv",
                       "application/json",
+                      "application/jsonl",
                       "text/html",
-                      "text/plain"
+                      "text/plain",
+                      "text/x-python",
+                      "image/svg+xml"
                     ]
                   },
                   "description": {"type": "string", "minLength": 1},

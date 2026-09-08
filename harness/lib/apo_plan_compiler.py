@@ -927,6 +927,38 @@ def enumerate_physical_candidates(
     )["candidates"]
 
 
+AUTH_HOME_ENV = "SOLAR_AUTH_HOME"
+_AUTH_PROVIDER_ALIASES = {
+    "openai": "openai",
+    "codex": "openai",
+    "anthropic": "anthropic",
+    "claude": "anthropic",
+    "zhipu": "zhipu",
+    "glm": "glm",
+}
+
+
+def provider_auth_presence(spec: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Observe whether the credential an operator needs is present right now.
+
+    Returns ``None`` for operators that need no provider credential (local
+    commands, registry transforms). Otherwise ``{"provider", "present",
+    "signal"}`` from the same presence probe preflight uses, so planning and
+    preflight cannot disagree about what "authenticated" means.
+    """
+    raw_provider = str(spec.get("provider") or spec.get("vendor") or "").strip().lower()
+    provider = _AUTH_PROVIDER_ALIASES.get(raw_provider)
+    if provider is None or not str(spec.get("auth_mode") or spec.get("key_ref") or ""):
+        return None
+    try:
+        from run_preflight import _auth_signal
+    except Exception:  # preflight unavailable: report unknown, never invent presence
+        return {"provider": provider, "present": False, "signal": "probe_unavailable"}
+    home = Path(os.environ.get(AUTH_HOME_ENV) or Path.home())
+    present, signal = _auth_signal(provider, home, os.environ)
+    return {"provider": provider, "present": bool(present), "signal": str(signal)}
+
+
 def enumerate_physical_candidate_decisions(
     *,
     role: str,
@@ -975,6 +1007,9 @@ def enumerate_physical_candidate_decisions(
         )
         if require_dispatchable and not _is_dispatchable_runtime(op_id):
             reasons.append("RUNTIME_NOT_IDLE")
+        auth = provider_auth_presence(spec)
+        if require_dispatchable and auth is not None and not auth["present"]:
+            reasons.append("PROVIDER_UNAUTHENTICATED")
         roles = [str(r).lower() for r in spec.get("roles", [spec.get("role", "")])]
         explicitly_preferred = op_id in preferred_ops
         # A capsule's explicit physical binding is stronger than its generic
@@ -1009,6 +1044,7 @@ def enumerate_physical_candidate_decisions(
                         "available": spec.get("available", True),
                         "deprecated": spec.get("deprecated", False),
                         "health_status": spec.get("health_status"),
+                        **({"auth": auth} if auth is not None else {}),
                     },
                 }
             )
@@ -1049,6 +1085,10 @@ def enumerate_physical_candidate_decisions(
             "cost_tier": spec.get("cost_tier"),
             "latency_tier": spec.get("latency_tier"),
             "preferred_for": spec.get("preferred_for", []),
+            # Credential presence observed when the plan was frozen. The
+            # scheduler re-observes it at dispatch; a missing credential is a
+            # typed skip, never a silent fallthrough to a traceback.
+            **({"auth": auth} if auth is not None else {}),
             "admission_state": "READY",
         }
         if _product_mode_enabled():
@@ -1211,6 +1251,7 @@ def build_physical_plan_ir(
                 "lease",
                 "quota_cooldown",
                 "process_health",
+                "auth",
             ],
         },
         "nodes": nodes,

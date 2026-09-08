@@ -9,7 +9,7 @@
     "artifact_role": {"const": "runtime_artifact"},
     "review_id": {"type": "string", "minLength": 1},
     "response_ref": {"type": "object"},
-    "review_method": {"const": "independent_model_call"},
+    "review_method": {"enum": ["independent_model_call", "same_model_second_pass"]},
     "reviewer": {
       "type": "object",
       "required": ["provider", "model"],

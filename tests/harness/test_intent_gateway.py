@@ -485,3 +485,21 @@ def test_deterministic_rewrite_multiline_objective_keeps_middle_and_end():
     ir = gateway.build_requirement_ir("intent-test", raw_intent, rewritten)
     assert "final report" in ir["objective"]
     assert len(ir["title"]) <= 90
+
+
+def test_capture_reports_legacy_compiler_mode_when_semantic_compiler_is_unconfigured(tmp_path):
+    env = dict(os.environ)
+    env.pop("SOLAR_INTENT_COMPILER_PROVIDER", None)
+    env["SOLAR_INTENT_GATEWAY_DIR"] = str(tmp_path / "intents")
+    env["SOLAR_HARNESS_SPRINTS_DIR"] = str(tmp_path / "sprints")
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "capture", "--text", "summarize this repository", "--repo", "/tmp/Solar", "--json"],
+        text=True,
+        capture_output=True,
+        env=env,
+        check=True,
+    )
+    payload = json.loads(proc.stdout)
+    assert payload["compiler_mode"] == "legacy_deterministic"
+    assert payload["rewrite_method"] == "deterministic_fallback"
+    assert any(item.startswith("intent_compiler_unconfigured") for item in payload["warnings"])

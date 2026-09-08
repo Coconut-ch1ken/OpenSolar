@@ -212,6 +212,9 @@ def delivery_manifest_defects(values: dict[str, Any]) -> list[str]:
         "application/json": {".json"},
         "text/html": {".html", ".htm"},
         "text/plain": {".txt"},
+        "text/x-python": {".py"},
+        "image/svg+xml": {".svg"},
+        "application/jsonl": {".jsonl"},
     }
     for index, row in enumerate(rows):
         suffix = Path(paths[index]).suffix.lower()

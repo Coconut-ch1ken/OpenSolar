@@ -1615,7 +1615,10 @@ def test_plan_prompt_exposes_semantic_capsule_abi_not_physical_catalog() -> None
             "execution_trust",
         } <= set(first)
     assert "operator_compatibility" not in prompt
-    assert len(prompt.encode("utf-8")) < 60000
+    # The prompt budget is a fixed instruction overhead plus a bounded ABI per
+    # capsule, so adding a capsule to the catalog does not break the guard while
+    # an ABI or instruction that bloats still does.
+    assert len(prompt.encode("utf-8")) < 33000 + 460 * len(payload["capability_capsule_abis"])
 
 
 def test_plan_authoring_contract_separates_executable_stages_from_controller_closure() -> None:

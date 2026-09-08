@@ -64,6 +64,7 @@
     {"artifact_type": "schema:schemas/evidence/experiment_status.v1.schema.json", "controller_input": false, "lineage_family": "experiment"},
     {"artifact_type": "schema:schemas/evidence/idea_candidate.v1.schema.json", "controller_input": false},
     {"artifact_type": "schema:schemas/evidence/idea_evaluation.v1.schema.json", "controller_input": false},
+    {"artifact_type": "schema:schemas/evidence/metric_recomputation.v1.schema.json", "controller_input": false, "lineage_family": "experiment"},
     {"artifact_type": "schema:schemas/evidence/literature_discovery.v1.schema.json", "controller_input": false},
     {"artifact_type": "schema:schemas/evidence/publication_bundle.v1.schema.json", "controller_input": false},
     {"artifact_type": "schema:schemas/evidence/research_claims.v1.schema.json", "controller_input": false},

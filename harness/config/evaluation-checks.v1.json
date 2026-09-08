@@ -252,6 +252,14 @@
       "semantic": null
     },
     {
+      "check_id": "check.scientific.metric_recomputation.v1",
+      "mode": "deterministic",
+      "applies_to": {"kind": "artifact_type", "artifact_types": ["schema:schemas/evidence/metric_recomputation.v1.schema.json"], "auto_apply": true},
+      "decision": "Validate that every reported metric was independently recomputed from hash-pinned result artifacts and that every discrepancy is explained.",
+      "deterministic": {"kind": "python_callable", "implementation_ref": "evaluators.scientific.metric_recomputation_gate:evaluate"},
+      "semantic": null
+    },
+    {
       "check_id": "check.scientific.experiment_plan.v1",
       "mode": "deterministic",
       "applies_to": {"kind": "artifact_type", "artifact_types": ["schema:schemas/evidence/experiment_plan.v1.schema.json"], "auto_apply": true},

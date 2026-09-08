@@ -4127,6 +4127,17 @@ def _project_elastic_planner_failure(record: dict[str, Any]) -> dict[str, Any] |
     """Converge a persisted typed PM failure into Elastic sprint state."""
     if str(record.get("closeout_kind") or "") != "elastic_planner":
         return None
+    # A sprint that was closed after the planner failed (direct execution,
+    # manual completion, or a later successful plan) must not be dragged back
+    # to the failed state by every reconcile pass over the stale PM record.
+    sprint_id = str(record.get("sprint_id") or "").strip()
+    if sprint_id:
+        try:
+            current = json.loads((SPRINTS_DIR / f"{sprint_id}.status.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            current = {}
+        if str(current.get("status") or "").lower() in {"completed", "closed", "done"}:
+            return None
     from elastic_planner_runtime import project_planner_failure
 
     task_id = str(record.get("task_id") or "").strip()

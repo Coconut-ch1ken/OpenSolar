@@ -4838,7 +4838,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "autosci_bridge verify_claim attaches review_llm evidence."
     },
     "autosci-artifact-review-worker": {
       "display_name": "Native AutoSci artifact review worker",
@@ -5063,7 +5065,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-synthesis-source-discovery-worker": {
       "display_name": "Fixed research A2 source discovery worker",
@@ -5079,7 +5083,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-synthesis-source-validation-worker": {
       "display_name": "Fixed research A3 source validation worker",
@@ -5115,7 +5121,9 @@
         "last_block_excerpt": "{\"ok\": false, \"node_id\": \"source_validation\", \"result\": {\"schema\": \"research_node_result.v1\", \"task_id\": \"sprint-20260818-214424-wf-research-evidence-to-poc-v1-694da7704bbe:research-evidence-to-poc\", \"run_id\": \"sprint-20260818-214424-wf-research-evidence-to-poc-v1-694da7704bbe\", \"workflow_id\": \"research.evidence_to_poc.v1\", \"node_id\": \"source_validation\", \"status\": \"blocked\", \"status_is_terminal\": true, \"output_artifacts\": [{\"artifact_id\": \"source_validation\", \"path\": \"artifacts/research_evidence_to_poc/validation/source_validation.json\", \"schema\": \"research_synthesis.source_validation.v1\", \"sha256\": \"05f0487eda9c25f5fe86e7d0c93038c2213e709c45be1866298921683c3160d0\"}], \"evidence\": [{\"evidence_id\": \"source_validation.review\", \"kind\": \"source_validation\", \"summary\": \"0 accepted and 8 rejecte",
         "last_pruned_at": "2026-08-19T01:57:58Z",
         "last_prune_reason": "expired_operator_block"
-      }
+      },
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "codex-research-evidence-synthesis-worker": {
       "display_name": "Fixed research A4 fresh-context Codex synthesis worker",
@@ -5131,7 +5139,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "codex-research-report-draft-worker": {
       "display_name": "Fixed research A5 fresh-context Codex report worker",
@@ -5147,7 +5157,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "codex-research-independent-review-worker": {
       "display_name": "Fixed research A6 independent fresh-context Codex reviewer",
@@ -5163,7 +5175,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "codex-research-report-revision-worker": {
       "display_name": "Fixed research A7 bounded fresh-context Codex revision worker",
@@ -5179,7 +5193,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-synthesis-final-acceptance-worker": {
       "display_name": "Fixed research A8 deterministic acceptance worker",
@@ -5195,7 +5211,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-poc-handoff-worker": {
       "display_name": "Fixed research B1 accepted-evidence handoff worker",
@@ -5211,7 +5229,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-poc-idea-evaluation-worker": {
       "display_name": "Fixed research B2 evidence-bound idea worker",
@@ -5227,7 +5247,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-poc-experiment-design-worker": {
       "display_name": "Fixed research B3 bounded experiment design worker",
@@ -5243,7 +5265,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-poc-experiment-approval-worker": {
       "display_name": "Fixed research B4 exact human approval validator",
@@ -5259,7 +5283,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-poc-experiment-run-worker": {
       "display_name": "Fixed research B5 no-network benchmark worker",
@@ -5275,7 +5301,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-poc-claim-verification-worker": {
       "display_name": "Fixed research B6 deterministic claim verification worker",
@@ -5291,7 +5319,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "autosci-research-poc-final-delivery-worker": {
       "display_name": "Fixed research B7 final evidence delivery worker",
@@ -5307,7 +5337,9 @@
       "compat_maps_to": {
         "host_type": "local_command_worker"
       },
-      "deprecated": false
+      "deprecated": false,
+      "reasoning": "model",
+      "reasoning_note": "fixed_research_node_adapter routes through _codex_services and verifies model usage."
     },
     "mini-codex-gpt55-medium-evaluator-2": {
       "display_name": "Mac mini Codex GPT 5.5 medium evaluator slot 2",

@@ -1207,3 +1207,23 @@ def test_non_frozen_assign_ready_preserves_legacy_relaxed_matching(monkeypatch) 
     assert result["assigned"][0]["node"] == "legacy-node"
     assert result["assigned"][0]["skills_relaxed"] is True
     assert result["capability_enrichment"]["auto"] is True
+
+
+def test_registered_operator_without_a_pane_is_transient_and_unregistered_is_permanent(monkeypatch) -> None:
+    monkeypatch.setattr(gs, "_REGISTERED_OPERATOR_IDS", {"op.registered"})
+    monkeypatch.setattr(gs, "_REGISTERED_OPERATOR_IDS_MTIME", (gs.HARNESS_DIR / "config" / "physical-operators.json").stat().st_mtime)
+    graph = _graph([_node("frozen", priority=5, candidates=[("op.registered", 1)])])
+    assignment = gs.assign_ready(graph, [])
+    queued = assignment["queued"][0]
+    assert queued["details"]["candidate_observations"][0]["reason"] == "operator_not_present"
+    assert queued["reason"] == "frozen_physical_candidates_temporarily_unavailable"
+    assert queued["retryable"] is True
+
+    graph = _graph([_node("frozen", priority=5, candidates=[("op.unknown", 1)])])
+    assignment = gs.assign_ready(graph, [])
+    queued = assignment["queued"][0]
+    assert queued["details"]["candidate_observations"][0]["reason"] == "operator_not_registered"
+    assert queued["retryable"] is False
+
+    assert gs._frozen_unavailability_classification([{"reason": "provider_unauthenticated"}]) == "transient"
+    assert gs._frozen_unavailability_classification([{"reason": "operator_not_registered"}]) == "static_incompatible"

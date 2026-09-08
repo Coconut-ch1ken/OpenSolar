@@ -23,8 +23,11 @@ from pathlib import Path
 
 
 HOME = Path.home()
-HARNESS = Path(os.environ.get("HARNESS_DIR", HOME / ".solar" / "harness"))
-SPRINTS = HARNESS / "sprints"
+HARNESS = Path(
+    os.environ.get("HARNESS_DIR")
+    or os.environ.get("SOLAR_HARNESS_DIR")
+    or HOME / ".solar" / "harness"
+)
 EVENTS = HARNESS / "events" / "all.jsonl"
 SESSION = os.environ.get("SOLAR_HARNESS_SESSION", "solar-harness")
 STATE = HARNESS / "state" / "autopilot-state.json"
@@ -63,6 +66,29 @@ REAL_HARNESS = Path(os.environ.get("REAL_HARNESS_DIR", HARNESS))
 sys.path.insert(0, str(REAL_HARNESS / "lib"))
 if REAL_HARNESS != HARNESS:
     sys.path.insert(1, str(HARNESS / "lib"))
+
+
+def _resolve_sprints_dir() -> Path:
+    """Resolve the sprints directory the same way preflight does.
+
+    Deriving it as ``HARNESS / "sprints"`` ignores an explicitly configured sprints
+    directory, so a run whose sprints live elsewhere is dispatched against a directory
+    that holds no graphs.
+    """
+    try:
+        from run_preflight import sprints_dir
+        return Path(sprints_dir())
+    except Exception:  # pragma: no cover - partial installs must remain inspectable
+        configured = os.environ.get("SPRINTS_DIR") or os.environ.get("HARNESS_SPRINTS_DIR")
+        return Path(configured) if configured else HARNESS / "sprints"
+
+
+SPRINTS = _resolve_sprints_dir()
+# Autopilot imports libraries that read either alias at import time. Normalize both in
+# this process so discovery, validation, scheduling and dispatch all agree on the
+# directory preflight resolved.
+os.environ["SPRINTS_DIR"] = str(SPRINTS)
+os.environ["HARNESS_SPRINTS_DIR"] = str(SPRINTS)
 try:
     from runtime_bridge import record_legacy_event
 except Exception:  # pragma: no cover - monitor must fail open

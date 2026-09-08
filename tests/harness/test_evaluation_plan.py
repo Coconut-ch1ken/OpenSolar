@@ -404,3 +404,36 @@ def test_registry_rejects_non_callable_deterministic_implementation(tmp_path) ->
 
     with pytest.raises(evaluation_plan.EvaluationPlanError, match="implementation is not callable"):
         evaluation_plan.load_evaluation_check_registry(path)
+
+
+def test_requirement_check_binds_to_output_produced_by_composition_support_node() -> None:
+    # Composition expansion splits one logical node into support nodes named
+    # <parent>__<digest>_cNN plus the terminal parent. The requirement stays on
+    # the parent while the output carrying its verifier moves to a support node.
+    task_graph = {
+        "sprint_id": "sprint-evaluation-plan-test",
+        "nodes": [
+            {
+                "id": "build__0123abcd_c00",
+                "requirement_ids": [],
+                "semantic_artifact_contract": {
+                    "produces": [{"artifact_type": PATCH, "verifier_ids": ["check.patch_within_scope"]}]
+                },
+                "evaluator_gate": {"kind": "llm_eval", "on_fail": "repair_once_then_fail"},
+            },
+            {
+                "id": "build",
+                "requirement_ids": ["R1"],
+                "semantic_artifact_contract": {"produces": []},
+                "evaluator_gate": {"kind": "llm_eval", "on_fail": "repair_once_then_fail"},
+            },
+        ],
+    }
+    compiled, validation = _compile(task_graph=task_graph)
+
+    unresolved = [row["code"] for row in compiled.get("unresolved") or []]
+    assert "REQUIREMENT_CHECK_NOT_BOUND" not in unresolved, compiled.get("unresolved")
+    parent = next(row for row in compiled["nodes"] if row["node_id"] == "build")
+    requirement_checks = [row for row in parent["checks"] if row.get("source") == "requirement"]
+    assert [row["check_id"] for row in requirement_checks] == ["check.patch_within_scope"]
+    assert validation["status"] == "pass", validation

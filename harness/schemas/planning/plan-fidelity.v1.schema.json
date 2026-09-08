@@ -12,7 +12,7 @@
     "plan_ir_ref": {"type": "object"},
     "status": {"enum": ["pass", "pass_with_warnings", "fail"]},
     "review_method": {
-      "enum": ["independent_model_call", "consolidated_deterministic_admission"]
+      "enum": ["independent_model_call", "same_model_second_pass", "consolidated_deterministic_admission"]
     },
     "reviewer": {
       "type": "object",
@@ -20,7 +20,8 @@
       "additionalProperties": false,
       "properties": {
         "provider": {"type": "string", "minLength": 1},
-        "model": {"type": "string", "minLength": 1}
+        "model": {"type": "string", "minLength": 1},
+        "independence": {"enum": ["distinct_model", "same_model", "unknown"]}
       }
     },
     "checks": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object"}},

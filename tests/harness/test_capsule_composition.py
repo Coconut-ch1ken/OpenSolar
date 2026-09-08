@@ -182,7 +182,15 @@ def test_claim_verification_contract_requires_claims_and_retained_papers() -> No
         _catalog(), available_inputs=[CLAIMS, PAPER], target_outputs=[CLAIM_VERDICT]
     )
 
-    assert missing_papers["verdict"] == "unsatisfiable"
+    # Without retained papers a verdict is reachable only through an actual
+    # measured experiment (design -> approval -> run -> recompute -> verify);
+    # never through a bare verification step.
+    assert missing_papers["verdict"] == "candidates_found"
+    for candidate in missing_papers["candidates"]:
+        steps = [step["capsule_id"] for step in candidate["steps"]]
+        assert "cap.research-experiment-run" in steps, steps
+        assert "cap.research-metric-recompute" in steps, steps
+        assert "cap.research-claim-verify" not in steps, steps
     assert grounded["verdict"] == "candidates_found"
     assert [step["capsule_id"] for step in grounded["candidates"][0]["steps"]] == [
         "cap.research-claim-verify"

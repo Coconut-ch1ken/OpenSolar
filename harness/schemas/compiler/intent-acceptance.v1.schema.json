@@ -18,14 +18,14 @@
     "validation_ref": {"oneOf": [{"$ref": "#/$defs/artifact_ref"}, {"type": "null"}]},
     "fidelity_ref": {"oneOf": [{"$ref": "#/$defs/artifact_ref"}, {"type": "null"}]},
     "decision": {"enum": ["accepted", "needs_clarification", "failed"]},
-    "final_generation": {"type": ["integer", "null"], "minimum": 0, "maximum": 1},
+    "final_generation": {"type": ["integer", "null"], "minimum": 0, "maximum": 4},
     "repair": {
       "type": "object",
       "additionalProperties": false,
       "required": ["attempted", "maximum_attempts"],
       "properties": {
         "attempted": {"type": "boolean"},
-        "maximum_attempts": {"const": 1}
+        "maximum_attempts": {"type": "integer", "minimum": 0, "maximum": 4}
       }
     },
     "reasons": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
@@ -40,7 +40,7 @@
           "intent_ir_ref": {"$ref": "#/$defs/artifact_ref"},
           "validation_ref": {"$ref": "#/$defs/artifact_ref"},
           "fidelity_ref": {"$ref": "#/$defs/artifact_ref"},
-          "final_generation": {"type": "integer"},
+          "final_generation": {"type": "integer", "minimum": 0, "maximum": 4},
           "clarification_questions": {"maxItems": 0},
           "requirement_compiler_handoff_allowed": {"const": true}
         }

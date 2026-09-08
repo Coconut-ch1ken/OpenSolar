@@ -70,12 +70,22 @@ def _post(endpoint: str, body: dict, headers: dict, timeout: int) -> dict:
     return result
 
 
+# A native constrained decode returns the document in tens of seconds because the
+# provider enforces the schema as it emits. A prompt_json transport has to generate the
+# whole document unconstrained and is then validated locally, which takes minutes for a
+# large IR. Holding both to one ceiling silently times out every prompt_json stage on a
+# large request, so give that mode a floor while leaving native callers untouched.
+PROMPT_JSON_MIN_TIMEOUT_SEC = 900
+
+
 class StructuredJsonModel:
     def __init__(self, *, model: str, provider: str, transport: str, schema_mode: str,
                  timeout_seconds: int = 240, endpoint: str = "", key_envs: tuple[str, ...] = (),
                  registry_id: str = "", max_output_tokens: int = 8192):
         self.model, self.provider = model, provider
         self.transport, self.schema_mode = transport, schema_mode
+        if schema_mode != "native":
+            timeout_seconds = max(timeout_seconds, PROMPT_JSON_MIN_TIMEOUT_SEC)
         self.timeout_seconds, self.endpoint = timeout_seconds, endpoint
         self.key_envs, self.registry_id = key_envs, registry_id
         self.max_output_tokens = max_output_tokens

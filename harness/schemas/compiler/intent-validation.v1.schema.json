@@ -14,7 +14,7 @@
     "validation_id": {"type": "string", "minLength": 1},
     "intent_ir_ref": {"$ref": "#/$defs/intent_ref"},
     "attempt": {"type": "integer", "minimum": 1, "maximum": 2},
-    "repair_count": {"type": "integer", "minimum": 0, "maximum": 1},
+    "repair_count": {"type": "integer", "minimum": 0, "maximum": 4},
     "status": {"enum": ["pass", "pass_with_warnings", "fail"]},
     "checks": {
       "type": "array",
@@ -34,7 +34,7 @@
       "required": ["intent_ir_id", "generation", "sha256"],
       "properties": {
         "intent_ir_id": {"type": "string"},
-        "generation": {"type": "integer", "minimum": 0, "maximum": 1},
+        "generation": {"type": "integer", "minimum": 0, "maximum": 4},
         "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       }
     },

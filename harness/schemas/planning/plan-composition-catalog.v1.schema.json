@@ -35,6 +35,7 @@
         "required": [
           "node_id",
           "requirement_ids",
+          "synthesis_requirement_ids",
           "available_inputs",
           "target_outputs",
           "required_effects",
@@ -51,6 +52,7 @@
         "properties": {
           "node_id": {"type": "string", "minLength": 1},
           "requirement_ids": {"$ref": "#/$defs/string_set"},
+          "synthesis_requirement_ids": {"$ref": "#/$defs/string_set"},
           "available_inputs": {"$ref": "#/$defs/string_set"},
           "target_outputs": {"$ref": "#/$defs/nonempty_string_set"},
           "required_effects": {"$ref": "#/$defs/effects"},

@@ -1,0 +1,119 @@
+capability_capsule_id: cap.scientific-report-synthesize
+capsule_kind: capability
+metadata:
+  name: Scientific Report Synthesize
+  description: Write a scientific report that answers information requirements (comparison, disagreement, recommendation) from typed evidence, using a reasoning model gated by the deterministic report verifier.
+applicability:
+  task_types:
+    - scientific-research
+    - report-drafting
+    - report-writing
+  positive_signals:
+    - compare approaches
+    - synthesize evidence
+    - recommend
+    - explain disagreements and limitations
+    - answer research question
+  negative_signals:
+    - run experiment
+    - generate idea
+    - render verdict table only
+contract:
+  inputs:
+    required:
+      - name: scientific_report_plan
+        schema_ref: schemas/evidence/scientific_report_plan.v1.schema.json
+      - name: claim_verdict
+        schema_ref: schemas/evidence/claim_verdict.v1.schema.json
+    optional:
+      - name: research_method
+        schema_ref: schemas/evidence/research_method.v1.schema.json
+      - name: literature_discovery
+        schema_ref: schemas/evidence/literature_discovery.v1.schema.json
+      - name: style_constraints
+        description: Audience, venue, or formatting guidance.
+  outputs:
+    required:
+      - name: scientific_report
+        schema_ref: schemas/evidence/scientific_report.v1.schema.json
+    optional:
+      - name: draft_files
+        description: Markdown or section files emitted as artifacts.
+  preconditions:
+    - check: evidence_available
+      description: A report plan with requirement bindings and verdict-backed claims exist.
+  postconditions:
+    - check: draft_evidence_linked
+      description: Every section cites evidence ids; unsupported claims are explicit.
+    - check: requirement_bindings_answered
+      description: Every requirement bound in the report plan is answered or explicitly reported as unresolved.
+  invariants:
+    - Unsupported claims remain explicit and are never presented as successful findings.
+    - Comparisons, disagreements, and recommendations are stated only with cited evidence ids.
+    - The deterministic scientific report verifier decides acceptance, not the writer.
+composition:
+  consumes:
+    - schema_ref: schemas/evidence/scientific_report_plan.v1.schema.json
+      purpose: Planned report structure with requirement bindings.
+    - schema_ref: schemas/evidence/claim_verdict.v1.schema.json
+      purpose: Verdict-backed claims.
+  produces:
+    - schema_ref: schemas/evidence/scientific_report.v1.schema.json
+      purpose: Synthesized report evidence.
+  compatible_with:
+    - cap.research-publication-produce
+    - cap.research-memory-update
+  incompatible_with: []
+  requires_after:
+    - cap.research-report-plan
+effects:
+  read:
+    - typed scientific evidence and report plans
+    - schemas/evidence/scientific_report_plan.v1.schema.json
+    - schemas/evidence/scientific_report.v1.schema.json
+  write:
+    - artifacts/scientific/scientific_report/
+  execute:
+    - bounded local commands inside the node write scope
+  network:
+    # The bound builder's provider call is runtime infrastructure, not a task
+    # network effect; retrieval capsules declare network, writers do not.
+    - none by default
+  cost:
+    - premium_model_quota
+  risk:
+    - narrative generation can overstate evidence without verifier checks
+implementation:
+  trust_class: evidence_transform
+  reasoning: model
+bindings:
+  skills:
+    required: []
+    optional:
+      - autosci.report_draft
+  mcp_capabilities: {}
+  data_refs:
+    - schemas/evidence/scientific_report_plan.v1.schema.json
+    - schemas/evidence/scientific_report.v1.schema.json
+  secret_refs: []
+verification:
+  self_check:
+    - Validate emitted evidence against scientific_report.v1.schema.json.
+    - Confirm every section cites evidence ids and unsupported_claims is explicit.
+  external_verifier:
+    required: true
+  pass_conditions:
+    - check.scientific.scientific_report.v1 passes on the emitted evidence.
+    - Requirement bindings from the accepted report plan are each answered or reported unresolved.
+    - Claims without evidence appear in unsupported_claims or limitations.
+operator_compatibility:
+  preferred:
+    - mini-codex-gpt55-medium-builder-1
+    - mini-claude-sonnet-builder-2
+    - mini-codex-gpt53-spark-builder-1
+  forbidden:
+    - autosci-report-worker
+    - BackendFullWorkflowRunner
+provenance:
+  owner: opensolar
+  source_phase: research_verification_capsules

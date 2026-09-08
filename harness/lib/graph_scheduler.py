@@ -2318,8 +2318,70 @@ def _worker_busy(worker: dict[str, Any]) -> bool:
     return bool(worker.get("busy")) or str(worker.get("status", "")).lower() in {"busy", "leased", "running"}
 
 
+_REGISTERED_OPERATOR_IDS: set[str] | None = None
+_REGISTERED_OPERATOR_IDS_MTIME: float | None = None
+_REGISTERED_OPERATOR_SPECS: dict[str, dict[str, Any]] = {}
+
+
+def _operator_registered(operator_id: str) -> bool:
+    """True when the operator id exists in the physical operator catalog.
+
+    The catalog is re-read when its mtime changes so a long-running scheduler
+    sees operators added or removed without a restart.
+    """
+    global _REGISTERED_OPERATOR_IDS, _REGISTERED_OPERATOR_IDS_MTIME, _REGISTERED_OPERATOR_SPECS
+    catalog = HARNESS_DIR / "config" / "physical-operators.json"
+    try:
+        mtime = catalog.stat().st_mtime
+    except OSError:
+        mtime = None
+    if _REGISTERED_OPERATOR_IDS is None or mtime != _REGISTERED_OPERATOR_IDS_MTIME:
+        try:
+            payload = json.loads(catalog.read_text(encoding="utf-8"))
+            operators = payload.get("operators") if isinstance(payload.get("operators"), dict) else {}
+            _REGISTERED_OPERATOR_SPECS = {str(k): dict(v) for k, v in operators.items() if isinstance(v, dict)}
+            _REGISTERED_OPERATOR_IDS = set(_REGISTERED_OPERATOR_SPECS)
+        except (OSError, ValueError):
+            _REGISTERED_OPERATOR_SPECS = {}
+            _REGISTERED_OPERATOR_IDS = set()
+        _REGISTERED_OPERATOR_IDS_MTIME = mtime
+    return operator_id in _REGISTERED_OPERATOR_IDS
+
+
+def _operator_spec(operator_id: str) -> dict[str, Any]:
+    """The catalog entry for an operator id, or {} when it is not registered."""
+    _operator_registered(operator_id)
+    return _REGISTERED_OPERATOR_SPECS.get(operator_id) or {}
+
+
 def _worker_unavailable_reason(worker: dict[str, Any]) -> str:
     return str(worker.get("unavailable_reason") or "").strip()
+
+
+def _frozen_candidate_unauthenticated(candidate: dict[str, Any]) -> bool:
+    """Re-observe credential presence for a frozen provider-backed candidate.
+
+    The Planner recorded ``auth`` when it froze the candidate; credentials can
+    expire or appear afterwards, so dispatch checks the live signal and only
+    trusts the frozen observation when the probe is unavailable.
+    """
+    frozen = candidate.get("auth")
+    spec = _operator_spec(str(candidate.get("operator_id") or ""))
+    if not isinstance(frozen, dict) and not spec:
+        return False
+    try:
+        from apo_plan_compiler import provider_auth_presence
+    except Exception:
+        return isinstance(frozen, dict) and not bool(frozen.get("present", True))
+    if isinstance(frozen, dict):
+        live = provider_auth_presence({"provider": frozen.get("provider"), "auth_mode": "recorded"})
+    else:
+        # The frozen scheduler input carries only identity and rank; the
+        # catalog says which credential, if any, the operator needs.
+        live = provider_auth_presence(spec)
+    if live is None:
+        return isinstance(frozen, dict) and not bool(frozen.get("present", True))
+    return not bool(live.get("present"))
 
 
 def _worker_quota_exhausted(worker: dict[str, Any], preferred_model: str | None = None) -> bool:
@@ -2668,9 +2730,15 @@ def _frozen_unavailability_classification(observations: list[dict[str, Any]]) ->
         "cooldown",
         "quota_exhausted",
         "graph_active_assignment",
+        # Pane presence and credential presence are runtime-refresh facts
+        # (physical_plan.availability_boundary.runtime_refresh); they clear
+        # when a pane starts or a login happens, without replanning. The
+        # bounded wait budget still terminalizes a pane that never appears.
+        "operator_not_present",
+        "provider_unauthenticated",
     )
     permanent_tokens = (
-        "operator_not_present",
+        "operator_not_registered",
         "not_registered",
         "provider_incompatible",
         "provider_mismatch",
@@ -2751,6 +2819,14 @@ def _assign_frozen_worker(
         )
         selected_worker: dict[str, Any] | None = None
         reasons: list[str] = []
+        if _frozen_candidate_unauthenticated(candidate):
+            observations.append({
+                "operator_id": operator_id,
+                "rank": rank,
+                "state": "UNAVAILABLE",
+                "reason": "provider_unauthenticated",
+            })
+            continue
         for worker in exact_workers:
             unavailable_reason = _worker_unavailable_reason(worker)
             if unavailable_reason:
@@ -2766,7 +2842,16 @@ def _assign_frozen_worker(
             break
 
         if selected_worker is None:
-            reason = "operator_not_present" if not exact_workers else ",".join(dict.fromkeys(reasons))
+            if not exact_workers:
+                # A registered operator with no live pane is a runtime-refresh
+                # condition; an operator absent from the catalog needs replanning.
+                reason = (
+                    "operator_not_present"
+                    if _operator_registered(operator_id)
+                    else "operator_not_registered"
+                )
+            else:
+                reason = ",".join(dict.fromkeys(reasons))
             observations.append({
                 "operator_id": operator_id,
                 "rank": rank,

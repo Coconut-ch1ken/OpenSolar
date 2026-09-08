@@ -309,3 +309,66 @@ def test_model_call_timeout_is_bounded_by_shared_deadline(
     assert 55 <= intent_compiler.effective_call_timeout(240) <= 61
     monkeypatch.delenv(intent_compiler.MODEL_CALL_DEADLINE_ENV)
     assert intent_compiler.effective_call_timeout(240) == 240.0
+
+
+def test_failure_sidecar_names_composition_fit_before_the_capsule_fallback(tmp_path: Path) -> None:
+    # Composition search and review run first; the single-capsule selection is
+    # the fallback that runs only after composition failed. The first rejection
+    # in pipeline order is the cause; the later one is a consequence.
+    root = tmp_path / "elastic-planner"
+    _write(root / "execution" / "plan_acceptance.json", {"decision": "failed", "reasons": ["produce_report: UNSATISFIABLE_BINDING"]})
+    _write(root / "execution" / "composition_selection_validation.json", {"status": "pass", "errors": []})
+    _write(root / "execution" / "composition_fit_review.json", {"status": "fail", "errors": [{"code": "SEMANTIC_COVERAGE_TOO_WEAK", "node_id": "discover", "message": "weak"}]})
+    _write(root / "execution" / "capsule_selection_validation.json", {"status": "fail", "errors": [{"code": "NO_COMPATIBLE_CAPSULE", "message": "none"}]})
+    failure = planner_failure.summarize_planner_failure(root)
+    assert failure["stage"] == "composition_fit"
+    assert failure["code"] == "SEMANTIC_COVERAGE_TOO_WEAK"
+    assert failure["node_id"] == "discover"
+
+
+def test_replay_skip_forces_named_calls_live(tmp_path: Path) -> None:
+    retained = tmp_path / "retained"
+    _retained_call(retained, "execution/composition-generation-0/composition_fit_review_call", output={"status": "fail"})
+    calls: list[str] = []
+
+    class Live:
+        provider = "codex"
+        model = ""
+
+        def generate(self, prompt, schema_path, work_dir):
+            calls.append(str(work_dir))
+            return {"status": "pass"}
+
+    model = planner_replay.ReplayJsonModel(replay_root=retained, output_root=tmp_path / "out", fallback=Live(), skip={"composition_fit_review_call"})
+    schema = _write(tmp_path / "schema.json", {"type": "object"})
+    assert model.generate("p", schema, tmp_path / "out" / "execution" / "composition-generation-0" / "composition_fit_review_call") == {"status": "pass"}
+    assert len(calls) == 1 and model.calls[-1].endswith("(live, forced)")
+    assert planner_replay.replay_skip_calls({"SOLAR_PLANNER_REPLAY_SKIP": "a_call, b_call"}) == {"a_call", "b_call"}
+    assert planner_replay.replay_skip_calls({}) == set()
+
+
+def test_planner_contract_violation_becomes_a_typed_sidecar(tmp_path: Path, monkeypatch) -> None:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("elastic_plan_cli", ROOT / "harness" / "tools" / "elastic_plan.py")
+    assert spec is not None and spec.loader is not None
+    elastic_plan = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(elastic_plan)
+
+    def _boom(*_args, **_kwargs):
+        raise elastic_plan.ElasticPlannerError("plan_acceptance.json failed schema validation")
+
+    monkeypatch.setattr(elastic_plan, "run_elastic_planning_request", _boom)
+    import types
+
+    monkeypatch.setattr(elastic_plan, "_codex_model", lambda role, *_args, **_kwargs: types.SimpleNamespace(provider="test", model=role))
+    requirement_ir = _write(tmp_path / "requirement_ir.json", {"schema_version": "solar.requirement_ir.v2", "requirements": []})
+    output_root = tmp_path / "elastic-planner"
+
+    code = elastic_plan.main(["--requirement-ir", str(requirement_ir), "--output-root", str(output_root), "--sprint-id", "sprint-x"])
+
+    assert code == 2
+    sidecar = json.loads((output_root / "planner_failure.json").read_text(encoding="utf-8"))
+    assert sidecar["stage"] == "planner_contract"
+    assert sidecar["code"] == "planner_contract_violation"
+    assert "schema validation" in sidecar["detail"]

@@ -8,7 +8,7 @@
     "schema_version": {"const": "solar.planning_decision.v1"},
     "artifact_role": {"const": "runtime_artifact"},
     "planning_decision_id": {"type": "string", "minLength": 1},
-    "generation": {"type": "integer", "minimum": 0, "maximum": 1},
+    "generation": {"type": "integer", "minimum": 0, "maximum": 4},
     "requirement_ir_ref": {
       "type": "object",
       "required": ["requirement_ir_id", "sha256"],

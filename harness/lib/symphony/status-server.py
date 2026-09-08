@@ -2474,6 +2474,8 @@ def _deliverable_content_type(path: Path) -> str:
         return "text/plain; charset=utf-8"
     if suffix == ".pdf":
         return "application/pdf"
+    if suffix == ".svg":
+        return "image/svg+xml"
     if suffix == ".png":
         return "image/png"
     if suffix in (".jpg", ".jpeg"):
@@ -2481,7 +2483,7 @@ def _deliverable_content_type(path: Path) -> str:
     # Code / config / data outputs: serve as readable text so the dashboard can preview them.
     if suffix in (
         ".py", ".sh", ".ts", ".tsx", ".js", ".jsx", ".css", ".yaml", ".yml",
-        ".toml", ".csv", ".diff", ".patch", ".ini", ".cfg", ".sql", ".rs",
+        ".toml", ".csv", ".jsonl", ".diff", ".patch", ".ini", ".cfg", ".sql", ".rs",
         ".go", ".java", ".rb", ".ipynb", ".xml", ".env",
     ):
         return "text/plain; charset=utf-8"
@@ -2808,7 +2810,7 @@ def _select_result_index(rows: list[dict]) -> int:
 def _discover_sprint_deliverables(sid: str) -> list[dict]:
     if not _valid_sprint_id(sid):
         return []
-    allowed_suffixes = {".html", ".htm", ".md", ".markdown", ".json", ".txt", ".log", ".pdf", ".png", ".jpg", ".jpeg"}
+    allowed_suffixes = {".html", ".htm", ".md", ".markdown", ".json", ".txt", ".log", ".pdf", ".png", ".jpg", ".jpeg", ".svg"}
     workdir = _sprint_workdir(sid)
     candidates: list[Path] = []
     try:
@@ -2891,7 +2893,7 @@ def _discover_sprint_deliverables(sid: str) -> list[dict]:
             cutoff = 0.0
         output_suffixes = allowed_suffixes | {
             ".py", ".sh", ".ts", ".tsx", ".js", ".jsx", ".css", ".yaml", ".yml",
-            ".toml", ".csv", ".diff", ".patch", ".sql", ".rs", ".go", ".java", ".rb", ".ipynb",
+            ".toml", ".csv", ".jsonl", ".diff", ".patch", ".sql", ".rs", ".go", ".java", ".rb", ".ipynb",
         }
         skip_dirs = {
             ".git", "__pycache__", ".pytest_cache", "node_modules", ".venv", "venv",
