@@ -41,6 +41,10 @@ ARXIV_URL_PATTERN = re.compile(
     r"https?://(?:www\.)?arxiv\.org/(?:abs|pdf|e-print)/([^?#\s]+)",
     re.IGNORECASE,
 )
+ARXIV_DOI_URL_PATTERN = re.compile(
+    r"https?://(?:dx\.)?doi\.org/10\.48550/arxiv\.([^?#\s]+)",
+    re.IGNORECASE,
+)
 MAX_SOURCE_ARCHIVE_BYTES = 250_000_000
 MAX_PARSED_SECTION_CHARS = 160_000
 
@@ -362,11 +366,78 @@ def _download_arxiv_source(arxiv_id: str, dest_dir: Path, *, timeout: int = 30) 
 
 def _find_main_tex(source_dir: Path) -> Path | None:
     tex_files = sorted(source_dir.rglob("*.tex"))
+    ranked: list[tuple[tuple[int, int, int, int, int], Path]] = []
     for tex_file in tex_files:
         text = _read_text(tex_file, limit=40_000)
-        if re.search(r"\\[A-Za-z@]*title[A-Za-z@]*\{", text) or "\\begin{document}" in text:
-            return tex_file
+        has_documentclass = int(bool(re.search(r"\\documentclass(?:\[[^\]]*\])?\{", text)))
+        has_document = int("\\begin{document}" in text)
+        main_name = int(tex_file.stem.lower() in {"main", "paper", "manuscript", "article"})
+        has_title = int(bool(re.search(r"\\(?:title|papertitle)\s*\{", text)))
+        ranked.append(((has_documentclass, has_document, main_name, has_title, len(text)), tex_file))
+    document_roots = [item for item in ranked if item[0][0] or item[0][1]]
+    if document_roots:
+        return max(document_roots, key=lambda item: (item[0], str(item[1])))[1]
+    titled = [item for item in ranked if item[0][3]]
+    if titled:
+        return max(titled, key=lambda item: (item[0], str(item[1])))[1]
     return tex_files[0] if tex_files else None
+
+
+_LATEX_INPUT_RE = re.compile(r"\\(?:input|include)\s*\{([^{}]+)\}")
+
+
+def _read_latex_with_inputs(
+    tex_file: Path,
+    *,
+    source_root: Path,
+    seen: set[Path] | None = None,
+    depth: int = 0,
+) -> str:
+    """Read a source tree's main document with bounded, in-root includes expanded.
+
+    arXiv packages commonly keep the abstract and paper body in separate files.
+    Parsing only the root file turns ``\\input{abstract}`` into the literal word
+    ``abstract`` and silently discards the scientific content used by downstream
+    relevance and evidence extraction.
+    """
+
+    if depth > 8:
+        return ""
+    root = source_root.resolve()
+    current = tex_file.resolve()
+    try:
+        current.relative_to(root)
+    except ValueError:
+        return ""
+    visited = seen if seen is not None else set()
+    if current in visited or not current.is_file():
+        return ""
+    visited.add(current)
+    text = _read_text(current)
+
+    def expand(match: re.Match[str]) -> str:
+        raw = match.group(1).strip()
+        if not raw or "\\" in raw:
+            return match.group(0)
+        candidate = current.parent / raw
+        if not candidate.suffix:
+            candidate = candidate.with_suffix(".tex")
+        try:
+            resolved = candidate.resolve()
+            resolved.relative_to(root)
+        except (OSError, ValueError):
+            return match.group(0)
+        if not resolved.is_file():
+            return match.group(0)
+        expanded = _read_latex_with_inputs(
+            resolved,
+            source_root=root,
+            seen=visited,
+            depth=depth + 1,
+        )
+        return f"\n{expanded}\n" if expanded else match.group(0)
+
+    return _LATEX_INPUT_RE.sub(expand, text)[:200_000]
 
 
 def _strip_latex_comments(text: str) -> str:
@@ -406,8 +477,16 @@ def _latex_to_text(text: str) -> str:
     return _normalize_space(cleaned)
 
 
-def _parse_latex_file(tex_file: Path, roots: list[Path]) -> dict[str, Any]:
-    source_text = _read_text(tex_file)
+def _parse_latex_file(
+    tex_file: Path,
+    roots: list[Path],
+    *,
+    source_root: Path | None = None,
+) -> dict[str, Any]:
+    source_text = _read_latex_with_inputs(
+        tex_file,
+        source_root=source_root or tex_file.parent,
+    )
     clean_source = _strip_latex_comments(source_text)
     fallback_title = tex_file.stem.replace("_", " ").replace("-", " ").strip() or "Untitled"
     raw_title = _extract_braced_after_command(clean_source, r"\\[A-Za-z@]*title[A-Za-z@]*\{")
@@ -542,8 +621,14 @@ def prepare_paper_source(
     raw_tmp = raw_root / "tmp" / "papers"
     raw_tmp.mkdir(parents=True, exist_ok=True)
     source_text = str(source)
+    arxiv_doi = ARXIV_DOI_URL_PATTERN.search(source_text)
+    if arxiv_doi:
+        source_text = (
+            "https://arxiv.org/abs/"
+            + normalize_arxiv_id(arxiv_doi.group(1))
+        )
     source_is_arxiv = bool(ARXIV_URL_PATTERN.search(source_text))
-    source_path = _resolve_source(source, roots) if not source_is_arxiv else Path(source_text)
+    source_path = _resolve_source(source_text, roots) if not source_is_arxiv else Path(source_text)
     source_display = source_text if source_is_arxiv else _display_path(source_path, roots)
     source_slug = slugify(arxiv_id or title or source_path.name)
     warnings: list[str] = []
@@ -719,7 +804,7 @@ def read_paper_source(
     if canonical.exists() and canonical.is_dir():
         main_tex = _find_main_tex(canonical)
         if main_tex is not None:
-            parsed = _parse_latex_file(main_tex, roots)
+            parsed = _parse_latex_file(main_tex, roots, source_root=canonical)
         else:
             parse_status = "failed"
             status = "failed"
@@ -727,7 +812,7 @@ def read_paper_source(
     elif canonical.exists():
         suffix = canonical.suffix.lower()
         if suffix in {".tex", ".latex"}:
-            parsed = _parse_latex_file(canonical, roots)
+            parsed = _parse_latex_file(canonical, roots, source_root=canonical.parent)
         elif suffix in {".md", ".markdown"}:
             parsed = _parse_markdown_file(canonical, roots)
         elif suffix == ".pdf":

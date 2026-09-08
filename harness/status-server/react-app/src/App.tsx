@@ -14,6 +14,7 @@ import {
   Circle,
   Clock3,
   Code2,
+  Copy,
   Download,
   Eye,
   EyeOff,
@@ -23,6 +24,7 @@ import {
   MessageSquarePlus,
   Minus,
   PanelRight,
+  Paperclip,
   PauseCircle,
   Play,
   Plus,
@@ -81,7 +83,13 @@ import {
 import type { AuthLoginStatus, AuthStatus } from "./api";
 import type { AgentRole } from "./format";
 import { activeNodeActor, nodeActor } from "./nodeActor";
-import { pipelineStages, type TerminalRunOutcome } from "./runPipeline";
+import {
+  pipelineStages,
+  resultAvailabilityCopy,
+  type TerminalRunOutcome,
+} from "./runPipeline";
+import { perRunUsageLabel } from "./runUsage";
+import { buildPocPreviewModel, selectPocArtifact } from "./pocPreview";
 import {
   ROLE_META,
   ROLE_ORDER,
@@ -95,11 +103,14 @@ import {
   localTimeZoneName,
   mergeEvents,
   nodeId,
+  planNodeLabel,
   nodeTitle,
   normalizeRole,
   payload,
   shortText,
   stallCopy,
+  failureCodeIsTyped,
+  typedFailureFacts,
   statusTone,
   titleForSprint,
   unwrapEvent,
@@ -758,21 +769,23 @@ function NewTaskDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     const cleanTask = task.trim();
-    if (!cleanTask) return;
+    if (!cleanTask && files.length === 0) return;
     setSubmitting(true);
     setError("");
     try {
-      const response = await submitIntake(cleanTask);
+      const response = await submitIntake(cleanTask, files);
       if (!response.ok || !response.sprint_id) {
         throw new Error(intakeErrorMessage(response));
       }
       setTask("");
+      setFiles([]);
       setOpen(false);
       await onCreated(response.sprint_id, response.request_id || "");
     } catch (err) {
@@ -793,19 +806,27 @@ function NewTaskDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content">
-          <Dialog.Title className="dialog-title">
+          <Dialog.Title id="new-task-dialog-title" className="dialog-title">
             Describe what you want done
           </Dialog.Title>
-          <Dialog.Description className="dialog-description">
+          <Dialog.Description id="new-task-dialog-description" className="dialog-description">
             This starts a real AI4Research intake via the existing CLI.
           </Dialog.Description>
           <form onSubmit={onSubmit} className="intake-form">
             <textarea
+              aria-labelledby="new-task-dialog-title"
+              aria-describedby="new-task-dialog-description"
               value={task}
               onChange={(event) => setTask(event.target.value)}
               placeholder="Build, investigate, verify, or produce an artifact..."
               autoFocus
               rows={7}
+            />
+            <IntakeAttachments
+              files={files}
+              onChange={setFiles}
+              onError={setError}
+              disabled={submitting}
             />
             {error && <div className="form-error">{error}</div>}
             <div className="dialog-actions">
@@ -821,7 +842,7 @@ function NewTaskDialog({
               <button
                 type="submit"
                 className="primary-button"
-                disabled={!task.trim() || submitting}
+                disabled={(!task.trim() && files.length === 0) || submitting}
               >
                 {submitting ? (
                   <Loader2 className="spin" size={16} />
@@ -835,6 +856,97 @@ function NewTaskDialog({
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+const MAX_INTAKE_FILES = 8;
+const MAX_INTAKE_FILE_BYTES = 20 * 1024 * 1024;
+const MAX_INTAKE_TOTAL_BYTES = 64 * 1024 * 1024;
+
+function readableFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function IntakeAttachments({
+  files,
+  onChange,
+  onError,
+  disabled = false,
+}: {
+  files: File[];
+  onChange: (files: File[]) => void;
+  onError: (message: string) => void;
+  disabled?: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function addFiles(selected: File[]) {
+    const combined = [...files, ...selected];
+    if (combined.length > MAX_INTAKE_FILES) {
+      onError(`Attach up to ${MAX_INTAKE_FILES} files per task.`);
+      return;
+    }
+    const oversized = selected.find((file) => file.size > MAX_INTAKE_FILE_BYTES);
+    if (oversized) {
+      onError(
+        `${oversized.name} is larger than ${readableFileSize(MAX_INTAKE_FILE_BYTES)}.`,
+      );
+      return;
+    }
+    const total = combined.reduce((sum, file) => sum + file.size, 0);
+    if (total > MAX_INTAKE_TOTAL_BYTES) {
+      onError(
+        `Attachments may total up to ${readableFileSize(MAX_INTAKE_TOTAL_BYTES)} per task.`,
+      );
+      return;
+    }
+    onError("");
+    onChange(combined);
+  }
+
+  return (
+    <div className="intake-attachments">
+      <input
+        ref={inputRef}
+        className="intake-file-input"
+        type="file"
+        multiple
+        disabled={disabled}
+        onChange={(event) => {
+          addFiles(Array.from(event.target.files || []));
+          event.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        className="intake-attach-button"
+        onClick={() => inputRef.current?.click()}
+        disabled={disabled}
+      >
+        <Paperclip size={14} aria-hidden="true" />
+        <span>Attach files</span>
+      </button>
+      {files.length > 0 && (
+        <div className="intake-file-list" aria-label="Attached files">
+          {files.map((file, index) => (
+            <span className="intake-file-chip" key={`${file.name}-${file.lastModified}-${index}`}>
+              <span title={file.name}>{file.name}</span>
+              <small>{readableFileSize(file.size)}</small>
+              <button
+                type="button"
+                aria-label={`Remove ${file.name}`}
+                onClick={() => onChange(files.filter((_, fileIndex) => fileIndex !== index))}
+                disabled={disabled}
+              >
+                <X size={12} aria-hidden="true" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1285,6 +1397,9 @@ function RunOverview({
     deliverables.find((item) => item.result) ||
     deliverables.find((item) => item.primary);
   const terminalOutcome = terminalRunOutcome(status, phase);
+  const resultCopy = result
+    ? resultAvailabilityCopy(terminalOutcome, deliverableLabel(result))
+    : undefined;
   const failedNode = graphNodes.find(
     (node) => asString(node.status).trim().toLowerCase() === "failed",
   );
@@ -1318,7 +1433,12 @@ function RunOverview({
     tone = "blocked";
   } else if (terminalOutcome === "failure") {
     kicker = "Run failed";
+    const typedLine =
+      stall?.failure && failureCodeIsTyped(stall.failure.code)
+        ? stallCopy(stall)
+        : "";
     line =
+      typedLine ||
       "A required step failed. Review the failed step and evaluation evidence below.";
     tone = "blocked";
   } else if (terminalOutcome === "success") {
@@ -1370,7 +1490,7 @@ function RunOverview({
             onClick={() => onOpenResult(result.rel_path)}
           >
             <FileCheck2 size={16} aria-hidden="true" />
-            <span className="run-result-label">Open result</span>
+            <span className="run-result-label">{resultCopy?.ctaLabel}</span>
             <span className="run-result-name">{deliverableLabel(result)}</span>
           </button>
         )}
@@ -1409,6 +1529,126 @@ function RunOverview({
   );
 }
 
+function PocLivePreview({
+  projection,
+  sprintId,
+  deliverables,
+  onOpenArtifact,
+}: {
+  projection?: ProjectionResponse;
+  sprintId: string;
+  deliverables: Deliverable[];
+  onOpenArtifact: (path: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const model = buildPocPreviewModel(projection);
+  const artifact = selectPocArtifact(deliverables);
+  const previewUrl = artifact ? deliverableUrl(sprintId, artifact) : "";
+  const isHtml = artifact?.kind.toLowerCase() === "html";
+  const phase = model.phase.replace(/_/g, " ") || "waiting for plan";
+  const readiness = model.terminal
+    ? model.failed > 0
+      ? "Completed with failures"
+      : "POC ready"
+    : model.active > 0
+      ? "Building now"
+      : "Preparing";
+
+  return (
+    <section className="poc-preview" data-testid="poc-preview" aria-label="POC live preview">
+      <div className="poc-preview-head">
+        <div>
+          <span className="poc-preview-kicker">Dynamic POC preview</span>
+          <div className="poc-preview-title-row">
+            <strong>{readiness}</strong>
+            <span className="poc-preview-phase">{phase}</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="poc-preview-toggle"
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+        >
+          {expanded ? <EyeOff size={15} /> : <Eye size={15} />}
+          <span>{expanded ? "Hide" : "Show"}</span>
+        </button>
+      </div>
+      <div className="poc-preview-progress" aria-label={`${model.percent}% complete`}>
+        <div className="poc-preview-progress-track">
+          <div style={{ width: `${model.percent}%` }} />
+        </div>
+        <strong>{model.percent}%</strong>
+      </div>
+      {expanded && (
+        <div className="poc-preview-grid">
+          <div className="poc-preview-status">
+            <div className="poc-preview-metrics">
+              <span><strong>{model.done}</strong><small>passed</small></span>
+              <span><strong>{model.total}</strong><small>total steps</small></span>
+              <span className={model.failed ? "has-failure" : ""}>
+                <strong>{model.failed}</strong><small>failed</small>
+              </span>
+            </div>
+            <div className="poc-preview-repairs">
+              <span className="poc-preview-section-title">
+                <ShieldCheck size={14} /> Fixed during this run
+              </span>
+              {model.resolvedIssues.length > 0 ? (
+                <ul>
+                  {model.resolvedIssues.map((code) => (
+                    <li key={code}>
+                      <CheckCircle2 size={13} />
+                      <span>{code.replace(/_/g, " ").toLowerCase()}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>
+                  {model.terminal
+                    ? "No planner repair codes were recorded."
+                    : "Repair results will appear here as the plan stabilizes."}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="poc-preview-window">
+            <div className="poc-preview-window-head">
+              <span>{artifact ? deliverableLabel(artifact) : "POC output"}</span>
+              {artifact && (
+                <button type="button" onClick={() => onOpenArtifact(artifact.rel_path)}>
+                  Open details <ArrowUpRight size={13} />
+                </button>
+              )}
+            </div>
+            {artifact && isHtml ? (
+              <iframe
+                src={previewUrl}
+                title={`POC preview: ${artifact.name}`}
+                sandbox="allow-same-origin"
+              />
+            ) : (
+              <div className="poc-preview-placeholder">
+                {artifact ? (
+                  <>
+                    <FileCheck2 size={22} />
+                    <span>{deliverableLabel(artifact)} is ready to inspect.</span>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className={model.terminal ? "" : "spin"} size={22} />
+                    <span>The preview will appear when a POC artifact is produced.</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SessionView({
   sprint,
   sprintId,
@@ -1437,6 +1677,9 @@ function SessionView({
     projectionData?.phase || currentSprint.phase || currentSprint.status,
   );
   const status = asString(projectionData?.status || currentSprint.status);
+  const originalPrompt = asString(
+    projectionData?.original_prompt || currentSprint.original_prompt,
+  );
   const gateOpen = Boolean(GATE_KINDS[humanActionType]);
   const terminal = isTerminalRun(status, phase);
   const isBlocked = !terminal && isSystemBlocked(stall, humanActionType);
@@ -1455,7 +1698,11 @@ function SessionView({
         projectionEvents,
         session.deliverables,
         phase,
-        { showStallSummary: isBlocked, stall, runActive },
+        {
+          showStallSummary: isBlocked || Boolean(stall?.failure),
+          stall,
+          runActive,
+        },
       ),
     [
       projection,
@@ -1495,6 +1742,7 @@ function SessionView({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
+            <OriginalPrompt prompt={originalPrompt} />
             <RunOverview
               projection={projection}
               isBlocked={isBlocked}
@@ -1503,7 +1751,13 @@ function SessionView({
               onOpenResult={rail.openArtifact}
               requestId={requestId}
             />
-            <RunHealth projection={projection} />
+            <PocLivePreview
+              projection={projection}
+              sprintId={sprintId}
+              deliverables={session.deliverables}
+              onOpenArtifact={rail.openArtifact}
+            />
+            <RunHealth projection={projection} usage={session.usage} />
             <PlanFlow projection={projection} isBlocked={isBlocked} />
             <div
               className={`process-results-layout ${rail.open ? "rail-open" : "rail-collapsed"}`}
@@ -1543,6 +1797,77 @@ function SessionView({
   );
 }
 
+function OriginalPrompt({ prompt }: { prompt: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const isLong = prompt.length > 420 || prompt.split(/\r?\n/).length > 7;
+
+  if (!prompt) return null;
+
+  const copyPrompt = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(prompt);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = prompt;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <section className="original-prompt" data-testid="original-prompt">
+      <div className="original-prompt-head">
+        <div>
+          <span className="original-prompt-label">Original prompt</span>
+          <span className="original-prompt-count">
+            {prompt.length.toLocaleString()} characters
+          </span>
+        </div>
+        <button
+          type="button"
+          className="original-prompt-copy"
+          onClick={() => void copyPrompt()}
+          aria-label="Copy full original prompt"
+        >
+          {copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <div
+        className={`original-prompt-body ${isLong && !expanded ? "is-collapsed" : ""}`}
+      >
+        {prompt}
+      </div>
+      {isLong && (
+        <button
+          type="button"
+          className="original-prompt-toggle"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          <ChevronDown
+            size={15}
+            className={expanded ? "is-expanded" : ""}
+            aria-hidden="true"
+          />
+          {expanded ? "Collapse prompt" : "Show full prompt"}
+        </button>
+      )}
+    </section>
+  );
+}
+
 function projectionForSprint(
   projection: ProjectionResponse | undefined,
   sprintId: string,
@@ -1573,14 +1898,6 @@ function isSystemBlocked(
     return false;
   }
   return true;
-}
-
-// The signature element: the multi-agent relay. Each variant expresses the
-// same subject (who acted, and where the capability gate held the work)
-function planNodeLabel(node: DagNode): string {
-  const id = asString(node.node_id || node.id);
-  const short = id.replace(/^build-/, "");
-  return short || asString(node.title) || id;
 }
 
 // Group the plan's DAG nodes by dependency depth so parallel siblings share a stage —
@@ -1739,7 +2056,7 @@ function PlanFlow({
                   >
                     <span className="plan-card-head">
                       <span className="plan-card-dot" aria-hidden="true" />
-                      <span className="plan-card-role">{nodeActor(node)}</span>
+                      <span className="plan-card-step">{planNodeLabel(node)}</span>
                       <span className="plan-card-status">{status}</span>
                     </span>
                     <span className="plan-card-title">
@@ -1909,12 +2226,46 @@ function operatorReadiness(
 ): "ready" | "busy" | "blocked" | "unknown" {
   const r = asString(row.readiness).toLowerCase();
   if (r === "ready" || r === "busy" || r === "blocked") return r;
-  if (row.available === false) return "blocked";
-  const state = asString(row.runtime_state || row.state).toLowerCase();
-  if (/auth|quota|blocked|error|permission/.test(state)) return "blocked";
+  if (r.endsWith("_blocked") || r === "disabled") return "blocked";
+  if (row.enabled === false || row.available === false) return "blocked";
+  const state = asString(
+    row.operator_runtime_state || row.runtime_state || row.state,
+  ).toLowerCase();
+  const quota = asString(row.quota_state || row.quota_guard_state).toLowerCase();
+  const auth = asString(row.auth_state).toLowerCase();
+  if (/auth|quota|cooldown|blocked|disabled|error|permission/.test(`${state} ${quota} ${auth}`)) {
+    return "blocked";
+  }
   if (/run|busy|active|dispatch|progress/.test(state)) return "busy";
   if (/idle|ready|wait/.test(state) || row.available === true) return "ready";
   return "unknown";
+}
+
+function operatorHasRole(row: Record<string, unknown>, role: string): boolean {
+  const roles = Array.isArray(row.roles)
+    ? row.roles.map((item) => asString(item).toLowerCase())
+    : [];
+  const primary = asString(row.role).toLowerCase();
+  return roles.includes(role) || primary === role;
+}
+
+function roleWorkerStats(
+  projection: ProjectionData | undefined,
+  role: string,
+): ReturnType<typeof workerStats> {
+  const rows = collectOperatorRows(projection).filter((row) =>
+    operatorHasRole(row, role),
+  );
+  let ready = 0;
+  let busy = 0;
+  let blocked = 0;
+  for (const row of rows) {
+    const state = operatorReadiness(row);
+    if (state === "ready") ready += 1;
+    else if (state === "busy") busy += 1;
+    else if (state === "blocked") blocked += 1;
+  }
+  return { total: rows.length, ready, busy, blocked };
 }
 
 function workerStats(projection?: ProjectionData): {
@@ -1946,22 +2297,28 @@ function projectionWorkersReady(projection?: ProjectionData): {
   return { total: stats.total, ready: stats.ready + stats.busy };
 }
 
-// A compact health strip surfacing the transparency data the backend already computes:
-// worker readiness, estimated cost, and the active blocker — none of which the UI showed.
-function RunHealth({ projection }: { projection?: ProjectionResponse }) {
+// A compact health strip surfacing worker readiness, truthful per-run usage
+// availability, and the active blocker.
+function RunHealth({
+  projection,
+  usage,
+}: {
+  projection?: ProjectionResponse;
+  usage?: UsagePayload;
+}) {
   const data = projection?.data;
   if (!data) return null;
   const stats = workerStats(data);
-  const resources = ((data.dispatch || {}) as { resources?: unknown })
-    .resources as Record<string, unknown> | undefined;
-  const cost = Number(resources?.estimated_total_cost) || 0;
+  const stall = projectionStall(projection);
+  const focusRole = stall?.state === "planner_dispatch_failed" ? "planner" : "";
+  const focused = focusRole ? roleWorkerStats(data, focusRole) : null;
   const mismatch = data.capability_mismatch;
   const status = asString(data.status || data.sprint?.status);
   const phase = asString(data.phase || data.sprint?.phase);
   const hasBlocker = !isTerminalRun(status, phase) && Boolean(mismatch?.present);
   const blockedNode = asString(mismatch?.blocked_node);
   const missing = asString(mismatch?.missing_capability);
-  if (stats.total === 0 && !cost && !hasBlocker) return null;
+  if (stats.total === 0 && !hasBlocker) return null;
   return (
     <section
       className="run-health"
@@ -1972,9 +2329,12 @@ function RunHealth({ projection }: { projection?: ProjectionResponse }) {
         <span className="run-health-label">Workers</span>
         {stats.total > 0 ? (
           <span className="run-health-value">
-            {stats.ready} ready
+            {stats.total} configured · {stats.ready} ready
             {stats.busy ? ` · ${stats.busy} busy` : ""}
-            {stats.blocked ? ` · ${stats.blocked} blocked` : ""} / {stats.total}
+            {stats.blocked ? ` · ${stats.blocked} blocked` : ""}
+            {focused
+              ? ` · ${focused.ready + focused.busy}/${focused.total} ${focusRole} eligible now`
+              : ""}
           </span>
         ) : (
           <span className="run-health-value run-health-warn">
@@ -1982,12 +2342,13 @@ function RunHealth({ projection }: { projection?: ProjectionResponse }) {
           </span>
         )}
       </div>
-      {cost > 0 && (
-        <div className="run-health-item">
-          <span className="run-health-label">Est. cost</span>
-          <span className="run-health-value">${cost.toFixed(2)}</span>
-        </div>
-      )}
+      <div
+        className="run-health-item"
+        title="Solar only shows measured per-run usage here. Task-graph cost estimates are not provider billing records."
+      >
+        <span className="run-health-label">Usage</span>
+        <span className="run-health-value">{perRunUsageLabel(usage)}</span>
+      </div>
       {hasBlocker && (
         <div className="run-health-item run-health-blocker">
           <AlertTriangle size={13} aria-hidden="true" />
@@ -2330,6 +2691,9 @@ function SystemStall({
   data?: ProjectionData;
 }) {
   const missing = asString(mismatch?.missing_capability);
+  const stall = data?.dispatch?.stall;
+  const stallTitle = asString(stall?.title, "System paused");
+  const stallDetail = asString(stall?.detail || stall?.explanation);
   const blockedNodes = Array.isArray(mismatch?.blocked_nodes)
     ? (mismatch!.blocked_nodes as Array<Record<string, unknown>>)
     : [];
@@ -2344,21 +2708,23 @@ function SystemStall({
   )
     .map((node) => asString(node))
     .filter(Boolean);
-  const diagnostics = (
+  const diagnostics = [
+    ...(Array.isArray(stall?.reasons) ? stall.reasons : []),
+    ...(
     Array.isArray(
       (data?.dispatch as { blocker_diagnostics?: unknown })
         ?.blocker_diagnostics,
     )
       ? ((data!.dispatch as { blocker_diagnostics?: unknown[] })
           .blocker_diagnostics as unknown[])
-      : []
-  )
+      : []),
+  ]
     .map((entry) =>
       typeof entry === "string"
         ? entry
         : asString((entry as { reason?: unknown })?.reason),
     )
-    .filter(Boolean)
+    .filter((reason, index, all) => Boolean(reason) && all.indexOf(reason) === index)
     .slice(0, 3);
   const unsafe = actions.filter(
     (action) =>
@@ -2373,17 +2739,18 @@ function SystemStall({
     >
       <h2 className="stall-title">
         <PauseCircle size={16} aria-hidden="true" />
-        System paused
+        {stallTitle}
       </h2>
       <p className="stall-resolve">
-        {blockedNode ? (
+        {mismatch?.present ? (
           <>
-            Node <code>{blockedNode}</code> can’t run:{" "}
+            {blockedNode ? <>Node <code>{blockedNode}</code> can’t run: </> : null}
+            no connected worker currently provides{" "}
+            {missing ? <code>{missing}</code> : "the required capability"}.
           </>
-        ) : null}
-        Connect a worker that provides{" "}
-        {missing ? <code>{missing}</code> : "the missing capability"} and the
-        run continues.
+        ) : (
+          stallDetail || "Solar cannot advance this run yet."
+        )}
       </p>
       {waiting.length > 0 && (
         <p className="stall-waiting">
@@ -2766,7 +3133,9 @@ function RailList({
         {deliverableLabel(item)}
       </span>
       <span className="artifact-meta">
-        {stageLabel(item.stage) || item.kind.toUpperCase()}
+        {item.producer_role
+          ? `${producerRoleLabel(item.producer_role)} · ${item.kind.toUpperCase()}`
+          : stageLabel(item.stage) || item.kind.toUpperCase()}
       </span>
       <ChevronRight size={14} className="artifact-chevron" />
     </button>
@@ -2841,6 +3210,11 @@ const STAGE_LABELS: Record<string, string> = {
 
 function stageLabel(stage?: string): string {
   return stage ? STAGE_LABELS[stage] || "" : "";
+}
+
+function producerRoleLabel(role?: string): string {
+  const normalized = normalizeRole(role);
+  return normalized ? ROLE_META[normalized].title.split(" ")[0] : "Agent";
 }
 
 function formatDeliverableTime(mtime?: number): string {
@@ -3153,10 +3527,11 @@ function buildProcessSteps(
   if (narrative.length > 0) {
     // Authoritative server narrative: already de-noised + de-duplicated. Render it
     // directly instead of reverse-engineering the raw event wall on the client.
-    narrative.forEach((entry, index) => {
+    const compactNarrative = compactNarrativeSteps(narrative);
+    compactNarrative.forEach((entry, index) => {
       const step = processStepFromNarrative(
         entry,
-        index === narrative.length - 1,
+        index === compactNarrative.length - 1,
         runActive,
       );
       if (step) steps.push(step);
@@ -3197,13 +3572,19 @@ function buildProcessSteps(
     options.showStallSummary === false
       ? undefined
       : options.stall || projection?.data?.dispatch?.stall;
-  if (stall?.is_stalled && !steps.some((step) => step.state === "blocked")) {
-    steps.push({
+  const typedFailure = Boolean(stall?.is_stalled && stall.failure);
+  if (
+    stall?.is_stalled &&
+    (typedFailure || !steps.some((step) => step.state === "blocked"))
+  ) {
+    const failureFacts = typedFailureFacts(stall);
+    const step: ProcessStep = {
       id: "stall-summary",
       actor: "Harness",
-      title: "Dispatch is blocked",
+      title: asString(stall.title) || "Dispatch is blocked",
       summary: stallCopy(stall),
       detail:
+        asString(stall.detail) ||
         stallCopy(stall) ||
         "The sprint is waiting on a dispatch gate or missing worker capability.",
       timestamp: projection?.generated_at || "",
@@ -3216,8 +3597,11 @@ function buildProcessSteps(
           value: asString(stall.state, "stalled").replace(/_/g, " "),
         },
         { label: "phase", value: phase.replace(/_/g, " ") },
+        ...failureFacts,
       ],
-    });
+    };
+    if (typedFailure) steps.unshift(step);
+    else steps.push(step);
   }
 
   // Surface the canonical result as a stream milestone regardless of file type
@@ -3228,18 +3612,25 @@ function buildProcessSteps(
       (item) => item.kind === "html" || item.name.endsWith(".html"),
     );
   if (resultDeliverable && !stall?.is_stalled) {
+    const status = asString(
+      projection?.data?.status || projection?.data?.sprint?.status,
+    );
+    const resultCopy = resultAvailabilityCopy(
+      terminalRunOutcome(status, phase),
+      deliverableLabel(resultDeliverable),
+    );
     steps.push({
       id: `deliverable-${resultDeliverable.rel_path}`,
       actor: "Harness",
-      title: "Result is ready",
-      summary: `${deliverableLabel(resultDeliverable)} is ready to open.`,
+      title: resultCopy.title,
+      summary: resultCopy.summary,
       detail:
         "The output is separated from the process stream so review can happen without digging through agent telemetry.",
       timestamp: resultDeliverable.mtime
         ? new Date(resultDeliverable.mtime * 1000).toISOString()
         : projection?.generated_at || "",
-      state: "completed",
-      tone: "complete",
+      state: resultCopy.accepted ? "completed" : "active",
+      tone: resultCopy.accepted ? "complete" : "working",
       defaultExpanded: false,
       facts: [
         { label: "kind", value: resultDeliverable.kind.toUpperCase() },
@@ -3272,6 +3663,30 @@ function buildProcessSteps(
 }
 
 const PROCESS_EVENT_LIMIT = 28;
+
+function compactNarrativeSteps(entries: NarrativeStep[]): NarrativeStep[] {
+  const seenDispatchStates = new Set<string>();
+  return entries.filter((entry) => {
+    const title = asString(entry.title).toLowerCase();
+    const token = asString(entry.token).toLowerCase();
+    const recurring =
+      token.includes("dispatch") &&
+      (token.includes("fail") ||
+        title.includes("dispatch blocked") ||
+        title.includes("dispatch failed") ||
+        title.includes("dispatch decision"));
+    if (!recurring) return true;
+    const key = [
+      token,
+      asString(entry.node_id),
+      asString(entry.summary),
+      asString(entry.tone),
+    ].join("\u0000");
+    if (seenDispatchStates.has(key)) return false;
+    seenDispatchStates.add(key);
+    return true;
+  });
+}
 
 function isSignificantProcessEvent(event: EventRecord): boolean {
   const u = unwrapEvent(event);
@@ -3312,9 +3727,13 @@ function processStepFromNarrative(
   latest: boolean,
   runActive: boolean,
 ): ProcessStep | null {
-  const title = asString(entry.title);
+  let title = asString(entry.title);
   if (!title) return null;
   const tone = asString(entry.tone, "working");
+  const token = asString(entry.token).toLowerCase();
+  if (title.toLowerCase().includes("dispatch decision") && token.includes("fail")) {
+    title = token.includes("eval") ? "Evaluation dispatch failed" : "Dispatch failed";
+  }
   const node = asString(entry.node_id);
   const actor = asString(entry.role || entry.actor, "Harness");
   const blocked = tone === "blocked";
@@ -3352,17 +3771,19 @@ function processStepFromEvent(
 ): ProcessStep {
   event = unwrapEvent(event);
   const body = payload(event);
-  const type = eventType(event);
+  let type = eventType(event);
   // Narrative: attribute the step to the AGENT the coordinator dispatched to (PM/Builder/
   // Evaluator/Planner) when the payload names a role, so the stream reads "PM did X, Builder did
   // Y" instead of everything being "coordinator".
   const stepRole = normalizeRole(body.role || body.target_role || event.role);
   const actor = stepRole ? ROLE_META[stepRole].title : eventActor(event);
-  const node = asString(body.node_id || body.node || event.node_id);
+  const waiting = evaluatorWaitDetails(body);
+  if (waiting) type = "graph_eval_dispatch_waiting";
+  const node = asString(waiting?.node || body.node_id || body.node || event.node_id);
   const phase = asString(body.phase || event.phase);
   const decision = asString(body.decision || event.decision);
   const target = asString(body.target_pane || body.pane || event.target_pane);
-  const reason = asString(body.reason || body.blocked_reason || event.reason);
+  const reason = asString(waiting?.reason || body.reason || body.blocked_reason || event.reason);
   const model = asString(body.model || event.model);
   const thought = asString(
     body.thought || body.summary || body.message || event.message,
@@ -3460,11 +3881,17 @@ function processTitle(
   values: { node: string; phase: string; decision: string; target: string },
 ): string {
   const eventType = asString(type);
+  if (eventType === "graph_eval_dispatch_waiting")
+    return `Waiting for Builder result${values.node ? ` for ${values.node}` : ""}`;
   if (eventType.includes("intake")) return `${actor} scoped the request`;
   if (eventType.includes("phase"))
     return `${actor} moved the sprint to ${values.phase.replace(/_/g, " ") || "the next phase"}`;
   if (eventType.includes("dispatch") && values.decision.includes("dispatched"))
     return `${actor} routed ${values.node || "work"}${values.target ? ` to ${values.target}` : ""}`;
+  if (eventType.includes("dispatch") && eventType.includes("fail"))
+    return `${eventType.includes("eval") ? "Evaluation dispatch" : "Dispatch"} failed${values.node ? ` for ${values.node}` : ""}`;
+  if (eventType.includes("dispatch") && values.decision.includes("no_matching"))
+    return `Dispatch blocked${values.node ? ` for ${values.node}` : ""}`;
   if (eventType.includes("dispatch"))
     return `${actor} made a dispatch decision`;
   if (eventType.includes("model_session_started"))
@@ -3490,6 +3917,8 @@ function processSummary(
   },
 ): string {
   const eventType = asString(type);
+  if (eventType === "graph_eval_dispatch_waiting")
+    return "Evaluation starts after the Builder publishes its durable result.";
   if (values.reason) return shortText(values.reason, 120);
   if (values.thought) return shortText(values.thought, 120);
   if (eventType.includes("phase"))
@@ -3507,6 +3936,45 @@ function processSummary(
       ? `The agent is working on ${values.node}.`
       : "An agent model session started.";
   return "";
+}
+
+function evaluatorWaitDetails(
+  body: Record<string, unknown>,
+): { node: string; reason: string } | null {
+  if (asString(body.reason) === "builder_operator_result_pending") {
+    return {
+      node: asString(body.node),
+      reason: "builder_operator_result_pending",
+    };
+  }
+  const raw = body.output;
+  if (typeof raw !== "string" || !raw.trim().startsWith("{")) return null;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (Array.isArray(parsed.dispatched) && parsed.dispatched.length > 0)
+      return null;
+    const skipped = parsed.skipped;
+    if (!Array.isArray(skipped) || skipped.length === 0) return null;
+    const rows = skipped.filter(
+      (entry): entry is Record<string, unknown> =>
+        Boolean(entry) && typeof entry === "object" && !Array.isArray(entry),
+    );
+    if (
+      rows.length !== skipped.length ||
+      rows.some(
+        (entry) =>
+          asString(entry.reason) !== "builder_operator_result_pending" ||
+          entry.complete === true,
+      )
+    )
+      return null;
+    return {
+      node: rows.length === 1 ? asString(rows[0].node) : "",
+      reason: "builder_operator_result_pending",
+    };
+  } catch {
+    return null;
+  }
 }
 
 function humanizeToken(value: string): string {
@@ -4761,25 +5229,27 @@ function HomeLanding({
   onCreated,
 }: {
   sprints: SprintSummary[];
-  onCreated: (sprintId: string) => Promise<void>;
+  onCreated: (sprintId: string, requestId?: string) => Promise<void>;
 }) {
   const crew = useCrew();
   const [task, setTask] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   async function start() {
     const clean = task.trim();
-    if (!clean || submitting) return;
+    if ((!clean && files.length === 0) || submitting) return;
     setSubmitting(true);
     setError("");
     try {
-      const response = await submitIntake(clean);
+      const response = await submitIntake(clean, files);
       if (!response.ok || !response.sprint_id) {
         throw new Error(intakeErrorMessage(response));
       }
       setTask("");
-      await onCreated(response.sprint_id);
+      setFiles([]);
+      await onCreated(response.sprint_id, response.request_id || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to start work");
     } finally {
@@ -4792,8 +5262,8 @@ function HomeLanding({
   return (
     <div className="home-landing" data-testid="home-landing">
       <div className="home-inner">
-        <h1>What do you want done?</h1>
-        <p className="home-sub">
+        <h1 id="home-task-heading">What do you want done?</h1>
+        <p id="home-task-instructions" className="home-sub">
           Describe a task. AI4Research routes it through PM, Planner, Builder,
           and Evaluator agents — and tells you plainly when it stalls.
         </p>
@@ -4805,6 +5275,8 @@ function HomeLanding({
           }}
         >
           <textarea
+            aria-labelledby="home-task-heading"
+            aria-describedby="home-task-instructions"
             value={task}
             onChange={(event) => setTask(event.target.value)}
             placeholder="Build, investigate, verify, or produce an artifact…"
@@ -4816,6 +5288,12 @@ function HomeLanding({
                 void start();
               }
             }}
+          />
+          <IntakeAttachments
+            files={files}
+            onChange={setFiles}
+            onError={setError}
+            disabled={submitting}
           />
           <div className="home-prompt-foot">
             <Popover.Root open={crew.open} onOpenChange={crew.setOpen}>
@@ -4853,7 +5331,7 @@ function HomeLanding({
             <button
               type="submit"
               className="primary-button"
-              disabled={!task.trim() || submitting}
+              disabled={(!task.trim() && files.length === 0) || submitting}
             >
               {submitting ? (
                 <Loader2 className="spin" size={16} />
@@ -4867,7 +5345,7 @@ function HomeLanding({
         </form>
 
         <p className="home-caption">
-          Starts a real intake via the existing CLI <kbd>⌘ ↵</kbd>
+          Starts a real intake via the existing CLI <kbd>Ctrl/Cmd + Enter</kbd>
           <span className="home-caption-note">
             · crew is staged, not yet applied to runs
           </span>

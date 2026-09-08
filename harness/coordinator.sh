@@ -45,13 +45,17 @@ if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
 fi
 
 HARNESS_DIR="${HARNESS_DIR:-${SOLAR_HARNESS_DIR:-$HOME/.solar/harness}}"
-SPRINTS_DIR="$HARNESS_DIR/sprints"
-export HARNESS_DIR SPRINTS_DIR
+SPRINTS_DIR="${HARNESS_SPRINTS_DIR:-${SOLAR_HARNESS_SPRINTS_DIR:-${SPRINTS_DIR:-$HARNESS_DIR/sprints}}}"
+export HARNESS_DIR SPRINTS_DIR HARNESS_SPRINTS_DIR="$SPRINTS_DIR" SOLAR_HARNESS_SPRINTS_DIR="$SPRINTS_DIR"
+CONFIGURED_SPRINTS_DIR="$SPRINTS_DIR"
 SESSION_NAME="${SOLAR_HARNESS_SESSION:-solar-harness}"
 LAB_SESSION_NAME="${SOLAR_HARNESS_LAB_SESSION:-${SESSION_NAME}-lab}"
 HARNESS_MANAGE_LAB="${SOLAR_HARNESS_MANAGE_LAB:-${SOLAR_WATCHDOG_MANAGE_LAB:-0}}"
 COORD_STATE="$HARNESS_DIR/.coordinator-state"
 SESSION_SH="$HARNESS_DIR/session.sh"
+COORDINATOR_ADMISSION_EPOCH="${SOLAR_COORDINATOR_ADMISSION_EPOCH:-$(date +%s)}"
+COORDINATOR_ADMISSION_DIR="$HARNESS_DIR/run/coordinator-admissions"
+COORDINATOR_ADMISSION_TTL_SECS="${SOLAR_COORDINATOR_ADMISSION_TTL_SECS:-300}"
 
 solar_choose_utf8_locale() {
   local locs
@@ -68,6 +72,29 @@ solar_choose_utf8_locale() {
 SOLAR_COORD_LOCALE="${SOLAR_COORD_LOCALE:-$(solar_choose_utf8_locale)}"
 export LANG="$SOLAR_COORD_LOCALE"
 export LC_ALL="$SOLAR_COORD_LOCALE"
+
+# A standalone coordinator must consume the same persisted runtime policy as
+# solar-harness.sh. The unified desktop backend starts this script directly;
+# without this bridge a saved runtime=codex silently disabled the healthy
+# operatord Builder/Evaluator pools and left only cockpit panes dispatchable.
+if [[ -f "$HARNESS_DIR/lib/harness-config.sh" ]]; then
+  # shellcheck source=/dev/null
+  . "$HARNESS_DIR/lib/harness-config.sh"
+fi
+if [[ -z "${SOLAR_PANE_RUNTIME:-}" ]] && declare -F solar_config_json_get >/dev/null 2>&1; then
+  SOLAR_PANE_RUNTIME="$(solar_config_json_get "runtime" "claude" 2>/dev/null || echo claude)"
+fi
+SOLAR_PANE_RUNTIME="${SOLAR_PANE_RUNTIME:-claude}"
+case "$SOLAR_PANE_RUNTIME" in
+  codex)
+    export SOLAR_PM_DEFAULT_PROVIDERS="${SOLAR_PM_DEFAULT_PROVIDERS:-openai}"
+    export SOLAR_MULTI_TASK_DEFAULT_PROVIDERS="${SOLAR_MULTI_TASK_DEFAULT_PROVIDERS:-openai}"
+    export SOLAR_CODEX_ALLOW_PM_OPERATOR_DISPATCH="${SOLAR_CODEX_ALLOW_PM_OPERATOR_DISPATCH:-1}"
+    export SOLAR_GRAPH_BUILDER_OPERATOR_POOL="${SOLAR_GRAPH_BUILDER_OPERATOR_POOL:-1}"
+    export SOLAR_GRAPH_EVAL_OPERATOR_POOL="${SOLAR_GRAPH_EVAL_OPERATOR_POOL:-1}"
+    ;;
+esac
+export SOLAR_PANE_RUNTIME
 
 # Product mode deliberately leaves the four cockpit panes as passive viewers;
 # its local operatord pool is therefore the only executable builder path.  Keep
@@ -99,12 +126,124 @@ export SOLAR_GRAPH_BUILDER_OPERATOR_POOL
 [[ -f "$HARNESS_DIR/lib/portable.sh" ]] && . "$HARNESS_DIR/lib/portable.sh"
 [[ -f "$HARNESS_DIR/lib/optional-hooks.sh" ]] && . "$HARNESS_DIR/lib/optional-hooks.sh"
 
+# Several legacy helper libraries still assign their historical default
+# directly to SPRINTS_DIR while they are sourced.  The coordinator is the
+# runtime authority for the sprint root, so restore the already-resolved
+# external configuration before any dispatch/reconciliation work begins.
+SPRINTS_DIR="$CONFIGURED_SPRINTS_DIR"
+export SPRINTS_DIR HARNESS_SPRINTS_DIR="$SPRINTS_DIR" SOLAR_HARNESS_SPRINTS_DIR="$SPRINTS_DIR"
+
 # Coordinator predates strict-mode helper libs and intentionally treats corrupt
 # sprint files as data-plane warnings. Do not let sourced libs' shell options
 # turn expected parse failures into process exits.
 set +e
 set +u
 set +o pipefail 2>/dev/null || true
+
+# A Coordinator launch is not permission to resume historical work.  By
+# default, only sprints created during this process lifetime are admitted.
+# Operators may explicitly opt into recovery with SOLAR_COORDINATOR_RESUME_EXISTING=1
+# or admit named sprint IDs via SOLAR_COORDINATOR_ADMITTED_SPRINTS.
+declare -A COORDINATOR_ADMITTED_IN_PROCESS=()
+coordinator_record_durable_admission() {
+  local status_file="$1"
+  python3 - "$status_file" "$COORDINATOR_ADMISSION_DIR" "$COORDINATOR_ADMISSION_TTL_SECS" <<'PY' >/dev/null 2>&1
+import datetime as dt
+import json
+import os
+from pathlib import Path
+import sys
+
+status_path = Path(sys.argv[1])
+admission_dir = Path(sys.argv[2])
+ttl = max(30, int(sys.argv[3]))
+payload = json.loads(status_path.read_text(encoding="utf-8"))
+sid = str(payload.get("sprint_id") or payload.get("id") or status_path.name.removesuffix(".status.json"))
+if not sid.startswith("sprint-"):
+    raise SystemExit(1)
+now = dt.datetime.now(dt.timezone.utc)
+admission_dir.mkdir(parents=True, exist_ok=True)
+target = admission_dir / f"{sid}.json"
+record = {
+    "schema_version": "solar.coordinator_admission.v1",
+    "sprint_id": sid,
+    "refreshed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "expires_at": (now + dt.timedelta(seconds=ttl)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+}
+temporary = target.with_suffix(f".json.tmp.{os.getpid()}")
+temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+os.replace(temporary, target)
+PY
+}
+
+coordinator_durable_admission_valid() {
+  local status_file="$1"
+  python3 - "$status_file" "$COORDINATOR_ADMISSION_DIR" <<'PY' >/dev/null 2>&1
+import datetime as dt
+import json
+from pathlib import Path
+import sys
+
+status_path = Path(sys.argv[1])
+admission_dir = Path(sys.argv[2])
+payload = json.loads(status_path.read_text(encoding="utf-8"))
+sid = str(payload.get("sprint_id") or payload.get("id") or status_path.name.removesuffix(".status.json"))
+record = json.loads((admission_dir / f"{sid}.json").read_text(encoding="utf-8"))
+expires = dt.datetime.fromisoformat(str(record.get("expires_at") or "").replace("Z", "+00:00"))
+raise SystemExit(0 if str(record.get("sprint_id") or "") == sid and expires > dt.datetime.now(dt.timezone.utc) else 1)
+PY
+}
+
+coordinator_sprint_admitted() {
+  local status_file="$1" sid admitted_list
+  [[ -f "$status_file" ]] || return 1
+  case "${SOLAR_COORDINATOR_RESUME_EXISTING:-0}" in
+    1|true|TRUE|yes|YES|on|ON) return 0 ;;
+  esac
+  sid="$(basename "$status_file" .status.json)"
+  if [[ -n "${COORDINATOR_ADMITTED_IN_PROCESS[$sid]:-}" ]]; then
+    coordinator_record_durable_admission "$status_file" || true
+    return 0
+  fi
+  admitted_list=",${SOLAR_COORDINATOR_ADMITTED_SPRINTS:-},"
+  if [[ "$admitted_list" == *",${sid},"* ]]; then
+    COORDINATOR_ADMITTED_IN_PROCESS["$sid"]=1
+    coordinator_record_durable_admission "$status_file" || true
+    return 0
+  fi
+  if coordinator_durable_admission_valid "$status_file"; then
+    COORDINATOR_ADMITTED_IN_PROCESS["$sid"]=1
+    coordinator_record_durable_admission "$status_file" || true
+    return 0
+  fi
+  if python3 - "$status_file" "$COORDINATOR_ADMISSION_EPOCH" <<'PY' >/dev/null 2>&1
+import datetime as dt
+import json
+from pathlib import Path
+import sys
+
+path, cutoff_raw = sys.argv[1:3]
+payload = json.load(open(path, encoding="utf-8"))
+value = payload.get("created_ts") or payload.get("created_at")
+if isinstance(value, (int, float)):
+    created = float(value)
+elif isinstance(value, str) and value.strip():
+    text = value.strip().replace("Z", "+00:00")
+    created = dt.datetime.fromisoformat(text).timestamp()
+else:
+    raise SystemExit(1)
+raise SystemExit(0 if created >= float(cutoff_raw) else 1)
+PY
+  then
+    # Admission is a lifecycle decision, not a property of a transient worker
+    # lease.  Once admitted, keep the sprint in scope for this Coordinator
+    # process even after the Planner/worker lease is released.
+    COORDINATOR_ADMITTED_IN_PROCESS["$sid"]=1
+    coordinator_record_durable_admission "$status_file" || true
+    return 0
+  fi
+  return 1
+}
 
 # Pane targets are session-qualified. Product Delivery and Builder Lab are
 # separate tmux sessions, so bare pane indexes are no longer safe identifiers.
@@ -845,6 +984,7 @@ get_latest_sprint_file() {
 
   for f in "$SPRINTS_DIR"/sprint-*.status.json; do
     [[ -f "$f" ]] || continue
+    coordinator_sprint_admitted "$f" || continue
 
     # JSON 可读但缺 id/sprint_id 时按文件名自愈；真正不可读才降频告警。
     local fid
@@ -1169,7 +1309,7 @@ pane_is_thinking_snapshot() {
 
 pane_has_runtime_blocker_snapshot() {
   local snapshot="$1"
-  printf '%s\n' "$snapshot" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit reached|usage limit exceeded|monthly usage limit|/upgrade to increase your usage limit|resets .*\\(America/Toronto\\)|How is Claude doing this session|1:[[:space:]]*Bad[[:space:]]+2:[[:space:]]*Fine[[:space:]]+3:[[:space:]]*Good[[:space:]]+0:[[:space:]]*Dismiss"
+  printf '%s\n' "$snapshot" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit reached|usage limit exceeded|monthly usage limit|/upgrade to increase your usage limit|resets .*\\(America/Toronto\\)|How is Claude doing this session|1:[[:space:]]*Bad[[:space:]]+2:[[:space:]]*Fine[[:space:]]+3:[[:space:]]*Good[[:space:]]+0:[[:space:]]*Dismiss|Code Mode is unavailable|code-mode host is disabled|failed to spawn code-mode host|codex-code-mode-host.*(not found|No such file|Permission denied)"
 }
 
 pane_has_active_work_snapshot() {
@@ -1881,7 +2021,9 @@ dispatch_to_pane() {
   # sprint-20260508-coordinator-control-plane-v2 S3: acquire pane lease
   if [[ -n "${_dispatch_id:-}" ]] && type acquire_pane_lease &>/dev/null; then
     local _lease_result
-    _lease_result=$(acquire_pane_lease "$pane" "$sid" "$_dispatch_id" 600 2>/dev/null || true)
+    local _pane_lease_ttl="${SOLAR_PANE_LEASE_TTL_SEC:-180}"
+    [[ "$_pane_lease_ttl" =~ ^[0-9]+$ ]] || _pane_lease_ttl=180
+    _lease_result=$(acquire_pane_lease "$pane" "$sid" "$_dispatch_id" "$_pane_lease_ttl" 2>/dev/null || true)
     if [[ "$_lease_result" == *'"acquired": true'* || "$_lease_result" == *'"acquired":true'* ]]; then
       : # lease acquired
     else
@@ -1891,14 +2033,14 @@ dispatch_to_pane() {
       if [[ -n "$_held_sid" && -n "$_held_did" ]] && status_is_terminal_for_assignment "$_held_sid"; then
         log "${Y}[lease] pane ${pane} held by terminal sprint ${_held_sid}; releasing stale lease${N}"
         release_pane_lease "$pane" "$_held_did" "terminal_sprint_reaped" 2>/dev/null || true
-        _lease_result=$(acquire_pane_lease "$pane" "$sid" "$_dispatch_id" 600 2>/dev/null || true)
+        _lease_result=$(acquire_pane_lease "$pane" "$sid" "$_dispatch_id" "$_pane_lease_ttl" 2>/dev/null || true)
       elif [[ -n "$_held_sid" && -n "$_held_did" && "$_held_sid" == "$sid" ]]; then
         local _same_sid_snapshot=""
         _same_sid_snapshot="$(capture_pane_tail "$pane" 30 2>/dev/null || true)"
         if pane_is_idle_snapshot "$_same_sid_snapshot"; then
           log "${Y}[lease] pane ${pane} held by same sprint ${sid} but idle; releasing stale same-sid lease${N}"
           release_pane_lease "$pane" "$_held_did" "same_sprint_idle_reaped" 2>/dev/null || true
-          _lease_result=$(acquire_pane_lease "$pane" "$sid" "$_dispatch_id" 600 2>/dev/null || true)
+          _lease_result=$(acquire_pane_lease "$pane" "$sid" "$_dispatch_id" "$_pane_lease_ttl" 2>/dev/null || true)
         fi
       fi
     fi
@@ -2106,10 +2248,7 @@ dispatch_to_pane() {
     # Quota/rate-limit errors also render with the generic "⎿" marker.  Do not
     # treat those as successful dispatch evidence, otherwise the pane assignment
     # is persisted while the worker never actually accepts the task.
-    printf '%s\n' "$verify_output" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit reached|usage limit exceeded|monthly usage limit|/upgrade to increase your usage limit|resets .*\\(America/Toronto\\)" && has_runtime_blocker=1
-    # Claude Code survey prompts can contain generic activity glyphs/keywords, but
-    # they are modal human-feedback screens and cannot accept dispatch input.
-    printf '%s\n' "$verify_output" | grep -qiE "How is Claude doing this session|1:[[:space:]]*Bad[[:space:]]+2:[[:space:]]*Fine[[:space:]]+3:[[:space:]]*Good[[:space:]]+0:[[:space:]]*Dismiss" && has_runtime_blocker=1
+    pane_has_runtime_blocker_snapshot "$verify_output" && has_runtime_blocker=1
     # Claude 真在处理的特征。Claude Code 2.x frequently uses
     # Ideating/Musing/Orbiting/Reticulating before a tool call; treating those
     # as idle causes false dispatch failures while the pane is actually working.
@@ -2127,8 +2266,7 @@ dispatch_to_pane() {
         tmux send-keys -t "$pane" Enter 2>/dev/null || true
         sleep 3
         verify_output=$(tmux capture-pane -t "$pane" -p 2>/dev/null | tail -120)
-        printf '%s\n' "$verify_output" | grep -qiE "You've hit your limit|hit your limit|rate[- ]limit|usage limit reached|usage limit exceeded|monthly usage limit|/upgrade to increase your usage limit|resets .*\(America/Toronto\)" && has_runtime_blocker=1
-        printf '%s\n' "$verify_output" | grep -qiE "How is Claude doing this session|1:[[:space:]]*Bad[[:space:]]+2:[[:space:]]*Fine[[:space:]]+3:[[:space:]]*Good[[:space:]]+0:[[:space:]]*Dismiss" && has_runtime_blocker=1
+        pane_has_runtime_blocker_snapshot "$verify_output" && has_runtime_blocker=1
         pane_has_processing_snapshot "$verify_output" && has_processing=1
         (( has_runtime_blocker || has_processing )) && break
       done
@@ -2404,6 +2542,7 @@ detect_stuck_state() {
 
   for sf in "$SPRINTS_DIR"/sprint-*.status.json; do
     [[ -f "$sf" ]] || continue
+    coordinator_sprint_admitted "$sf" || continue
     local sid st
     sid=$(get_field "$sf" "id")
     st=$(get_field "$sf" "status")
@@ -2601,6 +2740,20 @@ annotate_requirement_matrix_for_planning() {
   fi
 }
 
+refresh_terminal_requirement_coverage() {
+  local sid="$1"
+  local coverage_tool="$HARNESS_DIR/lib/requirement_coverage.py"
+  [[ -f "$SPRINTS_DIR/${sid}.requirement_ir.json" ]] || return 0
+  [[ -f "$SPRINTS_DIR/${sid}.task_graph.json" ]] || return 0
+  [[ -f "$coverage_tool" ]] || return 0
+  python3 "$coverage_tool" evaluate \
+    --sid "$sid" \
+    --sprints-dir "$SPRINTS_DIR" \
+    --requested-verdict pass \
+    --write \
+    --require-pass >/dev/null
+}
+
 # D4: 从 eval.json 提取失败项 (短路)
 extract_fail_info() {
   local sid="$1"
@@ -2775,12 +2928,28 @@ planner_artifacts_ready() {
 }
 
 planner_artifacts_present() {
-  # File-level presence (design+plan+task_graph non-empty) — deliberately NOT
-  # the workflow_guard route: with SOLAR_PLAN_VALIDATOR=1 the route stays pm
-  # until the graph is certified, and the acceptance seam below needs a
-  # certificate-independent "the planner already ran" signal (G3 run-4 fix).
+  # Compatibility name: these are Graph Compiler artifacts now, not Planner
+  # artifacts. Keep the function while older coordinator call sites migrate.
   local sid="$1"
   [[ -s "$SPRINTS_DIR/${sid}.design.md" && -s "$SPRINTS_DIR/${sid}.plan.md" && -s "$SPRINTS_DIR/${sid}.task_graph.json" ]]
+}
+
+planner_handoff_artifacts_present() {
+  local sid="$1"
+  [[ -s "$SPRINTS_DIR/${sid}.planner-requirements.md" && -s "$SPRINTS_DIR/${sid}.planner-handoff.md" ]]
+}
+
+planner_role_boundary_required() {
+  local sid="$1" sf="$SPRINTS_DIR/${sid}.status.json"
+  [[ -f "$sf" ]] || return 1
+  python3 - "$sf" <<'PY' >/dev/null 2>&1
+import json, sys
+try:
+    value = int(json.load(open(sys.argv[1], encoding="utf-8")).get("planner_role_boundary_version") or 0)
+except Exception:
+    value = 0
+raise SystemExit(0 if value >= 2 else 1)
+PY
 }
 
 workflow_guard_route_role() {
@@ -2803,28 +2972,26 @@ compile_generic_plan_graph() {
       return 0
       ;;
     3)
-      log "${Y}[plan-compile] ${sid} failed; planner bounce remains available: ${out}${N}"
+      log "${Y}[plan-compile] ${sid} failed; Graph Compiler repair remains available: ${out}${N}"
       emit_event "$sid" "plan_compile_failed" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc": int(sys.argv[1]), "output": sys.argv[2][-2000:]}))' "$rc" "$out" 2>/dev/null || echo '{}')"
-      local bounce_out bounce_rc
-      bounce_out=$(HARNESS_DIR="$HARNESS_DIR" HARNESS_SPRINTS_DIR="$SPRINTS_DIR" \
-        python3 "$HARNESS_DIR/lib/planner_bounce_dispatch.py" dispatch "$sid" --harness-dir "$HARNESS_DIR" 2>&1)
-      bounce_rc=$?
-      if (( bounce_rc == 0 )); then
-        log "${G}[plan-compile] ${sid} dispatched bounded Planner repair: ${bounce_out}${N}"
-        emit_event "$sid" "planner_bounce_dispatched" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"output": sys.argv[1][-2000:]}))' "$bounce_out" 2>/dev/null || echo '{}')"
+      local repair_rc
+      if dispatch_graph_compiler_operator "$sid"; then
+        log "${G}[plan-compile] ${sid} dispatched bounded Graph Compiler repair${N}"
+        emit_event "$sid" "graph_compiler_repair_dispatched" "coordinator" '{}'
       else
-        log "${Y}[plan-compile] ${sid} Planner repair dispatch deferred rc=${bounce_rc}: ${bounce_out}${N}"
-        emit_event "$sid" "planner_bounce_dispatch_failed" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc": int(sys.argv[1]), "output": sys.argv[2][-2000:]}))' "$bounce_rc" "$bounce_out" 2>/dev/null || echo '{}')"
+        repair_rc=$?
+        log "${Y}[plan-compile] ${sid} Graph Compiler repair dispatch deferred rc=${repair_rc}${N}"
+        emit_event "$sid" "graph_compiler_repair_dispatch_failed" "coordinator" "{\"rc\":${repair_rc}}"
       fi
       return 1
       ;;
     4)
-      log "${R}[plan-compile] ${sid} exhausted planner bounce budget; terminal failed/plan_compile_failed written: ${out}${N}"
+      log "${R}[plan-compile] ${sid} exhausted graph-compile repair budget; terminal failed/plan_compile_failed written: ${out}${N}"
       emit_event "$sid" "plan_compile_terminal" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc": int(sys.argv[1]), "output": sys.argv[2][-2000:]}))' "$rc" "$out" 2>/dev/null || echo '{}')"
       return 1
       ;;
     5)
-      log "${Y}[plan-compile] ${sid} deferred until the Planner operator publishes a durable successful result: ${out}${N}"
+      log "${Y}[plan-compile] ${sid} deferred until the Graph Compiler publishes a durable successful result: ${out}${N}"
       return 1
       ;;
     *)
@@ -2886,6 +3053,17 @@ gate_check() {
   if [[ -f "$sprint_dir/${sid}.finalized" ]]; then
     return 0
   fi
+  if direct_answer_runtime_required "$sid"; then
+    # The accepted RequirementIR is the authority for this bounded lane.
+    # Legacy PRD/Planner/TaskGraph gates must not rewrite it into a DAG flow.
+    return 0
+  fi
+  if typed_planner_required "$sid"; then
+    # Formal RequirementIR v2 is the authority for the typed planning lane.
+    # Its accepted bundle is reconciled and dispatched by handle_active(); the
+    # legacy PRD/plan gate must not demote planning_complete back to PM.
+    return 0
+  fi
   case "$st" in
     finalized|eval_passed)
       return 0
@@ -2927,6 +3105,11 @@ gate_check() {
 	          guard_role="$(workflow_guard_route_role "$sid")"
 	          guard_violations="$(workflow_guard_violations "$sid")"
 	        fi
+	      fi
+	      if planner_role_boundary_required "$sid" && [[ "$guard_role" == "graph_compiler" ]]; then
+	        log "${Y}Gate routed ${sid} to downstream Graph Compiler; Planner will not be asked to create the DAG${N}"
+	        runtime_status_transition "$sid" "drafting" "active_routed_to_graph_compiler" "coordinator" '{"status_fields":{"phase":"requirements_ready","handoff_to":"graph_compiler","target_role":"graph_compiler","planner_role_boundary_version":2},"note":"Planner handoff is complete; downstream Graph Compiler owns design, plan, and DAG."}' || true
+	        return 1
 	      fi
 	      if [[ "$guard_role" == "builder_main" || "$guard_role" == "builder" ]]; then
 	        # Once workflow_guard says planner artifacts + task_graph are ready,
@@ -3332,24 +3515,56 @@ planner_operator_compile_state() {
     --harness-dir "$HARNESS_DIR" --field state 2>/dev/null || echo unmanaged
 }
 
-dispatch_planner_operator_retry() {
+graph_compiler_operator_state() {
+  local sid="$1"
+  python3 "$HARNESS_DIR/lib/planner_operator_gate.py" state "$sid" \
+    --harness-dir "$HARNESS_DIR" --node-id GC0 --role builder \
+    --closeout-kind task_graph_compiler --field state 2>/dev/null || echo unmanaged
+}
+
+dispatch_graph_compiler_operator() {
   local sid="$1" out rc
   out=$(HARNESS_DIR="$HARNESS_DIR" SOLAR_HARNESS_DIR="$HARNESS_DIR" \
     SOLAR_HARNESS_SPRINTS_DIR="$SPRINTS_DIR" SOLAR_PM_DISPATCH_ALLOW_DIRECT=1 \
     python3 "$HARNESS_DIR/tools/pm_dispatch.py" submit \
-      --role planner \
-      --objective "[Solar Planner recovery] Retry the bounded Planner stage for ${sid} after the prior operator ended without a successful durable result. Read the current sprint contract, requirement IR, PRD, design, plan, task graph, and any prior Planner artifacts. Produce corrected candidate design.md, plan.md, and task_graph.json only. Do not run the plan compiler, do not modify status.json or the Solar ledger, do not create a certificate, do not dispatch Builder or Evaluator, and do not perform Builder work." \
-      --sprint "$sid" --node N0 --task-type planning \
-      --context "source=solar_coordinator planner_operator_retry=1 prior_result=unsuccessful" 2>&1)
+      --role builder \
+      --objective "[Solar Graph Compiler] Compile the accepted Planner handoff for ${sid}. Read ${SPRINTS_DIR}/${sid}.planner-requirements.md, ${SPRINTS_DIR}/${sid}.planner-handoff.md, requirement_ir.json, contract.md, and PRD. Produce only ${SPRINTS_DIR}/${sid}.design.md, ${SPRINTS_DIR}/${sid}.plan.md, and ${SPRINTS_DIR}/${sid}.task_graph.json. Validate the candidate graph. Do not execute any DAG node, perform research, generate HTML or a final report, evaluate results, dispatch another role, or modify status.json." \
+      --sprint "$sid" --node GC0 --task-type task_graph_compilation \
+      --closeout-kind task_graph_compiler \
+      --context "source=solar_coordinator graph_compiler_stage=1 planner_role_boundary_version=2" 2>&1)
   rc=$?
   if (( rc == 0 )); then
-    log "${G}[planner-retry] ${sid} dispatched a new bounded Planner operator task: ${out}${N}"
-    emit_event "$sid" "planner_operator_retry_dispatched" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"output": sys.argv[1][-2000:]}))' "$out" 2>/dev/null || echo '{}')"
+    log "${G}[graph-compiler] ${sid} dispatched bounded Graph Compiler task: ${out}${N}"
+    emit_event "$sid" "graph_compiler_dispatched" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"output": sys.argv[1][-2000:]}))' "$out" 2>/dev/null || echo '{}')"
     return 0
   fi
-  log "${Y}[planner-retry] ${sid} retry dispatch failed rc=${rc}: ${out}${N}"
-  emit_event "$sid" "planner_operator_retry_failed" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc": int(sys.argv[1]), "output": sys.argv[2][-2000:]}))' "$rc" "$out" 2>/dev/null || echo '{}')"
+  log "${Y}[graph-compiler] ${sid} dispatch failed rc=${rc}: ${out}${N}"
+  emit_event "$sid" "graph_compiler_dispatch_failed" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc": int(sys.argv[1]), "output": sys.argv[2][-2000:]}))' "$rc" "$out" 2>/dev/null || echo '{}')"
   return "$rc"
+}
+
+dispatch_planner_operator_stage() {
+  local sid="$1" mode="${2:-initial}" out rc
+  out=$(HARNESS_DIR="$HARNESS_DIR" SOLAR_HARNESS_DIR="$HARNESS_DIR" \
+    SOLAR_HARNESS_SPRINTS_DIR="$SPRINTS_DIR" SOLAR_PM_DISPATCH_ALLOW_DIRECT=1 \
+    python3 "$HARNESS_DIR/tools/pm_dispatch.py" submit \
+      --role planner \
+      --objective "[Solar Planner requirements handoff] Normalize the accepted requirements for ${sid}. Read the current sprint contract, RequirementIR, PRD, and any prior Planner handoff. Produce only ${SPRINTS_DIR}/${sid}.planner-requirements.md and ${SPRINTS_DIR}/${sid}.planner-handoff.md. Do not create a DAG, design, plan, research, HTML, final answer/report, evaluation, or modify status.json. Dispatch mode: ${mode}." \
+      --sprint "$sid" --node N0 --task-type requirements_handoff \
+      --context "source=solar_coordinator planner_role_boundary_version=2 planner_dispatch_mode=${mode}" 2>&1)
+  rc=$?
+  if (( rc == 0 )); then
+    log "${G}[planner-${mode}] ${sid} dispatched bounded Planner requirements task: ${out}${N}"
+    emit_event "$sid" "planner_operator_${mode}_dispatched" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"output": sys.argv[1][-2000:]}))' "$out" 2>/dev/null || echo '{}')"
+    return 0
+  fi
+  log "${Y}[planner-${mode}] ${sid} dispatch failed rc=${rc}: ${out}${N}"
+  emit_event "$sid" "planner_operator_${mode}_dispatch_failed" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc": int(sys.argv[1]), "output": sys.argv[2][-2000:]}))' "$rc" "$out" 2>/dev/null || echo '{}')"
+  return "$rc"
+}
+
+dispatch_planner_operator_retry() {
+  dispatch_planner_operator_stage "$1" retry
 }
 
 handle_queued() {
@@ -3373,11 +3588,292 @@ handle_queued() {
   rollback_state_cache "$sid"
 }
 
+direct_answer_runtime_required() {
+  local sid="$1"
+  local requirement_ir="$SPRINTS_DIR/${sid}.requirement_ir.json"
+  [[ -f "$requirement_ir" ]] || return 1
+  python3 - "$requirement_ir" <<'PY' 2>/dev/null
+import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+h = d.get("planner_hints") if isinstance(d.get("planner_hints"), dict) else {}
+raise SystemExit(0 if (
+    d.get("request_type") == "direct_answer"
+    and h.get("preferred_outcome") == "direct_answer"
+    and h.get("runtime_handoff_allowed") is False
+) else 1)
+PY
+}
+
+ensure_direct_answer_runtime() {
+  local sid="$1" sf="$2"
+  local direct_state pid_file pid log_file python_bin
+  direct_state="$(get_field "$sf" "direct_answer_status")"
+  case "$direct_state" in
+    accepted|failed) return 0 ;;
+    "") return 0 ;;
+  esac
+  pid_file="$SPRINTS_DIR/${sid}.direct-answer.pid"
+  if [[ -f "$pid_file" ]]; then
+    pid="$(head -1 "$pid_file" 2>/dev/null || true)"
+    if [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null; then
+      return 0
+    fi
+  fi
+  # The intake process writes queued before it writes the child pid. Give that
+  # short handoff window time to finish instead of launching a duplicate.
+  if [[ "$direct_state" == "queued" ]]; then
+    local queued_age
+    queued_age=$(( $(date +%s) - $(solar_file_mtime "$sf" 2>/dev/null || echo 0) ))
+    (( queued_age < 15 )) && return 0
+  fi
+  log_file="$HARNESS_DIR/logs/direct-answer/${sid}.log"
+  mkdir -p "$(dirname "$log_file")"
+  python_bin="${SOLAR_DIRECT_ANSWER_PYTHON:-}"
+  if [[ -z "$python_bin" && -x "$HARNESS_DIR/.venv-runtime/bin/python" ]]; then
+    python_bin="$HARNESS_DIR/.venv-runtime/bin/python"
+  fi
+  python_bin="${python_bin:-python3}"
+  HARNESS_DIR="$HARNESS_DIR" SOLAR_HARNESS_DIR="$HARNESS_DIR" \
+    nohup "$python_bin" "$HARNESS_DIR/tools/direct_answer_runtime.py" --sprint-id "$sid" \
+    >>"$log_file" 2>&1 </dev/null &
+  pid=$!
+  printf '%s\n' "$pid" > "$pid_file"
+  runtime_status_transition "$sid" "active" "direct_answer_recovered" "coordinator" \
+    '{"status_fields":{"phase":"direct_answer","stage":"direct_answer_queued","handoff_to":"direct_response_worker","target_role":"direct_response_worker","runtime_handoff_allowed":false,"direct_answer_status":"queued"},"note":"Started the downstream direct-response worker after Planner handoff; no TaskGraph is required."}' || true
+  emit_event "$sid" "direct_answer_runtime_started" "coordinator" \
+    "{\"pid\":${pid},\"runtime_handoff_allowed\":false}"
+}
+
+typed_planner_required() {
+  local sid="$1" requirement="$SPRINTS_DIR/${sid}.requirement_ir.json"
+  [[ -s "$requirement" ]] || return 1
+  python3 - "$requirement" <<'PY' >/dev/null 2>&1
+import json, sys
+payload = json.load(open(sys.argv[1], encoding="utf-8"))
+raise SystemExit(0 if payload.get("schema_version") == "solar.requirement_ir.v2" else 1)
+PY
+}
+
+typed_planner_result_path() {
+  printf '%s\n' "$SPRINTS_DIR/$1/planning/adapter_result.json"
+}
+
+typed_scheduler_state_path() {
+  local sid="$1" result
+  result="$(typed_planner_result_path "$sid")"
+  [[ -s "$result" ]] || return 1
+  python3 - "$result" "$sid" <<'PY'
+import json, sys
+from pathlib import Path
+
+payload = json.load(open(sys.argv[1], encoding="utf-8"))
+sid = sys.argv[2]
+projection = str(payload.get("runtime_projection") or "").strip()
+if projection:
+    path = Path(projection)
+elif payload.get("scheduler_runtime_dir"):
+    path = Path(str(payload["scheduler_runtime_dir"])) / f"{sid}.task_graph.json"
+else:
+    raise SystemExit(1)
+suffix = ".task_graph.json"
+if not path.name.endswith(suffix):
+    raise SystemExit(1)
+print(path.with_name(path.name[:-len(suffix)] + ".task_graph_state.json"))
+PY
+}
+
+typed_scheduler_state_requires_tick() {
+  local sid="$1" state
+  state="$(typed_scheduler_state_path "$sid" 2>/dev/null || true)"
+  # An accepted typed plan with no state yet still needs its first Scheduler tick.
+  [[ -n "$state" && -s "$state" ]] || return 0
+  python3 - "$state" <<'PY' >/dev/null 2>&1
+import json, sys
+
+payload = json.load(open(sys.argv[1], encoding="utf-8"))
+terminal = {"passed", "completed", "failed", "cancelled", "needs_human_review"}
+raise SystemExit(1 if str(payload.get("run_status") or "").lower() in terminal else 0)
+PY
+}
+
+typed_scheduler_terminal_status() {
+  local sid="$1" state
+  state="$(typed_scheduler_state_path "$sid" 2>/dev/null || true)"
+  [[ -n "$state" && -s "$state" ]] || return 1
+  python3 - "$state" <<'PY'
+import json, sys
+
+payload = json.load(open(sys.argv[1], encoding="utf-8"))
+status = str(payload.get("run_status") or "").lower()
+terminal = {"passed", "completed", "failed", "cancelled", "needs_human_review"}
+if status not in terminal:
+    raise SystemExit(1)
+print(status)
+PY
+}
+
+reconcile_typed_scheduler_state() {
+  local sid="$1" state run_status top_status event phase extra
+  state="$(typed_scheduler_state_path "$sid" 2>/dev/null || true)"
+  [[ -n "$state" && -s "$state" ]] || return 1
+  run_status="$(typed_scheduler_terminal_status "$sid" 2>/dev/null || true)"
+  [[ -n "$run_status" ]] || return 1
+  case "$run_status" in
+    passed|completed)
+      top_status="passed"
+      event="typed_scheduler_completed"
+      phase="scheduler_complete"
+      ;;
+    failed)
+      top_status="failed"
+      event="typed_scheduler_failed"
+      phase="scheduler_failed"
+      ;;
+    cancelled)
+      top_status="cancelled"
+      event="typed_scheduler_cancelled"
+      phase="scheduler_cancelled"
+      ;;
+    needs_human_review)
+      top_status="needs_human_review"
+      event="typed_scheduler_needs_human_review"
+      phase="scheduler_needs_human_review"
+      ;;
+    *) return 1 ;;
+  esac
+  extra=$(python3 - "$state" "$run_status" "$phase" <<'PY'
+import json, sys
+
+payload = json.load(open(sys.argv[1], encoding="utf-8"))
+run_status, phase = sys.argv[2:4]
+nodes = payload.get("nodes") if isinstance(payload.get("nodes"), dict) else {}
+by_status = {}
+for node_id, node in nodes.items():
+    if not isinstance(node, dict):
+        continue
+    status = str(node.get("status") or "unknown").lower()
+    by_status.setdefault(status, []).append(str(node_id))
+fields = {
+    "phase": phase,
+    "handoff_to": "",
+    "target_role": "",
+    "runtime_handoff_allowed": False,
+    "scheduler_run_status": run_status,
+    "scheduler_state_revision": payload.get("revision"),
+    "passed_nodes": sorted(by_status.get("passed", [])),
+    "failed_nodes": sorted(by_status.get("failed", [])),
+    "cancelled_nodes": sorted(by_status.get("cancelled", [])),
+}
+print(json.dumps({
+    "status_fields": fields,
+    "note": "Reconciled the terminal typed Scheduler ledger into the top-level sprint status.",
+}))
+PY
+)
+  runtime_status_transition "$sid" "$top_status" "$event" "coordinator" "$extra"
+}
+
+reconcile_typed_planner_result() {
+  local sid="$1" sf="$2" result status extra
+  result="$(typed_planner_result_path "$sid")"
+  if [[ ! -s "$result" ]]; then
+    log "${Y}Typed Elastic Planner is still running or held for ${sid}; legacy Planner/Graph Compiler remain disabled${N}"
+    return 0
+  fi
+  status=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("status") or "failed")' "$result" 2>/dev/null || echo failed)
+  case "$status" in
+    accepted)
+      extra=$(python3 - "$result" <<'PY'
+import json, sys
+d=json.load(open(sys.argv[1], encoding="utf-8"))
+fields={
+  "phase":"planning_complete",
+  "handoff_to":"scheduler",
+  "target_role":"scheduler",
+  "planning_authority":"elastic_planner",
+  "test_policy":d.get("test_policy") or {},
+  "runtime_handoff_allowed":bool(d.get("runtime_handoff_allowed")),
+  "plan_compile_required":False,
+  "scheduler_input_path":d.get("scheduler_input"),
+  "run_contract_path":d.get("run_contract"),
+  "scheduler_runtime_dir":d.get("scheduler_runtime_dir"),
+  "runtime_projection_path":d.get("runtime_projection"),
+}
+print(json.dumps({"status_fields":fields,"note":"Elastic Planner bundle and frozen SchedulerInput verified; legacy task_graph authority is disabled."}))
+PY
+)
+      runtime_status_transition "$sid" "active" "elastic_planner_accepted" "coordinator" "$extra" || true
+      ;;
+    direct_response)
+      extra=$(python3 - "$result" <<'PY'
+import json, sys
+d=json.load(open(sys.argv[1], encoding="utf-8"))
+print(json.dumps({"status_fields":{"phase":"direct_response_complete","handoff_to":"","target_role":"","runtime_handoff_allowed":False,"plan_compile_required":False,"result_path":d.get("direct_response")},"note":"Typed Planner selected direct_response; no scheduler or Builder DAG was created."}))
+PY
+)
+      runtime_status_transition "$sid" "passed" "elastic_planner_direct_response" "coordinator" "$extra" || true
+      ;;
+    *)
+      extra=$(python3 - "$result" <<'PY'
+import json, sys
+d=json.load(open(sys.argv[1], encoding="utf-8"))
+print(json.dumps({"status_fields":{"phase":"planning_failed","handoff_to":"","target_role":"","runtime_handoff_allowed":False,"plan_compile_required":True,"planning_errors":d.get("verification_errors") or []},"note":"Typed Elastic Planner failed closed; no runtime projection was authorized."}))
+PY
+)
+      runtime_status_transition "$sid" "failed" "elastic_planner_failed" "coordinator" "$extra" || true
+      ;;
+  esac
+}
+
+dispatch_typed_scheduler_once() {
+  local sid="$1" result scheduler_input run_contract runtime_dir runtime_projection out rc
+  local -a _typed_paths
+  result="$(typed_planner_result_path "$sid")"
+  [[ -s "$result" ]] || return 1
+  readarray -t _typed_paths < <(python3 - "$result" <<'PY'
+import json, sys
+d=json.load(open(sys.argv[1], encoding="utf-8"))
+for key in ("scheduler_input", "run_contract", "scheduler_runtime_dir", "runtime_projection"):
+    print(d.get(key) or "")
+PY
+)
+  scheduler_input="${_typed_paths[0]:-}"
+  run_contract="${_typed_paths[1]:-}"
+  runtime_dir="${_typed_paths[2]:-}"
+  runtime_projection="${_typed_paths[3]:-}"
+  [[ -s "$scheduler_input" && -s "$run_contract" && -d "$runtime_dir" && -s "$runtime_projection" ]] || return 1
+  set +e
+  out=$(HARNESS_DIR="$HARNESS_DIR" SOLAR_HARNESS_DIR="$HARNESS_DIR" \
+    SOLAR_HARNESS_SPRINTS_DIR="$runtime_dir" \
+    python3 "$HARNESS_DIR/lib/multi_task_runner.py" start \
+      --graph "$runtime_projection" \
+      --once --no-clear 2>&1)
+  rc=$?
+  set -e
+  if (( rc == 0 )); then
+    emit_event "$sid" "typed_scheduler_tick" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"output":sys.argv[1][-2000:]}))' "$out" 2>/dev/null || echo '{}')"
+    return 0
+  fi
+  log "${R}Typed scheduler refused ${sid} rc=${rc}: ${out}${N}"
+  emit_event "$sid" "typed_scheduler_refused" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc":int(sys.argv[1]),"output":sys.argv[2][-2000:]}))' "$rc" "$out" 2>/dev/null || echo '{}')"
+  return "$rc"
+}
+
 handle_drafting() {
   local sid="$1" sf="$2"
   local prd="$SPRINTS_DIR/${sid}.prd.md"
   local plan="$SPRINTS_DIR/${sid}.plan.md"
   local req_file=""
+  local direct_answer_required=0
+
+  if typed_planner_required "$sid"; then
+    reconcile_typed_planner_result "$sid" "$sf"
+    return 0
+  fi
+
+  if direct_answer_runtime_required "$sid"; then
+    direct_answer_required=1
+  fi
 
   if python3 - "$sf" <<'PY' 2>/dev/null
 import json, sys
@@ -3490,13 +3986,105 @@ PY
   local guard_role
   guard_role="$(workflow_guard_route_role "$sid")"
 
+  # Role-boundary v2 is deliberately two-stage:
+  #   Planner -> normalized requirements/handoff only
+  #   Graph Compiler -> design/plan/task_graph only
+  # Research, HTML/final deliverables, and evaluation remain DAG-stage work.
+  # Keep the legacy block below only for pre-v2 in-flight tasks.
+  if planner_role_boundary_required "$sid"; then
+    if ! planner_handoff_artifacts_present "$sid"; then
+      if pm_operator_role_pool_task_live "$sid" "planner" \
+        || pm_operator_role_pool_task_seen "$sid" "planner" \
+        || pm_operator_role_pool_claim_active "$sf" "planner"; then
+        log "${G}Planner requirements handoff is still in flight for ${sid}; downstream compilation remains blocked${N}"
+        return 0
+      fi
+      if [[ "$req_file" == "$prd" ]]; then
+        local strict_prd_err
+        if strict_prd_err=$(validate_doc "prd" "$req_file"); then :; else
+          log "${R}PRD ready but invalid; Planner dispatch blocked: ${strict_prd_err}${N}"
+          emit_event "$sid" "gate_blocked" "coordinator" '{"stage":"prd","reason":"invalid_prd"}'
+          return 0
+        fi
+      fi
+      if pm_operator_role_pool_enabled; then
+        if dispatch_planner_operator_stage "$sid" initial; then
+          return 0
+        fi
+        mark_drafting_retry "$sid" "planner" "operator_dispatch_failed"
+        rollback_state_cache "$sid"
+        return 0
+      fi
+
+      generate_dispatch "$sid" "规划者" "只整理需求并交接，不创建 DAG 或执行产物"
+      append_dispatch "$sid" "Read ${req_file}, ${SPRINTS_DIR}/${sid}.requirement_ir.json, and ${SPRINTS_DIR}/${sid}.contract.md. Write only ${SPRINTS_DIR}/${sid}.planner-requirements.md and ${SPRINTS_DIR}/${sid}.planner-handoff.md. Do not write design.md, plan.md, task_graph.json, research, HTML, final answers/reports, evaluations, or status.json."
+      dispatch_to_planner "$sid" "planner_requirements_handoff" "$SPRINTS_DIR/${sid}.dispatch.md"
+      return 0
+    fi
+
+    if (( direct_answer_required == 1 )); then
+      ensure_direct_answer_runtime "$sid" "$sf"
+      log "${G}Planner handoff complete for ${sid}; downstream direct-response worker is active and no TaskGraph will be created${N}"
+      return 0
+    fi
+
+    local graph_compiler_state
+    graph_compiler_state="$(graph_compiler_operator_state "$sid")"
+    case "$graph_compiler_state" in
+      running|pending)
+        log "${Y}Sprint ${sid} Graph Compiler is ${graph_compiler_state}; wait for its durable result before certification${N}"
+        return 0
+        ;;
+      failed|abandoned)
+        if drafting_retry_blocked "$sid" "graph_compiler"; then
+          log "${Y}Sprint ${sid} Graph Compiler retry cooldown active${N}"
+          return 0
+        fi
+        mark_drafting_retry "$sid" "graph_compiler" "$graph_compiler_state"
+        dispatch_graph_compiler_operator "$sid" || rollback_state_cache "$sid"
+        return 0
+        ;;
+    esac
+
+    if ! planner_artifacts_present "$sid"; then
+      if dispatch_graph_compiler_operator "$sid"; then
+        return 0
+      fi
+      mark_drafting_retry "$sid" "graph_compiler" "dispatch_failed"
+      rollback_state_cache "$sid"
+      return 0
+    fi
+
+    if ! annotate_requirement_matrix_for_planning "$sid"; then
+      log "${R}Graph Compiler artifacts exist but requirement trace annotation failed${N}"
+      emit_event "$sid" "gate_blocked" "coordinator" '{"stage":"graph_compiler","reason":"requirement_trace_annotation_failed"}'
+      rollback_state_cache "$sid"
+      return 0
+    fi
+    if ! compile_generic_plan_graph "$sid"; then
+      rollback_state_cache "$sid"
+      return 0
+    fi
+    guard_role="$(workflow_guard_route_role "$sid")"
+    if [[ "$guard_role" != "builder_main" && "$guard_role" != "builder" ]]; then
+      log "${R}Graph Compiler completed but workflow guard still refuses Builder for ${sid}: $(workflow_guard_violations "$sid")${N}"
+      rollback_state_cache "$sid"
+      return 0
+    fi
+
+    log "${G}Planner handoff + certified Graph Compiler output complete; advancing ${sid} to DAG execution${N}"
+    runtime_status_transition "$sid" "active" "graph_compiler_completed" "coordinator" '{"status_fields":{"phase":"planning_complete","handoff_to":"builder_main","target_role":"builder_main","planner_dispatch_claim":null,"plan_compile_required":false,"planner_role_boundary_version":2},"note":"Planner normalized requirements; downstream Graph Compiler produced and certified the DAG."}' || true
+    return 0
+  fi
+
   # The Planner no longer self-certifies or mutates lifecycle status.  Once
   # its bounded operator result is durable (gate above) and all candidate
   # artifacts exist, Solar annotates and compiles the final bytes, then
   # re-reads workflow_guard before deciding whether Builder may run.
   if [[ "$guard_role" != "builder_main" && "$guard_role" != "builder" ]] \
     && planner_artifacts_present "$sid" \
-    && ! pm_operator_role_pool_task_seen "$sid" "planner"; then
+    && { [[ "$planner_operator_state" == "completed" ]] \
+      || ! pm_operator_role_pool_task_seen "$sid" "planner"; }; then
     if ! annotate_requirement_matrix_for_planning "$sid"; then
       log "${R}Planner 产物存在但 Requirement Trace Matrix 注入失败，阻止 Solar 签证${N}"
       emit_event "$sid" "gate_blocked" "coordinator" '{"stage":"planning","reason":"requirement_trace_annotation_failed"}'
@@ -3642,13 +4230,14 @@ PY
   fi
 
   log "${G}Drafting sprint 已有 PRD + design + plan + task_graph → 自动推进 active/planning_complete${N}"
-  runtime_status_transition "$sid" "active" "planner_graph_completed" "coordinator" '{"status_fields":{"phase":"planning_complete","handoff_to":"builder_main","target_role":"builder_main"},"note":"Auto-promoted drafting sprint because planner artifacts and task_graph are complete."}' || true
+  runtime_status_transition "$sid" "active" "planner_graph_completed" "coordinator" '{"status_fields":{"phase":"planning_complete","handoff_to":"builder_main","target_role":"builder_main","planner_dispatch_claim":null,"plan_compile_required":false},"note":"Auto-promoted drafting sprint because planner artifacts and task_graph are complete."}' || true
 }
 
 auto_drive_drafting_sprints() {
   local sf sid st
   for sf in "$SPRINTS_DIR"/sprint-*.status.json; do
     [[ -f "$sf" ]] || continue
+    coordinator_sprint_admitted "$sf" || continue
     sid=$(get_field "$sf" "id")
     st=$(get_field "$sf" "status")
     [[ -n "$sid" && "$st" == "drafting" ]] || continue
@@ -3821,6 +4410,37 @@ handle_active() {
   title=$(get_field "$sf" "title")
   round=$(get_field "$sf" "round")
 
+  if direct_answer_runtime_required "$sid"; then
+    if planner_role_boundary_required "$sid" && ! planner_handoff_artifacts_present "$sid"; then
+      log "${Y}Sprint ${sid} direct response is waiting for Planner requirements handoff${N}"
+      runtime_status_transition "$sid" "drafting" "direct_answer_waiting_planner_handoff" "coordinator" '{"status_fields":{"phase":"prd_ready","handoff_to":"planner","target_role":"planner","planner_role_boundary_version":2},"note":"Direct-response execution cannot start before Planner requirements handoff."}' || true
+      rollback_state_cache "$sid"
+      return 0
+    fi
+    ensure_direct_answer_runtime "$sid" "$sf"
+    log "${Y}Sprint ${sid} downstream direct answer is in progress; no DAG is required${N}"
+    return 0
+  fi
+
+  if typed_planner_required "$sid"; then
+    local typed_phase
+    typed_phase=$(get_field "$sf" "phase")
+    if [[ "$typed_phase" != "planning_complete" && "$typed_phase" != "graph_dispatch_active" ]]; then
+      reconcile_typed_planner_result "$sid" "$sf"
+      return 0
+    fi
+    if reconcile_typed_scheduler_state "$sid"; then
+      return 0
+    fi
+    if dispatch_typed_scheduler_once "$sid"; then
+      if ! reconcile_typed_scheduler_state "$sid"; then
+        runtime_status_transition "$sid" "active" "typed_scheduler_dispatched" "coordinator" \
+          '{"status_fields":{"phase":"graph_dispatch_active","handoff_to":"scheduler","target_role":"scheduler","runtime_handoff_allowed":true},"note":"Scheduler tick consumed the verified frozen SchedulerInput; legacy task_graph dispatch was not used."}' || true
+      fi
+    fi
+    return 0
+  fi
+
   # sprint-20260503-090450 D1: research 拓扑 — 跳过 builder, 直接派 architect
   # sprint-20260503-182225 D1: select_topology 自动推断 + rs_set_topology
   local topology
@@ -3831,7 +4451,7 @@ handle_active() {
     [[ "$auto_top" != "standard" ]] && topology="$auto_top"
     type rs_set_topology &>/dev/null && rs_set_topology "$sid" "$topology" 2>/dev/null || true
   fi
-  if [[ "$topology" == "research" ]]; then
+  if [[ "$topology" == "research" ]] && ! planner_role_boundary_required "$sid"; then
     log "${G}research 拓扑 → 直接派 Strategy Lab architect${N}"
     log "  需求: ${title}"
     generate_architect_dispatch "$sid" "research" "长链调研"
@@ -4020,7 +4640,11 @@ EOF
         return 0
       fi
       local graph_rc=0 graph_out="" graph_eval_out="" graph_eval_rc=0
-      local graph_dispatch_timeout="${SOLAR_GRAPH_DISPATCH_TIMEOUT_SEC:-35}"
+      # A policy-aware pool probe may spend up to 30s refreshing operator
+      # health, followed by a PM submission that may spend up to 45s.  The
+      # outer guard must cover both or it can kill a successful dispatch
+      # before its graph assignment is durably recorded.
+      local graph_dispatch_timeout="${SOLAR_GRAPH_DISPATCH_TIMEOUT_SEC:-90}"
       # Self-advance cockpit/multi-task sprints: cockpit evaluator panes are usually idle, so eval needs the
       # operatord evaluator pool to find an evaluator (otherwise dispatch-evals returns no_available_evaluator
       # and the DAG never leaves `reviewing`). Honors an explicit SOLAR_GRAPH_EVAL_OPERATOR_POOL; otherwise
@@ -4034,6 +4658,13 @@ EOF
         graph_out="$(run_with_timeout "$graph_dispatch_timeout" python3 "$graph_dispatcher" dispatch-ready --graph "$SPRINTS_DIR/${sid}.task_graph.json" 2>&1)" || graph_rc=$?
       fi
       if (( graph_eval_rc != 0 )); then
+        local graph_eval_wait_payload=""
+        if graph_eval_wait_payload="$(printf '%s' "$graph_eval_out" | python3 "$HARNESS_DIR/lib/graph_dispatch_outcome.py" evaluator-wait 2>/dev/null)"; then
+          log "${Y}[graph-dispatch] evaluator waiting for Builder result: ${graph_eval_wait_payload}${N}"
+          rollback_state_cache "$sid"
+          emit_event "$sid" "graph_eval_dispatch_waiting" "coordinator" "$graph_eval_wait_payload"
+          return 0
+        fi
         log "${Y}[graph-dispatch] dispatch-evals failed rc=${graph_eval_rc}: ${graph_eval_out}${N}"
         rollback_state_cache "$sid"
         emit_event "$sid" "graph_eval_dispatch_failed" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"rc": int(sys.argv[1]), "output": sys.argv[2][-1000:]}))' "$graph_eval_rc" "$graph_eval_out" 2>/dev/null || echo '{}')"
@@ -4047,6 +4678,11 @@ EOF
       fi
       log "${G}[graph-dispatch] node evals: ${graph_eval_out}${N}"
       log "${G}[graph-dispatch] ready nodes dispatched: ${graph_out}${N}"
+      local graph_dispatch_activity=0
+      if printf '%s' "$graph_eval_out" | python3 "$HARNESS_DIR/lib/graph_dispatch_outcome.py" dispatch-activity >/dev/null 2>&1 \
+        || printf '%s' "$graph_out" | python3 "$HARNESS_DIR/lib/graph_dispatch_outcome.py" dispatch-activity >/dev/null 2>&1; then
+        graph_dispatch_activity=1
+      fi
       # Research rule injection: scan dispatched nodes and inject hard rules for R-prefixed nodes
       local _research_inject_hook="$HOME/.solar/hooks/research_dispatch_inject.sh"
       if [[ -x "$_research_inject_hook" && -f "$SPRINTS_DIR/${sid}.task_graph.json" ]]; then
@@ -4055,11 +4691,19 @@ EOF
           "$_research_inject_hook" "$SPRINTS_DIR/${sid}.${_node_id}-dispatch.md" "$_node_id" 2>/dev/null || true
         done
       fi
-      emit_event "$sid" "graph_nodes_dispatched" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"eval_output": sys.argv[1][-2000:], "ready_output": sys.argv[2][-2000:]}))' "$graph_eval_out" "$graph_out" 2>/dev/null || echo '{}')"
-      mark_builder_flow "$sid" "graph_node_dispatch"
+      if (( graph_dispatch_activity == 1 )); then
+        emit_event "$sid" "graph_nodes_dispatched" "coordinator" "$(python3 -c 'import json,sys; print(json.dumps({"eval_output": sys.argv[1][-2000:], "ready_output": sys.argv[2][-2000:]}))' "$graph_eval_out" "$graph_out" 2>/dev/null || echo '{}')"
+        mark_builder_flow "$sid" "graph_node_dispatch"
+      fi
       return 0
     fi
     log "${R}[graph-dispatch] ${sid} phase=${phase} but task_graph missing; refuse parent builder dispatch${N}"
+    if planner_role_boundary_required "$sid"; then
+      runtime_status_transition "$sid" "drafting" "active_blocked_missing_task_graph" "coordinator" '{"status_fields":{"phase":"requirements_ready","handoff_to":"graph_compiler","target_role":"graph_compiler","planner_role_boundary_version":2},"note":"Graph Compiler must produce the missing DAG; Planner remains requirements-only."}' || true
+      rollback_state_cache "$sid"
+      emit_event "$sid" "graph_dispatch_waiting_compiler" "coordinator" '{"reason":"task_graph_missing","owner":"graph_compiler"}'
+      return 0
+    fi
     dispatch_to_planner "$sid" "gate_missing_task_graph" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：Planner 必须补齐 ${SPRINTS_DIR}/${sid}.task_graph.json，包含 id/goal/depends_on/write_scope/read_scope/required_skills/preferred_model/gate/acceptance/estimated_cost。未生成 DAG 前禁止直接派 Builder。"
     runtime_status_transition "$sid" "drafting" "active_blocked_missing_task_graph" "coordinator" '{"status_fields":{"phase":"prd_ready","handoff_to":"planner","target_role":"planner"},"note":"Workflow guard refused single-builder fallback; task_graph is required."}' || true
     rollback_state_cache "$sid"
@@ -4069,6 +4713,11 @@ EOF
 
   if [[ -f "$SPRINTS_DIR/${sid}.plan.md" ]]; then
     log "${R}Sprint ${sid} active 有 plan 但 phase 非 planning_complete/graph_dispatch_active；禁止单 builder fallback${N}"
+    if planner_role_boundary_required "$sid"; then
+      runtime_status_transition "$sid" "drafting" "active_blocked_invalid_graph_phase" "coordinator" '{"status_fields":{"phase":"requirements_ready","handoff_to":"graph_compiler","target_role":"graph_compiler","planner_role_boundary_version":2},"note":"Graph Compiler owns DAG/phase repair; Planner remains requirements-only."}' || true
+      rollback_state_cache "$sid"
+      return 0
+    fi
     dispatch_to_planner "$sid" "gate_missing_task_graph_or_phase" "$SPRINTS_DIR/${sid}.dispatch.md" "门禁拦截：当前 active sprint 不能靠 plan.md 直接派 Builder。请补齐 task_graph.json 并把 phase 设为 planning_complete，再由 graph scheduler 派发。"
     runtime_status_transition "$sid" "drafting" "active_blocked_missing_graph_phase" "coordinator" '{"status_fields":{"phase":"prd_ready","handoff_to":"planner","target_role":"planner"},"note":"Single-builder fallback disabled; planner DAG is required."}' || true
     rollback_state_cache "$sid"
@@ -5391,6 +6040,15 @@ else:
     fi
   fi
 
+  # The graph closeout is authoritative only after closure.json is committed.
+  # The node-verdict refresh can run one instant earlier and leave the durable
+  # acceptance verdict stuck at IN_PROGRESS. Refresh again here so exports,
+  # parent runs, and the desktop all observe the same terminal PASS contract.
+  if ! refresh_terminal_requirement_coverage "$sid"; then
+    log "${R}[coverage-closeout] BLOCK finalize: $sid — terminal acceptance coverage did not pass${N}"
+    return 1
+  fi
+
   # P0 knowledge closure gate: finalized sprint must have accepted.md,
   # source_artifact_index.md, and structured JSON/events summaries.
   if ! ensure_knowledge_closure_or_block "$sid" "$sf"; then
@@ -5466,6 +6124,27 @@ prune_duplicate_coordinators() {
     fi
   done
 }
+
+reconcile_retryable_elastic_planners() {
+  local consumer="$HARNESS_DIR/lib/intent_consumer.py"
+  [[ -f "$consumer" ]] || return 0
+  local output rc attempted
+  output=$(SOLAR_HARNESS_DIR="$HARNESS_DIR" \
+    SOLAR_HARNESS_SPRINTS_DIR="$SPRINTS_DIR" \
+    HARNESS_SPRINTS_DIR="$SPRINTS_DIR" \
+    python3 "$consumer" retry-planners --limit 1 --json 2>>"$COORD_LOG")
+  rc=$?
+  if [[ "$rc" != "0" ]]; then
+    log "${Y}[planner-retry] reconciliation reported an error: ${output:0:500}${N}"
+    return 0
+  fi
+  attempted=$(printf '%s' "$output" | python3 -c 'import json,sys; print(int(json.load(sys.stdin).get("attempted",0)))' 2>/dev/null || echo 0)
+  [[ "$attempted" =~ ^[0-9]+$ ]] || attempted=0
+  if (( attempted > 0 )); then
+    log "${C}[planner-retry] resubmitted ${attempted} capacity-blocked Planner request(s)${N}"
+  fi
+}
+
 
 run_coordinator() {
   # PID 互斥: 防止多实例
@@ -5583,6 +6262,7 @@ with open('$patches_file','w') as f:
   local recovery_count=0
   for rsf in "$SPRINTS_DIR"/sprint-*.status.json; do
     [[ -f "$rsf" ]] || continue
+    coordinator_sprint_admitted "$rsf" || continue
     local rsid rst
     rsid=$(get_field "$rsf" "id")
     rst=$(get_field "$rsf" "status")
@@ -5605,6 +6285,7 @@ with open('$patches_file','w') as f:
   local planning_recovery_count=0
   for rsf in "$SPRINTS_DIR"/sprint-*.status.json; do
     [[ -f "$rsf" ]] || continue
+    coordinator_sprint_admitted "$rsf" || continue
     local rsid rst rphase
     rsid=$(get_field "$rsf" "id")
     rst=$(get_field "$rsf" "status")
@@ -5625,6 +6306,14 @@ with open('$patches_file','w') as f:
         log "startup recovery: replaying DAG-ready builder handoff for $rsid (status=${rst}, phase=${rphase})"
         handle_active "$rsid" "$rsf"
       fi
+    elif [[ "$rst" == "drafting" ]]; then
+      local recovery_planner_state
+      recovery_planner_state="$(planner_operator_compile_state "$rsid")"
+      if [[ "$recovery_planner_state" == "failed" || "$recovery_planner_state" == "abandoned" ]]; then
+        ((planning_recovery_count+=1))
+        log "startup recovery: replaying failed Planner dispatch for $rsid"
+        handle_drafting "$rsid" "$rsf"
+      fi
     fi
   done
   if [[ "$planning_recovery_count" -gt 0 ]]; then
@@ -5643,6 +6332,11 @@ with open('$patches_file','w') as f:
     echo "═══════════════════════════════════════════════════" >> "$COORD_LOG"
     echo "[会话] 轮询开始: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$COORD_LOG"
 
+    # Planner capacity is a queue condition, not a terminal request failure.
+    # Reconcile at most one due request per coordinator tick; the Python side
+    # applies durable ownership, deduplication, and exponential backoff.
+    reconcile_retryable_elastic_planners
+
     if type reap_expired_leases &>/dev/null; then
       local reaped_leases
       reaped_leases="$(reap_expired_leases 2>/dev/null || echo 0)"
@@ -5658,8 +6352,21 @@ with open('$patches_file','w') as f:
     # dormant on node-level progress and never re-runs dispatch-evals/dispatch-ready
     # (back-half stall). Extra wakes are safe: downstream dispatch is lease-guarded/idempotent.
     local max_file_mtime=0
-    for f in "$SPRINTS_DIR"/sprint-*.status.json "$SPRINTS_DIR"/sprint-*.task_dag.state.json; do
+    for f in "$SPRINTS_DIR"/sprint-*.status.json "$SPRINTS_DIR"/sprint-*.task_dag.state.json "$SPRINTS_DIR"/sprint-*/planning/adapter_result.json "$SPRINTS_DIR"/sprint-*/planning/runtime/sprint-*.task_graph_state.json; do
       [[ -f "$f" ]] || continue
+      local admission_status_file="$f"
+      if [[ "$f" == *.task_dag.state.json ]]; then
+        admission_status_file="${f%.task_dag.state.json}.status.json"
+      elif [[ "$f" == */planning/adapter_result.json ]]; then
+        local adapter_sprint_dir="${f%/planning/adapter_result.json}"
+        admission_status_file="$SPRINTS_DIR/${adapter_sprint_dir##*/}.status.json"
+      elif [[ "$f" == */planning/runtime/*.task_graph_state.json ]]; then
+        local runtime_state_sid
+        runtime_state_sid="$(get_field "$f" "sprint_id")"
+        [[ "$runtime_state_sid" == sprint-* ]] || continue
+        admission_status_file="$SPRINTS_DIR/${runtime_state_sid}.status.json"
+      fi
+      coordinator_sprint_admitted "$admission_status_file" || continue
       local fmtime
       fmtime=$(solar_file_mtime "$f" 2>/dev/null || echo 0)
       (( fmtime > max_file_mtime )) && max_file_mtime=$fmtime
@@ -5690,6 +6397,7 @@ with open('$patches_file','w') as f:
       local sf
       for sf in "$SPRINTS_DIR"/sprint-*.status.json; do
         [[ -f "$sf" ]] || continue
+        coordinator_sprint_admitted "$sf" || continue
 
         local sid st
         sid=$(get_field "$sf" "id")
@@ -5811,9 +6519,33 @@ with open('$patches_file','w') as f:
           if [[ "$st" == "approved" && -f "$SPRINTS_DIR/${sid}.task_graph.json" ]]; then
             log "${Y}[state-recovery] ${sid} is approved with task_graph; driving handle_approved to ensure progress${N}"
             handle_approved "$sid" "$sf"
+          elif [[ "$st" == "active" ]] && typed_planner_required "$sid"; then
+            if typed_scheduler_state_requires_tick "$sid"; then
+              log "${Y}[state-recovery] ${sid} has nonterminal typed Scheduler state; driving the next frozen SchedulerInput tick${N}"
+            else
+              log "${Y}[state-recovery] ${sid} has terminal typed Scheduler state; reconciling the top-level sprint status${N}"
+            fi
+            handle_active "$sid" "$sf"
           elif [[ "$st" == "active" ]] && { eval_passed_needs_progress "$sf" || [[ -f "$SPRINTS_DIR/${sid}.task_graph.json" ]]; }; then
             log "${Y}[state-recovery] ${sid} has task_graph or eval_passed; driving handle_active to ensure progress${N}"
             handle_active "$sid" "$sf"
+          elif [[ "$st" == "drafting" ]]; then
+            if typed_planner_required "$sid" && [[ -s "$(typed_planner_result_path "$sid")" ]]; then
+              log "${Y}[state-recovery] ${sid} has a completed typed Planner result; reconciling without a status-fingerprint change${N}"
+              handle_drafting "$sid" "$sf"
+            else
+              local drafting_planner_state
+              drafting_planner_state="$(planner_operator_compile_state "$sid")"
+              if [[ "$drafting_planner_state" == "failed" || "$drafting_planner_state" == "abandoned" ]]; then
+                if ! drafting_retry_blocked "$sid" "planner_operator_retry"; then
+                  log "${Y}[state-recovery] ${sid} Planner dispatch is ${drafting_planner_state}; retrying without a status-fingerprint change${N}"
+                  handle_drafting "$sid" "$sf"
+                fi
+              elif [[ "$drafting_planner_state" == "completed" ]] && planner_artifacts_present "$sid"; then
+                log "${Y}[state-recovery] ${sid} has a successful durable Planner result and candidate artifacts; certifying without a status-fingerprint change${N}"
+                handle_drafting "$sid" "$sf"
+              fi
+            fi
           fi
         fi
       done
@@ -5874,6 +6606,7 @@ PY
       # 扫所有 status=passed 但无 .finalized 的 sprint → 补跑 handle_passed
       for rsf in "$SPRINTS_DIR"/sprint-*.status.json; do
         [[ -f "$rsf" ]] || continue
+        coordinator_sprint_admitted "$rsf" || continue
         local rsid rst
         rsid=$(get_field "$rsf" "id")
         rst=$(get_field "$rsf" "status")

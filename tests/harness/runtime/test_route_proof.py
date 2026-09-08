@@ -4,8 +4,10 @@ from pathlib import Path
 
 
 ROOT = (Path(__file__).resolve().parents[3] / 'harness')
-if str(ROOT / "lib") not in sys.path:
-    sys.path.insert(0, str(ROOT / "lib"))
+HARNESS_LIB = str(ROOT / "lib")
+if HARNESS_LIB in sys.path:
+    sys.path.remove(HARNESS_LIB)
+sys.path.insert(0, HARNESS_LIB)
 
 import graph_scheduler  # noqa: E402
 import operator_runtime  # noqa: E402
@@ -35,6 +37,13 @@ def _seed_registry(harness: Path) -> None:
                     "provider": "anthropic",
                     "backend": "claude-cli",
                     "model": "sonnet",
+                    "enabled": True,
+                },
+                "autosci-local-action": {
+                    "role": "builder",
+                    "provider": "research_operator_registry",
+                    "backend": "research_operator_registry",
+                    "model_provider_neutral": True,
                     "enabled": True,
                 },
             },
@@ -148,6 +157,36 @@ def test_codex_route_proof_accepts_openai_only(tmp_path):
     assert (harness / "sprints" / f"{sid}.route-proof.json").exists()
 
 
+def test_codex_route_proof_accepts_registered_provider_neutral_local_operator(tmp_path):
+    harness = tmp_path / "harness"
+    sid = "sprint-route-local-neutral"
+    _seed_registry(harness)
+    _seed_pm_record(
+        harness,
+        sid,
+        "task-local",
+        node_id="S1",
+        role="builder",
+        operator_id="autosci-local-action",
+    )
+    _seed_result(
+        harness,
+        sid,
+        "task-local",
+        node_id="S1",
+        operator_id="autosci-local-action",
+        provider="research_operator_registry",
+        model="operator-runtime",
+    )
+
+    proof = route_proof.write_route_proof(harness, sid)
+
+    assert proof["ok"] is True
+    assert proof["enforced"] is True
+    assert proof["violations"] == []
+    assert proof["stages"][0]["model_provider_neutral"] is True
+
+
 def test_codex_route_proof_flags_anthropic_violation(tmp_path):
     harness = tmp_path / "harness"
     sid = "sprint-route-bad"
@@ -165,6 +204,67 @@ def test_codex_route_proof_flags_anthropic_violation(tmp_path):
             "provider": "anthropic",
             "allowed_providers": ["openai"],
             "reason": "provider_policy_violation",
+        }
+    ]
+
+
+def test_task_local_policy_does_not_retroactively_reject_mixed_planner_attempt(tmp_path):
+    """A later node policy must not rewrite an earlier mixed stage's policy history."""
+    harness = tmp_path / "harness"
+    sid = "sprint-route-task-local-policy"
+    _seed_registry(harness)
+    _seed_pm_record(
+        harness,
+        sid,
+        "task-planner-mixed",
+        node_id="N0",
+        role="planner",
+        operator_id="claude-evaluator",
+        runtime_mode="mixed",
+        provider_policy="",
+        status="failed",
+    )
+    _seed_result(
+        harness,
+        sid,
+        "task-planner-mixed",
+        node_id="N0",
+        operator_id="claude-evaluator",
+        provider="anthropic",
+        model="sonnet",
+    )
+    _seed_pm_record(
+        harness,
+        sid,
+        "task-evaluator-openai",
+        node_id="R3",
+        role="evaluator",
+        operator_id="codex-builder",
+        runtime_mode="codex",
+        provider_policy="openai",
+    )
+    _seed_result(
+        harness,
+        sid,
+        "task-evaluator-openai",
+        node_id="R3",
+        operator_id="codex-builder",
+        provider="openai",
+    )
+
+    proof = route_proof.write_route_proof(harness, sid)
+
+    assert proof["ok"] is True
+    assert proof["selected_runtime"] == "mixed"
+    assert proof["allowed_providers"] == ["openai"]
+    assert proof["violations"] == []
+    assert proof["diagnostics"]["unenforced_stages"] == [
+        {
+            "task_id": "task-planner-mixed",
+            "node_id": "N0",
+            "provider": "anthropic",
+            "runtime_mode": "mixed",
+            "reason": "provider_policy_not_declared_for_mixed_stage",
         }
     ]
 

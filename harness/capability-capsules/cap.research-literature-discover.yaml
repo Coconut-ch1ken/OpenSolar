@@ -2,7 +2,7 @@ capability_capsule_id: cap.research-literature-discover
 capsule_kind: capability
 metadata:
   name: Scientific Literature Discover
-  description: Produce a ranked and reviewable scientific paper shortlist without hidden ingestion or memory mutation.
+  description: Retrieve a ranked and reviewable scientific paper shortlist from live public literature providers together with an explicit study protocol, without hidden ingestion or memory mutation.
 applicability:
   task_types:
     - scientific-research
@@ -26,25 +26,35 @@ contract:
     required:
       - name: literature_discovery
         schema_ref: schemas/evidence/literature_discovery.v1.schema.json
+        description: Ranked candidates plus the explicit study_protocol used to discover and select them.
     optional:
       - name: degraded_sources
         description: Source channels that failed or returned incomplete data.
   preconditions:
     - check: query_or_seed_present
       description: Discovery has a query, seed, anchor, or venue target.
+    - check: live_network_authorized
+      description: The run authorizes outbound access to public scientific-literature providers.
   postconditions:
     - check: shortlist_traceable
       description: Candidate ranking includes sources, rationale, and dedup status.
+    - check: traceable_sources_recorded
+      description: Completed discovery contains either a non-fixture online source channel or controller-frozen, hash-bound local sources; unavailable online providers remain explicit limitations.
+    - check: study_protocol_traceable
+      description: Discovery records its search strategy, source-selection criteria, time range, inclusion criteria, exclusion criteria, and unresolved protocol fields.
   invariants:
+    - A completed result never falls back to fixtures, synthetic candidates, or memory-only candidates.
+    - Scientific reliability is not self-certified at discovery; downstream ingestion and claim verification decide evidentiary support.
     - Does not ingest selected papers directly.
     - Does not mutate durable research memory directly.
+    - Missing protocol parameters remain explicitly unresolved rather than being silently invented.
 composition:
   consumes:
     - schema_ref: request-envelope.schema.json
       purpose: Discovery request.
   produces:
     - schema_ref: schemas/evidence/literature_discovery.v1.schema.json
-      purpose: Ranked literature candidates.
+      purpose: Ranked literature candidates and the auditable study protocol used to select them.
   compatible_with:
     - cap.research-paper-ingest
     - cap.research-memory-update
@@ -53,14 +63,13 @@ composition:
   requires_after: []
 effects:
   read:
-    - optional existing research memory summaries
     - schemas/evidence/literature_discovery.v1.schema.json
   write:
     - artifacts/scientific/literature_discovery/
   execute:
-    - plugins/autosci/bin/autosci_bridge.py
+    - plugins/autosci/operators/scientific_lifecycle/evidence/registry.py
   network:
-    - optional scientific search APIs and paper metadata feeds
+    - required public scientific search APIs and paper metadata feeds
   cost:
     - bounded discovery and ranking cost
   risk:
@@ -79,10 +88,13 @@ verification:
   self_check:
     - Validate emitted evidence against literature_discovery.v1.schema.json.
     - Confirm candidates include source channels, ranking rationale, and dedup status.
+    - Require completed evidence to contain a non-fixture online source channel or controller-frozen, hash-bound local sources.
+    - Confirm outputs.study_protocol records all systematic-review protocol fields and identifies unresolved values.
   external_verifier:
     required: false
   pass_conditions:
-    - Fixture discovery emits at least one candidate or an explicit inconclusive status with limitations.
+    - Live provider discovery emits at least one traceable public candidate; provider failure may complete only when controller-frozen, hash-bound local sources remain available and the provider failure is recorded.
+    - The discovery artifact always carries a study_protocol, including when provider discovery is inconclusive.
     - No memory or ingestion artifact is created by this capsule alone.
 operator_compatibility:
   preferred:
@@ -92,3 +104,7 @@ operator_compatibility:
 provenance:
   owner: opensolar
   source_phase: phase2_autosci_solar_native_capsules
+implementation:
+  trust_class: evidence_transform
+  entrypoint: plugins.autosci.operators.scientific_lifecycle.evidence.registry:execute_literature_discover
+  required_services: []

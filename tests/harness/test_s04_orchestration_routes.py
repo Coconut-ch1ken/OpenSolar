@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -21,6 +22,284 @@ def _load_routes():
     return mod
 
 
+def test_builder_result_pending_is_presented_as_waiting_not_blocked() -> None:
+    mod = _load_routes()
+    output = json.dumps({
+        "ok": False,
+        "dispatched": [],
+        "skipped": [{
+            "node": "S1",
+            "reason": "builder_operator_result_pending",
+            "complete": False,
+        }],
+        "terminalized": [],
+    })
+    events = [{
+        "ts": "2026-08-27T21:39:05Z",
+        "type": "activity_failed",
+        "actor": "coordinator",
+        "payload": {
+            "legacy_event": "graph_eval_dispatch_failed",
+            "rc": 2,
+            "output": output,
+            "error": "graph_eval_dispatch_failed",
+        },
+    }]
+
+    timeline = mod._timeline_from_events(events, {}, "2026-08-27T21:39:05Z")
+    narrative = mod._narrative_from_events(events)
+
+    assert timeline[0]["title"] == "Waiting for Builder result for S1"
+    assert timeline[0]["tone"] == "working"
+    assert narrative[0]["title"] == "Waiting for Builder result S1"
+    assert narrative[0]["tone"] == "working"
+    assert "durable result" in narrative[0]["summary"]
+
+
+def test_spec_phase_does_not_report_missing_task_graph_as_a_stall() -> None:
+    mod = _load_routes()
+    stall = mod._build_stall_summary(
+        {
+            "status": "drafting",
+            "phase": "spec",
+            "handoff_to": "pm",
+            "target_role": "pm",
+        },
+        [],
+        [],
+        False,
+        [],
+    )
+
+    assert stall["is_stalled"] is False
+    assert stall["state"] == "awaiting_pm"
+    assert stall["title"] == "Waiting for PM"
+    assert "not expected yet" in stall["detail"]
+
+
+def test_real_evaluator_dispatch_failure_remains_blocked() -> None:
+    mod = _load_routes()
+    events = [{
+        "ts": "2026-08-27T21:39:05Z",
+        "type": "activity_failed",
+        "actor": "coordinator",
+        "payload": {
+            "legacy_event": "graph_eval_dispatch_failed",
+            "reason": "no_available_evaluator",
+        },
+    }]
+
+    narrative = mod._narrative_from_events(events)
+
+    assert narrative[0]["title"] == "Evaluation blocked"
+    assert narrative[0]["tone"] == "blocked"
+
+
+def test_native_elastic_planner_terminal_failure_precedes_missing_graph() -> None:
+    mod = _load_routes()
+    status = {
+        "status": "failed",
+        "phase": "elastic_planner_failed",
+        "elastic_planner_failure": {
+            "task_id": "pm-elastic-failed",
+            "status": "failed_contract_closeout",
+            "error": {
+                "code": "failed_contract_closeout",
+                "detail": "Planner output did not satisfy its contract.",
+            },
+            "retryable": False,
+        },
+    }
+
+    stall = mod._build_stall_summary(status, [], [], False)
+
+    assert stall["state"] == "elastic_planner_failed"
+    assert stall["title"] == "Planning failed"
+    assert stall["detail"] == "Planner output did not satisfy its contract."
+    assert stall["reasons"] == ["failed_contract_closeout"]
+
+
+def test_active_elastic_planning_without_graph_is_working_not_paused() -> None:
+    mod = _load_routes()
+    status = {
+        "status": "active",
+        "phase": "elastic_planning",
+        "planner_dispatch_claim": {
+            "state": "submitted",
+            "planner_task_id": "pm-elastic-live",
+        },
+    }
+
+    stall = mod._build_stall_summary(status, [], [], False)
+
+    assert stall == {
+        "is_stalled": False,
+        "state": "elastic_planner_working",
+        "severity": "ok",
+        "title": "Planner is working",
+        "detail": "The Elastic Planner is compiling the request; a DAG is not expected until planning finishes.",
+        "reasons": [],
+    }
+
+
+def test_active_elastic_planning_full_projection_has_no_missing_graph_diagnostic(
+    tmp_path: Path,
+) -> None:
+    mod = _load_routes()
+    payload, degraded = _scenario_projection(
+        mod,
+        tmp_path,
+        "elastic-planner-working",
+        status={
+            "status": "active",
+            "phase": "elastic_planning",
+            "planner_dispatch_claim": {
+                "state": "submitted",
+                "planner_task_id": "pm-elastic-live",
+            },
+        },
+    )
+
+    assert degraded == []
+    assert payload["nodes"] == []
+    assert payload["dispatch"]["blocker_diagnostics"] == []
+    assert payload["dispatch"]["stall"]["state"] == "elastic_planner_working"
+    assert payload["dispatch"]["stall"]["is_stalled"] is False
+
+
+def test_terminal_elastic_planner_failure_full_projection_remains_failed(tmp_path: Path) -> None:
+    mod = _load_routes()
+    payload, degraded = _scenario_projection(
+        mod,
+        tmp_path,
+        "elastic-planner-failed",
+        status={
+            "status": "failed",
+            "phase": "elastic_planner_failed",
+            "elastic_planner_failure": {
+                "task_id": "pm-elastic-failed",
+                "status": "failed_contract_closeout",
+                "error": {
+                    "code": "failed_contract_closeout",
+                    "detail": "Planner output did not satisfy its contract.",
+                },
+                "retryable": False,
+            },
+        },
+    )
+
+    assert any(item.startswith("task_graph:missing") for item in degraded)
+    assert payload["nodes"] == []
+    assert payload["dispatch"]["stall"]["state"] == "elastic_planner_failed"
+    assert payload["dispatch"]["stall"]["is_stalled"] is True
+    assert payload["dispatch"]["stall"]["detail"] == "Planner output did not satisfy its contract."
+
+
+def test_dashboard_node_projects_safe_prework_refusal_summary(tmp_path: Path) -> None:
+    mod = _load_routes()
+    payload, degraded = _scenario_projection(
+        mod,
+        tmp_path,
+        "prework-refusal",
+        status={"status": "active", "phase": "graph_dispatch_active"},
+        graph={
+            "nodes": [{
+                "id": "S1",
+                "goal": "Run bounded work",
+                "status": "pending",
+                "depends_on": [],
+            }],
+        },
+        runtime_state={
+            "S1": {
+                "status": "queued",
+                "blocking_reason": "frozen_physical_candidates_temporarily_unavailable",
+                "retryable": True,
+                "next_action": "Wait for cooldown.",
+                "candidate_observations": [{"operator_id": "op.rank2", "state": "UNAVAILABLE"}],
+                "pre_work_refusal": {
+                    "operator_id": "op.rank1",
+                    "task_id": "private-task-id",
+                    "result_json": "/private/result.json",
+                    "error": {"type": "provider_quota", "detail": "private log text"},
+                    "next_candidate_id": "op.rank2",
+                    "recorded_at": "2026-08-28T12:00:00Z",
+                },
+            },
+        },
+    )
+
+    assert degraded == []
+    card = payload["nodes"][0]
+    assert card["pre_work_refusal"] == {
+        "operator_id": "op.rank1",
+        "error_type": "provider_quota",
+        "next_candidate_id": "op.rank2",
+        "recorded_at": "2026-08-28T12:00:00Z",
+    }
+    assert "private-task-id" not in json.dumps(card)
+    assert "/private/result.json" not in json.dumps(card)
+
+
+def test_transient_missing_plan_certificate_is_working_after_certification() -> None:
+    mod = _load_routes()
+    events = [{
+        "ts": "2026-08-27T21:39:05Z",
+        "type": "log_message",
+        "actor": "graph-dispatch",
+        "payload": {
+            "legacy_event": "plan_validator_dispatch_refused",
+            "errors": [{
+                "code": "PLAN_CERTIFICATE_MISSING",
+                "message": "planner graph carries no plan_certificate",
+            }],
+        },
+    }]
+
+    narrative = mod._narrative_from_events(events, plan_certified=True)
+
+    assert narrative[0]["title"] == "Plan awaiting certification"
+    assert narrative[0]["tone"] == "working"
+    assert narrative[0]["summary"] == "Dispatch resumed after the plan certificate was recorded."
+
+
+def test_missing_plan_certificate_remains_blocked_without_certification() -> None:
+    mod = _load_routes()
+    events = [{
+        "ts": "2026-08-27T21:39:05Z",
+        "type": "log_message",
+        "actor": "graph-dispatch",
+        "payload": {
+            "legacy_event": "plan_validator_dispatch_refused",
+            "errors": [{"code": "PLAN_CERTIFICATE_MISSING"}],
+        },
+    }]
+
+    narrative = mod._narrative_from_events(events, plan_certified=False)
+
+    assert narrative[0]["title"] == "Plan certification required"
+    assert narrative[0]["tone"] == "blocked"
+
+
+def test_context_injected_is_a_completed_preparation_step() -> None:
+    mod = _load_routes()
+    events = [{
+        "ts": "2026-08-28T13:42:18Z",
+        "type": "context_injected",
+        "actor": "planner",
+        "payload": {"node": "A1"},
+    }]
+
+    timeline = mod._timeline_from_events(events, {}, "2026-08-28T13:42:18Z")
+    narrative = mod._narrative_from_events(events)
+
+    assert timeline[0]["title"] == "Context prepared"
+    assert timeline[0]["tone"] == "complete"
+    assert narrative[0]["title"] == "Context prepared"
+    assert narrative[0]["tone"] == "complete"
+    assert "model work" in narrative[0]["summary"]
+
+
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -29,6 +308,49 @@ def _write_json(path: Path, payload: dict) -> None:
 def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def test_fixed_contract_worker_binding_is_not_projected_as_missing() -> None:
+    mod = _load_routes()
+    operator_id = "autosci-research-synthesis-seed-fetch-worker"
+    node = {
+        "id": "seed_fetch",
+        "goal": "Freeze the governed research request and source authority.",
+        "status": "dispatched",
+        "required_operator_id": operator_id,
+        "required_capabilities": ["workflow.planning", "test.tdd"],
+        "capability_capsule_id": "cap.research-seed-snapshot",
+        "physical_plan_ir": {
+            "selected_operator_id": operator_id,
+            "capability_capsule_id": "cap.research-seed-snapshot",
+            "execution_candidates": [{"operator_id": operator_id}],
+        },
+    }
+
+    card = mod._build_node_cards("sprint-fixed", [node], {}, [])[0]
+
+    assert card["selected_operator_id"] == operator_id
+    assert card["capability_capsule_id"] == "cap.research-seed-snapshot"
+    assert card["candidate_workers_seen"] is True
+    assert card["missing_capabilities"] == []
+    assert card["route_decision"] == "fixed_contract_binding"
+
+
+def test_required_operator_without_compiled_candidate_remains_unavailable() -> None:
+    mod = _load_routes()
+    node = {
+        "id": "seed_fetch",
+        "required_operator_id": "missing-worker",
+        "required_capabilities": ["workflow.planning"],
+        "capability_capsule_id": "cap.research-seed-snapshot",
+        "physical_plan_ir": {"execution_candidates": []},
+    }
+
+    card = mod._build_node_cards("sprint-fixed", [node], {}, [])[0]
+
+    assert card["candidate_workers_seen"] is False
+    assert card["missing_capabilities"] == ["workflow.planning"]
+    assert card["route_decision"] == "no_routing_record"
 
 
 def _fixture_tree(tmp_path: Path) -> dict[str, Path]:
@@ -160,6 +482,7 @@ def _scenario_projection(
     routing: list[dict] | None = None,
     panes: list[dict] | None = None,
     operators: dict | None = None,
+    runtime_state: dict | None = None,
 ) -> tuple[dict, list[str]]:
     sid = f"sprint-{name}"
     tree = _scenario_tree(tmp_path, name)
@@ -173,6 +496,16 @@ def _scenario_projection(
         _write_json(tree["sprints"] / f"{sid}.status.json", payload)
     if graph is not None:
         _write_json(tree["sprints"] / f"{sid}.task_graph.json", {"sprint_id": sid, **graph})
+    if runtime_state is not None:
+        _write_json(
+            tree["sprints"] / f"{sid}.task_dag.state.json",
+            {
+                "schema_version": "solar.task_graph_state.v1",
+                "sprint_id": sid,
+                "node_results": runtime_state,
+                "gate_results": {},
+            },
+        )
     for suffix, text in (artifacts or {}).items():
         _write_text(tree["sprints"] / f"{sid}.{suffix}", text)
     if routing is not None:
@@ -182,6 +515,30 @@ def _scenario_projection(
     if operators is not None:
         _write_json(tree["config"] / "physical-operators.json", {"version": 1, "operators": operators})
     return mod.build_projection_payload(sid)
+
+
+def test_projection_overlays_authoritative_task_state_sidecar(tmp_path: Path) -> None:
+    mod = _load_routes()
+    payload, degraded = _scenario_projection(
+        mod,
+        tmp_path,
+        "fixed-state",
+        status={"status": "active", "phase": "implementation"},
+        graph={
+            "nodes": [
+                {
+                    "id": "seed_fetch",
+                    "goal": "Freeze the governed request.",
+                    "status": "pending",
+                }
+            ]
+        },
+        runtime_state={"seed_fetch": {"status": "dispatched"}},
+    )
+
+    assert degraded == []
+    assert payload["task_graph"]["nodes"][0]["workflow_status"] == "dispatched"
+    assert payload["task_graph"]["nodes"][0]["status"] == "active"
 
 
 def test_dashboard_payload_separates_actorhost_from_pane_carrier(tmp_path: Path) -> None:
@@ -219,6 +576,276 @@ def test_dashboard_payload_exposes_route_decision_and_blocked_reason(tmp_path: P
     assert nodes["N2"]["blocked_reason"] == "dependency_blocked"
 
 
+def test_projection_and_sprint_index_rehydrate_split_runtime_state(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "split-runtime-projection")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-split-runtime-projection"
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "title": "Split runtime projection",
+        "status": "passed",
+        "phase": "finalized",
+    })
+    _write_json(tree["sprints"] / f"{sid}.task_graph.json", {
+        "sprint_id": sid,
+        "required_gates": ["G1"],
+        "nodes": [{"id": "N1", "goal": "Complete work", "depends_on": [], "gate": "G1"}],
+    })
+    _write_json(tree["sprints"] / f"{sid}.task_dag.state.json", {
+        "schema_version": "solar.task_graph_state.v1",
+        "sprint_id": sid,
+        "graph_ref": f"{sid}.task_graph.json",
+        "node_results": {"N1": {"status": "passed"}},
+        "gate_results": {"G1": {"status": "passed", "node": "N1"}},
+    })
+
+    projection, degraded = mod.build_projection_payload(sid, mode="fast")
+
+    assert degraded == []
+    assert projection["status"] == "passed"
+    assert projection["phase"] == "finalized"
+    assert projection["summary"]["progress"]["passed_nodes"] == 1
+    assert projection["summary"]["progress"]["status_counts"] == {"passed": 1}
+    assert projection["task_graph"]["nodes"][0]["status"] == "passed"
+
+    index = mod._sprint_status_rows(limit=10)
+    row = next(item for item in index if item["sprint_id"] == sid)
+    assert row["node_status_counts"] == {"passed": 1}
+
+
+def test_dashboard_reads_scheduler_underscore_state_filename(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "underscore-runtime-state")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-underscore-runtime-state"
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "status": "active",
+        "phase": "planning_complete",
+    })
+    _write_json(tree["sprints"] / f"{sid}.task_graph.json", {
+        "sprint_id": sid,
+        "runtime_state_filename": f"{sid}.task_graph_state.json",
+        "nodes": [{"id": "S1", "goal": "Work", "depends_on": []}],
+    })
+    _write_json(tree["sprints"] / f"{sid}.task_graph_state.json", {
+        "schema_version": "solar.task_graph_state.v1",
+        "artifact_role": "mutable_execution_ledger",
+        "nodes": {"S1": {"status": "dispatched"}},
+        "node_results": {"S1": {"status": "dispatched"}},
+        "ready_nodes": [],
+        "revision": 1,
+        "events": [],
+    })
+
+    payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert degraded == []
+    assert payload["dag"]["nodes"][0]["workflow_status"] == "dispatched"
+
+
+def test_dashboard_projects_static_frozen_candidate_unsat_from_split_state(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "frozen-unsat")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-frozen-unsat"
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "status": "active",
+        "phase": "planning_complete",
+    })
+    _write_json(tree["sprints"] / f"{sid}.task_graph.json", {
+        "sprint_id": sid,
+        "runtime_state_filename": f"{sid}.task_graph_state.json",
+        "nodes": [{"id": "S1", "goal": "Execute", "depends_on": []}],
+    })
+    observations = [{
+        "operator_id": "op.claude",
+        "rank": 1,
+        "state": "UNAVAILABLE",
+        "reason": "physical_operator_provider_incompatible:allowed=openai:actual=anthropic",
+    }]
+    _write_json(tree["sprints"] / f"{sid}.task_graph_state.json", {
+        "schema_version": "solar.task_graph_state.v1",
+        "nodes": {"S1": {"status": "worker_blocked"}},
+        "node_results": {
+            "S1": {
+                "status": "worker_blocked",
+                "blocking_reason": "frozen_physical_plan_unsatisfiable",
+                "retryable": False,
+                "wait_classification": "static_incompatible",
+                "candidate_observations": observations,
+                "next_action": "Update provider policy, then explicitly resume.",
+            }
+        },
+    })
+
+    payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert degraded == []
+    card = payload["dag"]["nodes"][0]
+    assert card["status"] == "blocked"
+    assert card["workflow_status"] == "worker_blocked"
+    assert card["blocked_reason"] == "frozen_physical_plan_unsatisfiable"
+    assert card["candidate_observations"] == observations
+    assert card["retryable"] is False
+    assert card["next_action"] == "Update provider policy, then explicitly resume."
+    assert payload["stall"]["state"] == "frozen_physical_plan_unsatisfiable"
+    assert payload["stall"]["is_stalled"] is True
+
+
+def test_dashboard_projects_bounded_frozen_candidate_wait_from_split_state(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "frozen-wait")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-frozen-wait"
+    retry_after = "2026-08-28T12:30:00Z"
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "status": "active",
+        "phase": "planning_complete",
+    })
+    _write_json(tree["sprints"] / f"{sid}.task_graph.json", {
+        "sprint_id": sid,
+        "runtime_state_filename": f"{sid}.task_graph_state.json",
+        "nodes": [{"id": "S1", "goal": "Execute", "depends_on": []}],
+    })
+    _write_json(tree["sprints"] / f"{sid}.task_graph_state.json", {
+        "schema_version": "solar.task_graph_state.v1",
+        "node_results": {
+            "S1": {
+                "status": "queued",
+                "blocking_reason": "frozen_physical_candidates_temporarily_unavailable",
+                "retryable": True,
+                "retry_after": retry_after,
+                "wait_classification": "transient",
+                "candidate_wait_attempts": 2,
+                "candidate_observations": [{
+                    "operator_id": "op.primary",
+                    "rank": 1,
+                    "state": "UNAVAILABLE",
+                    "reason": "worker_capacity_exhausted",
+                }],
+                "next_action": "Wait for capacity to clear.",
+            }
+        },
+    })
+
+    payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert degraded == []
+    card = payload["dag"]["nodes"][0]
+    assert card["status"] == "pending"
+    assert card["blocked_reason"] == "frozen_physical_candidates_temporarily_unavailable"
+    assert card["retryable"] is True
+    assert card["retry_after"] == retry_after
+    assert card["candidate_wait_attempts"] == 2
+    assert payload["stall"]["state"] == "frozen_physical_candidates_waiting"
+    assert retry_after in payload["stall"]["detail"]
+
+
+def test_terminal_direct_answer_does_not_report_missing_dag_stall(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "direct-terminal")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-direct-terminal"
+    report = tree["sprints"] / f"{sid}.direct-response-report.md"
+    _write_text(report, "Photosynthesis converts light energy into stored chemical energy.\n")
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "status": "passed",
+        "phase": "direct_response_complete",
+        "execution_mode": "direct_response",
+        "direct_response_ref": {
+            "path": str(report),
+            "sha256": hashlib.sha256(report.read_bytes()).hexdigest(),
+        },
+    })
+
+    payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert degraded == []
+    assert payload["progress"]["total_nodes"] == 0
+    assert payload["stall"]["is_stalled"] is False
+
+
+def test_terminal_direct_answer_requires_existing_report(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "direct-terminal-missing")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-direct-terminal-missing"
+    report = tree["sprints"] / f"{sid}.direct-response-report.md"
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "status": "passed",
+        "phase": "direct_response_complete",
+        "execution_mode": "direct_response",
+        "direct_response_ref": {"path": str(report), "sha256": "a" * 64},
+    })
+
+    payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert f"direct_response:invalid:{sid}:report_missing" in degraded
+    assert f"task_graph:missing:{sid}" in degraded
+    assert payload["stall"]["is_stalled"] is True
+
+
+def test_terminal_direct_answer_rejects_report_outside_sprints(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "direct-terminal-outside")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-direct-terminal-outside"
+    report = tmp_path / "outside-report.md"
+    _write_text(report, "This file is outside the sprint authority.\n")
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "status": "passed",
+        "phase": "direct_response_complete",
+        "execution_mode": "direct_response",
+        "direct_response_ref": {
+            "path": str(report),
+            "sha256": hashlib.sha256(report.read_bytes()).hexdigest(),
+        },
+    })
+
+    _payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert f"direct_response:invalid:{sid}:path_outside_sprints" in degraded
+    assert f"task_graph:missing:{sid}" in degraded
+
+
+def test_terminal_direct_answer_rejects_tampered_report(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _scenario_tree(tmp_path, "direct-terminal-tampered")
+    _patch_dirs(mod, tree)
+    mod._capability_registry = lambda: {}
+    sid = "sprint-direct-terminal-tampered"
+    report = tree["sprints"] / f"{sid}.direct-response-report.md"
+    _write_text(report, "Original answer.\n")
+    recorded_sha = hashlib.sha256(report.read_bytes()).hexdigest()
+    _write_text(report, "Tampered answer.\n")
+    _write_json(tree["sprints"] / f"{sid}.status.json", {
+        "sprint_id": sid,
+        "status": "passed",
+        "phase": "direct_response_complete",
+        "execution_mode": "direct_response",
+        "direct_response_ref": {"path": str(report), "sha256": recorded_sha},
+    })
+
+    _payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert f"direct_response:invalid:{sid}:sha256_mismatch" in degraded
+    assert f"task_graph:missing:{sid}" in degraded
+
+
 def test_dashboard_payload_preserves_compiler_owned_node_role_authority(tmp_path: Path) -> None:
     mod = _load_routes()
     tree = _fixture_tree(tmp_path)
@@ -249,6 +876,47 @@ def test_dashboard_payload_reports_degraded_missing_task_graph(tmp_path: Path) -
     assert any(item.startswith("task_graph:missing") for item in degraded)
     assert payload["blocker_diagnostics"][0]["kind"] == "task_graph"
     assert payload["progress"]["total_nodes"] == 0
+
+
+def test_dashboard_loads_typed_scheduler_projection_and_runtime_state(tmp_path: Path) -> None:
+    mod = _load_routes()
+    tree = _fixture_tree(tmp_path)
+    _patch_dirs(mod, tree)
+    sid = "sprint-active"
+    (tree["sprints"] / f"{sid}.task_graph.json").unlink()
+    runtime = tree["sprints"] / sid / "planning" / "runtime"
+    _write_json(runtime / f"{sid}.task_graph.json", {
+        "schema_version": "solar.scheduler_runtime_projection.v1",
+        "sprint_id": sid,
+        "nodes": [{
+            "id": "typed-node",
+            "goal": "Run typed work",
+            "owner": "scheduler",
+            "depends_on": [],
+            "capability_capsule_id": "cap.typed-work",
+            "required_capabilities": ["cap.typed-work"],
+            "physical_candidates": [{
+                "operator_id": "typed-worker",
+                "admission_state": "ELIGIBLE",
+            }],
+            "write_scope": ["artifacts/typed-node"],
+        }],
+    })
+    _write_json(runtime / f"{sid}.task_graph_state.json", {
+        "schema_version": "solar.task_graph_state.v1",
+        "sprint_id": sid,
+        "run_status": "running",
+        "nodes": {"typed-node": {"status": "dispatched"}},
+    })
+
+    payload, degraded = mod.build_dashboard_payload(sid)
+
+    assert not any(item.startswith("task_graph:missing") for item in degraded)
+    assert payload["progress"]["total_nodes"] == 1
+    assert payload["dag"]["nodes"][0]["id"] == "typed-node"
+    assert payload["dag"]["nodes"][0]["workflow_status"] == "dispatched"
+    assert payload["dag"]["nodes"][0]["selected_operator_id"] == "typed-worker"
+    assert payload["dag"]["nodes"][0]["route_decision"] == "fixed_contract_binding"
 
 
 def test_projection_payload_surfaces_ui_action_contract(tmp_path: Path) -> None:
@@ -305,34 +973,70 @@ def test_projection_payload_surfaces_ui_action_contract(tmp_path: Path) -> None:
     assert payload["timeline"]
 
 
-def _install_fake_solar(bin_dir: Path) -> None:
+def test_projection_exposes_full_original_prompt_without_json_navigation(
+    tmp_path: Path,
+) -> None:
+    mod = _load_routes()
+    prompt = (
+        "Analyze the attached article and preserve every comparison dimension.\n\n"
+        "Requirements:\n- cite the source\n- explain uncertainty\n- keep the final table"
+    )
+    payload, degraded = _scenario_projection(
+        mod,
+        tmp_path,
+        "full-original-prompt",
+        status={"status": "active", "phase": "planning"},
+        graph={"nodes": []},
+        artifacts={
+            "raw_intent.json": json.dumps(
+                {"raw": {"text": prompt}},
+                ensure_ascii=False,
+            ),
+        },
+    )
+
+    assert degraded == []
+    assert payload["original_prompt"] == prompt
+    assert payload["sprint"]["original_prompt"] == prompt
+    assert "\n\nRequirements:\n" in payload["original_prompt"]
+    assert payload["title"].endswith("…")
+
+
+def _install_fake_solar(bin_dir: Path) -> list[str]:
+    script = bin_dir / "fake_solar.py"
     _write_text(
-        bin_dir / "solar",
-        """#!/usr/bin/env bash
-set -eu
-printf '%s\n' "$*" > "$HARNESS_DIR/verdict-args.txt"
-cmd="$2"
-sid="$3"
-verdict="${4:-}"
-status="active"
-phase="unknown"
-if [[ "$cmd" == "plan-verdict" ]]; then
-  phase="plan_reviewed"
-  if [[ "$verdict" == "approve" ]]; then status="approved"; else status="active"; fi
-elif [[ "$cmd" == "eval-verdict" ]]; then
-  phase="eval_completed"
-  if [[ "$verdict" == "pass" ]]; then status="passed"; else status="failed_review"; fi
-elif [[ "$cmd" == "handoff-submit" ]]; then
-  sid="$3"
-  phase="implementation_completed"
-  status="reviewing"
-fi
-mkdir -p "$HARNESS_DIR/sprints"
-printf '{"sprint_id":"%s","status":"%s","phase":"%s","title":"Verdict Sprint"}\n' "$sid" "$status" "$phase" > "$HARNESS_DIR/sprints/$sid.status.json"
-echo "$cmd: $sid -> $status"
+        script,
+        """from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+root = Path(os.environ["HARNESS_DIR"])
+(root / "verdict-args.txt").write_text(" ".join(args) + "\\n", encoding="utf-8")
+cmd = args[1]
+sid = args[2]
+verdict = args[3] if len(args) > 3 else ""
+status, phase = "active", "unknown"
+if cmd == "plan-verdict":
+    phase = "plan_reviewed"
+    status = "approved" if verdict == "approve" else "active"
+elif cmd == "eval-verdict":
+    phase = "eval_completed"
+    status = "passed" if verdict == "pass" else "failed_review"
+elif cmd == "handoff-submit":
+    phase, status = "implementation_completed", "reviewing"
+(root / "sprints").mkdir(parents=True, exist_ok=True)
+(root / "sprints" / f"{sid}.status.json").write_text(
+    json.dumps({"sprint_id": sid, "status": status, "phase": phase, "title": "Verdict Sprint"}),
+    encoding="utf-8",
+)
+print(f"{cmd}: {sid} -> {status}")
 """,
     )
-    (bin_dir / "solar").chmod(0o755)
+    return [sys.executable, str(script), "harness"]
 
 
 def test_plan_verdict_payload_validates_and_runs_safe_cli(tmp_path: Path, monkeypatch) -> None:
@@ -341,8 +1045,8 @@ def test_plan_verdict_payload_validates_and_runs_safe_cli(tmp_path: Path, monkey
     _patch_dirs(mod, tree)
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
-    _install_fake_solar(fake_bin)
-    monkeypatch.setenv("PATH", f"{fake_bin}:{os.environ.get('PATH', '')}")
+    command_prefix = _install_fake_solar(fake_bin)
+    monkeypatch.setattr(mod, "_solar_harness_command_prefix", lambda: command_prefix)
     monkeypatch.setenv("HARNESS_DIR", str(tree["root"]))
 
     payload, status_code = mod.submit_plan_verdict_payload("sprint-active", {"verdict": "approve", "reason": "scope ok"})
@@ -378,8 +1082,8 @@ def test_handoff_submit_payload_is_supported_only_for_ready_handoff(tmp_path: Pa
     _patch_dirs(mod, tree)
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
-    _install_fake_solar(fake_bin)
-    monkeypatch.setenv("PATH", f"{fake_bin}:{os.environ.get('PATH', '')}")
+    command_prefix = _install_fake_solar(fake_bin)
+    monkeypatch.setattr(mod, "_solar_harness_command_prefix", lambda: command_prefix)
     monkeypatch.setenv("HARNESS_DIR", str(tree["root"]))
     _write_json(tree["sprints"] / "sprint-active.status.json", {
         "sprint_id": "sprint-active",
@@ -628,3 +1332,138 @@ def test_projection_narrative_dedups_and_humanizes(tmp_path: Path) -> None:
 
     fast, _ = mod.build_projection_payload(sid, mode="fast")
     assert fast.get("narrative"), "narrative must ship in fast mode too"
+
+
+def test_projection_narrative_preserves_dispatch_reason_and_collapses_prerequisite_waits() -> None:
+    mod = _load_routes()
+    pending = json.dumps(
+        {
+            "ok": True,
+            "dispatched": [],
+            "waiting": [
+                {
+                    "node": "S1",
+                    "reason": "builder_operator_result_pending",
+                }
+            ],
+            "blocking_skips": [],
+        }
+    )
+    events = [
+        {
+            "ts": f"2026-06-26T10:00:{second:02d}Z",
+            "type": "activity_failed" if second < 31 else "log_message",
+            "actor": "coordinator",
+            "payload": {
+                "legacy_event": (
+                    "graph_eval_dispatch_failed" if second < 31 else "graph_nodes_dispatched"
+                ),
+                (
+                    "output" if second < 31 else "eval_output"
+                ): (
+                    json.dumps(
+                        {
+                            "ok": False,
+                            "dispatched": [],
+                            "skipped": [
+                                {
+                                    "node": "S1",
+                                    "reason": "builder_operator_result_pending",
+                                }
+                            ],
+                        }
+                    )
+                    if second < 31
+                    else pending
+                ),
+            },
+        }
+        for second in (1, 16, 31)
+    ]
+
+    narrative = mod._narrative_from_events(events)
+
+    waits = [row for row in narrative if row["title"].startswith("Waiting for Builder result")]
+    assert len(waits) == 1
+    assert waits[0]["tone"] == "working"
+    assert waits[0]["summary"] == "Evaluation starts after the Builder publishes its durable result."
+
+    real_failure = mod._narrative_from_events(
+        [
+            {
+                "ts": f"2026-06-26T10:01:{second:02d}Z",
+                "type": "activity_failed",
+                "actor": "coordinator",
+                "payload": {
+                    "legacy_event": "graph_eval_dispatch_failed",
+                    "output": json.dumps(
+                        {
+                            "ok": False,
+                            "skipped": [
+                                {"node": "S1", "reason": "no_available_evaluator"}
+                            ],
+                        }
+                    ),
+                },
+            }
+            for second in (0, 15)
+        ]
+    )
+    assert len(real_failure) == 1
+    assert real_failure[0]["title"] == "Evaluation blocked S1"
+    assert real_failure[0]["summary"] == "no available evaluator"
+    assert real_failure[0]["tone"] == "blocked"
+
+
+def test_failed_planner_dispatch_is_projected_as_a_stall(tmp_path: Path) -> None:
+    mod = _load_routes()
+
+    projection, _ = _scenario_projection(
+        mod,
+        tmp_path,
+        "planner-dispatch-failed",
+        status={
+            "status": "drafting",
+            "phase": "prd_ready",
+            "handoff_to": "planner",
+            "planner_dispatch_claim": {
+                "owner": "operator_pool",
+                "state": "failed",
+                "failure_reason": "no_dispatchable_operator_for_role: planner",
+                "returncode": 1,
+            },
+        },
+        graph={"nodes": [{"id": "N0", "goal": "plan", "status": "pending"}]},
+    )
+    stall = projection["dispatch"]["stall"]
+
+    assert stall["is_stalled"] is True
+    assert stall["state"] == "planner_dispatch_failed"
+    assert stall["title"] == "Planner temporarily unavailable"
+    assert stall["reasons"] == ["no_dispatchable_operator_for_role: planner"]
+    assert "No eligible Planner worker" in stall["detail"]
+
+
+def test_completed_planning_supersedes_an_old_failed_planner_claim(tmp_path: Path) -> None:
+    mod = _load_routes()
+
+    projection, _ = _scenario_projection(
+        mod,
+        tmp_path,
+        "planner-dispatch-recovered",
+        status={
+            "status": "active",
+            "phase": "planning_complete",
+            "handoff_to": "builder_main",
+            "planner_dispatch_claim": {
+                "owner": "operator_pool",
+                "state": "failed",
+                "failure_reason": "no_dispatchable_operator_for_role: planner",
+            },
+        },
+        graph={"nodes": [{"id": "N1", "goal": "build", "status": "pending"}]},
+    )
+
+    stall = projection["dispatch"]["stall"]
+    assert stall.get("state") != "planner_dispatch_failed"
+    assert stall.get("title") != "Planner temporarily unavailable"

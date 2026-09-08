@@ -24,6 +24,34 @@ def _load_pm_dispatch():
     return module
 
 
+def test_reconcile_keeps_live_task_active_when_partial_result_exists(tmp_path, monkeypatch, capsys):
+    pm_dispatch = _load_pm_dispatch()
+    inbox = tmp_path / "pm-inbox"
+    inbox.mkdir()
+    result_path = tmp_path / "partial-result.md"
+    result_path.write_text("worker is still writing\n", encoding="utf-8")
+    task_id = "pm-sprint-live-N1-deadbeef"
+    record_path = inbox / f"{task_id}.json"
+    record_path.write_text(json.dumps({
+        "task_id": task_id,
+        "status": "submitted",
+        "submitted_at": "2026-08-27T21:00:00Z",
+        "result_path": str(result_path),
+        "expected_artifacts": [str(tmp_path / "not-published-yet.md")],
+    }), encoding="utf-8")
+    monkeypatch.setattr(pm_dispatch, "PM_INBOX_DIR", inbox)
+    monkeypatch.setattr(pm_dispatch, "_active_pm_task_ids", lambda: {task_id})
+
+    rc = pm_dispatch.cmd_reconcile(argparse.Namespace(max_age_minutes=30, apply=True, json=True))
+
+    assert rc == 0
+    persisted = json.loads(record_path.read_text(encoding="utf-8"))
+    assert persisted["status"] == "submitted"
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["summary"] == {"keep_active": 1}
+    assert payload["actions"][0]["action"] == "keep_active"
+
+
 def test_select_operator_by_role_prefers_capsule_operator_constraints(monkeypatch):
     pm_dispatch = _load_pm_dispatch()
     monkeypatch.setattr(
@@ -61,6 +89,130 @@ def test_select_operator_by_role_prefers_capsule_operator_constraints(monkeypatc
     )
     assert reason == ""
     assert operator_id == "builder-b"
+
+
+def test_provider_policy_allows_declared_provider_neutral_native_operator(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "claim_verify_worker": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["evaluator"],
+                    "role": "evaluator",
+                    "backend": "research_operator_registry",
+                    "model_provider_neutral": True,
+                    "task_classes": ["claim-verification"],
+                }
+            },
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda op: (True, ""))
+
+    operator_id, _, reason = pm_dispatch.select_operator_by_role(
+        role="evaluator",
+        task_type="claim-verification",
+        prefer_operator="claim_verify_worker",
+        allowed_providers={"openai"},
+        strict_preference=True,
+    )
+
+    assert reason == ""
+    assert operator_id == "claim_verify_worker"
+
+
+def test_builder_pool_does_not_exclude_native_registry_operator(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "discovery_ingest_worker": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "role": "builder",
+                    "backend": "research_operator_registry",
+                    "model_provider_neutral": True,
+                    "runtime_binding": {
+                        "registry": "plugins.autosci.operators.scientific_lifecycle.evidence.registry",
+                        "node_id": "discovery_ingest",
+                    },
+                },
+                "model-builder": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "role": "builder",
+                    "backend": "command",
+                },
+            },
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda op: (True, ""))
+    monkeypatch.setattr(
+        pm_dispatch,
+        "_load_concurrency_policy_module",
+        lambda: types.SimpleNamespace(
+            load_policy=lambda: {"builder_pool": {"enabled": True}},
+            builder_pool_enabled=lambda _policy: True,
+            pool_member_ids=lambda _registry: ["model-builder"],
+        ),
+    )
+
+    operator_id, _, reason = pm_dispatch.select_operator_by_role(
+        role="builder",
+        task_type="literature-ingestion",
+        prefer_operator="discovery_ingest_worker",
+        allowed_providers={"openai"},
+        strict_preference=True,
+    )
+
+    assert reason == ""
+    assert operator_id == "discovery_ingest_worker"
+
+
+def test_elastic_planner_role_uses_bounded_second_operator_when_first_is_busy(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    operators = {
+        operator_id: {
+            "enabled": True,
+            "available": True,
+            "roles": ["elastic-planner"],
+            "role": "elastic-planner",
+            "backend": "command",
+            "task_classes": ["elastic_planning"],
+            "preferred_for": ["elastic_planning"],
+            "provider": "openai",
+            "model": "configured-by-elastic-planner",
+        }
+        for operator_id in ("solar-elastic-planner", "solar-elastic-planner-2")
+    }
+    monkeypatch.setattr(pm_dispatch, "load_registry", lambda: {"version": 1, "operators": operators})
+    monkeypatch.setattr(
+        pm_dispatch,
+        "is_dispatchable",
+        lambda op: (
+            (False, "runtime_state=leased")
+            if op.get("operator_id") == "solar-elastic-planner"
+            else (True, "")
+        ),
+    )
+    monkeypatch.setattr(pm_dispatch, "DEFAULT_OPERATOR_PROVIDERS", frozenset({"openai"}))
+
+    operator_id, _, reason = pm_dispatch.select_operator_by_role(
+        role="elastic-planner",
+        task_type="elastic_planning",
+    )
+
+    assert reason == ""
+    assert operator_id == "solar-elastic-planner-2"
 
 
 def test_scientific_research_rejects_spark_without_research_capability(monkeypatch):
@@ -111,6 +263,661 @@ def test_scientific_research_rejects_spark_without_research_capability(monkeypat
     assert operator["model"] == "gpt-5.5"
 
 
+def test_low_cost_ceiling_uses_spark_planner_spillover(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setenv("SOLAR_PM_MAX_COST_TIER", "low")
+    monkeypatch.setenv("SOLAR_PM_ALLOW_ROLE_SPILLOVER_IN_PROVIDER_MODE", "1")
+    monkeypatch.setattr(pm_dispatch, "DEFAULT_OPERATOR_PROVIDERS", frozenset({"openai"}))
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "medium-planner": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["planner"],
+                    "provider": "openai",
+                    "cost_tier": "medium",
+                    "launch_cmd_kind": "print_once",
+                    "task_classes": ["planning"],
+                },
+                "spark-builder": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "role": "builder",
+                    "provider": "openai",
+                    "model": "gpt-5.3-codex-spark",
+                    "cost_tier": "low",
+                    "launch_cmd_kind": "print_once",
+                    "task_classes": ["implementation", "tests", "code-edit"],
+                    "strengths": ["code-edit"],
+                },
+            },
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda op: (True, ""))
+    policy_mod = types.SimpleNamespace(
+        load_policy=lambda: {},
+        builder_pool_enabled=lambda policy: False,
+        pool_member_ids=lambda registry: [],
+        infer_builder_group=lambda operator: "codex-gpt-5.3-spark",
+    )
+    monkeypatch.setattr(pm_dispatch, "_load_concurrency_policy_module", lambda: policy_mod)
+    monkeypatch.setattr(
+        pm_dispatch,
+        "_role_spillover_spec",
+        lambda policy_module, policy, role: {
+            "enabled": True,
+            "max_active": 1,
+            "allowed_source_roles": ["builder"],
+            "preferred_groups": [],
+            "reason": "low-cost planner fallback",
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "_active_role_spillover_count", lambda role: 0)
+
+    operator_id, operator, reason = pm_dispatch.select_operator_by_role(
+        role="planner",
+        task_type="planning",
+    )
+
+    assert reason == ""
+    assert operator_id == "spark-builder"
+    assert operator["model"] == "gpt-5.3-codex-spark"
+    assert operator["borrowed_for_role"] == "planner"
+
+
+def test_preferred_operator_cannot_bypass_cost_ceiling(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setenv("SOLAR_PM_MAX_COST_TIER", "low")
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "expensive-planner": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["planner"],
+                    "provider": "openai",
+                    "cost_tier": "high",
+                }
+            },
+        },
+    )
+
+    operator_id, operator, reason = pm_dispatch.select_operator_by_role(
+        role="planner",
+        task_type="planning",
+        prefer_operator="expensive-planner",
+    )
+
+    assert operator_id == ""
+    assert operator == {}
+    assert "preferred_operator_cost_tier_exceeds_ceiling" in reason
+
+
+def test_planner_alternatives_preserve_order_and_exclude_undeclared_operators(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "preferred-builder": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                },
+                "fallback-builder": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                },
+                "undeclared-builder": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                },
+            },
+        },
+    )
+    monkeypatch.setattr(
+        pm_dispatch,
+        "is_dispatchable",
+        lambda op: (
+            (False, "runtime_state=leased")
+            if op["operator_id"] == "preferred-builder"
+            else (True, "")
+        ),
+    )
+
+    operator_id, _operator, exclusions, reason = (
+        pm_dispatch.select_operator_from_ordered_alternatives(
+            ["preferred-builder", "fallback-builder"],
+            role="builder",
+            task_type="implementation",
+        )
+    )
+
+    assert reason == ""
+    assert operator_id == "fallback-builder"
+    assert exclusions == [
+        {
+            "operator_id": "preferred-builder",
+            "reason": "preferred_operator_unavailable: preferred-builder: runtime_state=leased",
+            "stage": "selection",
+        }
+    ]
+
+
+def test_strict_planner_alternative_never_falls_through_to_registry(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "declared-builder": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                },
+                "undeclared-builder": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                },
+            },
+        },
+    )
+    monkeypatch.setattr(
+        pm_dispatch,
+        "is_dispatchable",
+        lambda op: (
+            (False, "runtime_state=leased")
+            if op["operator_id"] == "declared-builder"
+            else (True, "")
+        ),
+    )
+
+    operator_id, operator, exclusions, reason = (
+        pm_dispatch.select_operator_from_ordered_alternatives(
+            ["declared-builder"],
+            role="builder",
+            task_type="implementation",
+        )
+    )
+
+    assert operator_id == ""
+    assert operator == {}
+    assert reason == "operator_alternatives_exhausted"
+    assert [item["operator_id"] for item in exclusions] == ["declared-builder"]
+
+
+def test_submit_lease_race_retries_next_operator(monkeypatch, tmp_path):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setenv("SOLAR_PM_DISPATCH_ALLOW_DIRECT", "1")
+    monkeypatch.setattr(pm_dispatch, "HARNESS_DIR", tmp_path)
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", tmp_path / "sprints")
+    monkeypatch.setattr(pm_dispatch, "PM_INBOX_DIR", tmp_path / "run" / "pm-inbox")
+    monkeypatch.setattr(pm_dispatch, "OPERATOR_INBOX_DIR", tmp_path / "run" / "operator-inbox")
+    monkeypatch.setattr(pm_dispatch, "DEFAULT_OPERATOR_PROVIDERS", frozenset())
+    monkeypatch.setattr(pm_dispatch, "load_task_graph_node", lambda *_args: None)
+    monkeypatch.setattr(pm_dispatch, "build_pm_dispatch_text", lambda **kwargs: f"operator={kwargs['operator_id']}")
+    monkeypatch.setattr(
+        pm_dispatch,
+        "_build_pm_operator_envelope",
+        lambda **kwargs: {
+            "task_id": kwargs["task_id"],
+            "operator_id": kwargs["operator_id"],
+            "runtime_mode": "test",
+            "provider_policy": "test",
+        },
+    )
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "builder-primary": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                    "model": "primary",
+                },
+                "builder-fallback": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                    "model": "fallback",
+                },
+            },
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda _operator: (True, ""))
+    records: list[dict] = []
+    monkeypatch.setattr(pm_dispatch, "write_pm_task_record", lambda _task_id, record: records.append(dict(record)))
+
+    class BusyError(RuntimeError):
+        reason = "operator_busy"
+
+    submitted: list[str] = []
+    fake_operator_runtime = types.ModuleType("operator_runtime")
+
+    def submit(envelope):
+        submitted.append(envelope["operator_id"])
+        if envelope["operator_id"] == "builder-primary":
+            raise BusyError("lease was claimed after selection")
+        return {"lease_id": "lease-fallback", "inbox_path": "fallback/inbox.json"}
+
+    fake_operator_runtime.submit = submit  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "operator_runtime", fake_operator_runtime)
+
+    args = argparse.Namespace(
+        role="builder",
+        objective="implement safely",
+        operator="",
+        operator_alternative=["builder-primary", "builder-fallback"],
+        sprint="sprint-fallback",
+        node="N1",
+        task_type="implementation",
+        context="",
+        dry_run=False,
+    )
+
+    assert pm_dispatch.cmd_submit(args) == 0
+    assert submitted == ["builder-primary", "builder-fallback"]
+    assert records[-1]["operator_id"] == "builder-fallback"
+    assert records[-1]["authorized_operator_alternatives"] == [
+        "builder-primary",
+        "builder-fallback",
+    ]
+    assert records[-1]["operator_selection_exclusions"] == [
+        {
+            "operator_id": "builder-primary",
+            "reason": "operator_busy",
+            "stage": "lease",
+        }
+    ]
+    assert records[-1]["operator_fallbacks"] == [
+        {
+            "from_operator_id": "builder-primary",
+            "to_operator_id": "builder-fallback",
+            "reason": "operator_busy",
+        }
+    ]
+
+
+def test_planner_alternative_exhaustion_is_persisted_for_gui(monkeypatch, tmp_path):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setenv("SOLAR_PM_DISPATCH_ALLOW_DIRECT", "1")
+    monkeypatch.setattr(pm_dispatch, "HARNESS_DIR", tmp_path)
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", tmp_path / "sprints")
+    monkeypatch.setattr(pm_dispatch, "PM_INBOX_DIR", tmp_path / "run" / "pm-inbox")
+    monkeypatch.setattr(pm_dispatch, "DEFAULT_OPERATOR_PROVIDERS", frozenset())
+    monkeypatch.setattr(pm_dispatch, "load_task_graph_node", lambda *_args: None)
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                operator_id: {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                }
+                for operator_id in ("builder-primary", "builder-fallback")
+            },
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda _operator: (False, "runtime_state=leased"))
+    records: list[dict] = []
+    monkeypatch.setattr(pm_dispatch, "write_pm_task_record", lambda _task_id, record: records.append(dict(record)))
+
+    args = argparse.Namespace(
+        role="builder",
+        objective="implement safely",
+        operator="",
+        operator_alternative=["builder-primary", "builder-fallback"],
+        sprint="sprint-exhausted",
+        node="N1",
+        task_type="implementation",
+        context="",
+        dry_run=False,
+    )
+
+    assert pm_dispatch.cmd_submit(args) == 1
+    assert records[-1]["status"] == "failed_no_dispatchable_operator"
+    assert records[-1]["failure_reason"] == "operator_alternatives_exhausted"
+    assert records[-1]["display_error"]["code"] == "operator_alternatives_exhausted"
+    assert [
+        item["operator_id"] for item in records[-1]["operator_selection_exclusions"]
+    ] == ["builder-primary", "builder-fallback"]
+
+
+def test_frozen_graph_refusal_persists_restart_correlation(monkeypatch, tmp_path):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setenv("SOLAR_PM_DISPATCH_ALLOW_DIRECT", "1")
+    monkeypatch.setattr(pm_dispatch, "HARNESS_DIR", tmp_path)
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", tmp_path / "sprints")
+    monkeypatch.setattr(pm_dispatch, "PM_INBOX_DIR", tmp_path / "run" / "pm-inbox")
+    monkeypatch.setattr(pm_dispatch, "DEFAULT_OPERATOR_PROVIDERS", frozenset())
+    monkeypatch.setattr(pm_dispatch, "load_task_graph_node", lambda *_args: None)
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "builder-primary": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                }
+            },
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda _operator: (False, "runtime_state=leased"))
+    records: list[dict] = []
+    monkeypatch.setattr(pm_dispatch, "write_pm_task_record", lambda _task_id, record: records.append(dict(record)))
+    context = {
+        "source": "graph_node_dispatcher",
+        "graph": str(tmp_path / "sprints" / "sprint-refusal.task_graph.json"),
+        "dispatch_id": "graph-sprint-refusal-N1-attempt-2",
+        "original_assigned_pane": "operator:builder-primary",
+        "queue_item_id": "queue-frozen-2",
+    }
+    args = argparse.Namespace(
+        role="builder",
+        objective="implement safely",
+        operator="",
+        operator_alternative=["builder-primary"],
+        sprint="sprint-refusal",
+        node="N1",
+        task_type="implementation",
+        context=json.dumps(context),
+        dry_run=False,
+    )
+
+    assert pm_dispatch.cmd_submit(args) == 1
+    refusal = records[-1]
+    assert refusal["status"] == "failed_no_dispatchable_operator"
+    assert refusal["graph_dispatch_id"] == "graph-sprint-refusal-N1-attempt-2"
+    assert refusal["selected_frozen_operator_id"] == "builder-primary"
+    assert refusal["queue_item_id"] == "queue-frozen-2"
+    assert refusal["graph_path"] == context["graph"]
+    assert refusal["dispatch_id"].startswith("dispatch-pm-sprint-refusal-N1-")
+    assert refusal["attempt_id"] == "1"
+    assert refusal["correlation_id"] == "sprint-refusal:N1"
+    assert refusal["exit_code"] == 1
+
+
+def test_frozen_graph_uses_declared_specialized_host_role_for_exact_operator(monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    registry = {
+        "version": 1,
+        "operators": {
+            "source-assessor": {
+                "enabled": True,
+                "available": True,
+                "role": "scientific-source-assessor",
+            }
+        },
+    }
+    monkeypatch.setattr(pm_dispatch, "load_registry", lambda: registry)
+    context = json.dumps(
+        {
+            "source": "graph_node_dispatcher",
+            "graph": "/tmp/sprint.task_graph.json",
+            "dispatch_id": "graph-sprint-source-assessment-1",
+            "original_assigned_pane": "operator:source-assessor",
+            "physical_host_role": "scientific-source-assessor",
+            "queue_item_id": "queue-1",
+        }
+    )
+
+    assert pm_dispatch._frozen_operator_selection_role(
+        context,
+        ["source-assessor"],
+        "builder",
+    ) == "scientific-source-assessor"
+    assert pm_dispatch._frozen_operator_selection_role(
+        context,
+        ["a-different-operator"],
+        "builder",
+    ) == "builder"
+
+
+def test_native_scientific_lifecycle_binding_is_research_capability():
+    pm_dispatch = _load_pm_dispatch()
+    native_operator = {
+        "backend": "research_operator_registry",
+        "role": "scientific-source-assessor",
+        "runtime_binding": {
+            "registry": "plugins.autosci.operators.scientific_lifecycle.evidence.registry",
+            "node_id": "source_assess",
+        },
+    }
+
+    assert pm_dispatch._operator_reject_reason_for_task(
+        native_operator,
+        "scientific-source-assessor",
+        "scientific-research",
+    ) == ""
+    assert pm_dispatch._operator_reject_reason_for_task(
+        {"role": "scientific-source-assessor"},
+        "scientific-source-assessor",
+        "scientific-research",
+    ) == "operator_lacks_scientific_research_capability"
+
+
+def test_frozen_pm_envelope_forwards_registry_and_graph_authority(monkeypatch, tmp_path):
+    pm_dispatch = _load_pm_dispatch()
+    sprints = tmp_path / "sprints"
+    work_dir = sprints / "sprint-1" / "workdir"
+    work_dir.mkdir(parents=True)
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", sprints)
+    monkeypatch.setattr(pm_dispatch, "_graph_path_for_sprint", lambda _sid: str(sprints / "sprint-1.task_graph.json"))
+    graph_node = {
+        "id": "source_assessment",
+        "goal": "Assess sources",
+        "acceptance": ["check source assessment"],
+        "requirement_ids": ["R1"],
+        "read_scope": ["inputs/discovery.json"],
+        "write_scope": ["outputs/source_assessment.json"],
+        "artifact_contract": {"inputs": ["literature_discovery.v1"]},
+        "artifact_routes": {"consumes": {}, "produces": {}},
+        "capsule_binding": {"capsule_id": "cap.research-source-assess"},
+        "resource_requirements": {"network": "forbidden"},
+        "physical_candidates": [{"operator_id": "source-assessor", "rank": 2}],
+    }
+    context = json.dumps(
+        {
+            "source": "graph_node_dispatcher",
+            "graph_dispatch_id": "graph-dispatch-1",
+            "selected_frozen_operator_id": "source-assessor",
+            "scheduler_input_sha256": "a" * 64,
+            "frozen_candidate_ids": ["source-assessor"],
+        }
+    )
+    envelope = pm_dispatch._build_pm_operator_envelope(
+        task_id="task-1",
+        sprint_id="sprint-1",
+        node_id="source_assessment",
+        operator_id="source-assessor",
+        operator={
+            "backend": "research_operator_registry",
+            "runtime_binding": {"registry": "plugins.autosci.example", "node_id": "source_assess"},
+        },
+        task_type="scientific-research",
+        objective="Assess sources",
+        dispatch_file=tmp_path / "dispatch.md",
+        result_path=str(tmp_path / "result.md"),
+        context=context,
+        role="builder",
+        work_dir=str(work_dir),
+        task_graph_node=graph_node,
+    )
+
+    assert envelope["runtime_binding"] == {
+        "registry": "plugins.autosci.example",
+        "node_id": "source_assess",
+    }
+    assert envelope["artifact_contract"] == graph_node["artifact_contract"]
+    assert envelope["artifact_routes"] == graph_node["artifact_routes"]
+    assert envelope["capsule_binding"] == graph_node["capsule_binding"]
+    assert envelope["resource_requirements"] == graph_node["resource_requirements"]
+    assert envelope["physical_candidate_rank"] == 2
+    assert envelope["handoff_path"] == str(sprints / "sprint-1.source_assessment-handoff.md")
+
+
+def test_graph_eval_envelope_uses_evaluation_binding_instead_of_builder_authority(monkeypatch, tmp_path):
+    pm_dispatch = _load_pm_dispatch()
+    sprints = tmp_path / "sprints"
+    work_dir = sprints / "sprint-1" / "workdir"
+    work_dir.mkdir(parents=True)
+    graph_path = sprints / "sprint-1.task_graph.json"
+    graph_path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", sprints)
+    monkeypatch.setattr(pm_dispatch, "_graph_path_for_sprint", lambda _sid: str(graph_path))
+    evaluation_binding = {
+        "deterministic_gate_ids": ["gate.bundle"],
+        "semantic_evaluator_ids": ["check.acceptance.v1"],
+    }
+    evaluation_plan = {
+        "review_mode": "single",
+        "required_evaluators": 1,
+        "evaluator_classes": ["check.acceptance.v1"],
+        "evidence_requirements": ["handoff_md"],
+    }
+    expected = [
+        str(sprints / "sprint-1.publish-eval.md"),
+        str(sprints / "sprint-1.publish-eval.json"),
+    ]
+    envelope = pm_dispatch._build_pm_operator_envelope(
+        task_id="task-eval",
+        sprint_id="sprint-1",
+        node_id="publish",
+        operator_id="evaluator-1",
+        operator={"backend": "command", "role": "evaluator"},
+        task_type="graph_eval",
+        objective="Review publication",
+        dispatch_file=tmp_path / "eval-dispatch.md",
+        result_path=str(tmp_path / "eval-result.md"),
+        context=json.dumps({"source": "graph_node_dispatcher"}),
+        role="evaluator",
+        work_dir=str(work_dir),
+        logical_operator="Verifier",
+        task_graph_node={
+            "id": "publish",
+            "goal": "Publish",
+            "acceptance": ["gate.bundle"],
+            "requirement_ids": ["R1"],
+            "read_scope": ["builder-input.json"],
+            "write_scope": ["publication-output"],
+            "artifact_contract": {"produces": ["publication.bundle"]},
+            "artifact_routes": {"produces": {}},
+            "capsule_binding": {"capsule_ids": ["cap.publish"]},
+            "resource_requirements": {"network": "forbidden"},
+            "physical_candidates": [{"operator_id": "builder-1", "rank": 1}],
+            "execution_authority": {"sha256": "a" * 64},
+            "evaluation_binding": evaluation_binding,
+            "evaluation_plan": evaluation_plan,
+        },
+        capsule_submit={
+            "capability_native": True,
+            "capability_capsule_id": "cap.requirement-compiler-verification",
+        },
+        expected_artifacts=expected,
+        additional_read_scope=[str(sprints / "sprint-1.publish-eval-snapshot.json")],
+    )
+
+    assert envelope["evaluation_binding"] == evaluation_binding
+    assert envelope["evaluation_plan"] == evaluation_plan
+    assert envelope["evaluated_execution_authority_sha256"] == "a" * 64
+    assert envelope["write_scope"] == expected
+    assert envelope["capability_capsule_id"] == "cap.requirement-compiler-verification"
+    assert "artifact_contract" not in envelope
+    assert "capsule_binding" not in envelope
+    assert "resource_requirements" not in envelope
+    assert "physical_candidate_rank" not in envelope
+
+
+def test_missing_operator_runtime_never_bypasses_lease_with_direct_inbox(monkeypatch, tmp_path):
+    pm_dispatch = _load_pm_dispatch()
+    monkeypatch.setenv("SOLAR_PM_DISPATCH_ALLOW_DIRECT", "1")
+    monkeypatch.setattr(pm_dispatch, "HARNESS_DIR", tmp_path)
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", tmp_path / "sprints")
+    monkeypatch.setattr(pm_dispatch, "PM_INBOX_DIR", tmp_path / "run" / "pm-inbox")
+    monkeypatch.setattr(pm_dispatch, "OPERATOR_INBOX_DIR", tmp_path / "run" / "operator-inbox")
+    monkeypatch.setattr(pm_dispatch, "DEFAULT_OPERATOR_PROVIDERS", frozenset())
+    monkeypatch.setattr(pm_dispatch, "load_task_graph_node", lambda *_args: None)
+    monkeypatch.setattr(pm_dispatch, "build_pm_dispatch_text", lambda **_kwargs: "dispatch")
+    monkeypatch.setattr(pm_dispatch, "_build_pm_operator_envelope", lambda **kwargs: {"operator_id": kwargs["operator_id"]})
+    monkeypatch.setattr(
+        pm_dispatch,
+        "load_registry",
+        lambda: {
+            "version": 1,
+            "operators": {
+                "builder-only": {
+                    "enabled": True,
+                    "available": True,
+                    "roles": ["builder"],
+                    "launch_cmd_kind": "command",
+                    "task_classes": ["implementation"],
+                }
+            },
+        },
+    )
+    monkeypatch.setattr(pm_dispatch, "is_dispatchable", lambda _operator: (True, ""))
+    monkeypatch.setattr(
+        pm_dispatch,
+        "_load_operator_submit",
+        lambda: (_ for _ in ()).throw(ImportError("operator runtime missing")),
+    )
+    records: list[dict] = []
+    monkeypatch.setattr(pm_dispatch, "write_pm_task_record", lambda _task_id, record: records.append(dict(record)))
+
+    args = argparse.Namespace(
+        role="builder",
+        objective="implement safely",
+        operator="",
+        sprint="sprint-no-runtime",
+        node="N1",
+        task_type="implementation",
+        context="",
+        dry_run=False,
+    )
+
+    assert pm_dispatch.cmd_submit(args) == 1
+    assert records[-1]["status"] == "failed_operator_runtime_unavailable"
+    assert not (pm_dispatch.OPERATOR_INBOX_DIR / "builder-only").exists()
+
+
 def test_pm_operator_envelope_carries_strict_filesystem_scope(monkeypatch, tmp_path):
     pm_dispatch = _load_pm_dispatch()
     sprints = tmp_path / "sprints"
@@ -149,11 +956,12 @@ def test_pm_operator_envelope_carries_strict_filesystem_scope(monkeypatch, tmp_p
             "read_scope": ["dispatch/envelope.json"],
             "write_scope": ["artifacts/scientific/literature.json"],
         },
+        additional_read_scope=[str(tmp_path / "published"), "dispatch/envelope.json"],
     )
 
     assert envelope["workflow_contract"] == "research.autosci.v1"
     assert envelope["strict_filesystem_boundaries"] is True
-    assert envelope["read_scope"] == ["dispatch/envelope.json"]
+    assert envelope["read_scope"] == ["dispatch/envelope.json", str(tmp_path / "published")]
     assert envelope["write_scope"] == ["artifacts/scientific/literature.json"]
     assert envelope["write_scope_root"] == str(sprints / sid / "workdir")
     assert envelope["write_scope_resolution"] == "relative_to_write_scope_root"
@@ -182,6 +990,7 @@ def test_cmd_submit_reads_task_graph_capsule_metadata(monkeypatch):
                     "capability_native": True,
                     "capability_capsule_id": "cap.requirement-compiler-implementation",
                     "dispatch_task_type": "implementation",
+                    "required_skills": ["python_implementation"],
                     "capsule_plan": {
                         "capability_native": True,
                         "capability_capsule_id": "cap.requirement-compiler-implementation",
@@ -262,6 +1071,37 @@ def test_cmd_submit_reads_task_graph_capsule_metadata(monkeypatch):
         assert envelope["capability_capsule_id"] == "cap.requirement-compiler-implementation"
         assert envelope["logical_operator"] == "ImplementationWorker"
         assert envelope["task_type"] == "implementation"
+        assert envelope["selected_skills"] == ["python_implementation"]
+
+
+def test_capsule_submit_repairs_persisted_empty_grounded_compiler_bridge(monkeypatch):
+    import capability_capsules
+
+    monkeypatch.setattr(capability_capsules, "HARNESS_DIR", ROOT)
+    monkeypatch.setattr(
+        capability_capsules,
+        "CAPSULE_REGISTRY_PATH",
+        ROOT / "config" / "capability-capsules.registry.yaml",
+    )
+    pm_dispatch = _load_pm_dispatch()
+
+    metadata = pm_dispatch._capsule_submit_metadata(
+        {
+            "id": "R4",
+            "goal": "Compile the grounded synthesis into a governed Chinese report.",
+            "logical_operator": "GroundedResearchCompiler",
+            "dispatch_task_type": "research",
+            "capability_capsule_id": "cap.skill-execution-bridge",
+            "capsule_plan_ir": {
+                "capability_capsule_id": "cap.skill-execution-bridge",
+                "selected_skills": [],
+            },
+        }
+    )
+
+    assert metadata["capability_capsule_id"] == "cap.requirement-research-synthesizer"
+    assert metadata["dispatch_task_type"] == "research"
+    assert metadata["capsule_override_reason"] == "invalid_empty_skill_bridge_recovered"
 
 
 def test_cmd_submit_canonicalizes_analysis_audit_node_before_submit(monkeypatch):
@@ -647,6 +1487,32 @@ def test_codex_operator_health_accepts_path_resolved_codex(monkeypatch):
     }
 
 
+def test_codex_operator_health_accepts_wsl_desktop_materialization(monkeypatch, tmp_path):
+    pm_dispatch = _load_pm_dispatch()
+    materialized = tmp_path / "run" / "codex-cli-runtime" / "fixture" / "codex"
+    monkeypatch.setattr(pm_dispatch.shutil, "which", lambda _cmd: None)
+    monkeypatch.setattr(
+        pm_dispatch,
+        "resolve_codex_cli",
+        lambda *_args, **_kwargs: (materialized, "windows_desktop_wsl_copy"),
+    )
+
+    ok, reason = pm_dispatch._command_path_available(
+        "/opt/homebrew/bin/codex",
+        {
+            "provider": "openai",
+            "model": "gpt-5.5",
+            "command_path": "/opt/homebrew/bin/codex",
+        },
+    )
+
+    assert ok is True
+    assert reason == (
+        "command_path_resolved_via_windows_desktop_wsl_copy:"
+        f"{materialized}"
+    )
+
+
 def _write_builder_ready_graph(sprints: Path, sprint_id: str) -> None:
     (sprints / f"{sprint_id}.status.json").write_text(
         json.dumps({"status": "active", "phase": "planning_complete"}),
@@ -821,7 +1687,30 @@ def test_drain_builder_ready_submits_and_marks_graph(monkeypatch, tmp_path):
     )
 
     assert rc == 0
-    graph = json.loads((sprints / "sprint-drain.task_graph.json").read_text(encoding="utf-8"))
+    graph_scheduler = pm_dispatch._load_graph_scheduler_module()
+    assert graph_scheduler is not None
+    graph_scheduler.SPRINTS_DIR = sprints
+    graph = graph_scheduler.load_graph(sprints / "sprint-drain.task_graph.json")
     assert graph["nodes"][0]["status"] == "dispatched"
-    assert graph["nodes"][0]["dispatched_via"] == "pm_dispatch"
-    assert graph["nodes"][0]["pm_task_id"] == "pm-sprint-drain-B1-test"
+    assert graph["node_results"]["B1"]["dispatched_via"] == "pm_dispatch"
+    assert graph["node_results"]["B1"]["pm_task_id"] == "pm-sprint-drain-B1-test"
+
+
+def test_reconcile_never_re_fails_a_closed_sprint_from_a_stale_planner_record(tmp_path, monkeypatch):
+    pm_dispatch = _load_pm_dispatch()
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    monkeypatch.setattr(pm_dispatch, "SPRINTS_DIR", sprints)
+    projected: list[str] = []
+    stub = types.ModuleType("elastic_planner_runtime")
+    stub.project_planner_failure = lambda _sprints, sprint_id, **_kwargs: projected.append(sprint_id) or {"sprint_id": sprint_id}
+    monkeypatch.setitem(sys.modules, "elastic_planner_runtime", stub)
+    record = {"closeout_kind": "elastic_planner", "sprint_id": "sprint-closed", "task_id": "pm-1", "status": "failed"}
+
+    (sprints / "sprint-closed.status.json").write_text(json.dumps({"status": "completed"}), encoding="utf-8")
+    assert pm_dispatch._project_elastic_planner_failure(record) is None
+    assert projected == []
+
+    (sprints / "sprint-closed.status.json").write_text(json.dumps({"status": "blocked"}), encoding="utf-8")
+    assert pm_dispatch._project_elastic_planner_failure(record) == {"sprint_id": "sprint-closed"}
+    assert projected == ["sprint-closed"]

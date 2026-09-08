@@ -63,6 +63,7 @@ def _sync_graph_after_route_result(
     sprint_id: str,
     result_payload: Dict[str, Any] | None = None,
     result_path: Path | None = None,
+    graph_path: str | Path | None = None,
 ) -> Dict[str, Any]:
     """Converge terminal graph proof after result.json becomes durable.
 
@@ -80,18 +81,60 @@ def _sync_graph_after_route_result(
     if not sid:
         return {"ok": True, "reason": "missing_sprint_id"}
     sprints_dir = _route_sprints_dir()
-    graph_path = sprints_dir / f"{sid}.task_graph.json"
-    if not graph_path.is_file():
-        return {"ok": True, "reason": "graph_missing", "graph_path": str(graph_path)}
+    selected_graph_path = (
+        Path(graph_path).expanduser().resolve()
+        if str(graph_path or "").strip()
+        else sprints_dir / f"{sid}.task_graph.json"
+    )
+    if not selected_graph_path.is_file():
+        return {"ok": True, "reason": "graph_missing", "graph_path": str(selected_graph_path)}
     try:
         import graph_scheduler  # type: ignore
+
+        raw_graph = json.loads(selected_graph_path.read_text(encoding="utf-8"))
+        if raw_graph.get("schema_version") == "solar.scheduler_runtime_projection.v1":
+            import scheduler_input  # type: ignore
+
+            runtime_root = selected_graph_path.parent.resolve()
+            expected_path = runtime_root / f"{sid}.task_graph.json"
+            expected_work_dir = runtime_root / sid / "workdir"
+            runtime_work_dir = Path(str(raw_graph.get("runtime_work_dir") or "")).resolve()
+            verification = scheduler_input.verify_runtime_projection(
+                raw_graph,
+                graph_path=selected_graph_path,
+            )
+            node_id = str((result_payload or {}).get("node_id") or "")
+            node_ids = {
+                str(item.get("id") or "")
+                for item in raw_graph.get("nodes") or []
+                if isinstance(item, dict)
+            }
+            if (
+                not verification.get("ok")
+                or str(raw_graph.get("sprint_id") or "") != sid
+                or selected_graph_path != expected_path
+                or runtime_work_dir != expected_work_dir.resolve()
+                or not node_id
+                or node_id not in node_ids
+            ):
+                return {
+                    "ok": False,
+                    "reason": "route_result_graph_authority_invalid",
+                    "graph_path": str(selected_graph_path),
+                    "errors": list(verification.get("errors") or []),
+                }
 
         # operator_runtime may be imported before tests or an installed runner
         # override HARNESS_DIR.  Keep the scheduler on the same runtime roots as
         # the result artifact rather than its import-time defaults.
         graph_scheduler.HARNESS_DIR = HARNESS_DIR
-        graph_scheduler.SPRINTS_DIR = sprints_dir
-        graph = graph_scheduler.load_graph(graph_path)
+        graph_runtime_root = (
+            selected_graph_path.parent
+            if raw_graph.get("schema_version") == "solar.scheduler_runtime_projection.v1"
+            else sprints_dir
+        )
+        graph_scheduler.SPRINTS_DIR = graph_runtime_root
+        graph = graph_scheduler.load_graph(selected_graph_path)
         attempt_convergence: Dict[str, Any] = {
             "matched": False,
             "reason": "result_payload_missing",
@@ -113,21 +156,60 @@ def _sync_graph_after_route_result(
                     result_path=result_path or "",
                 )
                 if attempt_convergence.get("matched"):
-                    graph_scheduler.save_graph(graph_path, graph)
+                    graph_scheduler.save_graph(selected_graph_path, graph)
             else:
                 attempt_convergence = {"matched": False, "reason": "node_missing"}
         projection = graph_scheduler.sync_status_cache_from_graph(
             graph,
-            graph_path,
+            selected_graph_path,
             actor="operator_runtime",
             event="route_result_recorded",
         )
-        return {**projection, "attempt_convergence": attempt_convergence}
+        scheduler_tick: Dict[str, Any] = {
+            "ok": True,
+            "reason": "graph_dispatcher_unavailable",
+        }
+        evaluator_dispatch: Dict[str, Any] = {
+            "ok": True,
+            "reason": "graph_dispatcher_unavailable",
+        }
+        try:
+            import graph_node_dispatcher  # type: ignore
+
+            # Make result publication an active scheduler edge.  The
+            # graph-scoped non-blocking lock inside dispatch_ready prevents a
+            # simultaneous autopilot tick from dispatching the same node.
+            graph_node_dispatcher.HARNESS_DIR = HARNESS_DIR
+            graph_node_dispatcher.SPRINTS_DIR = graph_runtime_root
+            scheduler_tick = graph_node_dispatcher.dispatch_ready(str(selected_graph_path))
+            evaluator_dispatch = graph_node_dispatcher.dispatch_node_evals(
+                str(selected_graph_path),
+                max_items=1,
+            )
+        except Exception as dispatch_exc:
+            # result.json is already durable. Keep the operator completion
+            # successful and return an inspectable callback failure for the
+            # polling monitor to recover on its next tick.
+            scheduler_tick = {
+                "ok": False,
+                "reason": "route_result_dispatch_failed",
+                "error": f"{type(dispatch_exc).__name__}: {dispatch_exc}",
+            }
+            evaluator_dispatch = {
+                "ok": False,
+                "reason": "route_result_dispatch_failed",
+            }
+        return {
+            **projection,
+            "attempt_convergence": attempt_convergence,
+            "scheduler_tick": scheduler_tick,
+            "evaluator_dispatch": evaluator_dispatch,
+        }
     except Exception as exc:
         return {
             "ok": False,
             "reason": "route_result_sync_failed",
-            "graph_path": str(graph_path),
+            "graph_path": str(selected_graph_path),
             "error": f"{type(exc).__name__}: {exc}",
         }
 
@@ -204,6 +286,20 @@ def _coerce_pid(value: Any) -> Optional[int]:
 def _pid_exists(pid: Optional[int]) -> bool:
     if pid is None:
         return False
+    if os.name == "nt":
+        # On Windows ``os.kill(pid, 0)`` emits CTRL_C_EVENT to the target
+        # console group; it is not a harmless existence probe.  That can
+        # interrupt the scheduler and every colocated operator.
+        import _winapi
+
+        try:
+            handle = _winapi.OpenProcess(0x1000, False, int(pid))
+        except OSError:
+            return False
+        try:
+            return _winapi.GetExitCodeProcess(handle) == 259
+        finally:
+            _winapi.CloseHandle(handle)
     try:
         os.kill(pid, 0)
         return True
@@ -716,6 +812,15 @@ def submit(task_envelope: Dict[str, Any]) -> Dict[str, Any]:
     if config is None:
         raise ValueError(f"Unknown operator: '{operator_id}' not found in registry")
 
+    from execution_authority import from_envelope, check_operator
+    authority = from_envelope(payload, current_operator=config)
+    if authority is not None:
+        from execution_resources import check as check_resources
+        check_operator(authority, operator_id, config)
+        resource_errors = check_resources(payload.get("resource_requirements") or {}, config)
+        if resource_errors:
+            raise ValueError("RESOURCE_REQUIREMENTS_UNSATISFIED:" + ";".join(resource_errors))
+
     # ── 3. Dispatchability check ───────────────────────────────────────────
     current_state = get_operator_runtime_state(operator_id)
     if current_state in _NON_DISPATCHABLE_STATES:
@@ -794,6 +899,7 @@ def submit(task_envelope: Dict[str, Any]) -> Dict[str, Any]:
         "inbox_path": str(inbox_path),
         "status": "submitted",
         "submitted_at": submitted_at,
+        "expires_at": lease["expires_at"],
         "daemon_pid": daemon_pid,
     }
     return result
@@ -921,6 +1027,12 @@ def write_result(
     finished_at: str,
     log_tail: str,
     model_route: Optional[Dict[str, Any]] = None,
+    graph_path: str | Path | None = None,
+    error: Optional[Dict[str, Any]] = None,
+    failure_flow_control: Optional[Dict[str, Any]] = None,
+    identifiers: Optional[Dict[str, Any]] = None,
+    effects_receipt: Optional[Dict[str, Any]] = None,
+    provider_invocation_receipt: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Write the result.json artifact for a completed task.
 
@@ -949,6 +1061,33 @@ def write_result(
         for key in ("requested_model", "routing_model", "effective_provider", "effective_model"):
             if str(route.get(key) or "").strip():
                 result[key] = str(route[key])
+    if str(graph_path or "").strip():
+        result["graph_path"] = str(Path(graph_path).expanduser().resolve())
+    if identifiers:
+        exact_ids = {
+            key: str(identifiers.get(key) or "").strip()
+            for key in (
+                "dispatch_id",
+                "attempt_id",
+                "correlation_id",
+                "graph_dispatch_id",
+                "scheduler_input_sha256",
+            )
+        }
+        result.update({key: value for key, value in exact_ids.items() if value})
+        candidate_ids = identifiers.get("frozen_candidate_ids")
+        if isinstance(candidate_ids, list):
+            result["frozen_candidate_ids"] = [
+                str(value).strip() for value in candidate_ids if str(value).strip()
+            ]
+    if error:
+        result["error"] = dict(error)
+    if failure_flow_control:
+        result["failure_flow_control"] = dict(failure_flow_control)
+    if effects_receipt:
+        result["effects_receipt"] = dict(effects_receipt)
+    if provider_invocation_receipt:
+        result["provider_invocation_receipt"] = dict(provider_invocation_receipt)
 
     result_path = result_dir / "result.json"
     tmp_path = str(result_path) + ".tmp"
@@ -978,7 +1117,17 @@ def write_result(
         "finished_at": finished_at,
         "result_status": status,
     })
-    _sync_graph_after_route_result(sprint_id, result, result_path)
+    graph_callback = _sync_graph_after_route_result(
+        sprint_id,
+        result,
+        result_path,
+        graph_path=graph_path,
+    )
+    callback_path = result_dir / "graph-callback.json"
+    callback_tmp_path = str(callback_path) + ".tmp"
+    with open(callback_tmp_path, "w", encoding="utf-8") as f:
+        json.dump(graph_callback, f, indent=2, default=str)
+    os.replace(callback_tmp_path, str(callback_path))
     return result_path
 
 

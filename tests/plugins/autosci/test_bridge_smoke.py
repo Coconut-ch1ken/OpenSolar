@@ -15,7 +15,12 @@ def run_bridge(args: list[str], tmp_path: Path) -> subprocess.CompletedProcess[s
     env["HARNESS_DIR"] = str(tmp_path)
     return subprocess.run(
         [sys.executable, str(BRIDGE), *args],
-        cwd=HARNESS,
+        # Envelope arguments below are repo-root-relative
+        # (tests/plugins/autosci/fixtures/...). Commit 711bd5fba consolidated the
+        # suite under the root but left this cwd at harness/, so every fixture
+        # path resolved to harness/tests/... and the whole AutoSci bridge smoke
+        # suite has been failing since.
+        cwd=HARNESS.parent,
         env=env,
         text=True,
         stdout=subprocess.PIPE,
@@ -61,6 +66,201 @@ def test_smoke_writes_result_and_evidence_jsonl(tmp_path: Path) -> None:
     result = json.loads(result_path.read_text(encoding="utf-8"))
     assert result["schema"] == "research_claims.v1"
     assert "AutoSciRunner" not in json.dumps(result)
+
+
+def test_failed_evidence_is_preserved_but_returns_nonzero(tmp_path: Path) -> None:
+    envelope = tmp_path / "failed-analyze-envelope.json"
+    missing = tmp_path / "missing-paper.md"
+    envelope.write_text(
+        json.dumps(
+            {
+                "task_id": "task-failed-analysis",
+                "sprint_id": "sprint-failed-analysis",
+                "node_id": "paper_analysis",
+                "mode": "fixture",
+                "output_dir": "artifacts/failed-analysis",
+                "inputs": {"paper_path": str(missing)},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    proc = run_bridge(
+        ["run", "--action", "analyze_paper", "--envelope", str(envelope)],
+        tmp_path,
+    )
+
+    assert proc.returncode == 2
+    result = json.loads(proc.stdout)
+    assert result["ok"] is False
+    assert result["status"] == "failed"
+    assert (tmp_path / result["evidence_path"]).is_file()
+
+
+def test_evidence_payload_writer_supports_long_windows_paths(tmp_path: Path) -> None:
+    long_segment = "nested-" + ("battery-grid-storage-" * 8)
+    envelope = tmp_path / "envelope.long-path.json"
+    envelope.write_text(
+        json.dumps(
+            {
+                "task_id": "task-long-path",
+                "sprint_id": "phase-long-path",
+                "node_id": "node-long-path",
+                "mode": "fixture",
+                "output_dir": f"artifacts/scientific/{long_segment}",
+                "inputs": {
+                    "paper_path": "tests/plugins/autosci/fixtures/skillgen_sample_paper.md",
+                },
+                "outputs": {
+                    "evidence_payload_path": f"artifacts/scientific/{long_segment}/research_claims.json",
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    proc = run_bridge(["run", "--action", "extract_claims", "--envelope", str(envelope)], tmp_path)
+
+    assert proc.returncode == 0, proc.stderr
+    out = json.loads(proc.stdout)
+    requested = tmp_path / f"artifacts/scientific/{long_segment}/research_claims.json"
+    assert len(str(requested)) > 260
+    target = tmp_path / out["evidence_path"]
+    assert "artifacts/autosci/short-paths/" in out["evidence_path"].replace("\\", "/")
+    assert len(str(target)) < 260
+    assert json.loads(target.read_text(encoding="utf-8"))["schema"] == "research_claims.v1"
+
+
+def test_production_discovery_candidates_rank_with_relevance_evidence() -> None:
+    bin_dir = HARNESS / "plugins" / "autosci" / "bin"
+    if str(bin_dir) not in sys.path:
+        sys.path.insert(0, str(bin_dir))
+    from harness.plugins.autosci.bin.autosci_bridge import _production_discovery_candidates
+
+    result = {
+        "candidates": [
+            {
+                "source_id": "s1",
+                "title": "First source",
+                "url": "https://example.test/1",
+                "provider": "openalex",
+                "relevance_gate": {
+                    "matched_query_terms": ["lithium", "grid", "lifetime"],
+                    "coverage_group_matches": [{"matched_anchor_items": [{"label": "lithium-ion"}, {"label": "lifetime"}]}],
+                },
+            },
+            {
+                "source_id": "s2",
+                "title": "Second source",
+                "url": "https://example.test/2",
+                "provider": "openalex",
+                "relevance_gate": {
+                    "matched_query_terms": ["sodium", "grid"],
+                    "coverage_group_matches": [{"matched_anchor_items": [{"label": "sodium-ion"}]}],
+                },
+            },
+            {
+                "source_id": "s3",
+                "title": "Third source",
+                "url": "https://example.test/3",
+                "provider": "openalex",
+                "relevance_gate": {
+                    "matched_query_terms": ["solid", "grid"],
+                    "coverage_group_matches": [{"matched_anchor_items": [{"label": "solid-state"}]}],
+                },
+            },
+        ]
+    }
+
+    candidates = _production_discovery_candidates(result, limit=3)
+    scores = [item["ranking_score"] for item in candidates]
+
+    assert scores[0] > scores[1] > scores[2]
+    assert all("Lexical relevance:" in item["ranking_rationale"] for item in candidates)
+    assert candidates[0]["relevance_evidence"]["scoring_method"] == "deterministic_lexical_relevance_v1"
+
+
+def test_exact_failed_discovery_query_is_traced_in_final_boundary() -> None:
+    bin_dir = HARNESS / "plugins" / "autosci" / "bin"
+    if str(bin_dir) not in sys.path:
+        sys.path.insert(0, str(bin_dir))
+    from harness.plugins.autosci.bin.autosci_bridge import _discover_declared_scope
+
+    query = """Retrieve and rank evidence for a comparative output limited to lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Preserve the exact comparison criteria energy density, lifetime, safety, material availability, cost, and commercial readiness, and capture the unresolved framing questions about cell level versus module/system level versus full grid-scale system level, normalized quantitative metrics versus qualitative ratings versus mixed scoring, and the cost and commercial-readiness recency boundary.
+
+Authoritative discovery scope:
+- [R2] The comparison is limited to the named chemistries lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Required coverage: constraint_satisfied; supporting_evidence
+- [R3] The comparison must evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness. Required coverage: constraint_satisfied; supporting_evidence
+"""
+
+    scope = _discover_declared_scope({"inputs": {"query": query}}, {"query": query})
+
+    assert scope["scope_topics"] == ["lithium-ion", "sodium-ion", "solid-state", "lithium-sulfur"]
+    assert scope["criteria"] == [
+        "energy density",
+        "lifetime",
+        "safety",
+        "material availability",
+        "cost",
+        "commercial readiness",
+    ]
+    assert scope["framing_questions"] == [
+        "cell level versus module/system level versus full grid-scale system level",
+        "normalized quantitative metrics versus qualitative ratings versus mixed scoring",
+        "the cost and commercial-readiness recency boundary",
+    ]
+
+
+def test_exact_discovery_scope_can_finish_with_complete_evidence_and_traced_open_questions() -> None:
+    bin_dir = HARNESS / "plugins" / "autosci" / "bin"
+    if str(bin_dir) not in sys.path:
+        sys.path.insert(0, str(bin_dir))
+    from harness.plugins.autosci.bin.autosci_bridge import _discover_final_shortlist_boundary
+
+    query = """Retrieve and rank evidence for a comparative output limited to lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Preserve the exact comparison criteria energy density, lifetime, safety, material availability, cost, and commercial readiness, and capture the unresolved framing questions about cell level versus module/system level versus full grid-scale system level, normalized quantitative metrics versus qualitative ratings versus mixed scoring, and the cost and commercial-readiness recency boundary.
+
+Authoritative discovery scope:
+- [R2] The comparison is limited to the named chemistries lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Required coverage: constraint_satisfied; supporting_evidence
+- [R3] The comparison must evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness. Required coverage: constraint_satisfied; supporting_evidence
+"""
+    candidates = []
+    records = [
+        ("li", "Lithium-ion batteries for grid storage", "Energy density and lifetime evidence."),
+        ("na", "Sodium-ion batteries for grid storage", "Cost and material availability evidence."),
+        ("ss", "Solid-state batteries for grid storage", "Safety and commercial readiness evidence."),
+        ("ls", "Lithium-sulfur batteries for grid storage", "Lifetime and energy density evidence."),
+    ]
+    for index, (candidate_id, title, abstract) in enumerate(records, start=1):
+        candidates.append(
+            {
+                "candidate_id": candidate_id,
+                "title": title,
+                "abstract": abstract,
+                "source_channels": ["openalex"],
+                "ranking_score": 0.9 - (index * 0.01),
+                "ranking_rationale": f"Lexical relevance: matched query terms for {candidate_id}.",
+                "relevance_evidence": {"matched_query_terms": [candidate_id, "grid"]},
+            }
+        )
+
+    boundary = _discover_final_shortlist_boundary(
+        {"status": "completed", "provider_channels": ["openalex"], "invalid_reasons": []},
+        candidates,
+        envelope={"inputs": {"query": query}},
+        raw={"query": query},
+        mode="topic_public_provider_fallback",
+    )
+
+    assert boundary["final_shortlist_ready"] is True
+    assert boundary["ranking_audit"]["ranking_ready"] is True
+    coverage = boundary["requested_coverage_audit"]
+    assert coverage["coverage_ready"] is True
+    assert coverage["missing_scope_topics"] == []
+    assert coverage["missing_criteria"] == []
+    assert len(coverage["unresolved_framing_questions"]) == 3
 
 
 def test_validate_accepts_smoke_result(tmp_path: Path) -> None:
@@ -252,6 +452,51 @@ def test_phase10_claims_and_methods_use_input_paper_anchors(tmp_path: Path) -> N
     methods = json.loads((tmp_path / "artifacts/scientific/skillgen/research_method.json").read_text(encoding="utf-8"))
     assert any("SkillGen" in claim["text"] or "SKILLGEN" in claim["text"] for claim in claims["outputs"]["claims"])
     assert methods["outputs"]["methods"][0]["source_anchor"] == "skillgen_sample_paper.md#method"
+
+
+def test_phase10_methods_consume_scheduler_routed_research_papers(tmp_path: Path) -> None:
+    route = tmp_path / "upstream-papers"
+    route.mkdir()
+    for index, paper_id in enumerate(("paper-kivi", "paper-h2o"), start=1):
+        (route / f"research_paper.{index:03d}.v1.json").write_text(
+            json.dumps({
+                "schema": "research_paper.v1",
+                "outputs": {"paper": {
+                    "paper_id": paper_id,
+                    "title": f"Real routed paper {index}",
+                    "source_ref": f"real-{index}.tex",
+                    "sections": [{
+                        "section_id": "method",
+                        "title": "Method",
+                        "text": f"The {paper_id} procedure quantizes cached keys and measures accuracy.",
+                        "source_anchor": f"real-{index}.tex#method",
+                    }],
+                }},
+            }),
+            encoding="utf-8",
+        )
+    envelope = tmp_path / "routed-methods.json"
+    envelope.write_text(
+        json.dumps({
+            "task_id": "routed-methods",
+            "sprint_id": "phase10-test",
+            "node_id": "node-extract-methods",
+            "mode": "solar_native",
+            "output_dir": "artifacts/scientific/routed",
+            "inputs": {"artifact_routes": {"schema:schemas/evidence/research_paper.v1.schema.json": str(route)}},
+            "outputs": {"evidence_payload_path": "artifacts/scientific/routed/research_method.json"},
+        }),
+        encoding="utf-8",
+    )
+
+    proc = run_bridge(["run", "--action", "extract_methods", "--envelope", str(envelope)], tmp_path)
+    assert proc.returncode == 0, proc.stderr
+    out = json.loads(proc.stdout)
+    payload = json.loads((tmp_path / out["evidence_path"]).read_text(encoding="utf-8"))
+    methods = payload["outputs"]["methods"]
+    assert {paper for method in methods for paper in method["source_papers"]} == {"paper-kivi", "paper-h2o"}
+    assert "paper-autosci-fixture" not in json.dumps(payload)
+    assert all(method["source_anchor"].startswith("real-") for method in methods)
 
 
 def test_phase10_code_mapping_marks_missing_repo_unknown(tmp_path: Path) -> None:
@@ -535,6 +780,110 @@ def test_phase14_write_report_outputs_report_and_publication_bundle(tmp_path: Pa
         "artifacts/scientific/smoke/optional_rebuttal.md",
     ]:
         assert (tmp_path / rel_path).exists()
+
+
+def test_phase14_report_actions_consume_scheduler_artifact_routes_without_fixture_fallback(tmp_path: Path) -> None:
+    upstream = tmp_path / "upstream"
+    method_route = upstream / "methods"
+    plan_route = upstream / "plan"
+    method_route.mkdir(parents=True)
+    plan_route.mkdir(parents=True)
+    verdict_route = upstream / "claim_verdict.v1.json"
+    verdict_route.write_text(
+        json.dumps({
+            "schema": "claim_verdict.v1",
+            "task_id": "verify-real-kv",
+            "outputs": {"verdicts": [{
+                "claim_id": "claim-real-kv",
+                "claim_text": "Selective retention can reduce KV-cache memory under the evaluated setup.",
+                "verdict": "insufficient",
+                "confidence": 0.4,
+                "basis": "The routed paper anchor does not establish every comparison condition.",
+                "evidence_ids": ["paper-real-kv#results"],
+            }]},
+            "limitations": ["Independent benchmark replication was not routed."],
+        }),
+        encoding="utf-8",
+    )
+    (method_route / "extract_methods.evidence.json").write_text(
+        json.dumps({
+            "schema": "research_method.v1",
+            "task_id": "methods-real-kv",
+            "outputs": {"methods": [{
+                "method_id": "method-real-quantization",
+                "name": "Routed KV quantization",
+                "procedure": ["Quantize cached keys and values, then measure accuracy and memory."],
+                "source_papers": ["paper-real-kv"],
+                "source_anchor": "paper-real-kv#method",
+                "evidence_ids": ["paper-real-kv", "paper-real-kv#method"],
+            }]},
+            "limitations": [],
+        }),
+        encoding="utf-8",
+    )
+    (plan_route / "plan_report.evidence.json").write_text(
+        json.dumps({
+            "schema": "scientific_report_plan.v1",
+            "task_id": "plan-real-kv",
+            "outputs": {"report_plan": {
+                "report_id": "plan-real-kv",
+                "title": "Routed plan",
+                "audience": "researcher",
+                "evidence_ids": ["method-real-quantization", "claim-real-kv"],
+                "supported_claim_ids": ["claim-real-kv"],
+                "excluded_claim_ids": [],
+                "sections": [],
+            }},
+            "limitations": [],
+        }),
+        encoding="utf-8",
+    )
+    routes = {
+        "schema:schemas/evidence/scientific_report_plan.v1.schema.json": str(plan_route),
+        "schema:schemas/evidence/claim_verdict.v1.schema.json": str(verdict_route),
+        "schema:schemas/evidence/research_method.v1.schema.json": str(method_route),
+    }
+    request = (
+        "Produce a comprehensive technical landscape report titled or organized as "
+        "\u201cKV Cache Routed Evidence Landscape.\u201d Treat it as an auditable research workflow."
+    )
+    for action in ("plan_report", "write_report"):
+        envelope = tmp_path / f"{action}.json"
+        envelope.write_text(
+            json.dumps({
+                "task_id": f"{action}-routed",
+                "sprint_id": "phase14-routed",
+                "node_id": f"node-{action}",
+                "mode": "solar_native",
+                "output_dir": f"artifacts/scientific/{action}",
+                "inputs": {
+                    "request": request,
+                    "target": "for the project \u201cKV Cache Routed Evidence Landscape\u201d",
+                    "artifact_routes": routes,
+                },
+                "outputs": {"evidence_payload_path": f"artifacts/scientific/{action}/{action}.evidence.json"},
+            }),
+            encoding="utf-8",
+        )
+        proc = run_bridge(["run", "--action", action, "--envelope", str(envelope)], tmp_path)
+        assert proc.returncode == 0, proc.stderr
+        result = json.loads(proc.stdout)
+        evidence = json.loads((tmp_path / result["evidence_path"]).read_text(encoding="utf-8"))
+        if action == "plan_report":
+            assert evidence["schema"] == "scientific_report_plan.v1"
+            report = evidence["outputs"]["report_plan"]
+        else:
+            assert evidence["schema"] == "scientific_report.v1"
+            report = evidence["outputs"]["report"]
+        assert report["title"] == "KV Cache Routed Evidence Landscape"
+        assert "method-real-quantization" in report["evidence_ids"]
+        assert "claim-real-kv" in report["evidence_ids"]
+        assert "fixture" not in json.dumps(evidence).lower()
+
+    report_md = (tmp_path / "artifacts/scientific/write_report/report.md").read_text(encoding="utf-8")
+    assert "Routed KV quantization" in report_md
+    assert "Selective retention can reduce KV-cache memory" in report_md
+    assert "paper-real-kv#method" in report_md
 
 
 def test_phase16_evolve_workflow_outputs_reviewable_proposal(tmp_path: Path) -> None:

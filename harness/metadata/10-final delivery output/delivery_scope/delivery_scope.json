@@ -1,0 +1,24 @@
+{
+  "schema_version": "solar.delivery_scope.v1",
+  "delivery_scope_id": "delivery-scope-20260825-091412-a3f8",
+  "intent_ir_ref": {"intent_ir_id": "intent-ir-20260825-091412-a3f8", "sha256": "f61ae0efe3f91a70bfbaff9e2e0d5cad647533e46b1a874475d998044748bb5a"},
+  "evidence_ir_ref": {"evidence_ir_id": "evidence-ir-20260825-091412-a3f8", "sha256": "43d8255447fa529434bfc3b54bb0082f11c5e075222683dab0c0545fb7f6f014"},
+  "assumptions": [],
+  "unresolved_parameters": [
+    {
+      "intent_ref": "U3",
+      "statement": "The concrete resource envelope must be defined and disclosed by workflow design.",
+      "required_before": "reproducibility_design_acceptance"
+    }
+  ],
+  "not_machine_checkable": [],
+  "tested": [],
+  "not_tested": [
+    "Method comparison",
+    "Validation-conflict analysis",
+    "Claim-testability selection",
+    "Reproducibility-check design"
+  ],
+  "publishable": false,
+  "reason": "The metadata contract example was not executed and final evidence failed closed."
+}

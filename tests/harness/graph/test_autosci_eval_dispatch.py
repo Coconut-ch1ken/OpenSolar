@@ -14,8 +14,9 @@ import pytest
 HARNESS = (Path(__file__).resolve().parents[3] / 'harness')
 LIB = HARNESS / "lib"
 ADAPTER = HARNESS / "plugins" / "autosci" / "bin" / "autosci_eval_adapter.py"
-PASS_EVIDENCE = HARNESS / "tests" / "evaluators" / "scientific" / "fixtures" / "pass" / "research_paper.json"
-FAIL_EVIDENCE = HARNESS / "tests" / "evaluators" / "scientific" / "fixtures" / "fail" / "research_paper.json"
+SCIENTIFIC_FIXTURES = Path(__file__).resolve().parents[1] / "evaluators" / "scientific" / "fixtures"
+PASS_EVIDENCE = SCIENTIFIC_FIXTURES / "pass" / "research_paper.json"
+FAIL_EVIDENCE = SCIENTIFIC_FIXTURES / "fail" / "research_paper.json"
 
 if str(LIB) not in sys.path:
     sys.path.insert(0, str(LIB))
@@ -25,7 +26,17 @@ def _prepare_isolated_harness(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     harness_dir = tmp_path / "harness"
     harness_dir.mkdir()
     shutil.copytree(HARNESS / "config", harness_dir / "config")
-    for name in ("evaluators", "lib", "personas", "plugins", "schemas", "templates", "tools", "workflows"):
+    for name in (
+        "capability-capsules",
+        "evaluators",
+        "lib",
+        "personas",
+        "plugins",
+        "schemas",
+        "templates",
+        "tools",
+        "workflows",
+    ):
         link = harness_dir / name
         try:
             link.symlink_to(HARNESS / name, target_is_directory=True)
@@ -377,6 +388,7 @@ def test_dispatch_node_evals_routes_autosci_contract_to_autosci_evaluator_green(
 
     assert result["ok"] is True, result
     assert submitted
+    assert submitted[0]["eval_generation"] == 0
     assert result["dispatched"][0]["pane"] == "operator:mini-codex-gpt55-medium-evaluator-1"
     assert result["dispatched"][0]["evaluation_plan"]["independence_policy"]["mechanism"] == (
         "solar_policy_gate_plus_independent_codex_evaluator"
@@ -447,6 +459,7 @@ def test_autosci_eval_waits_for_durable_builder_result_before_snapshot(
     result = gnd.dispatch_node_evals(str(graph_path), ttl=30)
     saved = gnd.load_graph(graph_path)
 
+    assert result["ok"] is True
     assert result["dispatched"] == []
     assert result["skipped"] == [
         {
@@ -458,6 +471,8 @@ def test_autosci_eval_waits_for_durable_builder_result_before_snapshot(
             "result_json": None,
         }
     ]
+    assert result["waiting"] == result["skipped"]
+    assert result["blocking_skips"] == []
     assert saved["nodes"][0]["status"] == "dispatched"
     assert saved["node_results"]["paper_ingest"]["status"] == "dispatched"
     assert not (sprints / f"{sid}.paper_ingest-eval-snapshot.json").exists()
@@ -527,6 +542,63 @@ def test_autosci_eval_snapshot_uses_workdir_and_exact_operator_envelope(
     assert rows[relative_output]["exists"] is True
 
 
+def test_autosci_eval_snapshot_recovers_direct_operator_envelope_from_runstate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    harness_dir, sprints = _prepare_isolated_harness(tmp_path, monkeypatch)
+    sid = "sprint-autosci-snapshot-runstate"
+    node_id = "literature_discover"
+    task_id = f"graph-{sid}-{node_id}-20260829T021656Z"
+    operator_id = "autosci-literature-discover-worker"
+    relative_output = f"artifacts/scientific/{sid}/01_paper/literature_discovery.v1.json"
+    output = sprints / sid / "workdir" / relative_output
+    output.parent.mkdir(parents=True)
+    output.write_text('{"schema":"literature_discovery.v1","status":"completed"}\n', encoding="utf-8")
+    envelope = harness_dir / "run" / "operator-results" / operator_id / task_id / "envelope.json"
+    envelope.parent.mkdir(parents=True)
+    envelope.write_text('{"expected_action":"discover_literature"}\n', encoding="utf-8")
+
+    import node_runstate
+
+    node_runstate.record(
+        sprints,
+        sid,
+        node_id,
+        "attribution",
+        {
+            "phase": "dispatched",
+            "dispatch_mode": "autosci_operator_direct",
+            "dispatch_id": task_id,
+            "pm_task_id": task_id,
+            "operator_id": operator_id,
+            "role": "scientific-literature-discoverer",
+        },
+    )
+    node = {
+        "id": node_id,
+        "status": "reviewing",
+        "read_scope": ["dispatch/envelope.json"],
+        "write_scope": [relative_output],
+    }
+    graph = {
+        "sprint_id": sid,
+        "workflow_contract": "research.autosci.v1",
+        "workflow_contract_id": "research.autosci.v1",
+        "artifact_roots": {"canonical": f"artifacts/scientific/{sid}/"},
+        "nodes": [node],
+    }
+
+    import graph_node_dispatcher as gnd
+
+    snapshot = gnd._capture_eval_artifact_snapshot(sid, node, graph)
+
+    assert snapshot["ok"] is True, snapshot
+    rows = {row["declared"]: row for row in snapshot["rows"]}
+    assert rows["dispatch/envelope.json"]["authority"] == "operator_dispatch"
+    assert rows["dispatch/envelope.json"]["path"] == str(envelope)
+
+
 def test_autosci_dispatch_names_the_same_workdir_used_by_eval_snapshot(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -572,9 +644,10 @@ def test_autosci_dispatch_names_the_same_workdir_used_by_eval_snapshot(
 
 
 def test_normal_intake_autosci_graph_dispatches_autosci_evaluator_after_handoff(
-    tmp_path: Path,
+    tmp_path_factory: pytest.TempPathFactory,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    tmp_path = tmp_path_factory.mktemp("a")
     harness_dir, sprints = _prepare_isolated_harness(tmp_path, monkeypatch)
     graph_path = _capture_and_consume_autosci_intake(harness_dir, sprints, tmp_path)
     graph = json.loads(graph_path.read_text(encoding="utf-8"))
@@ -647,6 +720,33 @@ def test_normal_intake_autosci_dispatch_ready_uses_exact_autosci_operator(
     assert dispatched["operator_envelope"]["outputs"]["evidence_payload_path"].endswith(
         "research_evidence_import.v1.json"
     )
+
+
+def test_autosci_operator_envelope_preserves_node_required_skills() -> None:
+    import graph_node_dispatcher as gnd
+    implementation = getattr(gnd, "_IMPL", gnd)
+
+    envelope = implementation._build_autosci_operator_envelope(
+        sid="sprint-skill-bridge",
+        node_id="R3",
+        node={
+            "id": "R3",
+            "goal": "Compile the grounded research report.",
+            "dispatch_task_type": "research",
+            "capability_capsule_id": "cap.skill-execution-bridge",
+            "required_skills": ["research_compilation"],
+            "write_scope": ["workspace/research/report/"],
+        },
+        graph={},
+        graph_path=str(HARNESS / "sprints" / "sprint-skill-bridge.task_graph.json"),
+        operator_id="mini-codex-gpt55-medium-builder-1",
+        dispatch_id="graph-sprint-skill-bridge-R3",
+        instruction_file=HARNESS / "sprints" / "sprint-skill-bridge.R3-dispatch.md",
+        payload={"capsule_plan_ir": {"selected_skills": []}},
+        ttl=30,
+    )
+
+    assert envelope["selected_skills"] == ["research_compilation"]
 
 
 def test_openai_policy_keeps_provider_neutral_autosci_operator(

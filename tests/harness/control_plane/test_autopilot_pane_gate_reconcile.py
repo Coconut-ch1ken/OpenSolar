@@ -67,6 +67,50 @@ def test_pane_gate_clears_stale_live_lease_without_graph_node(tmp_path, monkeypa
     assert lease_path.exists() is False
 
 
+def test_pane_gate_keeps_live_pm_ack_without_graph_node(tmp_path, monkeypatch) -> None:
+    sid = "sprint-live-pm"
+    dispatch_id = "d-live-pm"
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    (sprints / f"{sid}.status.json").write_text(json.dumps({
+        "sprint_id": sid,
+        "status": "drafting",
+        "phase": "spec",
+        "handoff_to": "pm",
+    }) + "\n")
+    (sprints / f"{sid}.current-dispatch-id").write_text(dispatch_id + "\n")
+    (sprints / f"{sid}.ack-{dispatch_id}.json").write_text(json.dumps({
+        "dispatch_id": dispatch_id,
+        "sid": sid,
+        "role": "pm",
+        "status": "in_progress",
+    }) + "\n")
+    lease_dir = tmp_path / "pane-leases"
+    lease_dir.mkdir()
+    lease_path = lease_dir / f"{mod.pane_safe('solar-harness:0.0')}.json"
+    lease_path.write_text(json.dumps({
+        "pane": "solar-harness:0.0",
+        "sid": sid,
+        "dispatch_id": dispatch_id,
+        "expires_at": _utc_after(180),
+        "ttl_sec": 180,
+    }) + "\n")
+    monkeypatch.setattr(mod, "SPRINTS", sprints)
+    monkeypatch.setattr(mod, "PANE_ASSIGNMENTS", tmp_path / ".pane-assignments")
+    monkeypatch.setattr(mod, "PANE_LEASE_DIR", lease_dir)
+    monkeypatch.setattr(mod, "append_event", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mod, "assigned_graph_node_for_pane", lambda target: {})
+    monkeypatch.setattr(mod, "pane_is_busy", lambda target: False)
+
+    allowed, reason, detail = mod.pane_gate("solar-harness:0.0", "fresh-sprint")
+
+    assert allowed is False
+    assert reason == "pane_leased"
+    assert detail["role_dispatch_live"] is True
+    assert detail["lease"]["dispatch_id"] == dispatch_id
+    assert lease_path.exists() is True
+
+
 def test_pane_gate_keeps_active_graph_claims_even_when_pane_is_idle(tmp_path, monkeypatch) -> None:
     assignments = tmp_path / ".pane-assignments"
     assignments.write_text("solar-harness-lab:0.3=active-sprint:1779000000\n")
@@ -334,6 +378,61 @@ def test_ready_for_planner_queue_bypasses_fixed_pane_busy(tmp_path, monkeypatch)
     assert mod.load_queue() == []
 
 
+def test_ready_for_planner_queue_drops_when_planner_outputs_already_exist(tmp_path, monkeypatch) -> None:
+    sid = "sprint-planner-complete"
+    monkeypatch.setattr(mod, "QUEUE", tmp_path / "autopilot-queue.jsonl")
+    monkeypatch.setattr(mod, "SPRINTS", tmp_path / "sprints")
+    events: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        mod,
+        "append_event",
+        lambda event_sid, event, *_args, **_kwargs: events.append((event_sid, event)),
+    )
+    monkeypatch.setattr(
+        mod,
+        "dispatch_role_handoff",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("stale planner handoff must not dispatch")),
+    )
+    mod.SPRINTS.mkdir(parents=True)
+    (mod.SPRINTS / f"{sid}.status.json").write_text(
+        json.dumps({
+            "sprint_id": sid,
+            "status": "active",
+            "phase": "planning_complete",
+            "handoff_to": "builder_main",
+        }) + "\n",
+        encoding="utf-8",
+    )
+    (mod.SPRINTS / f"{sid}.design.md").write_text("# Design\n", encoding="utf-8")
+    (mod.SPRINTS / f"{sid}.plan.md").write_text("# Plan\n", encoding="utf-8")
+    (mod.SPRINTS / f"{sid}.task_graph.json").write_text(
+        json.dumps({"sprint_id": sid, "nodes": []}) + "\n",
+        encoding="utf-8",
+    )
+    mod.QUEUE.write_text(
+        json.dumps({
+            "sid": sid,
+            "type": "ready_for_planner",
+            "target": "solar-harness:0.1",
+            "created_at_epoch": time.time(),
+        }) + "\n",
+        encoding="utf-8",
+    )
+
+    actions = mod.retry_queue({"actions": {}, "target_actions": {}}, dispatch=True, cooldown=0)
+
+    assert actions == [{
+        "sid": sid,
+        "action": "ready_for_planner",
+        "dropped": "stale_planner_handoff",
+        "target": "solar-harness:0.1",
+        "status": "active",
+        "phase": "planning_complete",
+    }]
+    assert events == [(sid, "autopilot_queue_drop_stale_planner_handoff")]
+    assert mod.load_queue() == []
+
+
 def test_ready_for_planner_finding_bypasses_fixed_pane_busy(monkeypatch) -> None:
     sid = "sprint-planner-demo"
     finding = {
@@ -519,7 +618,18 @@ def test_ready_for_planner_role_pool_failure_queues_without_wake(monkeypatch) ->
         },
     })
     monkeypatch.setattr(mod, "enqueue_action", lambda f, reason, detail=None: queued.append((f, reason, detail or {})))
-    monkeypatch.setattr(mod, "dispatch_role_handoff", lambda s, t: (False, {"role": "planner", "stderr": "no planner"}))
+    monkeypatch.setattr(
+        mod,
+        "dispatch_role_handoff",
+        lambda s, t: (
+            False,
+            {
+                "role": "planner",
+                "returncode": 1,
+                "stderr": "ERROR: no_dispatchable_operator_for_role: planner; provider unavailable",
+            },
+        ),
+    )
     wake_calls: list[str] = []
     monkeypatch.setattr(mod, "wake_sid", lambda s: wake_calls.append(s) or True)
 
@@ -531,6 +641,10 @@ def test_ready_for_planner_role_pool_failure_queues_without_wake(monkeypatch) ->
     assert actions[0]["reason"] == "role_pool_unavailable"
     assert saved_statuses[-1]["planner_dispatch_claim"]["state"] == "failed"
     assert saved_statuses[-1]["planner_dispatch_claim"]["released_at"]
+    assert saved_statuses[-1]["planner_dispatch_claim"]["failure_reason"] == (
+        "no_dispatchable_operator_for_role: planner"
+    )
+    assert saved_statuses[-1]["planner_dispatch_claim"]["returncode"] == 1
 
 
 def test_ready_for_planner_role_pool_success_marks_claim_submitted(monkeypatch) -> None:

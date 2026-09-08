@@ -24,6 +24,8 @@ const app = read("../harness/status-server/react-app/src/App.tsx");
 const pkg = JSON.parse(read("package.json"));
 const autotest = read("autotest.sh");
 const selftestElectron = read("../tests/desktop/selftest-electron.test.cjs");
+const buildRenderer = read("build-renderer.js");
+const prepareResources = read("prepare-package-resources.js");
 // Keep static workflow assertions portable across Git's CRLF/LF checkout
 // policy. The contract is structural; line-ending normalization must not turn
 // a valid Windows checkout into a false release-gate failure.
@@ -33,6 +35,9 @@ const desktopWorkflow = read("../.github/workflows/desktop-build.yml").replace(
 );
 const desktopGateJob = desktopWorkflow.split("\n  gate:\n")[1] || "";
 const macResources = (pkg.build.mac.extraResources || []).map((entry) => entry.to);
+const harnessResource = (pkg.build.extraResources || []).find(
+  (entry) => entry.to === "harness",
+);
 
 assert(
   "fresh packaged app syncs bundled harness before network installer",
@@ -125,6 +130,24 @@ assert(
 );
 
 assert(
+  "desktop packaging uses cross-platform renderer and private-state-free staging",
+  pkg.scripts["build:renderer"] === "node build-renderer.js" &&
+    pkg.scripts["build:win"].includes("node prepare-package-resources.js") &&
+    pkg.scripts["build:mac"].includes("node prepare-package-resources.js") &&
+    pkg.scripts["build:linux"].includes("node prepare-package-resources.js") &&
+    harnessResource?.from === ".packaging/harness" &&
+    buildRenderer.includes("vite.js") &&
+    prepareResources.includes('"run"') &&
+    prepareResources.includes('"quarantine"'),
+);
+
+assert(
+  "desktop autotest runs automated accessibility audit",
+  autotest.includes("node accessibility.test.js") &&
+    pkg.scripts["test:accessibility"] === "node accessibility.test.js",
+);
+
+assert(
   "Electron selftest can verify a built executable",
   selftestElectron.includes("SOLAR_ELECTRON_EXECUTABLE_PATH") &&
     selftestElectron.includes("executablePath") &&
@@ -140,6 +163,29 @@ assert(
 assert(
   "desktop autotest runs this bootstrap/package contract",
   autotest.includes("node ../tests/desktop/bootstrap-contract.test.cjs"),
+);
+
+assert(
+  "same-version harness changes trigger runtime synchronization",
+  prepareResources.includes("treeFingerprint") &&
+    prepareResources.includes(".desktop-runtime-fingerprint") &&
+    main.includes("packagedRuntimeFingerprint") &&
+    main.includes("installedRuntimeFingerprint") &&
+    main.includes("installedRuntimeFingerprint() !== expectedFingerprint"),
+);
+
+assert(
+  "desktop autotest locks down complete Windows runtime prewarm",
+  autotest.includes("node ../tests/desktop/src/runtime-prewarm.test.cjs") &&
+    main.includes("buildWindowsRuntimePrewarmCommand") &&
+    main.includes("Windows runtime prewarm ready"),
+);
+
+assert(
+  "Windows dashboard opens only after Codex auth and role dispatch readiness pass",
+  main.includes("codex login status") &&
+    main.includes("route-preflight --runtime codex") &&
+    main.includes("--expect-provider openai --roles planner,builder,evaluator"),
 );
 
 assert(

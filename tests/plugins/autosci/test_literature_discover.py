@@ -206,3 +206,141 @@ def test_topic_discovery_exhausted_semantic_scholar_429_is_inconclusive(monkeypa
     assert sleeps == [0.5]
     assert any("Discovery source failed: Semantic Scholar API rate limited after 2 attempt(s)" in item for item in result["limitations"])
     assert any("Semantic Scholar rate-limit retry 1/1" in item for item in result["limitations"])
+
+
+def test_semantic_scholar_key_is_sent_only_as_header(monkeypatch) -> None:
+    calls: list[dict] = []
+
+    def fake_request(_method, _url, **kwargs):
+        calls.append(kwargs)
+        return FakeS2Response(200, {"data": []})
+
+    monkeypatch.setattr(literature_discover, "HAS_REQUESTS", True)
+    monkeypatch.setattr(literature_discover, "requests", SimpleNamespace(request=fake_request))
+    monkeypatch.setattr(literature_discover.time, "sleep", lambda _seconds: None)
+    monkeypatch.setenv("AUTOSCI_S2_RATE_LIMIT_DELAY_SECONDS", "0")
+    monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", "opaque-test-key")
+
+    literature_discover._s2_request("GET", "https://api.semanticscholar.org/graph/v1/paper/search")
+
+    assert calls[0]["headers"] == {"x-api-key": "opaque-test-key"}
+    assert "opaque-test-key" not in calls[0]["params"]
+    assert "opaque-test-key" not in str(calls[0].get("json"))
+
+
+def test_semantic_scholar_429_uses_exponential_backoff_without_retry_after(monkeypatch) -> None:
+    responses = [
+        FakeS2Response(429),
+        FakeS2Response(429),
+        FakeS2Response(200, {"data": []}),
+    ]
+    sleeps: list[float] = []
+
+    monkeypatch.setattr(literature_discover, "HAS_REQUESTS", True)
+    monkeypatch.setattr(
+        literature_discover,
+        "requests",
+        SimpleNamespace(request=lambda *_args, **_kwargs: responses.pop(0)),
+    )
+    monkeypatch.setattr(literature_discover.time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setenv("AUTOSCI_S2_RATE_LIMIT_DELAY_SECONDS", "0")
+    monkeypatch.setenv("AUTOSCI_S2_RETRY_DELAY_SECONDS", "0.5")
+
+    literature_discover._s2_request(
+        "GET",
+        "https://api.semanticscholar.org/graph/v1/paper/search",
+        max_retries=2,
+    )
+
+    assert sleeps == [0.5, 1.0]
+
+
+def test_topic_discovery_does_not_retry_before_provider_retry_after(monkeypatch, tmp_path: Path) -> None:
+    responses = [FakeS2Response(429, headers={"Retry-After": "120"})]
+    sleeps: list[float] = []
+    calls: list[tuple[tuple, dict]] = []
+
+    def request(*args, **kwargs):
+        calls.append((args, kwargs))
+        return responses.pop(0)
+
+    monkeypatch.setattr(
+        literature_discover,
+        "requests",
+        SimpleNamespace(request=request),
+    )
+    monkeypatch.setattr(literature_discover, "HAS_REQUESTS", True)
+    monkeypatch.setattr(literature_discover.time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setenv("AUTOSCI_S2_RATE_LIMIT_DELAY_SECONDS", "0")
+    progress_path = tmp_path / "semantic-scholar-progress.json"
+
+    result = literature_discover.discover_literature(
+        mode="topic",
+        query="bounded retry",
+        limit=1,
+        wiki_root=tmp_path / "wiki",
+        workspace_root=tmp_path,
+        max_retries=1,
+        max_retry_wait_seconds=5,
+        progress_path=progress_path,
+    )
+
+    assert result["status"] == "inconclusive"
+    assert result["candidates"] == []
+    assert len(calls) == 1
+    assert sleeps == []
+    assert any("Retry-After 120s exceeds retry budget 5s" in item for item in result["limitations"])
+    assert any("no early retry was attempted" in item for item in result["limitations"])
+    progress = json.loads(progress_path.read_text(encoding="utf-8"))
+    assert progress["status"] == "retry_budget_exceeded"
+    event = progress["current_event"]
+    assert event["provider_retry_after_seconds"] == 120.0
+    assert event["max_retry_wait_seconds"] == 5.0
+    assert event["actual_wait_seconds"] == 0.0
+    assert event["budget_exceeded"] is True
+
+
+def test_topic_discovery_still_bounded_retries_network_failure_without_retry_after(monkeypatch, tmp_path: Path) -> None:
+    responses: list[object] = [
+        OSError("temporary network failure"),
+        FakeS2Response(
+            200,
+            {
+                "data": [
+                    {
+                        "paperId": "network-retry",
+                        "title": "Bounded network retry",
+                        "abstract": "We evaluate a bounded retry and report completed results.",
+                        "url": "https://example.test/network-retry",
+                    }
+                ]
+            },
+        ),
+    ]
+    sleeps: list[float] = []
+
+    def request(*_args, **_kwargs):
+        response = responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    monkeypatch.setattr(literature_discover, "requests", SimpleNamespace(request=request))
+    monkeypatch.setattr(literature_discover, "HAS_REQUESTS", True)
+    monkeypatch.setattr(literature_discover.time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setenv("AUTOSCI_S2_RATE_LIMIT_DELAY_SECONDS", "0")
+    monkeypatch.setenv("AUTOSCI_S2_RETRY_DELAY_SECONDS", "60")
+
+    result = literature_discover.discover_literature(
+        mode="topic",
+        query="bounded network retry",
+        limit=1,
+        wiki_root=tmp_path / "wiki",
+        workspace_root=tmp_path,
+        max_retries=1,
+        max_retry_wait_seconds=5,
+    )
+
+    assert result["status"] == "completed"
+    assert sleeps == [5.0]
+    assert any("waited 5s" in item for item in result["limitations"])

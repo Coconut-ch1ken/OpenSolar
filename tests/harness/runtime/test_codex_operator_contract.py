@@ -9,6 +9,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -135,6 +136,50 @@ def test_pm_route_preflight_fails_closed_on_provider_mismatch(tmp_path, monkeypa
     assert "builder" in payload
 
 
+def test_pm_route_preflight_constrains_selection_to_requested_provider(monkeypatch, capsys):
+    monkeypatch.delenv("SOLAR_PM_DEFAULT_PROVIDERS", raising=False)
+    monkeypatch.delenv("SOLAR_MULTI_TASK_DEFAULT_PROVIDERS", raising=False)
+    pm_dispatch = _load_module("pm_dispatch_route_provider_contract", ROOT / "tools" / "pm_dispatch.py")
+    registry = {
+        "operators": {
+            "claude-planner": {
+                "role": "planner",
+                "roles": ["planner"],
+                "provider": "anthropic",
+                "backend": "command",
+                "model": "opus",
+                "enabled": True,
+                "available": True,
+                "priority": 100,
+            },
+            "codex-planner": {
+                "role": "planner",
+                "roles": ["planner"],
+                "provider": "openai",
+                "backend": "command",
+                "model": "gpt-5.5",
+                "enabled": True,
+                "available": True,
+            },
+        }
+    }
+    monkeypatch.setattr(pm_dispatch, "load_registry", lambda: registry)
+    monkeypatch.setattr(pm_dispatch, "get_operator_runtime_state", lambda _op_id: "idle")
+    monkeypatch.setattr(pm_dispatch, "_operator_external_health", lambda _op: (True, ""))
+    args = type("Args", (), {
+        "runtime": "codex",
+        "expect_provider": "openai",
+        "roles": "planner",
+        "pretty": False,
+    })()
+
+    assert pm_dispatch.cmd_route_preflight(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is True
+    assert payload["roles"][0]["operator_id"] == "codex-planner"
+    assert payload["roles"][0]["provider"] == "openai"
+
+
 def test_operatord_materializes_work_dir_for_codex(tmp_path, monkeypatch):
     operatord = _load_module("operatord_contract", ROOT / "tools" / "operatord.py")
     monkeypatch.setattr(operatord, "HARNESS_DIR", tmp_path / "harness")
@@ -165,10 +210,134 @@ def test_operatord_materializes_work_dir_for_codex(tmp_path, monkeypatch):
     assert Path(env["SOLAR_OPERATOR_ENVELOPE_JSON"]).exists()
     assert result_path.is_file()
     assert handoff_path.is_file()
+    publish_map = json.loads(env["SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON"])
+    assert len(publish_map) == 1
+    assert publish_map[0]["write_path"] == str(
+        result_dir / "declared-outputs" / "00-sprint-1.N1-handoff.md"
+    )
+    assert publish_map[0]["publish_path"] == str(handoff_path)
+    assert publish_map[0]["initial_sha256"]
     assert set(json.loads(env["SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON"])) == {
         str(result_path),
-        str(handoff_path),
+        publish_map[0]["write_path"],
     }
+
+
+def test_operatord_native_registry_handoff_uses_verified_canonical_path(tmp_path, monkeypatch):
+    operatord = _load_module("operatord_contract_native_handoff", ROOT / "tools" / "operatord.py")
+    harness = tmp_path / "harness"
+    runtime_root = tmp_path / "runtime"
+    result_dir = harness / "run" / "operator-results" / "native" / "task"
+    result_dir.mkdir(parents=True)
+    monkeypatch.setattr(operatord, "HARNESS_DIR", harness)
+    monkeypatch.setattr(operatord, "SPRINTS_DIR", runtime_root)
+    handoff = runtime_root / "sprint-1.N1-handoff.md"
+
+    env = operatord._materialize_envelope_context(
+        result_dir,
+        {
+            "task_id": "pm-sprint-1-N1-native",
+            "sprint_id": "sprint-1",
+            "node_id": "N1",
+            "operator_backend": "research_operator_registry",
+            "handoff_path": str(handoff),
+            "work_dir": str(runtime_root / "sprint-1" / "workdir"),
+            "expected_artifacts": [str(handoff)],
+        },
+    )
+
+    assert "SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON" not in env
+    assert json.loads(env["SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON"]) == [str(handoff)]
+
+
+def test_operatord_stages_and_atomically_publishes_replaceable_outputs(tmp_path, monkeypatch):
+    operatord = _load_module("operatord_contract_output_publish", ROOT / "tools" / "operatord.py")
+    harness = tmp_path / "harness"
+    monkeypatch.setattr(operatord, "HARNESS_DIR", harness)
+    result_dir = harness / "run" / "operator-results" / "planner" / "task"
+    result_dir.mkdir(parents=True)
+    work_dir = harness / "sprints" / "sprint-1" / "workdir"
+    canonical = harness / "sprints" / "sprint-1.task_graph.json"
+    canonical.parent.mkdir(parents=True, exist_ok=True)
+    canonical.write_text('{"version": "old"}\n', encoding="utf-8")
+
+    env = operatord._materialize_envelope_context(
+        result_dir,
+        {
+            "task_id": "pm-sprint-1-N0-abc",
+            "sprint_id": "sprint-1",
+            "work_dir": str(work_dir),
+            "expected_artifacts": [str(canonical)],
+        },
+    )
+    mapping = json.loads(env["SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON"])[0]
+    staged = Path(mapping["write_path"])
+    assert staged.read_text(encoding="utf-8") == '{"version": "old"}\n'
+
+    replacement = canonical.with_suffix(".replacement")
+    replacement.write_text('{"version": "control-plane"}\n', encoding="utf-8")
+    os.replace(replacement, canonical)
+    staged.write_text('{"version": "worker"}\n', encoding="utf-8")
+
+    assert operatord._publish_staged_outputs(env) == [str(canonical)]
+    assert canonical.read_text(encoding="utf-8") == '{"version": "worker"}\n'
+
+
+def test_operatord_shortens_long_windows_staging_paths(tmp_path):
+    operatord = _load_module("operatord_contract_long_staging", ROOT / "tools" / "operatord.py")
+    staging_dir = tmp_path / "declared-outputs"
+    publish_path = tmp_path / ("very-long-sprint-and-node-name-" * 4 + "handoff.md")
+
+    original = staging_dir / f"00-{publish_path.name}"
+    assert len(str(original)) >= 240
+
+    staged = operatord._staging_output_path(staging_dir, 0, publish_path)
+
+    assert len(str(staged)) < 240
+    assert staged.parent == staging_dir
+    assert staged.name.startswith("00-")
+    assert staged.suffix == ".md"
+
+    deep_staging_dir = Path("C:/") / ("x" * 215) / "declared-outputs"
+    minimal = operatord._staging_output_path(deep_staging_dir, 0, publish_path)
+    assert minimal.name == "0"
+    assert len(str(minimal)) < 240
+
+
+def test_operatord_refuses_to_publish_empty_staged_output(tmp_path, monkeypatch):
+    operatord = _load_module("operatord_contract_empty_publish", ROOT / "tools" / "operatord.py")
+    harness = tmp_path / "harness"
+    monkeypatch.setattr(operatord, "HARNESS_DIR", harness)
+    result_dir = harness / "run" / "operator-results" / "planner" / "task"
+    result_dir.mkdir(parents=True)
+    canonical = harness / "sprints" / "sprint-1.task_graph.json"
+
+    env = operatord._materialize_envelope_context(
+        result_dir,
+        {"expected_artifacts": [str(canonical)]},
+    )
+
+    with pytest.raises(ValueError, match="was not materialized"):
+        operatord._publish_staged_outputs(env)
+
+
+def test_operatord_refuses_to_publish_unchanged_staged_output(tmp_path, monkeypatch):
+    operatord = _load_module("operatord_contract_stale_publish", ROOT / "tools" / "operatord.py")
+    harness = tmp_path / "harness"
+    monkeypatch.setattr(operatord, "HARNESS_DIR", harness)
+    result_dir = harness / "run" / "operator-results" / "planner" / "task"
+    result_dir.mkdir(parents=True)
+    canonical = harness / "sprints" / "sprint-1.task_graph.json"
+    canonical.parent.mkdir(parents=True, exist_ok=True)
+    canonical.write_text('{"version": "stale"}\n', encoding="utf-8")
+
+    env = operatord._materialize_envelope_context(
+        result_dir,
+        {"expected_artifacts": [str(canonical)]},
+    )
+
+    with pytest.raises(ValueError, match="was not updated"):
+        operatord._publish_staged_outputs(env)
 
 
 def test_operatord_derives_work_dir_for_legacy_pm_envelope(tmp_path, monkeypatch):
@@ -215,6 +384,119 @@ def test_operatord_refuses_expected_artifact_outside_authorized_roots(tmp_path, 
         )
 
 
+def test_operatord_allows_control_plane_outputs_in_custom_runtime_root(tmp_path, monkeypatch):
+    operatord = _load_module("operatord_contract_custom_runtime", ROOT / "tools" / "operatord.py")
+    harness = tmp_path / "harness"
+    runtime_root = tmp_path / "runtime"
+    result_dir = harness / "run" / "operator-results" / "evaluator" / "task"
+    result_dir.mkdir(parents=True)
+    monkeypatch.setattr(operatord, "HARNESS_DIR", harness)
+    monkeypatch.setattr(operatord, "SPRINTS_DIR", runtime_root)
+    eval_md = runtime_root / "sprint-1.N1-eval.md"
+    eval_json = runtime_root / "sprint-1.N1-eval.json"
+    pm_result = runtime_root / "sprint-1.N1-eval.pm-result.md"
+
+    env = operatord._materialize_envelope_context(
+        result_dir,
+        {
+            "task_id": "pm-sprint-1-N1-abc",
+            "sprint_id": "sprint-1",
+            "node_id": "N1",
+            "work_dir": str(runtime_root / "sprint-1" / "workdir"),
+            "result_path": str(pm_result),
+            "expected_artifacts": [str(eval_md), str(eval_json)],
+        },
+    )
+
+    assert pm_result.is_file()
+    publish_map = json.loads(env["SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON"])
+    assert {item["publish_path"] for item in publish_map} == {str(eval_md), str(eval_json)}
+
+
+def test_codex_operator_explains_precreated_output_placeholders(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_output_guidance", ROOT / "tools" / "codex_operator.py")
+    dispatch_file = tmp_path / "dispatch.md"
+    dispatch_file.write_text("# Build the artifacts\n", encoding="utf-8")
+    expected = tmp_path / "design.md"
+    expected.touch()
+    monkeypatch.setenv("DISPATCH_FILE", str(dispatch_file))
+    monkeypatch.setenv("SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON", json.dumps([str(expected)]))
+
+    dispatch = codex_operator._read_dispatch()
+
+    assert dispatch.startswith("# Build the artifacts")
+    assert "zero-byte placeholders" in dispatch
+    assert "use Update File rather than Add File" in dispatch
+    assert str(expected) in dispatch
+
+
+def test_codex_operator_explains_staged_publish_paths(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_publish_guidance", ROOT / "tools" / "codex_operator.py")
+    dispatch_file = tmp_path / "dispatch.md"
+    dispatch_file.write_text("# Plan the sprint\n", encoding="utf-8")
+    staged = tmp_path / "task" / "00-task_graph.json"
+    canonical = tmp_path / "sprints" / "sprint.task_graph.json"
+    staged.parent.mkdir()
+    staged.touch()
+    monkeypatch.setenv("DISPATCH_FILE", str(dispatch_file))
+    monkeypatch.setenv("SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON", json.dumps([str(staged)]))
+    monkeypatch.setenv(
+        "SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON",
+        json.dumps([{"write_path": str(staged), "publish_path": str(canonical)}]),
+    )
+
+    dispatch = codex_operator._read_dispatch()
+
+    assert "Do not write their canonical publish paths directly" in dispatch
+    assert f"Write `{staged}`" in dispatch
+    assert f"publishes it to `{canonical}`" in dispatch
+
+
+def test_codex_operator_materializes_direct_skill_bridge_evidence(tmp_path, monkeypatch):
+    codex_operator = _load_module(
+        "codex_operator_contract_skill_bridge",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    envelope_path = tmp_path / "envelope.json"
+    envelope_path.write_text(
+        json.dumps(
+            {
+                "capability_capsule_id": "cap.skill-execution-bridge",
+                "selected_skills": ["research_compilation"],
+                "resolved_capability_capsule": {
+                    "capability_capsule_id": "cap.skill-execution-bridge",
+                    "selected_skills": [],
+                },
+                "task_graph_node": {"required_skills": ["research_compilation"]},
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SOLAR_OPERATOR_ENVELOPE_JSON", str(envelope_path))
+
+    evidence = codex_operator._materialize_skill_bridge_evidence(
+        tmp_path,
+        "Compile the grounded report.",
+    )
+    codex_operator._write_skill_bridge_result(tmp_path, evidence, 0)
+
+    expected = {
+        "skill-dispatch-result.json",
+        "skill-dispatch-pane-prompt.md",
+        "skill-dispatch-selection-proof.json",
+        "skill-dispatch-bridge-contract.json",
+    }
+    assert expected.issubset({path.name for path in tmp_path.iterdir()})
+    contract = json.loads((tmp_path / "skill-dispatch-bridge-contract.json").read_text(encoding="utf-8"))
+    assert contract["command_protocol"]["mode"]
+    assert contract["command_protocol"]["execution_surface"] == "direct_command_operator"
+    assert contract["workflow_contract"]["phases"]
+    assert contract["workflow_contract"]["delivery_expectation"]
+    result = json.loads((tmp_path / "skill-dispatch-result.json").read_text(encoding="utf-8"))
+    assert result["status"] == "completed"
+    assert result["selected_skills"] == ["research_compilation"]
+
+
 def test_codex_operator_uses_writable_sqlite_home_and_ephemeral_flag(tmp_path, monkeypatch):
     codex_operator = _load_module("codex_operator_contract", ROOT / "tools" / "codex_operator.py")
     harness_dir = tmp_path / "harness"
@@ -236,9 +518,196 @@ def test_codex_operator_uses_writable_sqlite_home_and_ephemeral_flag(tmp_path, m
 
     cmd = codex_operator._codex_exec_command("gpt-5.5", "medium", str(tmp_path), task_dir / "last.md")
     assert "--ephemeral" in cmd
+    assert "--skip-git-repo-check" in cmd
     assert 'cli_auth_credentials_store="file"' in cmd
     assert "--cd" in cmd
     assert str(tmp_path) in cmd
+
+
+def test_codex_operator_prefers_bound_workspace_virtualenv(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_bound_venv", ROOT / "tools" / "codex_operator.py")
+    workspace_binding = _load_module("workspace_binding_contract_bound_venv", ROOT / "lib" / "workspace_binding.py")
+    harness_dir = tmp_path / "harness"
+    sprints_dir = harness_dir / "sprints"
+    task_dir = harness_dir / "run" / "operator-results" / "op" / "task"
+    workspace = tmp_path / "workspace"
+    venv_bin = workspace / ".venv" / "bin"
+    sid = "sprint-bound-venv"
+    task_dir.mkdir(parents=True)
+    sprints_dir.mkdir(parents=True)
+    venv_bin.mkdir(parents=True)
+    (venv_bin / "python3").touch()
+    (sprints_dir / f"{sid}.raw_intent.json").write_text(
+        json.dumps({"context": {"repo": str(workspace)}}) + "\n",
+        encoding="utf-8",
+    )
+    workspace_binding.bind_active_workspace(harness_dir, workspace, source="test")
+    monkeypatch.setitem(sys.modules, "workspace_binding", workspace_binding)
+    monkeypatch.setenv("HARNESS_DIR", str(harness_dir))
+    monkeypatch.setenv("SPRINTS_DIR", str(sprints_dir))
+    monkeypatch.setenv("SID", sid)
+
+    env = codex_operator._codex_exec_env(task_dir)
+
+    path_entries = env["PATH"].split(os.pathsep)
+    assert str(venv_bin) in path_entries
+    assert path_entries.index(str(venv_bin)) < path_entries.index(str(harness_dir))
+
+
+def test_codex_operator_prefers_harness_wide_model_policy(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_model_policy", ROOT / "tools" / "codex_operator.py")
+    monkeypatch.setenv("CODEX_MODEL", "gpt-5.5")
+    monkeypatch.setenv("SOLAR_CODEX_MODEL", "gpt-5.3-codex-spark")
+
+    assert codex_operator._codex_model() == "gpt-5.3-codex-spark"
+
+
+def test_codex_operator_uses_resolved_cross_platform_binary(tmp_path):
+    codex_operator = _load_module("codex_operator_contract_binary", ROOT / "tools" / "codex_operator.py")
+    binary = tmp_path / "codex"
+    command = codex_operator._codex_exec_command(
+        "gpt-5.5",
+        "medium",
+        str(tmp_path),
+        tmp_path / "last.md",
+        str(binary),
+    )
+
+    assert command[0] == str(binary)
+    assert command[1] == "exec"
+    assert "--skip-git-repo-check" in command
+
+
+def test_codex_operator_default_state_root_is_cross_platform(monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_state_root", ROOT / "tools" / "codex_operator.py")
+    monkeypatch.delattr(codex_operator.os, "getuid", raising=False)
+
+    root = codex_operator._default_operator_state_root()
+
+    assert root.parent == Path(codex_operator.tempfile.gettempdir())
+    assert root.name == f"solar-codex-operator-state-pid-{os.getpid()}"
+
+
+def test_codex_operator_registers_windows_child_by_pid(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_windows_registry", ROOT / "tools" / "codex_operator.py")
+    calls = []
+
+    class FakeRegistry:
+        @staticmethod
+        def register(*args, **kwargs):
+            calls.append((args, kwargs))
+
+    monkeypatch.setitem(sys.modules, "run_process_registry", FakeRegistry)
+    monkeypatch.delattr(codex_operator.os, "getpgid", raising=False)
+    monkeypatch.delattr(codex_operator.os, "getsid", raising=False)
+    monkeypatch.setenv("HARNESS_DIR", str(tmp_path / "harness"))
+
+    assert codex_operator._register_codex_process_group(12345) is True
+    assert calls[0][1]["signal_scope"] == "pid"
+
+
+def test_codex_operator_projects_auth_on_macos(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_non_linux_auth", ROOT / "tools" / "codex_operator.py")
+    harness_dir = tmp_path / "harness"
+    task_dir = harness_dir / "run" / "operator-results" / "op" / "task"
+    work_dir = tmp_path / "work"
+    source_codex_home = tmp_path / "source-codex-home"
+    task_dir.mkdir(parents=True)
+    work_dir.mkdir()
+    source_codex_home.mkdir()
+    (source_codex_home / "auth.json").write_text('{"fixture": true}\n', encoding="utf-8")
+    monkeypatch.setenv("HARNESS_DIR", str(harness_dir))
+    monkeypatch.setenv("SOLAR_CODEX_SOURCE_HOME", str(source_codex_home))
+    monkeypatch.setenv("SOLAR_CODEX_OPERATOR_STATE_ROOT", str(tmp_path / "operator-state"))
+    monkeypatch.setenv("SOLAR_OPERATOR_STRICT_FS_SCOPE", "0")
+    monkeypatch.setattr(codex_operator.sys, "platform", "darwin")
+    env = codex_operator._codex_exec_env(task_dir)
+
+    command, proof = codex_operator._filesystem_isolated_command(
+        ["codex", "exec", "-"], task_dir=task_dir, cwd=work_dir, env=env
+    )
+
+    assert command == ["codex", "exec", "--sandbox", "workspace-write", "-"]
+    assert proof == {"mode": "codex_workspace_write", "strict": False, "read_write": []}
+    assert "--dangerously-bypass-approvals-and-sandbox" not in command
+    sandbox_codex_home = Path(env["CODEX_HOME"])
+    assert sandbox_codex_home.parent.parent == tmp_path / "operator-state"
+    assert (sandbox_codex_home / "auth.json").read_text(encoding="utf-8") == '{"fixture": true}\n'
+    if os.name != "nt":
+        assert (sandbox_codex_home / "auth.json").stat().st_mode & 0o777 == 0o600
+    assert (sandbox_codex_home / "config.toml").read_text(encoding="utf-8") == (
+        'cli_auth_credentials_store = "file"\n'
+    )
+
+
+def test_codex_operator_grants_only_declared_output_parent_on_macos(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_non_linux_outputs", ROOT / "tools" / "codex_operator.py")
+    harness_dir = tmp_path / "harness"
+    task_dir = harness_dir / "run" / "operator-results" / "op" / "task"
+    work_dir = harness_dir / "sprints" / "sprint-1" / "workdir"
+    output = harness_dir / "sprints" / "sprint-1.N0.pm-result.md"
+    outside = tmp_path / "outside" / "escape.md"
+    source_codex_home = tmp_path / "source-codex-home"
+    task_dir.mkdir(parents=True)
+    work_dir.mkdir(parents=True)
+    output.touch()
+    source_codex_home.mkdir()
+    (source_codex_home / "auth.json").write_text('{"fixture": true}\n', encoding="utf-8")
+    monkeypatch.setenv("HARNESS_DIR", str(harness_dir))
+    monkeypatch.setenv("SOLAR_CODEX_SOURCE_HOME", str(source_codex_home))
+    monkeypatch.setenv("SOLAR_CODEX_OPERATOR_STATE_ROOT", str(tmp_path / "operator-state"))
+    monkeypatch.setenv("SOLAR_OPERATOR_STRICT_FS_SCOPE", "0")
+    monkeypatch.setenv(
+        "SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON",
+        json.dumps([str(output), str(outside)]),
+    )
+    monkeypatch.setattr(codex_operator.sys, "platform", "darwin")
+    env = codex_operator._codex_exec_env(task_dir)
+
+    command, proof = codex_operator._filesystem_isolated_command(
+        ["codex", "exec", "-"], task_dir=task_dir, cwd=work_dir, env=env
+    )
+
+    assert command == [
+        "codex",
+        "exec",
+        "--sandbox",
+        "workspace-write",
+        "--add-dir",
+        str(harness_dir / "sprints"),
+        "-",
+    ]
+    assert proof == {
+        "mode": "codex_workspace_write",
+        "strict": False,
+        "read_write": [str(harness_dir / "sprints")],
+    }
+    assert str(outside.parent) not in command
+
+
+def test_codex_operator_preserves_proven_windows_command(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_windows", ROOT / "tools" / "codex_operator.py")
+    harness_dir = tmp_path / "harness"
+    task_dir = harness_dir / "run" / "operator-results" / "op" / "task"
+    work_dir = harness_dir / "sprints" / "sprint-1" / "workdir"
+    source_codex_home = tmp_path / "source-codex-home"
+    task_dir.mkdir(parents=True)
+    work_dir.mkdir(parents=True)
+    source_codex_home.mkdir()
+    monkeypatch.setenv("HARNESS_DIR", str(harness_dir))
+    monkeypatch.setenv("SOLAR_CODEX_SOURCE_HOME", str(source_codex_home))
+    monkeypatch.setenv("SOLAR_CODEX_OPERATOR_STATE_ROOT", str(tmp_path / "operator-state"))
+    monkeypatch.setenv("SOLAR_OPERATOR_STRICT_FS_SCOPE", "0")
+    monkeypatch.setattr(codex_operator.sys, "platform", "win32")
+    env = codex_operator._codex_exec_env(task_dir)
+    original = ["codex.exe", "exec", "--dangerously-bypass-approvals-and-sandbox", "-"]
+
+    command, proof = codex_operator._filesystem_isolated_command(
+        original, task_dir=task_dir, cwd=work_dir, env=env
+    )
+
+    assert command == original
+    assert proof == {"mode": "unsupported", "strict": False}
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="Landlock is Linux-only")
@@ -262,6 +731,15 @@ def test_codex_operator_wraps_strict_run_in_landlock(tmp_path, monkeypatch):
     exact_handoff.parent.mkdir(parents=True, exist_ok=True)
     exact_handoff.touch()
     env["SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON"] = json.dumps([str(exact_handoff)])
+    published = tmp_path / "published" / "evidence.jsonl"
+    published.parent.mkdir()
+    published.write_text("evidence\n", encoding="utf-8")
+    relative_read = work_dir / "inputs" / "source.json"
+    relative_read.parent.mkdir()
+    relative_read.write_text("{}\n", encoding="utf-8")
+    env["SOLAR_OPERATOR_READ_SCOPE_JSON"] = json.dumps(
+        [str(published), "inputs/source.json"]
+    )
 
     command, proof = codex_operator._filesystem_isolated_command(
         ["codex", "exec", "-"], task_dir=task_dir, cwd=work_dir, env=env
@@ -269,7 +747,9 @@ def test_codex_operator_wraps_strict_run_in_landlock(tmp_path, monkeypatch):
 
     assert command[0] == sys.executable
     assert command[1].endswith("landlock_exec.py")
-    assert command[-4:] == ["--", "codex", "exec", "-"]
+    assert command[-4] == "--"
+    assert Path(command[-3]).name in {"codex", "codex.js"}
+    assert command[-2:] == ["exec", "-"]
     assert proof["mode"] == "landlock"
     assert proof["strict"] is True
     assert str(harness_dir.resolve()) in proof["read_only"]
@@ -277,9 +757,17 @@ def test_codex_operator_wraps_strict_run_in_landlock(tmp_path, monkeypatch):
     assert str(work_dir.resolve()) in proof["read_write"]
     assert str(task_dir.resolve()) in proof["read_write"]
     assert str(exact_handoff.resolve()) in proof["read_write"]
+    assert str(published.resolve()) in proof["read_only"]
+    assert str(relative_read.resolve()) in proof["read_only"]
     assert str(tmp_path.resolve()) not in proof["read_write"]
     assert str(Path("/etc/resolv.conf").resolve()) in proof["read_only"]
+    resolved_codex = Path(command[-3]).resolve()
+    assert str(resolved_codex.parent.parent) in proof["read_only"]
+    node_binary = shutil.which("node", path=env.get("PATH"))
+    assert node_binary
+    assert str(Path(node_binary).resolve()) in proof["read_only"]
     sandbox_codex_home = Path(env["CODEX_HOME"])
+    assert Path(env["HOME"]) == sandbox_codex_home.parent
     assert sandbox_codex_home == Path(env["CODEX_SQLITE_HOME"]) / "home"
     assert (sandbox_codex_home / "auth.json").is_file()
     assert not (sandbox_codex_home / "auth.json").is_symlink()
@@ -306,6 +794,84 @@ def test_codex_operator_refuses_disabled_isolation_for_strict_run(tmp_path, monk
         )
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="WSL mount isolation is Linux-only")
+def test_codex_operator_uses_mount_namespace_for_drvfs(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_drvfs", ROOT / "tools" / "codex_operator.py")
+    harness_dir = tmp_path / "harness"
+    task_dir = harness_dir / "run" / "operator-results" / "op" / "task"
+    work_dir = harness_dir / "sprints" / "sprint-1" / "workdir"
+    task_dir.mkdir(parents=True)
+    work_dir.mkdir(parents=True)
+    (tmp_path / "AGENTS.md").write_text("# Test agent instructions\n", encoding="utf-8")
+    (tmp_path / ".agents").mkdir()
+    source_codex_home = tmp_path / "source-codex-home"
+    source_codex_home.mkdir()
+    monkeypatch.setenv("HARNESS_DIR", str(harness_dir))
+    monkeypatch.setenv("SOLAR_CODEX_SOURCE_HOME", str(source_codex_home))
+    monkeypatch.setenv("SOLAR_CODEX_OPERATOR_STATE_ROOT", str(tmp_path / "operator-state"))
+    monkeypatch.setenv("SOLAR_OPERATOR_STRICT_FS_SCOPE", "1")
+    monkeypatch.setattr(codex_operator, "_path_filesystem_type", lambda _path: "9p")
+    env = codex_operator._codex_exec_env(task_dir)
+
+    command, proof = codex_operator._filesystem_isolated_command(
+        ["codex", "exec", "-"], task_dir=task_dir, cwd=work_dir, env=env
+    )
+
+    assert Path(command[0]).name == "unshare"
+    assert "mount_namespace_exec.py" in command
+    assert "landlock_exec.py" in command
+    assert "--read-scope-only" in command
+    assert proof["mode"] == "mount_namespace+landlock-read"
+    assert str(tmp_path.resolve()) in proof["read_directories"]
+    assert str((tmp_path / "AGENTS.md").resolve()) in proof["read_only"]
+    assert str((tmp_path / ".agents").resolve()) in proof["read_only"]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="WSL mount isolation is Linux-only")
+def test_drvfs_mount_namespace_writes_only_declared_paths(tmp_path, monkeypatch):
+    codex_operator = _load_module("codex_operator_contract_drvfs_live", ROOT / "tools" / "codex_operator.py")
+    if codex_operator._path_filesystem_type(ROOT) not in {"9p", "v9fs"}:
+        pytest.skip("requires a WSL DrvFS checkout")
+    harness_dir = tmp_path / "harness"
+    task_dir = harness_dir / "run" / "operator-results" / "op" / "task"
+    work_dir = harness_dir / "sprints" / "sprint-1" / "workdir"
+    allowed = harness_dir / "sprints" / "allowed.md"
+    denied = harness_dir / "sprints" / "denied.md"
+    task_dir.mkdir(parents=True)
+    work_dir.mkdir(parents=True)
+    allowed.parent.mkdir(parents=True, exist_ok=True)
+    allowed.touch()
+    monkeypatch.setenv("HARNESS_DIR", str(harness_dir))
+    monkeypatch.setenv("SOLAR_CODEX_OPERATOR_STATE_ROOT", "/tmp/solar-codex-mount-test")
+    monkeypatch.setenv("SOLAR_OPERATOR_STRICT_FS_SCOPE", "1")
+    env = codex_operator._codex_exec_env(task_dir)
+    env["SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON"] = json.dumps([str(allowed)])
+    env["TEST_ALLOWED_OUTPUT"] = str(allowed)
+    env["TEST_DENIED_OUTPUT"] = str(denied)
+    script = (
+        "import os\n"
+        "from pathlib import Path\n"
+        "Path(os.environ['TEST_ALLOWED_OUTPUT']).write_text('ok', encoding='utf-8')\n"
+        "try:\n"
+        "    Path(os.environ['TEST_DENIED_OUTPUT']).write_text('bad', encoding='utf-8')\n"
+        "except OSError:\n"
+        "    pass\n"
+        "else:\n"
+        "    raise SystemExit(9)\n"
+    )
+
+    command, proof = codex_operator._filesystem_isolated_command(
+        [sys.executable, "-c", script], task_dir=task_dir, cwd=work_dir, env=env
+    )
+    result = subprocess.run(command, env=env, text=True, capture_output=True, check=False)
+
+    assert result.returncode == 0, result.stderr
+    assert proof["mode"] == "mount_namespace+landlock-read"
+    assert allowed.read_text(encoding="utf-8") == "ok"
+    assert not denied.exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="generated harness shim is a POSIX shell script")
 def test_codex_operator_binds_model_shell_to_active_harness(tmp_path, monkeypatch):
     codex_operator = _load_module("codex_operator_contract_active_harness", ROOT / "tools" / "codex_operator.py")
     harness_dir = tmp_path / "clean-harness"
@@ -378,7 +944,7 @@ def test_codex_operator_does_not_forward_unrecognized_extra_flags(tmp_path, monk
     cmd = codex_operator._codex_exec_command("gpt-5.5", "medium", str(tmp_path), tmp_path / "last.md")
 
     assert cmd[:2] == ["codex", "exec"]
-    assert "--json" not in cmd
+    assert "--json" in cmd
     assert "--add-dir" not in cmd
     assert "/tmp/not-authorized-by-the-operator-contract" not in cmd
 
@@ -391,3 +957,237 @@ def test_codex_operator_treats_malformed_extra_flags_as_search_disabled(tmp_path
 
     assert cmd[:2] == ["codex", "exec"]
     assert "--search" not in cmd
+
+
+def test_codex_operator_writes_typed_provider_admission_receipt(tmp_path, monkeypatch):
+    codex_operator = _load_module(
+        "codex_operator_provider_admission_receipt",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    monkeypatch.setenv("TASK_ID", "pm-task")
+    monkeypatch.setenv("DISPATCH_ID", "dispatch-pm-task")
+    monkeypatch.setenv("ATTEMPT_ID", "2")
+    monkeypatch.setenv("CORRELATION_ID", "sprint:N1")
+    monkeypatch.setenv("GRAPH_DISPATCH_ID", "graph-sprint-N1")
+    monkeypatch.setenv("SCHEDULER_INPUT_SHA256", "b" * 64)
+    monkeypatch.setenv("FROZEN_CANDIDATE_IDS_JSON", '["op.rank1", "op.rank2"]')
+    output_file = tmp_path / "last-message.md"
+
+    provider_jsonl = "\n".join([
+        json.dumps({"type": "thread.started", "thread_id": "thread-1"}),
+        json.dumps({"type": "item.completed", "item": {"type": "error", "message": "retry warning"}}),
+        json.dumps({"type": "turn.started"}),
+        json.dumps({"type": "error", "message": "You've hit your usage limit; resets later"}),
+        json.dumps({"type": "turn.failed", "error": {"message": "You've hit your usage limit; resets later"}}),
+    ])
+    receipt = codex_operator._write_provider_invocation_receipt(
+        tmp_path,
+        output_file,
+        provider_jsonl,
+        1,
+        invocation_id="inv-1",
+        status="failed",
+    )
+
+    persisted = json.loads(
+        (tmp_path / "provider-invocation-receipt.json").read_text(encoding="utf-8")
+    )
+    assert persisted == receipt
+    assert receipt["provider_admission_refusal"] is True
+    assert receipt["error"] == {
+        "type": "provider_quota",
+        "phase": "admission",
+        "retryable": True,
+        "retry_scope": "frozen_operator_alternative",
+    }
+    assert receipt["final_assistant_message"]["present"] is False
+    assert receipt["tool_evidence"]["observed"] is False
+    assert receipt["tool_evidence"]["complete"] is True
+    assert receipt["structured_stream"]["terminal_event_type"] == "turn.failed"
+    assert receipt["structured_stream"]["event_count"] == 5
+    assert receipt["identifiers"]["graph_dispatch_id"] == "graph-sprint-N1"
+    assert receipt["identifiers"]["frozen_candidate_ids"] == ["op.rank1", "op.rank2"]
+
+
+def test_codex_operator_does_not_call_completed_work_an_admission_refusal(tmp_path, monkeypatch):
+    codex_operator = _load_module(
+        "codex_operator_provider_admission_with_message",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    output_file = tmp_path / "last-message.md"
+    output_file.write_text("I changed the requested file.", encoding="utf-8")
+
+    provider_jsonl = "\n".join([
+        json.dumps({"type": "thread.started", "thread_id": "thread-2"}),
+        json.dumps({"type": "turn.started"}),
+        json.dumps({"type": "item.completed", "item": {"type": "agent_message", "text": "You've hit your usage limit after doing work"}}),
+        json.dumps({"type": "turn.failed", "error": {"message": "You've hit your usage limit after doing work"}}),
+    ])
+    receipt = codex_operator._write_provider_invocation_receipt(
+        tmp_path,
+        output_file,
+        provider_jsonl,
+        1,
+        invocation_id="inv-2",
+        status="failed",
+    )
+
+    assert receipt["provider_admission_refusal"] is False
+    assert "error" not in receipt
+    assert receipt["final_assistant_message"]["present"] is True
+    assert receipt["tool_evidence"]["complete"] is True
+
+
+@pytest.mark.parametrize(
+    "events",
+    [
+        [
+            {"type": "thread.started", "prompt": "You've hit your usage limit"},
+            {"type": "turn.started"},
+            {"type": "turn.completed", "usage": {"input_tokens": 1}},
+        ],
+        [
+            {"type": "thread.started"},
+            {"type": "turn.started"},
+            {"type": "item.completed", "item": {"type": "agent_message", "text": "usage limit"}},
+            {"type": "turn.failed", "error": {"message": "usage limit"}},
+        ],
+        [
+            {"type": "thread.started"},
+            {"type": "turn.started"},
+            {"type": "item.completed", "item": {"type": "command_execution", "aggregated_output": "usage limit"}},
+            {"type": "turn.failed", "error": {"message": "usage limit"}},
+        ],
+    ],
+)
+def test_codex_operator_does_not_authorize_fallback_from_adversarial_message_text(
+    tmp_path,
+    events,
+):
+    codex_operator = _load_module(
+        "codex_operator_structured_adversarial_stream",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    receipt = codex_operator._write_provider_invocation_receipt(
+        tmp_path,
+        tmp_path / "last-message.md",
+        "\n".join(json.dumps(event) for event in events),
+        1,
+        invocation_id="inv-adversarial",
+        status="failed",
+    )
+
+    assert receipt["provider_admission_refusal"] is False
+    assert "error" not in receipt
+
+
+def test_codex_operator_malformed_jsonl_fails_closed(tmp_path):
+    codex_operator = _load_module(
+        "codex_operator_structured_malformed_stream",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    stream = "\n".join([
+        json.dumps({"type": "turn.started"}),
+        "not-json",
+        json.dumps({"type": "turn.failed", "error": {"message": "usage limit"}}),
+    ])
+
+    receipt = codex_operator._write_provider_invocation_receipt(
+        tmp_path,
+        tmp_path / "last-message.md",
+        stream,
+        1,
+        invocation_id="inv-malformed",
+        status="failed",
+    )
+
+    assert receipt["provider_admission_refusal"] is False
+    assert receipt["structured_stream"]["malformed"] is True
+
+
+def test_codex_operator_unknown_json_event_fails_closed(tmp_path):
+    codex_operator = _load_module(
+        "codex_operator_structured_unknown_event",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    stream = "\n".join(json.dumps(event) for event in [
+        {"type": "turn.started"},
+        {"type": "provider.work.maybe_started", "detail": "unknown effect"},
+        {"type": "turn.failed", "error": {"message": "You've hit your usage limit"}},
+    ])
+
+    receipt = codex_operator._write_provider_invocation_receipt(
+        tmp_path,
+        tmp_path / "last-message.md",
+        stream,
+        1,
+        invocation_id="inv-unknown",
+        status="failed",
+    )
+
+    assert receipt["provider_admission_refusal"] is False
+    assert receipt["structured_stream"]["complete"] is False
+    assert receipt["structured_stream"]["unknown_event_types"] == ["provider.work.maybe_started"]
+
+
+def test_codex_operator_oversized_jsonl_is_bounded_and_fails_closed(tmp_path, monkeypatch):
+    codex_operator = _load_module(
+        "codex_operator_structured_bounded_stream",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    monkeypatch.setenv("SOLAR_CODEX_PROVIDER_JSONL_MAX_BYTES", "65536")
+    noise = json.dumps({"type": "error", "message": "x" * 70000})
+    stream = "\n".join([
+        json.dumps({"type": "turn.started"}),
+        noise,
+        json.dumps({"type": "turn.failed", "error": {"message": "You've hit your usage limit"}}),
+    ])
+
+    receipt = codex_operator._write_provider_invocation_receipt(
+        tmp_path,
+        tmp_path / "last-message.md",
+        stream,
+        1,
+        invocation_id="inv-overflow",
+        status="failed",
+    )
+
+    assert receipt["provider_admission_refusal"] is False
+    assert receipt["structured_stream"]["complete"] is False
+    assert (tmp_path / "codex-cli-output.log").stat().st_size <= 65536
+
+
+def test_codex_operator_bounds_forwarded_provider_stream(tmp_path):
+    codex_operator = _load_module(
+        "codex_operator_contract_bounded_closeout",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    output_file = tmp_path / "codex-last-message.md"
+    output_file.write_text("final human-readable message", encoding="utf-8")
+
+    forwarded = codex_operator._forwarded_cli_output("event\n" * 500000, output_file)
+
+    assert "full stream retained in codex-cli-output.log" in forwarded
+    assert forwarded.endswith("final human-readable message")
+    assert len(forwarded) < 21000
+
+
+def test_codex_operator_detects_complete_declared_closeout(tmp_path, monkeypatch):
+    codex_operator = _load_module(
+        "codex_operator_contract_declared_closeout",
+        ROOT / "tools" / "codex_operator.py",
+    )
+    output_file = tmp_path / "codex-last-message.md"
+    handoff = tmp_path / "handoff.md"
+    artifact_dir = tmp_path / "artifact"
+    artifact_dir.mkdir()
+    output_file.write_text("done", encoding="utf-8")
+    handoff.write_text("handoff", encoding="utf-8")
+    (artifact_dir / "result.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("HANDOFF", str(handoff))
+    monkeypatch.setenv("SOLAR_OPERATOR_WRITE_SCOPE_JSON", json.dumps([str(artifact_dir)]))
+
+    assert codex_operator._declared_closeout_ready(output_file, 0.0) is True
+
+    (artifact_dir / "result.json").write_text("", encoding="utf-8")
+    assert codex_operator._declared_closeout_ready(output_file, 0.0) is False

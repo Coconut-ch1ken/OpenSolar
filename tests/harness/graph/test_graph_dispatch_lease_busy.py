@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
+import json
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 ROOT = (Path(__file__).resolve().parents[3] / 'harness')
 sys.path.insert(0, str(ROOT / "lib"))
 
 import graph_node_dispatcher as gnd  # noqa: E402
+import graph_scheduler as gs  # noqa: E402
 import pytest  # noqa: E402
 
 
@@ -34,6 +38,236 @@ def test_operator_pool_can_be_enabled_explicitly(monkeypatch) -> None:
     assert gnd._builder_operator_pool_enabled() is True
 
 
+def test_graph_dispatch_lease_defaults_to_three_minutes() -> None:
+    assert gnd.DEFAULT_GRAPH_LEASE_TTL_SECONDS == 180
+    assert gs.DEFAULT_GRAPH_LEASE_TTL_SECONDS == 180
+
+
+def test_frozen_handoff_route_satisfies_operator_closeout(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", sprints)
+    work_dir = tmp_path / "runtime" / "workdir"
+    routed_handoff = work_dir / "private" / "design" / "01-artifact.handoff_md.json"
+    routed_handoff.parent.mkdir(parents=True)
+    routed_handoff.write_text('{"status":"completed"}\n', encoding="utf-8")
+    node = {
+        "id": "design",
+        "artifact_routes": {
+            "produces": {"artifact.handoff_md": str(routed_handoff)},
+        },
+        "write_scope": [str(routed_handoff)],
+    }
+    graph = {"runtime_work_dir": str(work_dir), "nodes": [node]}
+
+    assert gnd._existing_node_handoff("sprint-frozen", node, graph) == routed_handoff
+
+
+def test_unscoped_handoff_route_cannot_satisfy_operator_closeout(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", sprints)
+    routed_handoff = tmp_path / "outside" / "handoff.json"
+    routed_handoff.parent.mkdir()
+    routed_handoff.write_text("{}\n", encoding="utf-8")
+    node = {
+        "id": "design",
+        "artifact_routes": {
+            "produces": {"artifact.handoff_md": str(routed_handoff)},
+        },
+        "write_scope": [],
+    }
+
+    assert gnd._existing_node_handoff(
+        "sprint-frozen", node, {"runtime_work_dir": str(tmp_path / "workdir")}
+    ) is None
+
+
+def test_completed_operator_with_frozen_handoff_route_passes_terminal_closeout(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", sprints)
+    work_dir = tmp_path / "runtime" / "workdir"
+    routed_handoff = work_dir / "private" / "design" / "01-artifact.handoff_md.json"
+    routed_handoff.parent.mkdir(parents=True)
+    routed_handoff.write_text('{"status":"completed"}\n', encoding="utf-8")
+    node = {
+        "id": "design",
+        "operator_id": "frozen-builder",
+        "pm_task_id": "task-design",
+        "artifact_routes": {
+            "produces": {"artifact.handoff_md": str(routed_handoff)},
+        },
+        "write_scope": [str(routed_handoff)],
+    }
+    graph = {"runtime_work_dir": str(work_dir), "nodes": [node]}
+    monkeypatch.setattr(
+        gnd,
+        "_latest_operator_result_for",
+        lambda *_args, **_kwargs: {"status": "completed", "exit_code": 0},
+    )
+
+    assert gnd._operator_terminal_result_closeout(
+        "sprint-frozen", "design", node, graph
+    ) is None
+
+
+def test_eval_snapshot_accepts_exact_hash_bound_workspace_source(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    sprints = tmp_path / "runtime"
+    sprints.mkdir()
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", sprints)
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    source = workspace / "inputs" / "paper.pdf"
+    source.parent.mkdir()
+    source.write_bytes(b"real local paper bytes")
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    work_dir = sprints / "sprint-source" / "workdir"
+    work_dir.mkdir(parents=True)
+    node = {
+        "id": "discovery",
+        "read_scope": [str(source)],
+        "write_scope": [],
+        "workspace_reads": [
+            {
+                "kind": "file",
+                "relative_path": "inputs/paper.pdf",
+                "sha256": digest,
+            }
+        ],
+    }
+    graph = {
+        "schema_version": "solar.scheduler_runtime_projection.v1",
+        "sprint_id": "sprint-source",
+        "runtime_work_dir": str(work_dir),
+        "nodes": [node],
+    }
+    monkeypatch.setattr(
+        gnd,
+        "_scheduler_frozen_workspace",
+        lambda _sid, _graph: (workspace, {"reason": "verified_test_authority"}),
+    )
+
+    snapshot = gnd._capture_eval_artifact_snapshot(
+        "sprint-source", node, graph, persist=False
+    )
+
+    assert snapshot["ok"] is True
+    assert snapshot["violations"] == []
+    assert snapshot["rows"][0]["authority"] == "controller_frozen_workspace_source"
+    assert snapshot["rows"][0]["sha256"] == digest
+
+
+def test_frozen_workspace_verifier_uses_authority_store_not_runtime_dir(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    sid = "sprint-source"
+    runtime_dir = tmp_path / "planning" / "runtime"
+    runtime_dir.mkdir(parents=True)
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", runtime_dir)
+    controller_store = tmp_path / "controller" / "sprints"
+    controller_store.mkdir(parents=True)
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    authority_path = controller_store / f"{sid}.workspace_authority.json"
+    authority_path.write_text('{"frozen":true}\n', encoding="utf-8")
+    authority_sha = hashlib.sha256(authority_path.read_bytes()).hexdigest()
+    observed: dict[str, object] = {}
+
+    import scheduler_input
+
+    monkeypatch.setattr(
+        scheduler_input,
+        "verify_runtime_projection",
+        lambda *_args, **_kwargs: {"ok": True},
+    )
+
+    def verify_authority(path, *, sprints_dir, harness_dir, require_active_binding):
+        observed.update(
+            path=Path(path),
+            sprints_dir=Path(sprints_dir),
+            harness_dir=Path(harness_dir),
+            require_active_binding=require_active_binding,
+        )
+        return {"workspace_root": str(workspace)}
+
+    monkeypatch.setattr(
+        gnd,
+        "_workspace_binding",
+        SimpleNamespace(verify_sprint_workspace_authority=verify_authority),
+    )
+    graph = {
+        "schema_version": "solar.scheduler_runtime_projection.v1",
+        "workspace_authority_ref": {
+            "path": str(authority_path),
+            "sha256": authority_sha,
+            "workspace_root": str(workspace.resolve()),
+        },
+    }
+
+    resolved, evidence = gnd._scheduler_frozen_workspace(sid, graph)
+
+    assert resolved == workspace.resolve()
+    assert evidence["reason"] == "frozen_workspace_authority"
+    assert observed["sprints_dir"] == controller_store.resolve()
+    assert observed["require_active_binding"] is False
+
+
+def test_builder_pool_probe_allows_health_checks_to_finish(monkeypatch) -> None:
+    monkeypatch.setenv("SOLAR_GRAPH_BUILDER_OPERATOR_POOL", "1")
+    observed: dict[str, object] = {}
+
+    def fake_run(*args, **kwargs):
+        observed["args"] = args
+        observed["timeout"] = kwargs.get("timeout")
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"total_policy_available": 2}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(gnd.subprocess, "run", fake_run)
+
+    assert gnd._builder_operator_pool_available_count() == 2
+    assert observed["timeout"] == 30
+
+
+def test_planner_operator_alternatives_are_forwarded_in_declared_order() -> None:
+    cmd = ["python", "pm_dispatch.py", "submit"]
+
+    result = gnd._append_planner_operator_alternatives(
+        cmd,
+        {
+            "alternatives": [
+                "operator.primary",
+                "operator.fallback-1",
+                "",
+                "operator.fallback-2",
+            ]
+        },
+    )
+
+    assert result == [
+        "python",
+        "pm_dispatch.py",
+        "submit",
+        "--operator-alternative",
+        "operator.primary",
+        "--operator-alternative",
+        "operator.fallback-1",
+        "--operator-alternative",
+        "operator.fallback-2",
+    ]
+
+
 def test_operator_pool_submit_is_disabled_when_env_unset(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.delenv("SOLAR_GRAPH_BUILDER_OPERATOR_POOL", raising=False)
     monkeypatch.setattr(gnd, "HARNESS_DIR", tmp_path)
@@ -52,6 +286,215 @@ def test_operator_pool_submit_is_disabled_when_env_unset(monkeypatch, tmp_path: 
     )
 
     assert result == {"ok": False, "reason": "operator_pool_disabled"}
+
+
+def test_permanent_capsule_admission_failure_enters_durable_human_review(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    sid = "sprint-capsule-admission"
+    node_id = "N2"
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    graph_path = sprints / f"{sid}.task_graph.json"
+    graph_path.write_text(
+        json.dumps(
+            {
+                "sprint_id": sid,
+                "nodes": [
+                    {
+                        "id": node_id,
+                        "status": "assigned",
+                        "depends_on": [],
+                        "assigned_to": "operator-pool:builder.0",
+                        "dispatch_id": "dispatch-capsule",
+                        "capability_capsule_id": "capsule.missing.v1",
+                    }
+                ],
+                "node_results": {},
+                "gate_results": {},
+                "required_gates": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(gnd, "HARNESS_DIR", tmp_path)
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", sprints)
+    monkeypatch.setattr(gnd, "_builder_operator_pool_enabled", lambda: True)
+    monkeypatch.setattr(gnd, "_builder_operator_pool_allowed_for_pane", lambda _pane: True)
+    monkeypatch.setattr(gnd, "build_dispatch_text", lambda *_args, **_kwargs: "# dispatch\n")
+    monkeypatch.setattr(gnd, "_inject_dispatch_context", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(gnd, "_broker_env", lambda _sid: {})
+    monkeypatch.setattr(
+        gnd.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            returncode=2,
+            stdout="",
+            stderr=(
+                "pm_dispatch refused request: admission_failed: capsule "
+                "capsule.missing.v1 not found\n"
+            ),
+        ),
+    )
+    ledger: list[tuple] = []
+    events: list[dict] = []
+    monkeypatch.setattr(gnd, "_append_dispatch_ledger", lambda *args, **_kwargs: ledger.append(args))
+    monkeypatch.setattr(gnd, "_append_event", lambda _sid, event: events.append(event))
+    monkeypatch.setattr(gnd, "_record_node_runstate", lambda *_args, **_kwargs: None)
+
+    result = gnd._submit_builder_to_operator_pool(
+        item={"payload": {}},
+        payload={},
+        sid=sid,
+        node={
+            "id": node_id,
+            "required_capabilities": [],
+            "capability_capsule_id": "capsule.missing.v1",
+        },
+        node_id=node_id,
+        graph_path=str(graph_path),
+        pane="operator-pool:builder.0",
+        dispatch_id="dispatch-capsule",
+        dry_run=False,
+    )
+
+    assert result["ok"] is False
+    assert result["reason"] == "operator_pool_capsule_admission_failed"
+    assert result["permanent"] is True
+    assert result["suppress_fallback"] is True
+    assert result["graph_updated"] is True
+    assert "capsule.missing.v1 not found" in result["blocking_reason"]
+    persisted = gnd.load_graph(graph_path)
+    node = persisted["nodes"][0]
+    assert node["status"] == "needs_human_review"
+    assert node["blocking_reason"] == result["blocking_reason"]
+    assert node["next_action"] == result["next_action"]
+    assert node["operator_submit_reason"] == "operator_admission_failed"
+    assert "assigned_to" not in node
+    assert "dispatch_id" not in node
+    assert persisted["node_results"][node_id]["blocking_reason"] == result["blocking_reason"]
+    assert ledger and ledger[-1][0] == "operator_pool_capsule_admission_blocked"
+    assert events and events[-1]["event"] == "graph_operator_pool_capsule_admission_blocked"
+
+
+def test_transient_operator_pool_submit_failure_remains_retryable(monkeypatch, tmp_path: Path) -> None:
+    sprints = tmp_path / "sprints"
+    sprints.mkdir()
+    graph_path = sprints / "sprint-transient.task_graph.json"
+    graph_path.write_text(
+        json.dumps(
+            {
+                "sprint_id": "sprint-transient",
+                "nodes": [{"id": "N2", "status": "assigned", "depends_on": []}],
+                "node_results": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(gnd, "HARNESS_DIR", tmp_path)
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", sprints)
+    monkeypatch.setattr(gnd, "_builder_operator_pool_enabled", lambda: True)
+    monkeypatch.setattr(gnd, "_builder_operator_pool_allowed_for_pane", lambda _pane: True)
+    monkeypatch.setattr(gnd, "build_dispatch_text", lambda *_args, **_kwargs: "# dispatch\n")
+    monkeypatch.setattr(gnd, "_inject_dispatch_context", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(gnd, "_broker_env", lambda _sid: {})
+    monkeypatch.setattr(
+        gnd.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            returncode=1,
+            stdout="",
+            stderr="operator busy: lease already held",
+        ),
+    )
+
+    result = gnd._submit_builder_to_operator_pool(
+        item={"payload": {}},
+        payload={},
+        sid="sprint-transient",
+        node={"id": "N2", "required_capabilities": []},
+        node_id="N2",
+        graph_path=str(graph_path),
+        pane="operator-pool:builder.0",
+        dispatch_id="dispatch-transient",
+        dry_run=False,
+    )
+
+    assert result["reason"] == "operator_pool_submit_failed"
+    assert not result.get("permanent")
+    assert not result.get("suppress_fallback")
+    persisted = gnd.load_graph(graph_path)
+    assert persisted["nodes"][0]["status"] == "assigned"
+
+
+def test_dispatch_queue_does_not_requeue_permanent_capsule_admission_failure(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    graph_path = tmp_path / "sprint-capsule-queue.task_graph.json"
+    graph_path.write_text(
+        json.dumps(
+            {
+                "sprint_id": "sprint-capsule-queue",
+                "nodes": [
+                    {
+                        "id": "N2",
+                        "status": "assigned",
+                        "depends_on": [],
+                        "assigned_to": "operator-pool:builder.0",
+                        "dispatch_id": "dispatch-capsule",
+                    }
+                ],
+                "node_results": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    permanent_failure = {
+        "ok": False,
+        "reason": "operator_pool_capsule_admission_failed",
+        "permanent": True,
+        "suppress_fallback": True,
+        "blocking_reason": (
+            "permanent_capsule_admission_failure:admission_failed: "
+            "capsule capsule.missing.v1 not found"
+        ),
+        "next_action": "repair capsule and explicitly resume",
+        "graph_updated": True,
+    }
+    fallback_calls: list[str] = []
+    monkeypatch.setattr(gnd, "_plan_validator_enabled", lambda: False)
+    monkeypatch.setattr(gnd, "_prepare_human_search_handoff", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(gnd, "_submit_builder_to_operator_pool", lambda **_kwargs: permanent_failure)
+    monkeypatch.setattr(
+        gnd,
+        "enqueue",
+        lambda *_args, **_kwargs: fallback_calls.append("requeued") or {"ok": True},
+    )
+    monkeypatch.setattr(
+        gnd,
+        "_send_to_pane",
+        lambda *_args, **_kwargs: fallback_calls.append("pane_fallback") or True,
+    )
+
+    result = gnd.dispatch_queue_item(
+        {
+            "intent": "graph_node|node_id=N2",
+            "priority": 80,
+            "payload": {
+                "sprint_id": "sprint-capsule-queue",
+                "node": {"id": "N2", "status": "assigned"},
+                "assignment": {"pane": "operator-pool:builder.0"},
+                "dispatch_id": "dispatch-capsule",
+                "graph": str(graph_path),
+            },
+        },
+        dry_run=False,
+    )
+
+    assert result == permanent_failure
+    assert fallback_calls == []
 
 
 def test_expired_lease_does_not_make_pane_busy(monkeypatch) -> None:
@@ -540,7 +983,7 @@ def test_assigned_pane_rejects_pane_outside_harness_session(monkeypatch) -> None
     )
 
 
-def test_reconcile_keeps_acknowledged_dispatch_when_leases_disabled(monkeypatch, tmp_path) -> None:
+def test_reconcile_requeues_submit_ack_without_worker_lease(monkeypatch, tmp_path) -> None:
     harness = tmp_path / "harness"
     sprints = harness / "sprints"
     ack_dir = sprints / "graph-acks"
@@ -575,7 +1018,8 @@ def test_reconcile_keeps_acknowledged_dispatch_when_leases_disabled(monkeypatch,
     monkeypatch.setattr(gnd, "HARNESS_DIR", harness)
     monkeypatch.setattr(gnd, "SPRINTS_DIR", sprints)
     monkeypatch.setattr(gnd, "read_lease", lambda pane: None)
-    monkeypatch.setattr(gnd, "release_lease", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("should not release")))
+    released = []
+    monkeypatch.setattr(gnd, "release_lease", lambda *args, **kwargs: released.append(args) or {"released": False})
     monkeypatch.setattr(gnd, "_pane_title", lambda pane: "Builder | 模型:GLM")
     monkeypatch.setattr(gnd, "_pane_tail", lambda pane, lines=80: "❯\n  ⏵⏵ bypass permissions on")
     monkeypatch.setattr(gnd, "_pane_runtime_unavailable_reason", lambda pane, title="": "")
@@ -583,10 +1027,20 @@ def test_reconcile_keeps_acknowledged_dispatch_when_leases_disabled(monkeypatch,
 
     repaired = gnd._reconcile_existing_dispatches(graph, tmp_path / f"{sid}.task_graph.json")
 
-    assert repaired == []
-    assert graph["nodes"][0]["status"] == "dispatched"
-    assert graph["nodes"][0]["dispatch_id"] == dispatch_id
-    assert graph["node_results"][node_id]["status"] == "dispatched"
+    assert repaired == [
+        {
+            "node": node_id,
+            "pane": pane,
+            "dispatch_id": dispatch_id,
+            "status": "pending",
+            "reason": "stale_submit_ack_without_live_lease",
+        }
+    ]
+    assert released
+    assert graph["nodes"][0]["status"] == "pending"
+    assert "dispatch_id" not in graph["nodes"][0]
+    assert "assigned_to" not in graph["nodes"][0]
+    assert node_id not in graph["node_results"]
 
 
 def test_reconcile_keeps_acknowledged_dispatch_on_recoverable_prompt(monkeypatch, tmp_path) -> None:
@@ -707,6 +1161,7 @@ def test_reconcile_recoverable_pane_blocker_requeues_pending(monkeypatch, tmp_pa
 def test_assigned_recoverable_pane_unavailable_does_not_cooldown(monkeypatch) -> None:
     marked: list[tuple[str, str, str, bool]] = []
     retryable: list[tuple[str, str]] = []
+    released: list[tuple[str, str, str]] = []
 
     item = {
         "sprint_id": "sprint-test",
@@ -724,6 +1179,11 @@ def test_assigned_recoverable_pane_unavailable_does_not_cooldown(monkeypatch) ->
     monkeypatch.setattr(gnd, "_graph_node_runtime_state", lambda graph_path, node_id: {"status": "pending"})
     monkeypatch.setattr(gnd, "_pane_exists", lambda pane: True)
     monkeypatch.setattr(gnd, "_assigned_pane_unavailable_reason", lambda pane: "queued_prompt_residue")
+    monkeypatch.setattr(
+        gnd,
+        "release_lease",
+        lambda pane, dispatch_id, reason: released.append((pane, dispatch_id, reason)),
+    )
     monkeypatch.setattr(gnd, "_mark_pane_recover_cooldown", lambda *a, **k: (_ for _ in ()).throw(AssertionError("should not cooldown")))
     monkeypatch.setattr(gnd, "_mark_pane_recover_retryable", lambda pane, reason, **kw: retryable.append((pane, reason)))
     monkeypatch.setattr(
@@ -746,6 +1206,11 @@ def test_assigned_recoverable_pane_unavailable_does_not_cooldown(monkeypatch) ->
     assert result["unavailable_reason"] == "queued_prompt_residue"
     assert marked == [("/tmp/sprint-test.task_graph.json", "N1", "pending", True)]
     assert retryable == [("solar-harness-lab:0.3", "assigned_pane_unavailable:queued_prompt_residue")]
+    assert released == [(
+        "solar-harness-lab:0.3",
+        "dispatch-N1",
+        "graph_dispatch_assigned_pane_unavailable:queued_prompt_residue",
+    )]
 
 
 def test_dispatch_queue_item_dry_run_does_not_reset_busy_active_node(monkeypatch, tmp_path) -> None:
@@ -961,6 +1426,7 @@ def test_worker_discovery_marks_multi_task_shell_unavailable(monkeypatch) -> Non
     monkeypatch.setattr(gnd, "_pane_current_command", lambda pane: "zsh")
     monkeypatch.setattr(gnd, "_pane_tail", lambda pane, lines=80: "zsh% ")
     monkeypatch.setattr(gnd, "_pane_health", lambda pane: {})
+    monkeypatch.setattr(gnd, "_pane_hygiene_unavailable_reason", lambda pane: "")
     monkeypatch.setattr(gnd, "_pane_unavailable_reason", lambda pane: "")
     monkeypatch.setattr(gnd, "_pane_runtime_unavailable_reason", lambda pane, title="": "")
     monkeypatch.setattr(gnd, "_pane_tui_busy", lambda pane: False)
@@ -972,8 +1438,56 @@ def test_worker_discovery_marks_multi_task_shell_unavailable(monkeypatch) -> Non
     assert workers[0]["unavailable_reason"] == "multi_task_shell_not_direct_worker"
 
 
+def test_worker_discovery_routes_around_needs_respawn_to_operator_pool(monkeypatch) -> None:
+    cockpit = "solar-harness:0.2"
+    pool = "operator-pool:builder.0"
+    monkeypatch.setattr(
+        gnd.subprocess,
+        "check_output",
+        lambda *a, **kw: b"solar-harness:0.2\tBuilder | model:gpt-5.5\n",
+    )
+    monkeypatch.setattr(gnd, "_recover_hung_pane", lambda *a, **kw: False)
+    monkeypatch.setattr(gnd, "_pane_current_command", lambda pane: "codex")
+    monkeypatch.setattr(gnd, "_pane_tail", lambda pane, lines=80: "Ask Codex to do anything")
+    monkeypatch.setattr(gnd, "_pane_health", lambda pane: {})
+    monkeypatch.setattr(gnd, "_pane_hygiene_unavailable_reason", lambda pane: "pane_hygiene_needs_respawn")
+    monkeypatch.setattr(gnd, "_pane_cooldown_reason", lambda pane: "")
+    monkeypatch.setattr(gnd, "_pane_runtime_unavailable_reason", lambda pane, title="": "")
+    monkeypatch.setattr(gnd, "_pane_unavailable_reason", lambda pane: "")
+    monkeypatch.setattr(gnd, "_pane_has_active_lease", lambda pane: False)
+    monkeypatch.setattr(gnd, "_pane_tui_busy", lambda pane: False)
+    monkeypatch.setattr(
+        gnd,
+        "_builder_operator_pool_workers",
+        lambda skills, capabilities: [{
+            "pane": pool,
+            "models": ["gpt-5.5"],
+            "skills": skills,
+            "capabilities": capabilities,
+            "role": "builder",
+            "dispatch_role": "builder",
+            "host_role": "operator_pool",
+            "busy": False,
+            "unavailable_reason": "",
+            "load": 0,
+        }],
+    )
+
+    workers = gnd._discover_workers(dry_run=False)
+    by_pane = {worker["pane"]: worker for worker in workers}
+    assignment = gs.assign_workers(
+        [{"id": "R1", "dispatch_role": "builder", "required_skills": [], "required_capabilities": []}],
+        workers,
+    )
+
+    assert by_pane[cockpit]["unavailable_reason"] == "pane_hygiene_needs_respawn"
+    assert by_pane[cockpit]["busy"] is True
+    assert assignment["assigned"][0]["pane"] == pool
+
+
 def test_dispatch_queue_item_retries_when_assigned_pane_later_hits_quota(monkeypatch) -> None:
     marked: list[tuple[str, str, str, bool]] = []
+    released: list[tuple[str, str, str]] = []
 
     item = {
         "sprint_id": "sprint-test",
@@ -993,6 +1507,11 @@ def test_dispatch_queue_item_retries_when_assigned_pane_later_hits_quota(monkeyp
     monkeypatch.setattr(gnd, "_assigned_pane_unavailable_reason", lambda pane: "rate_limit_or_api_error")
     monkeypatch.setattr(
         gnd,
+        "release_lease",
+        lambda pane, dispatch_id, reason: released.append((pane, dispatch_id, reason)),
+    )
+    monkeypatch.setattr(
+        gnd,
         "_mark_graph_node",
         lambda graph_path, node_id, status, clear_assignment=False: marked.append(
             (graph_path, node_id, status, clear_assignment)
@@ -1010,6 +1529,11 @@ def test_dispatch_queue_item_retries_when_assigned_pane_later_hits_quota(monkeyp
     assert result["reason"] == "assigned_pane_unavailable_retry_later"
     assert result["unavailable_reason"] == "rate_limit_or_api_error"
     assert marked == [("/tmp/sprint-test.task_graph.json", "N1", "pending", True)]
+    assert released == [(
+        "solar-harness-lab:0.3",
+        "dispatch-N1",
+        "graph_dispatch_assigned_pane_unavailable:rate_limit_or_api_error",
+    )]
 
 
 def test_evaluator_discovery_ignores_expired_lease(monkeypatch) -> None:

@@ -1,0 +1,187 @@
+{
+  "schema_version": "solar.intent_generalization_cases.v1",
+  "status": "design_fixtures_not_yet_run_through_a_live_compiler",
+  "cases": [
+    {
+      "case_id": "G01-direct-fact",
+      "category": "simple_question",
+      "raw_text": "What is the capital of France?",
+      "expected_outcome_classes": ["information"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "direct_response",
+      "fields_exercised": ["goals", "outcomes", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_answer_requirement"},
+        {"stage": "elastic_planner", "decision": "direct_response"},
+        {"stage": "direct_response_evaluator", "decision": "check_answer_against_requirement"}
+      ]
+    },
+    {
+      "case_id": "G02-constrained-explanation",
+      "category": "constrained_explanation",
+      "raw_text": "Explain Raft consensus to a beginner in fewer than 500 words and include one concrete example.",
+      "expected_outcome_classes": ["information"],
+      "expected_constraint_categories": ["content", "limit"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "direct_response",
+      "fields_exercised": ["goals", "outcomes", "constraints", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_audience_length_and_example_requirements"},
+        {"stage": "direct_response_evaluator", "decision": "check_length_and_example"}
+      ]
+    },
+    {
+      "case_id": "G03-code-change",
+      "category": "implementation",
+      "raw_text": "Add CSV export to the dashboard without adding dependencies, include tests, and preserve JSON export behavior.",
+      "expected_outcome_classes": ["artifact"],
+      "expected_constraint_categories": ["content", "prohibition"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "workflow_capsule_or_compose",
+      "fields_exercised": ["goals", "outcomes", "constraints", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_patch_test_and_compatibility_requirements"},
+        {"stage": "plan_validator", "decision": "require_implementation_and_regression_evaluation"}
+      ]
+    },
+    {
+      "case_id": "G04-diagnosis-only",
+      "category": "read_only_diagnosis",
+      "raw_text": "Diagnose why the API returns 502 errors, but do not modify code, configuration, or production state.",
+      "expected_outcome_classes": ["information"],
+      "expected_constraint_categories": ["prohibition"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "workflow_capsule_or_compose",
+      "fields_exercised": ["goals", "outcomes", "constraints", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_diagnosis_and_non_mutation_requirements"},
+        {"stage": "plan_validator", "decision": "reject_mutation_work"}
+      ]
+    },
+    {
+      "case_id": "G05-research-and-design",
+      "category": "research_and_experiment_design",
+      "raw_text": "Compare methane leak measurement methods and design a bounded reproducibility check for the most testable claims.",
+      "expected_outcome_classes": ["information", "artifact"],
+      "expected_constraint_categories": ["scope", "limit"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "workflow_capsule_or_compose",
+      "fields_exercised": ["goals", "outcomes", "constraints", "unknowns", "source_spans", "derived_from"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_research_and_design_only_requirements"},
+        {"stage": "elastic_planner", "decision": "include_discovery_without_unrequested_execution"}
+      ]
+    },
+    {
+      "case_id": "G06-research-and-execution",
+      "category": "resource_bounded_experiment",
+      "raw_text": "Compare RAG chunking strategies by running experiments on public datasets within two hours and $20, using at least three seeds, and deliver HTML results.",
+      "expected_outcome_classes": ["action", "artifact"],
+      "expected_constraint_categories": ["scope", "limit", "format"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "workflow_capsule_or_compose",
+      "fields_exercised": ["goals", "outcomes", "constraints", "unknowns", "source_spans", "derived_from"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_dataset_execution_budget_seed_and_html_requirements"},
+        {"stage": "elastic_planner", "decision": "include_resource_preflight_and_measured_execution"}
+      ]
+    },
+    {
+      "case_id": "G07-direct-conflict",
+      "category": "conflicting_constraints",
+      "raw_text": "Write the report in no more than 500 words and make it at least 2,000 words long.",
+      "expected_outcome_classes": ["artifact"],
+      "expected_constraint_categories": ["limit"],
+      "expected_blocking_issue": true,
+      "expected_planner_strategy": "clarify_before_planning",
+      "fields_exercised": ["goals", "outcomes", "constraints", "conflicts", "source_spans", "derived_from"],
+      "downstream_decisions": [
+        {"stage": "intent_acceptance_gate", "decision": "block_incompatible_constraints"}
+      ]
+    },
+    {
+      "case_id": "G08-blocking-ambiguity",
+      "category": "missing_user_preferences",
+      "raw_text": "Recommend the best database for my application.",
+      "expected_outcome_classes": ["information"],
+      "expected_blocking_issue": true,
+      "expected_planner_strategy": "clarify_before_planning",
+      "fields_exercised": ["goals", "outcomes", "ambiguities", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "intent_acceptance_gate", "decision": "ask_for_workload_and_decision_priorities"}
+      ]
+    },
+    {
+      "case_id": "G09-attachment-analysis",
+      "category": "attachment_processing",
+      "raw_text": "Summarize the attached paper and cite the page number for every major finding.",
+      "expected_outcome_classes": ["artifact"],
+      "expected_constraint_categories": ["content"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "workflow_capsule_or_compose",
+      "fields_exercised": ["goals", "outcomes", "constraints", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_grounded_summary_and_page_citation_requirements"},
+        {"stage": "context_loader", "decision": "resolve_attachment_from_raw_intent"}
+      ]
+    },
+    {
+      "case_id": "G10-multi-turn-correction",
+      "category": "conversation_revision",
+      "raw_text": "Use option B instead. Ignore my earlier two-hour limit and cap the run at 30 minutes.",
+      "expected_outcome_classes": ["action"],
+      "expected_constraint_categories": ["limit", "temporal"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "recompile_from_context",
+      "fields_exercised": ["goals", "outcomes", "constraints", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "context_loader", "decision": "resolve_option_b_and_prior_limit"},
+        {"stage": "intent_compiler", "decision": "create_a_new_candidate_without_mutating_history"}
+      ]
+    },
+    {
+      "case_id": "G11-infeasible-request",
+      "category": "feasibility_conflict",
+      "raw_text": "Use no network access and retrieve today's latest AI model prices from the public web.",
+      "expected_outcome_classes": ["information"],
+      "expected_constraint_categories": ["prohibition", "temporal"],
+      "expected_blocking_issue": true,
+      "expected_planner_strategy": "clarify_before_planning",
+      "fields_exercised": ["goals", "outcomes", "constraints", "conflicts", "unknowns", "source_spans", "derived_from"],
+      "downstream_decisions": [
+        {"stage": "intent_acceptance_gate", "decision": "block_network_and_freshness_conflict"}
+      ]
+    },
+    {
+      "case_id": "G12-sensitive-analysis",
+      "category": "privacy_constrained_analysis",
+      "raw_text": "Analyze uploaded support logs, but do not expose customer email addresses or copy raw logs into the final report.",
+      "expected_outcome_classes": ["information"],
+      "expected_constraint_categories": ["prohibition"],
+      "expected_blocking_issue": false,
+      "expected_planner_strategy": "workflow_capsule_or_compose",
+      "fields_exercised": ["goals", "outcomes", "constraints", "source_spans"],
+      "downstream_decisions": [
+        {"stage": "requirement_compiler", "decision": "compile_redaction_and_non_disclosure_requirements"},
+        {"stage": "final_acceptance", "decision": "reject_pii_or_raw_log_disclosure"}
+      ]
+    }
+  ],
+  "acceptance_rules": {
+    "minimum_cases": 12,
+    "required_outcome_classes": ["information", "artifact", "action"],
+    "required_semantic_fields": [
+      "goals",
+      "outcomes",
+      "constraints",
+      "ambiguities",
+      "conflicts",
+      "unknowns",
+      "source_spans",
+      "derived_from"
+    ],
+    "require_blocking_and_non_blocking_cases": true,
+    "direct_response_requires_evaluator": true,
+    "reusable_work_uses_workflow_capsules_not_runtime_dags": true
+  }
+}

@@ -53,8 +53,10 @@
   --lotus-mid: #a60822;
   --lotus-back: #7a0a1d;
 
-  /* Semantic state — amber owns 'stalled' (hue-separated from brand red); done = quiet ink. */
-  --solar-success: #3a3b40;
+  /* Semantic state — amber owns stalled; green makes completed work distinct from pending gray. */
+  --solar-success: #177245;
+  --solar-success-wash: rgba(23, 114, 69, 0.08);
+  --solar-success-line: rgba(23, 114, 69, 0.34);
   --solar-warning: #b26a00;
   --solar-danger: #a60822;
   --solar-warning-fill: #fbefd0;
@@ -286,7 +288,10 @@ summary:focus-visible,
 .new-task-button,
 .primary-button {
   color: #ffffff;
-  background: linear-gradient(180deg, #2a2b2f 0%, var(--solar-control) 100%);
+  /* Keep the background deterministic for contrast tooling. The previous
+     near-black gradient was visually compliant, but automated WCAG audits
+     could not resolve the background behind nested button text. */
+  background: var(--solar-control);
   font-size: var(--solar-type-sm);
   font-weight: 680;
   box-shadow:
@@ -1706,6 +1711,180 @@ summary:focus-visible,
   background: var(--solar-surface);
 }
 
+.original-prompt {
+  max-width: 1120px;
+  padding: var(--solar-space-4) var(--solar-space-5);
+  border: 1px solid var(--solar-line);
+  border-radius: var(--solar-radius-modal);
+  background: var(--solar-surface);
+}
+
+.original-prompt-head,
+.original-prompt-head > div,
+.original-prompt-copy,
+.original-prompt-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.original-prompt-head {
+  justify-content: space-between;
+  gap: var(--solar-space-4);
+}
+
+.original-prompt-head > div {
+  flex-wrap: wrap;
+  gap: var(--solar-space-2);
+}
+
+.original-prompt-label {
+  color: var(--solar-ink);
+  font-size: var(--solar-type-sm);
+  font-weight: 700;
+}
+
+.original-prompt-count {
+  color: var(--solar-subtle);
+  font-family: var(--solar-font-mono);
+  font-size: var(--solar-type-micro);
+}
+
+.original-prompt-copy,
+.original-prompt-toggle {
+  gap: var(--solar-space-2);
+  color: var(--solar-muted);
+  background: transparent;
+  font-size: var(--solar-type-xs);
+  font-weight: 640;
+  cursor: pointer;
+}
+
+.original-prompt-copy {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 var(--solar-space-3);
+  border: 1px solid var(--solar-line);
+  border-radius: var(--solar-radius-control);
+}
+
+.original-prompt-copy:hover,
+.original-prompt-toggle:hover {
+  color: var(--solar-ink);
+}
+
+.original-prompt-body {
+  position: relative;
+  margin-top: var(--solar-space-3);
+  color: var(--solar-ink);
+  font-family: var(--solar-font-mono);
+  font-size: var(--solar-type-xs);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.original-prompt-body.is-collapsed {
+  max-height: 9.9em;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+}
+
+.original-prompt-toggle {
+  width: fit-content;
+  margin-top: var(--solar-space-3);
+  color: var(--solar-accent-ink);
+}
+
+.original-prompt-toggle svg {
+  transition: transform var(--solar-duration-fast) var(--solar-ease);
+}
+
+.original-prompt-toggle svg.is-expanded {
+  transform: rotate(180deg);
+}
+
+.intake-attachments {
+  display: flex;
+  align-items: center;
+  gap: var(--solar-space-2);
+  flex-wrap: wrap;
+  margin-top: var(--solar-space-3);
+}
+
+.intake-file-input {
+  display: none;
+}
+
+.intake-attach-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 var(--solar-space-3);
+  border: 1px solid var(--solar-line);
+  border-radius: var(--solar-radius-control);
+  color: var(--solar-muted);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--solar-type-xs);
+}
+
+.intake-attach-button:hover:not(:disabled) {
+  border-color: var(--solar-line-strong);
+  color: var(--solar-ink);
+}
+
+.intake-attach-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.intake-file-list {
+  display: flex;
+  gap: var(--solar-space-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.intake-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid var(--solar-line);
+  border-radius: var(--solar-radius-pill);
+  color: var(--solar-ink);
+  background: var(--solar-surface-quiet);
+  font-size: var(--solar-type-xs);
+}
+
+.intake-file-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intake-file-chip small {
+  flex: none;
+  color: var(--solar-subtle);
+}
+
+.intake-file-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  color: var(--solar-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -2514,6 +2693,11 @@ summary:focus-visible,
     var(--solar-space-4);
 }
 
+.home-prompt > .intake-attachments {
+  margin: 0;
+  padding: 0 var(--solar-space-4) var(--solar-space-2);
+}
+
 .home-caption {
   display: flex;
   align-items: center;
@@ -2532,6 +2716,9 @@ summary:focus-visible,
   border: 1px solid var(--solar-line);
   border-radius: 4px;
   color: var(--solar-muted);
+  /* An explicit surface lets contrast tools resolve this small text without
+     guessing through transparent ancestors. */
+  background: var(--solar-surface);
   font-family: var(--solar-font-mono);
   font-size: var(--solar-type-micro);
 }
@@ -4393,10 +4580,14 @@ summary:focus-visible,
   flex: 0 0 auto;
 }
 .run-stage-done {
-  color: var(--solar-ink);
+  color: var(--solar-success);
+  background: var(--solar-success-wash);
 }
 .run-stage-done .run-stage-dot {
   background: var(--solar-success);
+}
+.run-stage-done:not(:last-child)::after {
+  background: var(--solar-success-line);
 }
 .run-stage-active {
   background: var(--solar-accent-wash);
@@ -4444,6 +4635,230 @@ summary:focus-visible,
   font-family: var(--solar-font-mono);
   font-size: var(--solar-type-micro);
   color: var(--solar-subtle);
+}
+
+/* Live POC surface: progress and repair evidence stay visible beside the newest preview. */
+.poc-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--solar-space-3);
+  margin: 0 0 var(--solar-space-5);
+  padding: var(--solar-space-4);
+  border: 1px solid var(--solar-line);
+  border-radius: var(--solar-radius-card);
+  background: linear-gradient(135deg, var(--solar-surface) 0%, var(--solar-surface-quiet) 100%);
+}
+.poc-preview-head,
+.poc-preview-title-row,
+.poc-preview-window-head,
+.poc-preview-section-title {
+  display: flex;
+  align-items: center;
+}
+.poc-preview-head {
+  justify-content: space-between;
+  gap: var(--solar-space-3);
+}
+.poc-preview-kicker {
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--solar-font-mono);
+  font-size: var(--solar-type-micro);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--solar-accent-ink);
+}
+.poc-preview-title-row {
+  gap: var(--solar-space-2);
+}
+.poc-preview-title-row strong {
+  font-size: var(--solar-type-md);
+  color: var(--solar-ink);
+}
+.poc-preview-phase {
+  padding: 2px 8px;
+  border-radius: var(--solar-radius-pill);
+  background: var(--solar-surface);
+  color: var(--solar-subtle);
+  font-family: var(--solar-font-mono);
+  font-size: var(--solar-type-micro);
+}
+.poc-preview-toggle,
+.poc-preview-window-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--solar-subtle);
+  font-size: var(--solar-type-xs);
+  cursor: pointer;
+}
+.poc-preview-toggle:hover,
+.poc-preview-window-head button:hover {
+  color: var(--solar-accent-ink);
+}
+.poc-preview-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--solar-space-3);
+}
+.poc-preview-progress-track {
+  height: 8px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: var(--solar-radius-pill);
+  background: var(--solar-line);
+}
+.poc-preview-progress-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--solar-success);
+  transition: width 0.45s ease;
+}
+.poc-preview-progress > strong {
+  min-width: 3ch;
+  font-family: var(--solar-font-mono);
+  font-size: var(--solar-type-xs);
+  color: var(--solar-success);
+  text-align: right;
+}
+.poc-preview-grid {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.72fr) minmax(320px, 1.5fr);
+  gap: var(--solar-space-4);
+  min-height: 240px;
+}
+.poc-preview-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--solar-space-4);
+}
+.poc-preview-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--solar-space-2);
+}
+.poc-preview-metrics > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--solar-space-3);
+  border: 1px solid var(--solar-line);
+  border-radius: var(--solar-radius-small);
+  background: var(--solar-surface);
+}
+.poc-preview-metrics strong {
+  font-family: var(--solar-font-mono);
+  font-size: var(--solar-type-md);
+  color: var(--solar-success);
+}
+.poc-preview-metrics small {
+  font-size: var(--solar-type-micro);
+  color: var(--solar-subtle);
+}
+.poc-preview-metrics .has-failure strong {
+  color: var(--solar-warning);
+}
+.poc-preview-repairs {
+  min-width: 0;
+}
+.poc-preview-section-title {
+  gap: 6px;
+  font-size: var(--solar-type-xs);
+  font-weight: 650;
+  color: var(--solar-ink);
+}
+.poc-preview-repairs ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: var(--solar-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.poc-preview-repairs li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--solar-success);
+  font-size: var(--solar-type-xs);
+}
+.poc-preview-repairs li svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+.poc-preview-repairs li span {
+  color: var(--solar-subtle);
+  overflow-wrap: anywhere;
+}
+.poc-preview-repairs p {
+  margin: var(--solar-space-2) 0 0;
+  color: var(--solar-subtle);
+  font-size: var(--solar-type-xs);
+}
+.poc-preview-window {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--solar-line-strong);
+  border-radius: var(--solar-radius-small);
+  background: var(--solar-surface);
+  box-shadow: var(--solar-shadow-soft);
+}
+.poc-preview-window-head {
+  min-height: 36px;
+  justify-content: space-between;
+  gap: var(--solar-space-2);
+  padding: 0 var(--solar-space-3);
+  border-bottom: 1px solid var(--solar-line);
+  font-family: var(--solar-font-mono);
+  font-size: var(--solar-type-micro);
+  color: var(--solar-subtle);
+}
+.poc-preview-window-head > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.poc-preview-window iframe {
+  width: 100%;
+  min-height: 270px;
+  flex: 1;
+  border: 0;
+  background: #fff;
+}
+.poc-preview-placeholder {
+  display: flex;
+  min-height: 200px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: var(--solar-space-2);
+  padding: var(--solar-space-5);
+  color: var(--solar-subtle);
+  font-size: var(--solar-type-xs);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .poc-preview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .poc-preview-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .poc-preview-grid {
+    min-height: 0;
+  }
+  .poc-preview-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* Deliverables: canonical result emphasis + collapsed source group */
@@ -4550,16 +4965,27 @@ summary:focus-visible,
 .plan-card.tone-complete .plan-card-dot {
   background: var(--solar-success);
 }
+.plan-card.tone-complete {
+  border-color: var(--solar-success-line);
+  background: var(--solar-success-wash);
+}
+.plan-card.tone-complete .plan-card-status {
+  color: var(--solar-success);
+}
 .plan-card.tone-working .plan-card-dot {
   background: var(--solar-accent);
 }
 .plan-card.tone-blocked .plan-card-dot {
   background: var(--solar-warning);
 }
-.plan-card-role {
+.plan-card-step {
+  min-width: 0;
+  overflow: hidden;
   font-size: var(--solar-type-xs);
   font-weight: 650;
   color: var(--solar-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .plan-card-status {
   margin-left: auto;

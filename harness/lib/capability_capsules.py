@@ -60,6 +60,7 @@ DEFAULT_CAPSULE_BY_LOGICAL_OPERATOR = {
     "Critic": "cap.requirement-compiler-verification",
     "ResearchScout": "cap.research-retrieval",
     "ResearchSynthesizer": "cap.requirement-research-synthesizer",
+    "GroundedResearchCompiler": "cap.requirement-research-synthesizer",
     "ArtifactCurator": "cap.requirement-research-synthesizer",
     "ScientificLiteratureDiscoverer": "cap.research-literature-discover",
     "ScientificPaperIngestor": "cap.research-paper-ingest",
@@ -91,6 +92,7 @@ DEFAULT_TASK_TYPE_BY_LOGICAL_OPERATOR = {
     "Critic": "review",
     "ResearchScout": "knowledge-extraction",
     "ResearchSynthesizer": "research",
+    "GroundedResearchCompiler": "research",
     "ArtifactCurator": "evidence",
     "ScientificLiteratureDiscoverer": "scientific-research",
     "ScientificPaperIngestor": "scientific-research",
@@ -309,8 +311,20 @@ def _load_schema(path: Optional[Path] = None) -> Dict[str, Any]:
 def _flatten_registry(raw: Dict[str, Any], registry_path: Path) -> List[RegistryEntry]:
     capsules = raw.get("capsules", {})
     entries: List[RegistryEntry] = []
+    seen_identities: set[tuple[str, str, str]] = set()
     for capsule_kind in ("capability", "guard", "resource"):
         for item in capsules.get(capsule_kind, []) or []:
+            identity = (
+                str(item.get("capsule_kind", capsule_kind)),
+                str(item["capability_capsule_id"]),
+                str(item["version"]),
+            )
+            if identity in seen_identities:
+                raise CapsuleRegistryError(
+                    "duplicate capability capsule registry entry: "
+                    f"{identity[0]} {identity[1]}@{identity[2]}"
+                )
+            seen_identities.add(identity)
             manifest_path = Path(item["manifest_path"])
             if not manifest_path.is_absolute():
                 manifest_path = (registry_path.parent / manifest_path).resolve()
@@ -435,6 +449,41 @@ def get_registry_entry(
     for entry in entries:
         if entry.capability_capsule_id == capability_capsule_id:
             return entry
+    # Artifact adapters have a dedicated registry because they are selected by
+    # the planner's artifact-rewrite pass.  They still use capability capsule
+    # manifests and must pass the same runtime admission checks.  Resolve an
+    # adapter explicitly when a deployment has not duplicated it into the
+    # general registry (older installations and generated fixtures do this).
+    adapter_registry_path = Path(path or CAPSULE_REGISTRY_PATH).parent / "artifact-adapter-capsules.registry.yaml"
+    if adapter_registry_path.exists():
+        try:
+            adapter_registry = _read_yaml_or_json(adapter_registry_path)
+            for item in adapter_registry.get("adapters", []) or []:
+                if str(item.get("adapter_capsule_id") or "") != str(capability_capsule_id):
+                    continue
+                status = str(item.get("status") or "draft").strip().lower()
+                if status != "stable" and not include_nonstable:
+                    return None
+                manifest_ref = str(item.get("manifest_path") or "").strip()
+                if not manifest_ref:
+                    raise CapsuleRegistryError(
+                        f"artifact adapter {capability_capsule_id} has no manifest_path"
+                    )
+                manifest_path = Path(manifest_ref)
+                if not manifest_path.is_absolute():
+                    manifest_path = (adapter_registry_path.parent / manifest_path).resolve()
+                return RegistryEntry(
+                    capability_capsule_id=str(capability_capsule_id),
+                    version=str(item.get("version") or "0.1.0"),
+                    capsule_kind="capability",
+                    status=status,
+                    schema_ref="schemas/draft/capability-capsule.v1.draft.json",
+                    manifest_path=str(manifest_path),
+                    tags=["adapter"],
+                    owner="opensolar",
+                )
+        except (AttributeError, KeyError, TypeError) as exc:
+            raise CapsuleRegistryError(f"invalid artifact adapter registry: {adapter_registry_path}: {exc}") from exc
     return None
 
 
@@ -1047,6 +1096,7 @@ def default_capability_plan_for_logical_operator(
     elif str(logical_operator or "") in {
         "ResearchScout",
         "ResearchSynthesizer",
+        "GroundedResearchCompiler",
         "ArtifactCurator",
     }:
         # Named research operators have explicit, governed artifact contracts.
@@ -1211,6 +1261,7 @@ def _attach_referenced_capsules(
     *,
     expected_kind: str,
     registry_path: Optional[Path] = None,
+    frozen_definitions: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     attached: List[Dict[str, Any]] = []
     for capsule_id in ids:
@@ -1219,7 +1270,13 @@ def _attach_referenced_capsules(
             raise CapsuleResolutionError(f"missing_{expected_kind}: {capsule_id}")
         if entry.status == "revoked":
             raise CapsuleResolutionError(f"revoked_{expected_kind}: {capsule_id}")
-        manifest = load_capability_capsule_manifest(Path(entry.manifest_path))
+        if frozen_definitions is not None:
+            frozen = frozen_definitions.get(str(capsule_id))
+            if not frozen:
+                raise CapsuleResolutionError(f"missing_frozen_{expected_kind}: {capsule_id}")
+            manifest = frozen["manifest"]
+        else:
+            manifest = load_capability_capsule_manifest(Path(entry.manifest_path))
         if manifest.get("capsule_kind") != expected_kind:
             raise CapsuleResolutionError(
                 f"{capsule_id} expected kind {expected_kind}, got {manifest.get('capsule_kind')}"
@@ -1247,6 +1304,7 @@ def resolve_capability_capsule_for_task(
     *,
     operator_id: Optional[str] = None,
     registry_path: Optional[Path] = None,
+    frozen_definitions: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     signals = _signals_from_task(task_envelope)
     explicit_id = task_envelope.get("capability_capsule_id") or task_envelope.get("execution_capsule_id")
@@ -1260,8 +1318,16 @@ def resolve_capability_capsule_for_task(
         if entry.status == "revoked":
             raise CapsuleResolutionError(f"policy_blocked: capsule {explicit_id} is revoked")
         selected_entry = entry
-        selected_manifest = load_capability_capsule_manifest(Path(entry.manifest_path))
+        if frozen_definitions is not None:
+            frozen = frozen_definitions.get(str(explicit_id))
+            if not frozen:
+                raise CapsuleResolutionError(f"missing_frozen_capability: {explicit_id}")
+            selected_manifest = frozen["manifest"]
+        else:
+            selected_manifest = load_capability_capsule_manifest(Path(entry.manifest_path))
     else:
+        if frozen_definitions is not None:
+            raise CapsuleResolutionError("frozen_capability_requires_explicit_id")
         candidates = query_capability_capsules(
             task_type=task_envelope.get("task_type"),
             signals=signals,
@@ -1291,11 +1357,13 @@ def resolve_capability_capsule_for_task(
         bindings.get("required_guard_capsules", []),
         expected_kind="guard",
         registry_path=registry_path,
+        frozen_definitions=frozen_definitions,
     )
     attached_resources = _attach_referenced_capsules(
         bindings.get("required_resource_capsules", []),
         expected_kind="resource",
         registry_path=registry_path,
+        frozen_definitions=frozen_definitions,
     )
 
     effect_summary = _summarize_effects(selected_manifest)
@@ -1329,7 +1397,8 @@ def resolve_capability_capsule_for_task(
         "operator_constraints": {
             "preferred": list(operator_compat.get("preferred", [])),
             "forbidden": list(operator_compat.get("forbidden", [])),
-            "default_operator_profile": selected_entry.default_operator_profile,
+            "default_operator_profile": (frozen_definitions[str(explicit_id)].get("default_operator_profile")
+                                         if frozen_definitions is not None else selected_entry.default_operator_profile),
         },
         "manifest_path": selected_entry.manifest_path,
         "status": selected_entry.status,
@@ -1342,10 +1411,13 @@ def resolve_capability_capsule_for_envelope(
     *,
     registry_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
+    from execution_authority import from_envelope
+    authority = from_envelope(task_envelope)
     operator_id = task_envelope.get("operator_id")
     resolved = resolve_capability_capsule_for_task(
         task_envelope,
         operator_id=operator_id,
         registry_path=registry_path,
+        frozen_definitions=authority["capsules"] if authority is not None else None,
     )
     return resolved

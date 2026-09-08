@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Unified RawIntent gateway for Solar-Harness entrypoints.
 
-Every user-facing entrypoint should write the same RawIntent packet before it
-creates PRD/contract/task_graph work.  Model rewriting is pluggable through
-SOLAR_INTENT_REWRITE_CMD; deterministic rewriting is the fail-open fallback.
+Every user-facing entrypoint writes the same RawIntent packet before it creates
+PRD/contract/task_graph work.  Interactive production channels require the
+formal LLM IntentIR compiler; deterministic rewriting remains an offline/CLI
+compatibility path and must never silently classify GUI requests.
 """
 
 from __future__ import annotations
@@ -21,9 +22,44 @@ from pathlib import Path
 from typing import Any
 
 
-HARNESS_DIR = Path(os.environ.get("SOLAR_HARNESS_DIR", Path(__file__).resolve().parents[1]))
-SPRINTS_DIR = Path(os.environ.get("SOLAR_HARNESS_SPRINTS_DIR", Path.home() / ".solar" / "harness" / "sprints"))
-INTENTS_DIR = Path(os.environ.get("SOLAR_INTENT_GATEWAY_DIR", Path.home() / ".solar" / "harness" / "intents"))
+HARNESS_DIR = Path(
+    os.environ.get("HARNESS_DIR")
+    or os.environ.get("SOLAR_HARNESS_DIR")
+    or Path(__file__).resolve().parents[1]
+)
+SPRINTS_DIR = Path(os.environ.get("SOLAR_HARNESS_SPRINTS_DIR") or (HARNESS_DIR / "sprints"))
+INTENTS_DIR = Path(os.environ.get("SOLAR_INTENT_GATEWAY_DIR") or (HARNESS_DIR / "intents"))
+_DEFAULT_LLM_INTENT_CHANNELS = {
+    "cli_intake",
+    "dashboard",
+    "gui",
+    "webapp",
+    "web",
+    "codex_pm_router",
+}
+
+
+def _llm_intent_compiler_required(source_channel: str) -> bool:
+    """Return whether this ingress must produce model-authored IntentIR.
+
+    The channel list is configurable for deployments with renamed frontends,
+    but the shipped GUI/web channels are fail-closed by default.  CLI capture
+    stays deterministic-capable so local schema tests and offline maintenance
+    do not unexpectedly invoke a live model.
+    """
+    configured = str(
+        os.environ.get("SOLAR_INTENT_COMPILER_REQUIRED_CHANNELS") or ""
+    ).strip()
+    channels = (
+        {
+            value.strip().lower()
+            for value in configured.split(",")
+            if value.strip()
+        }
+        if configured
+        else _DEFAULT_LLM_INTENT_CHANNELS
+    )
+    return str(source_channel or "").strip().lower() in channels
 
 
 def now_iso() -> str:
@@ -38,7 +74,9 @@ def slug(value: str, limit: int = 64) -> str:
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # ASCII-safe JSON remains valid UTF-8 and can also be read by Windows
+    # callers that omit an explicit encoding and fall back to CP1252.
+    tmp.write_text(json.dumps(payload, ensure_ascii=True, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, path)
 
 
@@ -69,6 +107,33 @@ def extract_research_artifact(args: argparse.Namespace) -> dict[str, Any] | None
         "conversation_id": conversation_id,
         "source_url": source_url,
     }
+
+
+def intake_attachments_from_env() -> list[dict[str, Any]]:
+    raw = str(os.environ.get("SOLAR_INTAKE_ATTACHMENTS_JSON") or "").strip()
+    if not raw:
+        return []
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(payload, list):
+        return []
+    attachments: list[dict[str, Any]] = []
+    for item in payload[:8]:
+        if not isinstance(item, dict):
+            continue
+        path = str(item.get("path") or "").strip()
+        if not path or not Path(path).is_file():
+            continue
+        attachments.append({
+            "name": str(item.get("name") or Path(path).name)[:140],
+            "path": path,
+            "mime_type": str(item.get("mime_type") or "application/octet-stream")[:160],
+            "size": int(item.get("size") or Path(path).stat().st_size),
+            "sha256": str(item.get("sha256") or "")[:64],
+        })
+    return attachments
 
 
 def _contains_marker(value: str, marker: str) -> bool:
@@ -389,6 +454,50 @@ def _looks_like_engineering_strategy_request(value: str) -> bool:
     )
 
 
+def _looks_like_direct_answer_request(value: str) -> bool:
+    """Recognize bounded conversational answers that need no runtime DAG.
+
+    This intentionally excludes requests whose answer depends on fresh data,
+    supplied artifacts, retrieval, or an external effect.  Those requests must
+    continue through research or delivery planning even when they are phrased
+    as a question.
+    """
+    if not value.strip():
+        return False
+    if re.search(r"https?://|www\.", value, flags=re.IGNORECASE):
+        return False
+    if any(
+        _contains_marker(value, marker)
+        for marker in (
+            "current",
+            "latest",
+            "today",
+            "right now",
+            "source",
+            "sources",
+            "citation",
+            "citations",
+            "attached",
+            "attachment",
+            "uploaded",
+            "file",
+            "repository",
+            "repo",
+            "codebase",
+        )
+    ):
+        return False
+    return bool(
+        re.match(
+            r"\s*(?:what|why|how|who|when|where|explain|describe|define|"
+            r"tell\s+me|translate|rewrite|summarize)\b",
+            value,
+            flags=re.IGNORECASE,
+        )
+        or value.rstrip().endswith("?")
+    )
+
+
 def infer_mode(text: str) -> str:
     value = text.lower()
     # Failure/debug intent is more specific than the subsystem being repaired:
@@ -410,6 +519,8 @@ def infer_mode(text: str) -> str:
         return "strategy"
     if any(_contains_marker(value, token) for token in _ENGINEERING_MARKERS):
         return "strategy"
+    if _looks_like_direct_answer_request(value):
+        return "direct_answer"
     return "delivery"
 
 
@@ -421,9 +532,19 @@ def deterministic_rewrite(raw_text: str) -> dict[str, Any]:
     objective = re.sub(r"\s+", " ", raw_text).strip() or title
     mode = infer_mode(raw_text)
     constraints: list[str] = [
-        "All execution must enter Solar-Harness through RawIntent and requirement compilation.",
-        "Do not bypass task_graph, operator runtime, quota-aware fallback, or evidence logging.",
+        "All work must enter Solar-Harness through RawIntent and requirement compilation.",
     ]
+    if mode == "direct_answer":
+        constraints.extend(
+            [
+                "Do not claim retrieval, execution, file mutation, or other external effects.",
+                "An independently accepted direct response must stop before task-graph runtime.",
+            ]
+        )
+    else:
+        constraints.append(
+            "Do not bypass task_graph, operator runtime, quota-aware fallback, or evidence logging."
+        )
     if mode == "debug":
         constraints.append("Capture failure evidence before changing implementation.")
     if mode == "research":
@@ -433,12 +554,24 @@ def deterministic_rewrite(raw_text: str) -> dict[str, Any]:
         "Compiled work is routable through PM/Planner/task_graph and multi-task operator runtime.",
         "Completion requires evidence artifacts and verifier-visible status.",
     ]
+    if mode == "direct_answer":
+        acceptance = [
+            "RawIntent, rewritten_intent, requirement_ir, and requirement_trace artifacts are persisted.",
+            "The response directly answers the accepted request in the requested audience and format.",
+            "Independent direct-response review passes before terminal closeout.",
+        ]
     logical_operators = [
         "RequirementCompiler",
         "Planner",
         "ImplementationWorker",
         "Verifier",
     ]
+    if mode == "direct_answer":
+        logical_operators = [
+            "RequirementCompiler",
+            "Planner",
+            "Verifier",
+        ]
     if mode == "research":
         logical_operators = [
             "RequirementCompiler",
@@ -453,12 +586,194 @@ def deterministic_rewrite(raw_text: str) -> dict[str, Any]:
         "title": title,
         "problem": raw_text.strip(),
         "objective": objective,
-        "outcome": "A compiled, dispatchable Solar-Harness work item with acceptance evidence.",
+        "outcome": (
+            "A reviewed direct answer with no task-graph runtime."
+            if mode == "direct_answer"
+            else "A compiled, dispatchable Solar-Harness work item with acceptance evidence."
+        ),
         "constraints": constraints,
-        "non_goals": ["Do not dispatch raw natural language directly to builder panes."],
+        "non_goals": (
+            ["Do not create or dispatch a runtime DAG for a bounded direct answer."]
+            if mode == "direct_answer"
+            else ["Do not dispatch raw natural language directly to builder panes."]
+        ),
         "acceptance": acceptance,
         "suggested_lane": mode,
         "suggested_logical_operators": logical_operators,
+    }
+
+
+_READINESS_ANSWER_FIELDS = {
+    "delivery_format",
+    "execution_network",
+    "mutation_policy",
+    "objective",
+    "target_choice",
+}
+
+
+def parse_clarification_answers(values: list[str] | None) -> dict[str, str]:
+    """Parse explicit ``FIELD=VALUE`` answers accepted by the capture CLI."""
+    answers: dict[str, str] = {}
+    for raw_value in values or []:
+        field, separator, value = str(raw_value).partition("=")
+        field = field.strip()
+        value = value.strip()
+        if not separator or field not in _READINESS_ANSWER_FIELDS or not value:
+            allowed = ", ".join(sorted(_READINESS_ANSWER_FIELDS))
+            raise SystemExit(
+                "--clarification-answer requires FIELD=VALUE with FIELD in: " + allowed
+            )
+        answers[field] = value
+    return answers
+
+
+def compile_ambiguity_readiness(
+    raw_text: str,
+    rewritten: dict[str, Any],
+    *,
+    requires_human_confirm: bool = False,
+    answers: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Return the minimum blocking questions needed before planning.
+
+    This is intentionally a bounded, deterministic preflight. It does not try
+    to turn every uncertainty into a conversation: only ambiguities that make
+    execution unsafe or select mutually exclusive routes block readiness.
+    Explicit ``answers`` resolve a named field and make the transition
+    machine-readable without relying on prose inference.
+    """
+    supplied_answers = {
+        str(field): str(value).strip()
+        for field, value in (answers or {}).items()
+        if str(field) in _READINESS_ANSWER_FIELDS and str(value).strip()
+    }
+    value = raw_text.strip()
+    lowered = value.lower()
+    blockers: list[dict[str, Any]] = []
+
+    def add_blocker(
+        *,
+        reason: str,
+        field: str,
+        question: str,
+        evidence_kind: str,
+        evidence_matches: list[str],
+    ) -> None:
+        if field in supplied_answers or any(row["field"] == field for row in blockers):
+            return
+        blockers.append(
+            {
+                "reason": reason,
+                "field": field,
+                "question_id": f"clarify-{field.replace('_', '-')}",
+                "question": question,
+                "evidence": {
+                    "kind": evidence_kind,
+                    "matches": evidence_matches,
+                },
+            }
+        )
+
+    objective = str(rewritten.get("objective") or "").strip()
+    if not objective:
+        add_blocker(
+            reason="missing_required_field",
+            field="objective",
+            question="What concrete outcome should this work produce?",
+            evidence_kind="normalized_field",
+            evidence_matches=["objective=empty"],
+        )
+
+    # Route choices expressed as "either X or Y" require one decision. The
+    # question asks for that single decision instead of separately asking
+    # about both alternatives.
+    choice_match = re.search(
+        r"\b(?:either|one\s+of)\s+([^.;\n]{1,80}?)\s+or\s+([^.;\n]{1,80})",
+        value,
+        re.IGNORECASE,
+    )
+    if choice_match:
+        choices = [re.sub(r"\s+", " ", item).strip(" ,") for item in choice_match.groups()]
+        add_blocker(
+            reason="ambiguous_route_choice",
+            field="target_choice",
+            question=f"Which target should planning use: {choices[0]} or {choices[1]}?",
+            evidence_kind="raw_request_span",
+            evidence_matches=choices,
+        )
+
+    contradiction_rules = (
+        (
+            "execution_network",
+            "conflicting_execution_constraints",
+            (
+                r"\b(?:offline|no\s+network|without\s+(?:the\s+)?internet)\b",
+                r"\b(?:live|online|browse\s+(?:the\s+)?internet|current\s+web)\b",
+            ),
+            "Should execution remain offline, or may it access the live network?",
+        ),
+        (
+            "mutation_policy",
+            "conflicting_mutation_constraints",
+            (
+                r"\b(?:read[- ]only|do\s+not\s+(?:modify|change)|no\s+changes)\b",
+                r"\b(?:implement|fix|patch|modify|change)\b",
+            ),
+            "May the implementation modify files, or must it remain read-only?",
+        ),
+        (
+            "delivery_format",
+            "conflicting_output_constraints",
+            (r"\bjson\s+only\b", r"\bmarkdown\s+only\b"),
+            "Which exclusive output format is required: JSON or Markdown?",
+        ),
+    )
+    for field, reason, patterns, question in contradiction_rules:
+        matches = []
+        for pattern in patterns:
+            match = re.search(pattern, lowered, re.IGNORECASE)
+            if match:
+                matches.append(match.group(0))
+        if len(matches) == len(patterns):
+            add_blocker(
+                reason=reason,
+                field=field,
+                question=question,
+                evidence_kind="conflicting_raw_request_spans",
+                evidence_matches=matches,
+            )
+
+    # A clarification string is not attributable approval evidence.  Keep the
+    # human gate closed until the dedicated approval workflow records it.
+    if requires_human_confirm:
+        add_blocker(
+            reason="required_approval_missing",
+            field="approval",
+            question="Do you approve dispatching this compiled intent to planning?",
+            evidence_kind="routing_hint",
+            evidence_matches=["requires_human_confirm=true"],
+        )
+
+    return {
+        "schema_version": "solar.intent_readiness.v1",
+        "status": "ready" if not blockers else "needs_clarification",
+        "ready": not blockers,
+        "blocking_count": len(blockers),
+        "unresolved": blockers,
+        "questions": [
+            {
+                "question_id": blocker["question_id"],
+                "field": blocker["field"],
+                "question": blocker["question"],
+                "reason": blocker["reason"],
+            }
+            for blocker in blockers
+        ],
+        "applied_answers": supplied_answers,
+        "planning_admitted": not blockers,
+        "next_action": "plan" if not blockers else "clarify",
+        "policy": "Only ambiguities that block safe route selection or execution are questions.",
     }
 
 
@@ -507,7 +822,37 @@ def model_rewrite(raw_intent: dict[str, Any], prompt_path: Path) -> tuple[dict[s
     return fallback, meta
 
 
+def _planner_workflow_candidates(request: str, lane: str) -> list[dict[str, Any]]:
+    """Expose memoized TaskGraphs to the planner without selecting one."""
+    if str(lane or "").strip().lower() != "research":
+        return []
+    try:
+        from workflow_router import FIXED_RESEARCH_WORKFLOW_ID, classify_research_request
+
+        hint = classify_research_request(request)
+        profile_hint = str(hint.get("execution_profile") or "part_a_only")
+        reason = str(hint.get("reason") or "Requirement IR classified the request as research")
+    except Exception as exc:
+        # Candidate discovery is advisory. Requirement compilation and planner
+        # handoff remain available when the template catalog cannot be loaded.
+        FIXED_RESEARCH_WORKFLOW_ID = "research.evidence_to_poc.v1"
+        profile_hint = "part_a_only"
+        reason = f"research lane candidate; classifier unavailable: {type(exc).__name__}"
+    return [
+        {
+            "workflow_id": FIXED_RESEARCH_WORKFLOW_ID,
+            "candidate_kind": "memoized_task_graph",
+            "selection_authority": "planner",
+            "auto_instantiate": False,
+            "execution_profile_hint": profile_hint,
+            "reason": reason,
+        }
+    ]
+
+
 def build_requirement_ir(intent_id: str, raw_intent: dict[str, Any], rewritten: dict[str, Any]) -> dict[str, Any]:
+    from requirement_compiler import requirement_ir_id_for_intent
+
     context = raw_intent.get("context", {}) if isinstance(raw_intent.get("context"), dict) else {}
     raw_block = raw_intent.get("raw", {}) if isinstance(raw_intent.get("raw"), dict) else {}
     research = raw_intent.get("research") if isinstance(raw_intent.get("research"), dict) else None
@@ -522,8 +867,53 @@ def build_requirement_ir(intent_id: str, raw_intent: dict[str, Any], rewritten: 
             "conversation_id": research.get("conversation_id", ""),
             "source_url": research.get("source_url", ""),
         }
+    attachments = raw_block.get("attachments") if isinstance(raw_block.get("attachments"), list) else []
+    if attachments:
+        source_inputs["attachments"] = attachments
+    routing_hints = (
+        raw_intent.get("routing_hints", {})
+        if isinstance(raw_intent.get("routing_hints"), dict)
+        else {}
+    )
+    clarifications = (
+        raw_intent.get("clarifications", {})
+        if isinstance(raw_intent.get("clarifications"), dict)
+        else {}
+    )
+    answers = clarifications.get("answers", {}) if isinstance(clarifications.get("answers"), dict) else {}
+    readiness = compile_ambiguity_readiness(
+        str(raw_block.get("text") or ""),
+        rewritten,
+        requires_human_confirm=bool(routing_hints.get("requires_human_confirm")),
+        answers=answers,
+    )
+    lane = str(rewritten.get("suggested_lane") or "delivery")
+    workflow_candidates = _planner_workflow_candidates(
+        str(raw_block.get("text") or ""),
+        lane,
+    )
+    planner_hints: dict[str, Any] = {
+        "workflow_candidates": workflow_candidates,
+        "selection_authority": "planner",
+        "response_authority": "planner",
+        "allowed_outcomes": ["direct_answer", "memoized_task_graph", "new_task_graph"],
+    }
+    if lane == "direct_answer":
+        planner_hints["preferred_outcome"] = "direct_answer"
+        planner_hints["runtime_handoff_allowed"] = False
+    raw_request = str(raw_block.get("text") or "").strip()
+    objective = str(rewritten.get("objective") or raw_request).strip()
+    acceptance = [
+        str(item).strip()
+        for item in rewritten.get("acceptance") or []
+        if str(item).strip()
+    ]
+    if not acceptance:
+        outcome = str(rewritten.get("outcome") or objective).strip()
+        acceptance = [outcome] if outcome else []
     return {
         "schema_version": "solar.requirement_ir.v1",
+        "id": requirement_ir_id_for_intent(intent_id),
         "intent_id": intent_id,
         "source": raw_intent.get("source", {}),
         "source_inputs": source_inputs,
@@ -534,18 +924,66 @@ def build_requirement_ir(intent_id: str, raw_intent: dict[str, Any], rewritten: 
         "constraints": rewritten.get("constraints", []),
         "non_goals": rewritten.get("non_goals", []),
         "acceptance": rewritten.get("acceptance", []),
-        "lane": rewritten.get("suggested_lane", "delivery"),
+        "requirements": [
+            {
+                "id": "REQ-001",
+                "origin": "user:raw_intent",
+                "source_text": raw_request or objective,
+                "success_criteria": acceptance,
+                "verification_method": "not_machine_checkable",
+                "priority": "P1",
+            }
+        ],
+        "lane": lane,
         "logical_operators": rewritten.get("suggested_logical_operators", []),
-        "compiler_next": "pm_planner_task_graph",
+        "planner_hints": planner_hints,
+        "readiness": readiness,
+        "compiler_next": (
+            "pm_elastic_planner"
+            if readiness["ready"] and lane == "direct_answer"
+            else "pm_planner_task_graph"
+            if readiness["ready"]
+            else "clarification_required"
+        ),
     }
+
+
+def compile_and_evaluate_requirement_bundle(
+    intent_ir: dict[str, Any], intent_acceptance: dict[str, Any],
+    *, work_dir: Path, model: Any = None, reviewer: Any = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Compile an admitted IntentIR and run the independent deterministic gate."""
+    from intent_compiler import requirement_handoff
+    from requirement_compiler import evaluate_requirement_ir_format
+    from requirement_compiler.semantic import compile_semantic_requirement_ir
+
+    handoff = requirement_handoff(intent_ir, intent_acceptance)
+    intent_digest = handoff["intent_ir_sha256"]
+    requirement_ir = compile_semantic_requirement_ir(
+        intent_ir,
+        intent_ir_sha256=intent_digest,
+        work_dir=work_dir, model=model, reviewer=reviewer,
+    )
+    evaluation = evaluate_requirement_ir_format(
+        requirement_ir,
+        intent_ir=intent_ir,
+        intent_ir_sha256=intent_digest,
+        intent_acceptance=intent_acceptance,
+    )
+    return requirement_ir, evaluation
 
 
 def capture(args: argparse.Namespace) -> dict[str, Any]:
     raw_text = read_text_arg(args)
+    formal_intent_required = _llm_intent_compiler_required(args.source_channel)
     created = now_iso()
     digest = hashlib.sha1(f"{created}\n{raw_text}".encode("utf-8")).hexdigest()[:10]
     intent_id = args.intent_id or f"intent-{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%d-%H%M%S')}-{digest}"
     research = extract_research_artifact(args)
+    attachments = intake_attachments_from_env()
+    clarification_answers = parse_clarification_answers(
+        getattr(args, "clarification_answer", None)
+    )
     raw_intent = {
         "schema_version": "solar.raw_intent.v1",
         "intent_id": intent_id,
@@ -558,19 +996,25 @@ def capture(args: argparse.Namespace) -> dict[str, Any]:
         },
         "raw": {
             "text": raw_text,
-            "attachments": [],
+            "attachments": attachments,
             "quoted_context": [],
             "received_at": created,
         },
         "context": {
             "repo": args.repo or "",
-            "cwd": str(Path.cwd()),
+            # Dashboard/CLI harness callers provide the user workspace
+            # explicitly. Keep Path.cwd() only as a compatibility value for
+            # older direct callers; it is never publication authority.
+            "cwd": getattr(args, "cwd", "") or str(Path.cwd()),
             "related_sprints": [],
             "knowledge_query": args.knowledge_query or "",
         },
         "routing_hints": {
             "urgency": args.urgency,
-            "mode": args.mode or infer_mode(raw_text),
+            # A production IntentIR is semantic authority.  Keep an explicit
+            # caller override, and retain the heuristic only for the named
+            # offline/CLI compatibility path.
+            "mode": args.mode or ("" if formal_intent_required else infer_mode(raw_text)),
             "allow_autodispatch": not args.no_autodispatch,
             "requires_human_confirm": args.requires_human_confirm,
             "require_research_artifact": bool(args.require_research_artifact or research),
@@ -581,14 +1025,202 @@ def capture(args: argparse.Namespace) -> dict[str, Any]:
             "contains_secrets": "unknown",
         },
     }
+    if clarification_answers:
+        raw_intent["clarifications"] = {"answers": clarification_answers}
     if research:
         raw_intent["research"] = research
     base = INTENTS_DIR / intent_id
+    artifact_compiler_provider = os.environ.get("SOLAR_INTENT_COMPILER_PROVIDER", "").strip()
+    if not artifact_compiler_provider and formal_intent_required:
+        # Select the formal path. The registry factory below determines the
+        # actual provider; this sentinel is not provenance.
+        artifact_compiler_provider = "registry"
+    if artifact_compiler_provider:
+        from intent_compiler import (
+            model_from_environment,
+            run_pipeline,
+        )
+
+        compiler_model = model_from_environment("compiler")
+        reviewer_model = model_from_environment("reviewer")
+        artifact_compiler_provider = getattr(compiler_model, "provider", artifact_compiler_provider)
+        compiler_result = run_pipeline(
+            raw_intent,
+            base / "intent",
+            compiler_model,
+            reviewer_model,
+        )
+        acceptance = compiler_result["intent_acceptance"]
+        accepted_intent = compiler_result.get("intent_ir")
+        write_json(base / "raw_intent.json", raw_intent)
+        candidate_trace_artifacts = {
+            "raw_intent": str(base / "raw_intent.json"),
+            "input": str(base / "intent" / "input.json"),
+            "intent_ir": str(base / "intent" / "intent_ir.json"),
+            "intent_validation": str(base / "intent" / "intent_validation.json"),
+            "intent_fidelity": str(base / "intent" / "intent_fidelity.json"),
+            "intent_acceptance": str(base / "intent" / "intent_acceptance.json"),
+        }
+        trace_artifacts = {
+            name: path
+            for name, path in candidate_trace_artifacts.items()
+            if Path(path).exists()
+        }
+        trace = {
+            "schema_version": "solar.requirement_trace.v1",
+            "intent_id": intent_id,
+            "created_at": created,
+            "artifacts": trace_artifacts,
+            "stages": [
+                {"stage": "raw_intent_capture", "status": "ok"},
+                {
+                    "stage": "intent_ir_compile",
+                    "status": "ok" if accepted_intent else "failed",
+                    "provider": artifact_compiler_provider,
+                },
+                {
+                    "stage": "intent_validation",
+                    "status": (
+                        compiler_result.get("intent_validation") or {"status": "not_run"}
+                    ).get("status"),
+                },
+                {
+                    "stage": "intent_fidelity",
+                    "status": (
+                        compiler_result.get("intent_fidelity") or {"status": "not_run"}
+                    ).get("status"),
+                },
+                {
+                    "stage": "intent_acceptance",
+                    "status": acceptance["decision"],
+                    "repair_attempted": acceptance["repair"]["attempted"],
+                },
+            ],
+        }
+        if acceptance["decision"] != "accepted" or not accepted_intent:
+            raw_intent["routing_hints"]["allow_autodispatch"] = False
+            raw_intent["routing_hints"]["readiness_blocked"] = True
+            write_json(base / "raw_intent.json", raw_intent)
+            write_json(base / "requirement_trace.json", trace)
+            return {
+                "ok": True,
+                "intent_id": intent_id,
+                "title": None,
+                "lane": None,
+                "ready": False,
+                "readiness_status": acceptance["decision"],
+                "clarification_questions": acceptance["clarification_questions"],
+                "rewrite_method": "intent_ir_v3",
+                "raw_intent": str(base / "raw_intent.json"),
+                "intent_ir": (
+                    str(base / "intent" / "intent_ir.json")
+                    if (base / "intent" / "intent_ir.json").exists()
+                    else None
+                ),
+                "intent_validation": (
+                    str(base / "intent" / "intent_validation.json")
+                    if (base / "intent" / "intent_validation.json").exists()
+                    else None
+                ),
+                "intent_fidelity": (
+                    str(base / "intent" / "intent_fidelity.json")
+                    if (base / "intent" / "intent_fidelity.json").exists()
+                    else None
+                ),
+                "intent_acceptance": str(base / "intent" / "intent_acceptance.json"),
+                "requirement_trace": str(base / "requirement_trace.json"),
+            }
+        requirement_ir, requirement_evaluation = compile_and_evaluate_requirement_bundle(
+            accepted_intent,
+            acceptance,
+            work_dir=base / "requirement",
+        )
+        requirement_ir_path = base / "requirement_ir.json"
+        requirement_evaluation_path = base / "requirement_format_evaluation.json"
+        trace["artifacts"].update(
+            {
+                "requirement_ir": str(requirement_ir_path),
+                "requirement_format_evaluation": str(requirement_evaluation_path),
+            }
+        )
+        trace["stages"].extend(
+            [
+                {"stage": "requirement_ir_compile", "status": "ok"},
+                {
+                    "stage": "requirement_format_evaluation",
+                    "status": requirement_evaluation["status"],
+                    "defect_count": len(requirement_evaluation["defects"]),
+                },
+            ]
+        )
+        write_json(requirement_ir_path, requirement_ir)
+        write_json(requirement_evaluation_path, requirement_evaluation)
+        if requirement_evaluation["status"] != "pass":
+            raw_intent["routing_hints"]["allow_autodispatch"] = False
+            raw_intent["routing_hints"]["readiness_blocked"] = True
+            write_json(base / "raw_intent.json", raw_intent)
+            write_json(base / "requirement_trace.json", trace)
+            return {
+                "ok": True,
+                "intent_id": intent_id,
+                "title": None,
+                "lane": None,
+                "ready": False,
+                "readiness_status": "requirement_evaluation_failed",
+                "clarification_questions": [],
+                "rewrite_method": "intent_ir_v3",
+                "raw_intent": str(base / "raw_intent.json"),
+                "intent_ir": str(base / "intent" / "intent_ir.json"),
+                "intent_validation": str(base / "intent" / "intent_validation.json"),
+                "intent_fidelity": str(base / "intent" / "intent_fidelity.json"),
+                "intent_acceptance": str(base / "intent" / "intent_acceptance.json"),
+                "requirement_ir": str(requirement_ir_path),
+                "requirement_evaluation": str(requirement_evaluation_path),
+                "requirement_trace": str(base / "requirement_trace.json"),
+            }
+        write_json(base / "requirement_trace.json", trace)
+        if args.sprint_id:
+            bind_intent_artifacts(intent_id, args.sprint_id)
+        goals = accepted_intent.get("goals") or []
+        title = (
+            str(goals[0].get("statement") or "")[:90]
+            if goals and isinstance(goals[0], dict)
+            else None
+        )
+        return {
+            "ok": True,
+            "intent_id": intent_id,
+            "title": title,
+            # Intent compilation must not choose a workflow lane.  The typed
+            # Elastic Planner owns direct_response/exact_reuse/generate.
+            "lane": None,
+            "ready": True,
+            "readiness_status": acceptance["decision"],
+            "clarification_questions": acceptance["clarification_questions"],
+            "rewrite_method": "intent_ir_v3",
+            "compiler_mode": "semantic",
+            "warnings": [],
+            "raw_intent": str(base / "raw_intent.json"),
+            "intent_ir": str(base / "intent" / "intent_ir.json"),
+            "intent_validation": str(base / "intent" / "intent_validation.json"),
+            "intent_fidelity": str(base / "intent" / "intent_fidelity.json"),
+            "intent_acceptance": str(base / "intent" / "intent_acceptance.json"),
+            "requirement_ir": str(requirement_ir_path),
+            "requirement_evaluation": str(requirement_evaluation_path),
+            "requirement_trace": str(base / "requirement_trace.json"),
+        }
     model_result, rewrite_meta = model_rewrite(raw_intent, base / "rewrite_prompt.json")
     rewritten = model_result or deterministic_rewrite(raw_text)
     rewritten["intent_id"] = intent_id
     rewritten["model_rewrite"] = rewrite_meta
     requirement_ir = build_requirement_ir(intent_id, raw_intent, rewritten)
+    readiness = requirement_ir["readiness"]
+    if not readiness["ready"]:
+        # The consumer's normal planner handoff policy reads this routing hint.
+        # Capturing evidence remains allowed, but automatic planning is closed
+        # until every blocking field has an explicit answer.
+        raw_intent["routing_hints"]["allow_autodispatch"] = False
+        raw_intent["routing_hints"]["readiness_blocked"] = True
     trace = {
         "schema_version": "solar.requirement_trace.v1",
         "intent_id": intent_id,
@@ -601,7 +1233,15 @@ def capture(args: argparse.Namespace) -> dict[str, Any]:
         "stages": [
             {"stage": "raw_intent_capture", "status": "ok"},
             {"stage": "intent_rewrite", "status": "ok", "method": rewritten.get("rewrite_method")},
-            {"stage": "requirement_ir_compile", "status": "ok"},
+            {
+                "stage": "ambiguity_readiness",
+                "status": readiness["status"],
+                "blocking_count": readiness["blocking_count"],
+            },
+            {
+                "stage": "requirement_ir_compile",
+                "status": "ok" if readiness["ready"] else "blocked",
+            },
         ],
     }
     write_json(base / "raw_intent.json", raw_intent)
@@ -615,7 +1255,15 @@ def capture(args: argparse.Namespace) -> dict[str, Any]:
         "intent_id": intent_id,
         "title": rewritten.get("title"),
         "lane": requirement_ir.get("lane"),
+        "ready": requirement_ir["readiness"]["ready"],
+        "readiness_status": requirement_ir["readiness"]["status"],
+        "clarification_questions": requirement_ir["readiness"]["questions"],
         "rewrite_method": rewritten.get("rewrite_method"),
+        "compiler_mode": "legacy_deterministic",
+        "warnings": [
+            "intent_compiler_unconfigured: SOLAR_INTENT_COMPILER_PROVIDER is unset; "
+            "no semantic validation ran"
+        ],
         "raw_intent": str(base / "raw_intent.json"),
         "rewritten_intent": str(base / "rewritten_intent.json"),
         "requirement_ir": str(base / "requirement_ir.json"),
@@ -629,12 +1277,44 @@ def bind_intent_artifacts(intent_id: str, sprint_id: str) -> dict[str, Any]:
         raise SystemExit(f"unknown intent_id: {intent_id}")
     mapping = {
         "raw_intent.json": SPRINTS_DIR / f"{sprint_id}.raw_intent.json",
-        "rewritten_intent.json": SPRINTS_DIR / f"{sprint_id}.rewritten_intent.json",
         "requirement_ir.json": SPRINTS_DIR / f"{sprint_id}.requirement_ir.json",
         "requirement_trace.json": SPRINTS_DIR / f"{sprint_id}.requirement_trace.json",
     }
+    optional_mapping = {
+        "rewritten_intent.json": SPRINTS_DIR / f"{sprint_id}.rewritten_intent.json",
+        "requirement_format_evaluation.json": SPRINTS_DIR
+        / f"{sprint_id}.requirement_format_evaluation.json",
+        "intent/input.json": SPRINTS_DIR / f"{sprint_id}.input.json",
+        "intent/intent_ir.json": SPRINTS_DIR / f"{sprint_id}.intent_ir.json",
+        "intent/intent_validation.json": SPRINTS_DIR / f"{sprint_id}.intent_validation.json",
+        "intent/intent_fidelity.json": SPRINTS_DIR / f"{sprint_id}.intent_fidelity.json",
+        "intent/intent_acceptance.json": SPRINTS_DIR / f"{sprint_id}.intent_acceptance.json",
+    }
+    immutable_compiler_artifacts = {
+        name
+        for name in optional_mapping
+        if name.startswith("intent/") or name == "requirement_format_evaluation.json"
+    }
+    mapping.update(
+        {name: destination for name, destination in optional_mapping.items() if (base / name).exists()}
+    )
     for name, dst in mapping.items():
-        gateway_payload = json.loads((base / name).read_text(encoding="utf-8"))
+        source_path = base / name
+        if name == "requirement_ir.json":
+            source_requirement = json.loads(source_path.read_text(encoding="utf-8"))
+            if source_requirement.get("schema_version") == "solar.requirement_ir.v2":
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                temporary = dst.with_suffix(dst.suffix + ".tmp")
+                temporary.write_bytes(source_path.read_bytes())
+                os.replace(temporary, dst)
+                continue
+        if name in immutable_compiler_artifacts:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            temporary = dst.with_suffix(dst.suffix + ".tmp")
+            temporary.write_bytes(source_path.read_bytes())
+            os.replace(temporary, dst)
+            continue
+        gateway_payload = json.loads(source_path.read_text(encoding="utf-8"))
         payload = gateway_payload
         if (
             dst.exists()
@@ -671,12 +1351,18 @@ def bind_intent_artifacts(intent_id: str, sprint_id: str) -> dict[str, Any]:
                     gateway_source = gateway_payload.get("source")
                     if not payload.get("source") and isinstance(gateway_source, dict):
                         payload["source"] = gateway_source
+                    gateway_planner_hints = gateway_payload.get("planner_hints")
+                    if (
+                        not payload.get("planner_hints")
+                        and isinstance(gateway_planner_hints, dict)
+                    ):
+                        payload["planner_hints"] = gateway_planner_hints
                     compiled_inputs = payload.get("source_inputs")
                     if not isinstance(compiled_inputs, dict):
                         compiled_inputs = {}
                     gateway_inputs = gateway_payload.get("source_inputs")
                     if isinstance(gateway_inputs, dict):
-                        for key in ("raw_request", "repo_context", "research_artifact"):
+                        for key in ("raw_request", "repo_context", "research_artifact", "attachments"):
                             if not compiled_inputs.get(key) and gateway_inputs.get(key):
                                 compiled_inputs[key] = gateway_inputs[key]
                     payload["source_inputs"] = compiled_inputs
@@ -702,12 +1388,20 @@ def main(argv: list[str] | None = None) -> int:
     cap.add_argument("--session-id", default="")
     cap.add_argument("--thread-ref", default="")
     cap.add_argument("--repo", default="")
+    cap.add_argument("--cwd", default="")
     cap.add_argument("--knowledge-query", default="")
     cap.add_argument("--urgency", default="normal")
     cap.add_argument("--mode", default="")
     cap.add_argument("--source-trust", default="user_direct")
     cap.add_argument("--no-autodispatch", action="store_true")
     cap.add_argument("--requires-human-confirm", action="store_true")
+    cap.add_argument(
+        "--clarification-answer",
+        action="append",
+        default=[],
+        metavar="FIELD=VALUE",
+        help="Resolve one readiness field; repeat for multiple answers.",
+    )
     cap.add_argument("--require-research-artifact", action="store_true")
     cap.add_argument("--research-artifact", default="")
     cap.add_argument("--research-project-name", default="")
@@ -729,7 +1423,10 @@ def main(argv: list[str] | None = None) -> int:
     else:
         raise SystemExit(f"unknown command: {args.cmd}")
     if getattr(args, "json", False):
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        # Keep machine-readable stdout ASCII-safe. Windows callers commonly
+        # decode subprocess output using their active code page (for example,
+        # CP1252); JSON escapes preserve Unicode across that boundary.
+        print(json.dumps(payload, ensure_ascii=True, indent=2))
     else:
         print(f"intent_id={payload.get('intent_id')} rewrite={payload.get('rewrite_method', 'N/A')}")
     return 0

@@ -22,6 +22,7 @@ export type SprintStatus = {
   phase?: string;
   epic_id?: string;
   updated_at?: string;
+  original_prompt?: string;
   [key: string]: unknown;
 };
 
@@ -121,6 +122,7 @@ export type ProjectionData = {
   };
   sprint_id?: string;
   title?: string;
+  original_prompt?: string;
   status?: string;
   phase?: string;
   sprint?: SprintStatus;
@@ -346,13 +348,28 @@ export type PaneSupply = {
   [key: string]: unknown;
 };
 
+export type TypedFailure = {
+  code?: string;
+  stage?: string | null;
+  before_execution?: boolean;
+  retry_safe?: boolean | null;
+  node_id?: string | null;
+  operator_id?: string | null;
+  receipt_ref?: string | null;
+  task_id?: string | null;
+};
+
 export type StallSummary = {
   is_stalled?: boolean;
   state?: string;
+  severity?: string;
+  title?: string;
+  detail?: string;
   reason?: string;
   reasons?: string[];
   blocked_nodes?: string[];
   explanation?: string;
+  failure?: TypedFailure;
   [key: string]: unknown;
 };
 
@@ -399,11 +416,21 @@ export type Deliverable = {
   result?: boolean;
   // Producing pipeline stage: report | prd | design | plan | task_graph | handoff | eval | source | other.
   stage?: string;
+  // Explicit governed-artifact authorship. Direct answers are Planner-owned;
+  // compiler artifacts must never be presented as their author.
+  producer_role?: string;
+  producer_component?: string;
 };
 
 export type IntakeResponse = {
   ok: boolean;
   status?: string;
+  job_status?: "queued" | "running" | "succeeded" | "failed" | string;
+  terminal?: boolean;
+  phase?: string;
+  poll_after_ms?: number;
+  created_at?: string;
+  updated_at?: string;
   sprint_id?: string;
   request_id?: string;
   attribution?: string;
@@ -412,6 +439,13 @@ export type IntakeResponse = {
   error?: string;
   stdout_tail?: string;
   returncode?: number;
+  attachments?: Array<{
+    name: string;
+    path: string;
+    mime_type?: string;
+    size?: number;
+    sha256?: string;
+  }>;
 };
 
 export type SettingsPayload = {

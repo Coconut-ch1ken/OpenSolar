@@ -654,12 +654,12 @@ def test_multi_task_launch_persists_canonical_legacy_attempt(
     monkeypatch.setattr(mtr, "SPRINTS_DIR", sprints)
     monkeypatch.setattr(mtr, "RUN_DIR", run_dir)
     monkeypatch.setattr(mtr, "OPERATORD_SUBMIT_ENABLED", False)
-    monkeypatch.setattr(mtr, "_plan_validator_launch_refusal", lambda _graph: None)
+    monkeypatch.setattr(mtr, "_plan_validator_launch_refusal", lambda *_args: None)
     monkeypatch.setattr(mtr, "select_profile", lambda *_args, **_kwargs: profile)
     monkeypatch.setattr(mtr, "capability_for_profile", lambda _profile: {"provider": "test", "status": "ready"})
     monkeypatch.setattr(mtr, "build_dispatch_text", lambda *_args, **_kwargs: "# dispatch\n")
     monkeypatch.setattr(mtr, "tmux_start", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(mtr, "set_last_launch", lambda: None)
+    monkeypatch.setattr(mtr, "set_last_launch", lambda *_args: None)
     monkeypatch.setattr(mtr, "_record_node_attribution", lambda *_args, **_kwargs: None)
 
     payload = mtr.launch_node(
@@ -670,7 +670,10 @@ def test_multi_task_launch_persists_canonical_legacy_attempt(
         dry_run=False,
     )
 
-    persisted = json.loads(graph_path.read_text(encoding="utf-8"))
+    # Runtime ownership fields live in the task-graph state sidecar; use the
+    # production loader to inspect the hydrated graph rather than the frozen
+    # spec plane alone.
+    persisted = mtr.load_graph(graph_path)
     attempt = persisted["nodes"][0]["execution_attempt"]
     assert attempt["task_id"] == payload["id"]
     assert attempt["source"] == "multi_task_tmux"
@@ -771,6 +774,44 @@ def test_failed_current_attempt_is_retained_until_replacement(
     assert node["execution_attempt"]["status"] == "failed"
     assert node["execution_attempt"]["closeout_failure"]["exit_code"] == 1
     assert node["last_operator_closeout_failure"]["reason"] == "operator_result_failed"
+
+
+def test_old_terminal_result_cannot_close_new_virtual_pool_assignment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The scheduler may assign a retry before a physical operator accepts it.
+
+    Until acceptance activates a replacement attempt, the prior failed attempt
+    remains as audit evidence.  Its result must not be replayed against the new
+    graph dispatch id on each reconciliation poll.
+    """
+    monkeypatch.setattr(gnd, "HARNESS_DIR", tmp_path)
+    _write_result(
+        tmp_path,
+        "pm-old",
+        "operator-old",
+        status="failed",
+        exit_code=1,
+    )
+    old_attempt = _attempt("pm-old", "operator-old", status="failed")
+    old_attempt["dispatch_id"] = "graph-old"
+    node = {
+        "id": NODE_ID,
+        "status": "assigned",
+        "assigned_to": "operator-pool:builder.0",
+        "dispatch_id": "graph-retry-not-yet-accepted",
+        "execution_attempt": old_attempt,
+    }
+    graph = {
+        "sprint_id": SID,
+        "nodes": [node],
+        "node_results": {NODE_ID: {"status": "assigned"}},
+    }
+
+    closeout = gnd._operator_terminal_result_closeout(SID, NODE_ID, node, graph)
+
+    assert closeout is None
 
 
 def test_operator_pool_success_without_task_identity_fails_closed(
@@ -913,3 +954,134 @@ def test_untracked_operator_pool_submission_never_falls_back_to_second_worker(
 
     assert result == pool_failure
     assert fallback_calls == []
+
+
+def test_dispatched_virtual_pool_assignment_is_resubmitted_through_operator_pool(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    graph_path = tmp_path / f"{SID}.task_graph.json"
+    graph_path.write_text(
+        json.dumps(
+            {
+                "sprint_id": SID,
+                "nodes": [
+                    {
+                        "id": NODE_ID,
+                        "status": "dispatched",
+                        "depends_on": [],
+                        "assigned_to": "operator-pool:builder.0",
+                        "dispatch_id": "graph-current",
+                    }
+                ],
+                "node_results": {
+                    NODE_ID: {
+                        "status": "dispatched",
+                        "assigned_to": "operator-pool:builder.0",
+                        "dispatch_id": "graph-current",
+                    }
+                },
+                "gate_results": {},
+                "required_gates": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    pool_success = {"ok": True, "dispatch_mode": "operator_pool"}
+    calls: list[str] = []
+    monkeypatch.setattr(gnd, "_plan_validator_enabled", lambda: False)
+    monkeypatch.setattr(gnd, "_prepare_human_search_handoff", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        gnd,
+        "_submit_builder_to_operator_pool",
+        lambda **_kwargs: calls.append("pool") or pool_success,
+    )
+    monkeypatch.setattr(
+        gnd,
+        "_assigned_pane_unavailable_reason",
+        lambda _pane: (_ for _ in ()).throw(AssertionError("virtual pool pane reached tmux guard")),
+    )
+
+    result = gnd.dispatch_queue_item(
+        {
+            "intent": f"graph_node|node_id={NODE_ID}",
+            "priority": 80,
+            "payload": {
+                "sprint_id": SID,
+                "node": {"id": NODE_ID, "status": "dispatched"},
+                "assignment": {"pane": "operator-pool:builder.0"},
+                "dispatch_id": "graph-current",
+                "graph": str(graph_path),
+            },
+        },
+        dry_run=False,
+    )
+
+    assert result == pool_success
+    assert calls == ["pool"]
+
+
+def test_virtual_pool_assignment_with_tracked_attempt_repairs_operator_pane_without_resubmit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    graph_path = tmp_path / f"{SID}.task_graph.json"
+    graph_path.write_text(
+        json.dumps(
+            {
+                "sprint_id": SID,
+                "nodes": [
+                    {
+                        "id": NODE_ID,
+                        "status": "dispatched",
+                        "depends_on": [],
+                        "assigned_to": "operator-pool:builder.0",
+                        "dispatch_id": "graph-current",
+                        "execution_attempt": {
+                            **_attempt("pm-current", "operator-current"),
+                            "dispatch_id": "graph-current",
+                        },
+                    }
+                ],
+                "node_results": {
+                    NODE_ID: {
+                        "status": "dispatched",
+                        "assigned_to": "operator-pool:builder.0",
+                        "dispatch_id": "graph-current",
+                    }
+                },
+                "gate_results": {},
+                "required_gates": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(gnd, "_plan_validator_enabled", lambda: False)
+    monkeypatch.setattr(gnd, "_prepare_human_search_handoff", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        gnd,
+        "_submit_builder_to_operator_pool",
+        lambda **_kwargs: (_ for _ in ()).throw(AssertionError("tracked attempt was resubmitted")),
+    )
+    monkeypatch.setattr(gnd, "_ledger_transition", lambda *_args, **_kwargs: None)
+
+    result = gnd.dispatch_queue_item(
+        {
+            "intent": f"graph_node|node_id={NODE_ID}",
+            "priority": 80,
+            "payload": {
+                "sprint_id": SID,
+                "node": {"id": NODE_ID, "status": "dispatched"},
+                "assignment": {"pane": "operator-pool:builder.0"},
+                "dispatch_id": "graph-current",
+                "graph": str(graph_path),
+            },
+        },
+        dry_run=False,
+    )
+
+    assert result["ok"] is True
+    assert result["reason"] == "operator_pool_submission_in_flight"
+    assert result["pane"] == "operator:operator-current"
+    persisted = gnd.load_graph(graph_path)
+    assert persisted["nodes"][0]["assigned_to"] == "operator:operator-current"

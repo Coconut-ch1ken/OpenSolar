@@ -16,6 +16,19 @@ sys.path.insert(0, str(ROOT / "lib"))
 import capability_capsules as caps
 
 
+def test_grounded_research_compiler_uses_governed_synthesis_capsule():
+    plan = caps.default_capability_plan_for_logical_operator(
+        "GroundedResearchCompiler",
+        request_type="research",
+        node={"goal": "Compile a grounded Chinese research report."},
+        registry_path=ROOT / "config" / "capability-capsules.registry.yaml",
+    )
+
+    assert plan["capability_capsule_id"] == "cap.requirement-research-synthesizer"
+    assert plan["dispatch_task_type"] == "research"
+    assert plan["selected_skills"] == []
+
+
 def _write_yaml(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
@@ -282,3 +295,59 @@ def test_read_only_analysis_scope_node_canonicalizes_to_admitted_audit_type():
         registry_path=ROOT / "config" / "capability-capsules.registry.yaml",
     )
     assert resolved["capability_capsule_id"] == "cap.requirement-compiler-audit"
+
+
+def test_skill_execution_bridge_is_registered_for_runtime_admission():
+    registry_path = ROOT / "config" / "capability-capsules.registry.yaml"
+
+    entry = caps.get_registry_entry(
+        "cap.skill-execution-bridge",
+        path=registry_path,
+    )
+
+    assert entry is not None
+    assert Path(entry.manifest_path).name == "cap.skill-execution-bridge.yaml"
+    resolved = caps.resolve_capability_capsule_for_task(
+        {
+            "task_type": "research",
+            "objective": "Compile the grounded research report.",
+            "selected_skills": ["research_compilation"],
+            "capability_capsule_id": "cap.skill-execution-bridge",
+        },
+        operator_id="mini-codex-gpt55-medium-builder-1",
+        registry_path=registry_path,
+    )
+    assert resolved["capability_capsule_id"] == "cap.skill-execution-bridge"
+
+
+def test_artifact_type_bridge_resolves_through_runtime_admission():
+    """The dedicated adapter registry is an admission source of truth too."""
+    registry_path = ROOT / "config" / "capability-capsules.registry.yaml"
+    resolved = caps.resolve_capability_capsule_for_task(
+        {
+            "task_type": "implementation",
+            "objective": "Bridge the upstream artifact into the downstream shape.",
+            "capability_capsule_id": "adapter.artifact-type-bridge",
+            "upstream_artifact": {"kind": "artifact.request_context"},
+        },
+        operator_id="mini-claude-sonnet-builder-2",
+        registry_path=registry_path,
+    )
+    assert resolved["capability_capsule_id"] == "adapter.artifact-type-bridge"
+    assert resolved["status"] == "stable"
+
+
+def test_artifact_type_bridge_falls_back_to_dedicated_registry(monkeypatch):
+    """Older deployments without duplicated main-registry entries still admit adapters."""
+    monkeypatch.setattr(caps, "iter_registry_entries", lambda **kwargs: [])
+    resolved = caps.resolve_capability_capsule_for_task(
+        {
+            "task_type": "implementation",
+            "objective": "Bridge the upstream artifact into the downstream shape.",
+            "capability_capsule_id": "adapter.artifact-type-bridge",
+            "upstream_artifact": {"kind": "artifact.request_context"},
+        },
+        operator_id="mini-claude-sonnet-builder-2",
+        registry_path=ROOT / "config" / "capability-capsules.registry.yaml",
+    )
+    assert resolved["capability_capsule_id"] == "adapter.artifact-type-bridge"

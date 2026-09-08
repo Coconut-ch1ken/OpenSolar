@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://solar.local/schemas/evidence/metric_recomputation.v1.schema.json",
+  "title": "Solar Evidence ABI - Metric Recomputation",
+  "type": "object",
+  "required": [
+    "schema",
+    "task_id",
+    "sprint_id",
+    "node_id",
+    "status",
+    "inputs",
+    "outputs",
+    "artifacts",
+    "provenance",
+    "limitations"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "metric_recomputation.v1"
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sprint_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "node_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "outputs": {
+      "type": "object",
+      "required": [
+        "recomputation"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "recomputation": {
+          "$ref": "#/$defs/result"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "inconclusive"
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "type",
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "operator_id",
+        "implementation_package",
+        "timestamp"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "operator_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "implementation_package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "experiment_id",
+        "metrics",
+        "evidence_ids",
+        "recomputed_from"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "experiment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recomputed_from": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "artifact_path",
+              "sha256"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "artifact_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[A-Fa-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "reported_value",
+              "recomputed_value",
+              "agreement"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reported_value": {
+                "type": [
+                  "number",
+                  "string",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "recomputed_value": {
+                "type": [
+                  "number",
+                  "string",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "unit": {
+                "type": "string"
+              },
+              "tolerance": {
+                "type": "number",
+                "minimum": 0
+              },
+              "agreement": {
+                "type": "string",
+                "enum": [
+                  "matches",
+                  "within_tolerance",
+                  "differs",
+                  "not_recomputable"
+                ]
+              },
+              "method": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "discrepancies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

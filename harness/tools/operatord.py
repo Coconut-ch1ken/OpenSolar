@@ -21,9 +21,11 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import shlex
+import shutil
 import sys
 import re
 from pathlib import Path
@@ -35,6 +37,11 @@ from typing import Any, Optional
 
 HOME = Path.home()
 HARNESS_DIR = Path(os.environ.get("HARNESS_DIR", HOME / ".solar" / "harness"))
+SPRINTS_DIR = Path(
+    os.environ.get("SOLAR_HARNESS_SPRINTS_DIR")
+    or os.environ.get("HARNESS_SPRINTS_DIR")
+    or HARNESS_DIR / "sprints"
+)
 PERSONAS_DIR = HARNESS_DIR / "personas"
 OPERATOR_DAEMON_DIR = HARNESS_DIR / "run" / "operator-daemons"
 PHYSICAL_OPERATORS_PATH = Path(
@@ -58,6 +65,21 @@ if sys.path and sys.path[0] != str(_LIB_DIR):
     sys.path.insert(0, str(_LIB_DIR))
 
 import file_lock_compat as fcntl  # noqa: E402
+try:
+    from developer_observability import (  # noqa: E402
+        enabled as _observability_enabled,
+        observe as _observe,
+        stable_id as _observation_id,
+    )
+except Exception:  # Observability must never become a worker dependency.
+    def _observe(*_args: Any, **_kwargs: Any) -> bool:
+        return False
+
+    def _observation_id(kind: str, *parts: Any) -> str:
+        return f"{kind}-unavailable"
+
+    def _observability_enabled() -> bool:
+        return False
 
 from operator_persona import (  # noqa: E402  (import after path setup)
     EVALUATOR_PROTOCOL_FILENAME,
@@ -190,6 +212,57 @@ def _configured_launch_command(config: dict) -> str:
     return str(config.get("launch_cmd") or "").strip()
 
 
+def _configured_launch_argv(config: dict) -> list[str]:
+    """Return an optional shell-free command declared by a physical operator."""
+    surface = config.get("surface")
+    raw = surface.get("launch_argv") if isinstance(surface, dict) else None
+    if raw is None:
+        raw = config.get("launch_argv")
+    if isinstance(raw, list) and raw and all(isinstance(part, str) and part for part in raw):
+        return list(raw)
+    return []
+
+
+def _is_codex_command_operator(config: dict[str, Any]) -> bool:
+    """Return whether a command-backend profile is backed by Codex CLI."""
+    if str(config.get("backend") or "").strip().lower() != "command":
+        return False
+    haystack = " ".join(
+        str(config.get(key) or "")
+        for key in (
+            "profile",
+            "provider",
+            "base_url",
+            "model_config",
+            "command",
+            "command_path",
+        )
+    ).lower()
+    return "codex" in haystack
+
+
+def _command_operator_environment(config: dict[str, Any]) -> dict[str, str]:
+    """Materialize platform-neutral environment declared by command profiles."""
+    if not _is_codex_command_operator(config):
+        return {}
+    model = str(config.get("model") or "").strip()
+    effort = str(config.get("reasoning_effort") or "").strip()
+    if not effort:
+        match = re.search(
+            r"(?:^|[;,\s])reasoning(?:_effort)?=([A-Za-z0-9_-]+)",
+            str(config.get("model_config") or ""),
+            re.IGNORECASE,
+        )
+        effort = match.group(1) if match else "medium"
+    env = {
+        "CODEX_REASONING_EFFORT": effort,
+        "PYTHONUTF8": "1",
+    }
+    if model:
+        env["CODEX_MODEL"] = model
+    return env
+
+
 def _claude_model_arg(model: str) -> str:
     value = str(model or "sonnet").strip().lower()
     if value in {"glm", "glm-5", "glm-5.1", "zhipu", "zhipu-glm-5.1"}:
@@ -319,9 +392,26 @@ def _materialize_envelope_context(result_dir: Path, envelope: dict) -> dict[str,
         env["TASK_ID"] = str(envelope["task_id"])
     if str(envelope.get("sprint_id") or "").strip():
         env["SID"] = str(envelope["sprint_id"])
+    identity_environment = {
+        "DISPATCH_ID": envelope.get("dispatch_id"),
+        "ATTEMPT_ID": envelope.get("attempt_id"),
+        "CORRELATION_ID": envelope.get("correlation_id"),
+        "CAUSATION_ID": envelope.get("causation_id"),
+        "GRAPH_DISPATCH_ID": envelope.get("graph_dispatch_id"),
+        "SCHEDULER_INPUT_SHA256": envelope.get("scheduler_input_sha256"),
+        "SOLAR_OBSERVABILITY_SPAN_ID": envelope.get("span_id"),
+        "SOLAR_OBSERVABILITY_PARENT_SPAN_ID": envelope.get("parent_span_id"),
+    }
+    for name, value in identity_environment.items():
+        if value not in {None, ""}:
+            env[name] = str(value)
+    candidate_ids = envelope.get("frozen_candidate_ids")
+    if isinstance(candidate_ids, list):
+        env["FROZEN_CANDIDATE_IDS_JSON"] = json.dumps(candidate_ids, ensure_ascii=False)
 
     allowed_output_roots = [
         HARNESS_DIR.expanduser().resolve(strict=False),
+        SPRINTS_DIR.expanduser().resolve(strict=False),
         result_dir.expanduser().resolve(strict=False),
     ]
     if work_dir:
@@ -345,18 +435,58 @@ def _materialize_envelope_context(result_dir: Path, envelope: dict) -> dict[str,
         env["RESULT_PATH"] = result_path
         env["PM_RESULT_PATH"] = result_path
     allowed_outputs: list[str] = []
-    for raw in envelope.get("expected_artifacts") or []:
+    output_publish_map: list[dict[str, str]] = []
+    direct_write_roots = [result_dir.expanduser().resolve(strict=False)]
+    if work_dir:
+        direct_write_roots.append(Path(work_dir).expanduser().resolve(strict=False))
+    # The native research-registry adapter validates its canonical handoff
+    # path against the frozen sprint/node identity before it executes and
+    # writes that exact path itself.  Generic model workers still use staged
+    # publication because their control-plane outputs can be replaced while
+    # they are running.
+    if str(envelope.get("operator_backend") or "").strip() == "research_operator_registry":
+        native_handoff = str(envelope.get("handoff_path") or "").strip()
+        if native_handoff:
+            direct_write_roots.append(authorized_output(native_handoff))
+    for index, raw in enumerate(envelope.get("expected_artifacts") or []):
         if not str(raw or "").strip():
             continue
         path = authorized_output(str(raw).strip())
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch(exist_ok=True)
-        allowed_outputs.append(str(path))
+        if any(path == root or path.is_relative_to(root) for root in direct_write_roots):
+            allowed_outputs.append(str(path))
+            continue
+
+        # Control-plane files such as task_graph.json are atomically replaced
+        # while an operator is running. Landlock file rules follow the inode,
+        # so an exact-path grant silently becomes read-only after replacement.
+        # Give the worker a stable task-local inode and publish it only after
+        # the sandboxed process has exited successfully.
+        staging_dir = result_dir / "declared-outputs"
+        staging_dir.mkdir(parents=True, exist_ok=True)
+        staging_path = _staging_output_path(staging_dir, index, path)
+        if path.is_file():
+            shutil.copyfile(path, staging_path)
+        else:
+            staging_path.touch(exist_ok=True)
+        allowed_outputs.append(str(staging_path))
+        output_publish_map.append(
+            {
+                "write_path": str(staging_path),
+                "publish_path": str(path),
+                "initial_sha256": hashlib.sha256(staging_path.read_bytes()).hexdigest(),
+            }
+        )
     if result_path:
         allowed_outputs.append(str(Path(result_path).expanduser()))
     if allowed_outputs:
         env["SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON"] = json.dumps(
             sorted(set(allowed_outputs)), ensure_ascii=False
+        )
+    if output_publish_map:
+        env["SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON"] = json.dumps(
+            output_publish_map, ensure_ascii=False
         )
     pm_context = str(envelope.get("pm_context") or "").strip()
     if pm_context:
@@ -364,8 +494,239 @@ def _materialize_envelope_context(result_dir: Path, envelope: dict) -> dict[str,
     env["TASK_DIR"] = str(result_dir)
     env["OUTPUT_LOG"] = str(result_dir / "output.log")
     env["HARNESS_DIR"] = str(HARNESS_DIR)
-    env["SPRINTS_DIR"] = str(HARNESS_DIR / "sprints")
+    env["SPRINTS_DIR"] = str(SPRINTS_DIR)
     return env
+
+
+def _staging_output_path(staging_dir: Path, index: int, publish_path: Path) -> Path:
+    """Keep staged output paths below conservative Windows path-length limits."""
+    candidate = staging_dir / f"{index:02d}-{publish_path.name}"
+    if len(str(candidate)) < 240:
+        return candidate
+    digest = hashlib.sha256(str(publish_path).encode("utf-8")).hexdigest()[:16]
+    suffix = publish_path.suffix[-12:] or ".out"
+    shortened = staging_dir / f"{index:02d}-{digest}{suffix}"
+    if len(str(shortened)) < 240:
+        return shortened
+    return staging_dir / str(index)
+
+
+def _persistent_writable_snapshot(
+    exec_env: dict[str, str],
+    *,
+    ephemeral_root: Path,
+) -> dict[str, Any]:
+    """Hash persistent writable grants around one provider invocation.
+
+    Provider wrappers may write anywhere below the bound work directory, not
+    only declared output files.  A safe pre-work fallback therefore needs a
+    whole-grant observation.  Wrapper-owned task bookkeeping below
+    ``ephemeral_root`` is deliberately excluded.
+    """
+    roots: list[Path] = []
+    declared_roots: set[Path] = set()
+    work_dir = str(exec_env.get("CODEX_WORKDIR") or exec_env.get("WORK_DIR") or "").strip()
+    if work_dir:
+        roots.append(Path(work_dir).expanduser().resolve(strict=False))
+    try:
+        declared = json.loads(exec_env.get("SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON") or "[]")
+    except (TypeError, ValueError):
+        declared = []
+    for value in declared if isinstance(declared, list) else []:
+        if isinstance(value, str) and value.strip():
+            declared_root = Path(value).expanduser().resolve(strict=False)
+            roots.append(declared_root)
+            declared_roots.add(declared_root)
+
+    ordered: list[Path] = []
+    for root in roots:
+        if (root == ephemeral_root or root.is_relative_to(ephemeral_root)) and root not in declared_roots:
+            continue
+        if any(root == kept or root.is_relative_to(kept) for kept in ordered if kept.is_dir()):
+            continue
+        ordered.append(root)
+
+    try:
+        max_files = max(1, int(os.environ.get("SOLAR_EFFECT_SNAPSHOT_MAX_FILES", "5000") or 5000))
+        max_bytes = max(1, int(os.environ.get("SOLAR_EFFECT_SNAPSHOT_MAX_BYTES", str(512 * 1024 * 1024))))
+    except (TypeError, ValueError):
+        max_files = 5000
+        max_bytes = 512 * 1024 * 1024
+    entries: dict[str, dict[str, Any]] = {}
+    total_bytes = 0
+    complete = True
+    error = ""
+
+    def observe(path: Path) -> None:
+        nonlocal total_bytes, complete, error
+        if len(entries) >= max_files:
+            complete = False
+            error = "snapshot_file_limit_exceeded"
+            return
+        try:
+            if path.is_symlink():
+                entries[str(path)] = {"kind": "symlink", "target": os.readlink(path)}
+                return
+            if path.is_dir():
+                entries[str(path)] = {"kind": "directory"}
+                return
+            if path.is_file():
+                size = path.stat().st_size
+                total_bytes += size
+                if total_bytes > max_bytes:
+                    complete = False
+                    error = "snapshot_byte_limit_exceeded"
+                    return
+                entries[str(path)] = {
+                    "kind": "file",
+                    "size": size,
+                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                }
+                return
+            entries[str(path)] = {"kind": "missing"}
+        except OSError as exc:
+            complete = False
+            error = f"snapshot_error:{type(exc).__name__}"
+
+    for root in ordered:
+        if not complete:
+            break
+        observe(root)
+        if root.is_dir() and not root.is_symlink():
+            try:
+                descendants = sorted(root.rglob("*"), key=lambda item: str(item))
+            except OSError as exc:
+                complete = False
+                error = f"snapshot_walk_error:{type(exc).__name__}"
+                break
+            for path in descendants:
+                if path == ephemeral_root or path.is_relative_to(ephemeral_root):
+                    continue
+                observe(path)
+                if not complete:
+                    break
+    return {
+        "schema_version": "solar.persistent_writable_snapshot.v1",
+        "complete": complete,
+        "error": error,
+        "roots": [str(root) for root in ordered],
+        "entry_count": len(entries),
+        "total_bytes": total_bytes,
+        "entries": entries,
+    }
+
+
+def _persistent_effects_receipt(
+    before: dict[str, Any],
+    after: dict[str, Any],
+    *,
+    published_outputs: list[str],
+    publish_attempted: bool,
+) -> dict[str, Any]:
+    before_entries = before.get("entries") if isinstance(before.get("entries"), dict) else {}
+    after_entries = after.get("entries") if isinstance(after.get("entries"), dict) else {}
+    changed = sorted(
+        path
+        for path in set(before_entries) | set(after_entries)
+        if before_entries.get(path) != after_entries.get(path)
+    )
+    complete = bool(before.get("complete") is True and after.get("complete") is True)
+    unknown = not complete
+    return {
+        "schema_version": "solar.operator_effects_receipt.v1",
+        "observed": True,
+        "complete": complete,
+        "unknown": unknown,
+        "persistent_roots": list(before.get("roots") or []),
+        "before_entry_count": int(before.get("entry_count") or 0),
+        "after_entry_count": int(after.get("entry_count") or 0),
+        "changed_persistent_paths": changed[:200],
+        "changed_path_count": len(changed),
+        "outputs_changed": bool(changed),
+        "publish_attempted": bool(publish_attempted),
+        "outputs_published": bool(published_outputs),
+        "published_outputs": list(published_outputs),
+        "effects_started": bool(changed or published_outputs or unknown),
+        "before_error": str(before.get("error") or ""),
+        "after_error": str(after.get("error") or ""),
+    }
+
+
+def _validated_provider_invocation_receipt(
+    result_dir: Path,
+    envelope: dict[str, Any],
+) -> dict[str, Any] | None:
+    path = result_dir / "provider-invocation-receipt.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    identifiers = payload.get("identifiers") if isinstance(payload.get("identifiers"), dict) else {}
+    for key in (
+        "task_id",
+        "dispatch_id",
+        "attempt_id",
+        "correlation_id",
+        "graph_dispatch_id",
+        "scheduler_input_sha256",
+    ):
+        expected = str(envelope.get(key) or "").strip()
+        observed = str(identifiers.get(key) or "").strip()
+        if expected != observed:
+            return None
+    expected_candidates = [
+        str(value).strip()
+        for value in envelope.get("frozen_candidate_ids") or []
+        if str(value).strip()
+    ]
+    observed_candidates = [
+        str(value).strip()
+        for value in identifiers.get("frozen_candidate_ids") or []
+        if str(value).strip()
+    ]
+    if expected_candidates != observed_candidates:
+        return None
+    receipt = dict(payload)
+    receipt["path"] = str(path)
+    receipt["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return receipt
+
+
+def _publish_staged_outputs(exec_env: dict[str, str]) -> list[str]:
+    """Publish task-local declared outputs after the sandbox exits cleanly."""
+    raw = exec_env.get("SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON") or "[]"
+    mappings = json.loads(raw)
+    if not isinstance(mappings, list):
+        raise ValueError("operator output publish map must be a list")
+
+    published: list[str] = []
+    for index, item in enumerate(mappings):
+        if not isinstance(item, dict):
+            raise ValueError("operator output publish map entries must be objects")
+        write_path = Path(str(item.get("write_path") or "")).expanduser()
+        publish_path = Path(str(item.get("publish_path") or "")).expanduser()
+        if not write_path.is_file() or write_path.stat().st_size <= 0:
+            raise ValueError(f"declared output was not materialized: {write_path}")
+        initial_sha256 = str(item.get("initial_sha256") or "").strip()
+        current_sha256 = hashlib.sha256(write_path.read_bytes()).hexdigest()
+        if initial_sha256 and current_sha256 == initial_sha256:
+            raise ValueError(f"declared output was not updated: {write_path}")
+        publish_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = publish_path.with_name(
+            f".{publish_path.name}.operator-publish-{os.getpid()}-{index}.tmp"
+        )
+        try:
+            shutil.copyfile(write_path, temporary)
+            os.replace(temporary, publish_path)
+        finally:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+        published.append(str(publish_path))
+    return published
 
 
 def _claude_print_command(config: dict[str, Any]) -> list[str]:
@@ -430,7 +791,11 @@ def _register_worker_process(pid: int, envelope: dict) -> None:
         _info(f"worker registry registration skipped: {exc}")
 
 
-def _build_command(config: dict, envelope: dict) -> list[str]:
+def _build_command(
+    config: dict,
+    envelope: dict,
+    exec_env: dict[str, str] | None = None,
+) -> list[str]:
     """Return the shell command list to execute for this task.
 
     If the envelope carries an explicit ``command`` override, or if a command
@@ -443,6 +808,70 @@ def _build_command(config: dict, envelope: dict) -> list[str]:
 
     # Explicit command in the envelope takes highest priority.
     cmd_val = envelope.get("command")
+    # A scheduler envelope normally repeats the registry command.  Perform
+    # native-Windows translation before treating that repeated value as an
+    # arbitrary shell override; otherwise the POSIX snippet expands
+    # ``$HARNESS_DIR`` under the wrong shell and bypasses the native branch
+    # below.
+    effective_command = str(cmd_val or config.get("command") or "").strip()
+    if os.name == "nt" and _is_codex_command_operator(config) and "codex_operator.py" in effective_command:
+        return [sys.executable, str(HARNESS_DIR / "tools" / "codex_operator.py")]
+    if (
+        os.name == "nt"
+        and backend == "command"
+        and "plugins/autosci/bin/autosci_bridge.py" in effective_command.replace("\\", "/")
+    ):
+        envelope_path = str((exec_env or {}).get("SOLAR_OPERATOR_ENVELOPE_JSON") or "").strip()
+        action_match = re.search(r"--action\s+[\"']?([A-Za-z0-9_-]+)", effective_command)
+        if not envelope_path or action_match is None:
+            return [
+                sys.executable,
+                "-c",
+                "import sys; print('AutoSci bridge action or envelope is unavailable', file=sys.stderr); raise SystemExit(127)",
+            ]
+        return [
+            str(os.environ.get("SOLAR_AUTOSCI_PYTHON") or sys.executable),
+            str(HARNESS_DIR / "plugins" / "autosci" / "bin" / "autosci_bridge.py"),
+            "run",
+            "--action",
+            action_match.group(1),
+            "--envelope",
+            envelope_path,
+        ]
+    if (
+        os.name == "nt"
+        and backend == "command"
+        and "plugins/autosci/bin/fixed_research_node_adapter.py" in effective_command.replace("\\", "/")
+    ):
+        envelope_path = str((exec_env or {}).get("SOLAR_OPERATOR_ENVELOPE_JSON") or "").strip()
+        if not envelope_path:
+            return [
+                sys.executable,
+                "-c",
+                "import sys; print('fixed research envelope path is unavailable', file=sys.stderr); raise SystemExit(127)",
+            ]
+        return [
+            str(os.environ.get("SOLAR_AUTOSCI_PYTHON") or sys.executable),
+            str(HARNESS_DIR / "plugins" / "autosci" / "bin" / "fixed_research_node_adapter.py"),
+            "--envelope",
+            envelope_path,
+        ]
+    if backend == "research_operator_registry":
+        envelope_path = str((exec_env or {}).get("SOLAR_OPERATOR_ENVELOPE_JSON") or "").strip()
+        adapter = HARNESS_DIR / "tools" / "research_operator_registry_adapter.py"
+        if not envelope_path or not adapter.is_file():
+            reason = "registry envelope path is unavailable" if not envelope_path else "registry adapter is unavailable"
+            return [
+                sys.executable,
+                "-c",
+                f"import sys; print({reason!r}, file=sys.stderr); raise SystemExit(127)",
+            ]
+        return [
+            str(os.environ.get("SOLAR_AUTOSCI_PYTHON") or sys.executable),
+            str(adapter),
+            "--envelope",
+            envelope_path,
+        ]
     if cmd_val:
         if isinstance(cmd_val, list):
             return [str(c) for c in cmd_val]
@@ -482,11 +911,45 @@ def _build_command(config: dict, envelope: dict) -> list[str]:
         # existing login-shell behavior below.
         return ["bash", "-c", command_text]
 
+    # A physical operator may declare argv directly when shell translation is
+    # undesirable (notably native Windows paths being handed to WSL bash).
+    launch_argv = _configured_launch_argv(config)
+    if backend == "command" and launch_argv:
+        return launch_argv
+
+    # The physical-operator registry is shared with macOS and historically
+    # stores Codex launches as POSIX shell snippets.  On native Windows those
+    # snippets cannot execute (``VAR=x``, ``$HARNESS_DIR``, ``python3``, and
+    # ``/opt/homebrew/bin`` are all POSIX-specific).  Launch the same provider
+    # wrapper directly with the active Python runtime; the wrapper resolves the
+    # installed ``codex.exe`` and consumes the dispatch/envelope environment.
+    if os.name == "nt" and _is_codex_command_operator(config):
+        return [sys.executable, str(HARNESS_DIR / "tools" / "codex_operator.py")]
+
+    configured_command = str(config.get("command") or "").strip()
+    if (
+        os.name == "nt"
+        and backend == "command"
+        and "plugins/autosci/bin/fixed_research_node_adapter.py" in configured_command.replace("\\", "/")
+    ):
+        envelope_path = str((exec_env or {}).get("SOLAR_OPERATOR_ENVELOPE_JSON") or "").strip()
+        if not envelope_path:
+            return [
+                sys.executable,
+                "-c",
+                "import sys; print('fixed research envelope path is unavailable', file=sys.stderr); raise SystemExit(127)",
+            ]
+        return [
+            str(os.environ.get("SOLAR_AUTOSCI_PYTHON") or sys.executable),
+            str(HARNESS_DIR / "plugins" / "autosci" / "bin" / "fixed_research_node_adapter.py"),
+            "--envelope",
+            envelope_path,
+        ]
+
     launch_cmd = _configured_launch_command(config)
     if backend == "command" and launch_cmd:
         return ["bash", "-lc", launch_cmd]
     if backend == "command":
-        configured_command = str(config.get("command") or "").strip()
         if configured_command:
             return ["bash", "-lc", configured_command]
 
@@ -605,6 +1068,58 @@ def _apply_failure_runtime_override(
     )
 
 
+_TERMINAL_EXCEPTION_RE = re.compile(
+    r"^(?:[A-Za-z_][A-Za-z0-9_]*\.)*[A-Za-z_][A-Za-z0-9_]*(?:Error|Exception):\s*"
+)
+
+
+def _failure_runtime_override_skip_reason(failure_text: str) -> str:
+    """Keep local closeout/orchestration failures from poisoning operator health.
+
+    A worker log can contain a recoverable provider error before a later local
+    scheduler, path, or configuration exception.  Failure flow-control scans
+    the whole tail, so without this causal guard that stale provider text can
+    put an otherwise healthy operator into cooldown.  A terminal provider
+    exception still reaches the normal classifier.
+    """
+    # Research-registry and other structured workers emit a Solar node
+    # envelope as their final JSON line.  That typed error is authoritative:
+    # provider warnings earlier in stdout must not be reclassified as the
+    # cause of the whole operator failure.
+    for line in reversed(str(failure_text or "").splitlines()):
+        try:
+            payload = json.loads(line.strip())
+        except (TypeError, ValueError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        receipt = payload.get("receipt") if isinstance(payload.get("receipt"), dict) else payload
+        error = receipt.get("error") if isinstance(receipt.get("error"), dict) else None
+        if not error:
+            continue
+        error_type = str(error.get("type") or "").strip().lower()
+        if not error_type:
+            break
+        if any(token in error_type for token in ("quota", "rate_limit", "auth")):
+            return ""
+        return f"typed_non_flow_control:{error_type}"
+
+    terminal_exception = ""
+    for line in reversed(str(failure_text or "").splitlines()):
+        candidate = line.strip()
+        if _TERMINAL_EXCEPTION_RE.match(candidate):
+            terminal_exception = candidate
+            break
+    if not terminal_exception:
+        return ""
+
+    import operator_flow_control as ofc  # noqa: E402
+
+    if ofc.classify_failure_state(terminal_exception):
+        return ""
+    return "terminal_local_failure"
+
+
 # ---------------------------------------------------------------------------
 # Subcommand: daemon
 # ---------------------------------------------------------------------------
@@ -710,11 +1225,33 @@ def cmd_daemon(args: argparse.Namespace) -> int:
         try:
             os.killpg(pid, signal.SIGTERM)
             _info(f"Sent SIGTERM to worker process group pid={pid} ({reason})")
+            _observe(
+                "operator.teardown.term_sent",
+                component="operatord",
+                operator=operator_id,
+                operation="operator_teardown",
+                operation_id=_observation_id("operation", operator_id, pid, reason, "teardown"),
+                phase="point",
+                status="sent",
+                data={"pid": int(pid), "signal": "SIGTERM", "reason": reason, "target_kind": "process_group"},
+                provenance="observed",
+            )
             return True
         except Exception:
             try:
                 os.kill(pid, signal.SIGTERM)
                 _info(f"Sent SIGTERM to worker pid={pid} ({reason})")
+                _observe(
+                    "operator.teardown.term_sent",
+                    component="operatord",
+                    operator=operator_id,
+                    operation="operator_teardown",
+                    operation_id=_observation_id("operation", operator_id, pid, reason, "teardown"),
+                    phase="point",
+                    status="sent",
+                    data={"pid": int(pid), "signal": "SIGTERM", "reason": reason, "target_kind": "process"},
+                    provenance="observed",
+                )
                 return True
             except Exception as exc:
                 _info(f"Unable to terminate worker pid={pid} ({reason}): {exc}")
@@ -728,11 +1265,33 @@ def cmd_daemon(args: argparse.Namespace) -> int:
         try:
             os.killpg(pid, signal.SIGKILL)
             _info(f"Sent SIGKILL to worker process group pid={pid} ({reason})")
+            _observe(
+                "operator.teardown.kill_sent",
+                component="operatord",
+                operator=operator_id,
+                operation="operator_teardown",
+                operation_id=_observation_id("operation", operator_id, pid, reason, "teardown"),
+                phase="point",
+                status="sent",
+                data={"pid": int(pid), "signal": "SIGKILL", "reason": reason, "target_kind": "process_group"},
+                provenance="observed",
+            )
             return True
         except Exception:
             try:
                 os.kill(pid, signal.SIGKILL)
                 _info(f"Sent SIGKILL to worker pid={pid} ({reason})")
+                _observe(
+                    "operator.teardown.kill_sent",
+                    component="operatord",
+                    operator=operator_id,
+                    operation="operator_teardown",
+                    operation_id=_observation_id("operation", operator_id, pid, reason, "teardown"),
+                    phase="point",
+                    status="sent",
+                    data={"pid": int(pid), "signal": "SIGKILL", "reason": reason, "target_kind": "process"},
+                    provenance="observed",
+                )
                 return True
             except Exception as exc:
                 _info(f"Unable to force kill worker pid={pid} ({reason}): {exc}")
@@ -865,6 +1424,24 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                     leased_task_id = None
 
             task_id, envelope, envelope_path = tasks[0]
+            observation_ids = {
+                "sprint_id": str(envelope.get("sprint_id") or "") or None,
+                "node_id": str(envelope.get("node_id") or "") or None,
+                "task_id": task_id,
+                "dispatch_id": str(envelope.get("dispatch_id") or task_id),
+                "attempt_id": str(envelope.get("attempt_id") or "1"),
+                "correlation_id": str(envelope.get("correlation_id") or task_id),
+                "causation_id": str(envelope.get("causation_id") or envelope.get("dispatch_id") or task_id),
+            }
+            task_operation_id = _observation_id(
+                "operation",
+                observation_ids["dispatch_id"],
+                observation_ids["attempt_id"],
+                "operatord-task",
+            )
+            task_span_id = _observation_id("span", task_operation_id)
+            observation_ids["span_id"] = task_span_id
+            observation_ids["parent_span_id"] = str(envelope.get("span_id") or "") or None
 
             if lease is None or lease.get("task_id") != task_id:
                 recovered_lease = None
@@ -956,6 +1533,7 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                 continue
 
             _info(f"Claiming task {task_id}")
+            claim_started_ns = time.monotonic_ns()
             try:
                 update_operator_lease_state(operator_id, "running")
             except RuntimeError as exc:
@@ -968,6 +1546,23 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                     break
                 time.sleep(poll_interval)
                 continue
+
+            _observe(
+                "operator.task.claimed",
+                component="operatord",
+                operator=operator_id,
+                operation="operator_task",
+                operation_id=task_operation_id,
+                phase="started",
+                identifiers=observation_ids,
+                data={
+                    "lease_state": "running",
+                    "claim_duration_ms": (time.monotonic_ns() - claim_started_ns) / 1_000_000,
+                    "provider": model_route.get("effective_provider"),
+                    "model": model_route.get("effective_model"),
+                },
+                provenance="observed",
+            )
 
             _state["current_state"] = "running"
             write_heartbeat(
@@ -985,12 +1580,79 @@ def cmd_daemon(args: argparse.Namespace) -> int:
             result_status: str = "failed"
             exit_code: int = -1
             log_lines: list[str] = []
+            worker_operation_id = _observation_id("operation", task_operation_id, "worker")
+            worker_span_id = _observation_id("span", worker_operation_id)
+            worker_ids = dict(observation_ids)
+            worker_ids["span_id"] = worker_span_id
+            worker_ids["parent_span_id"] = task_span_id
+            worker_started = False
+            worker_terminal_emitted = False
 
             result_dir = OPERATOR_RESULTS_DIR / operator_id / task_id
             result_dir.mkdir(parents=True, exist_ok=True)
             log_path = result_dir / "output.log"
             exec_env = os.environ.copy()
-            exec_env.update(_materialize_envelope_context(result_dir, envelope))
+            persistent_before: dict[str, Any] = {
+                "complete": False,
+                "error": "envelope_not_materialized",
+                "roots": [],
+                "entries": {},
+            }
+            published_outputs: list[str] = []
+            publish_attempted = False
+            child_envelope = dict(envelope)
+            if _observability_enabled():
+                child_envelope["span_id"] = worker_span_id
+                child_envelope["parent_span_id"] = task_span_id
+                child_envelope["causation_id"] = observation_ids["dispatch_id"]
+            try:
+                exec_env.update(_materialize_envelope_context(result_dir, child_envelope))
+                persistent_before = _persistent_writable_snapshot(
+                    exec_env,
+                    ephemeral_root=result_dir.resolve(strict=False),
+                )
+            except Exception as exc:
+                failure = f"operator envelope materialization failed: {type(exc).__name__}: {exc}"
+                _info(failure)
+                log_path.write_text(f"[ERROR] {failure}\n", encoding="utf-8")
+                finished_at = _now_utc()
+                result_path = write_result(
+                    operator_id=operator_id,
+                    task_id=task_id,
+                    sprint_id=sprint_id,
+                    node_id=node_id,
+                    status="failed_envelope_materialization",
+                    exit_code=78,
+                    started_at=started_at,
+                    finished_at=finished_at,
+                    log_tail=f"[ERROR] {failure}",
+                    model_route=model_route,
+                    graph_path=envelope.get("graph_path"),
+                )
+                _info(f"Result written: {result_path}")
+                try:
+                    envelope_path.unlink()
+                except Exception:
+                    pass
+                try:
+                    release_operator_lease(operator_id, reason="failed_envelope_materialization")
+                except Exception:
+                    pass
+                _state["current_proc"] = None
+                _state["current_task_id"] = None
+                _state["current_state"] = "idle"
+                processed += 1
+                write_heartbeat(
+                    operator_id,
+                    "idle",
+                    resolved_persona=resolved_persona,
+                    model_route=model_route,
+                )
+                if once:
+                    break
+                time.sleep(poll_interval)
+                continue
+            exec_env.update(_command_operator_environment(config))
             pm_result_path = _pm_result_path(envelope) if _is_pm_dispatch_task(envelope) else None
             if pm_result_path is not None:
                 try:
@@ -1005,7 +1667,7 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                 except Exception as exc:
                     _info(f"Unable to prepare pm result {pm_result_path}: {exc}")
 
-            cmd = _build_command(config, envelope)
+            cmd = _build_command(config, envelope, exec_env)
             _info(f"Executing: {' '.join(shlex.quote(part) for part in cmd[:8])}")
 
             try:
@@ -1019,6 +1681,9 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                     env=exec_env,
                     start_new_session=os.name != "nt",
                 )
+                worker_started_ns = time.monotonic_ns()
+                first_output_observed = False
+                worker_started = True
                 _state["current_proc"] = proc
                 _state["current_task_id"] = task_id
                 _register_worker_process(proc.pid, envelope)
@@ -1034,6 +1699,21 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                     worker_pid=int(proc.pid),
                     resolved_persona=resolved_persona,
                     model_route=model_route,
+                )
+                _observe(
+                    "operator.worker.started",
+                    component="operatord",
+                    operator=operator_id,
+                    operation="operator_worker",
+                    operation_id=worker_operation_id,
+                    phase="started",
+                    identifiers=worker_ids,
+                    data={
+                        "pid": int(proc.pid),
+                        "provider": model_route.get("effective_provider"),
+                        "model": model_route.get("effective_model"),
+                    },
+                    provenance="observed",
                 )
 
                 with open(log_path, "w", encoding="utf-8") as log_f:
@@ -1089,7 +1769,33 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                                 proc.wait(timeout=5)
                             except subprocess.TimeoutExpired:
                                 _kill_worker_force(int(proc.pid), reason="task_timeout_escalation")
-                                proc.wait(timeout=5)
+                                try:
+                                    proc.wait(timeout=5)
+                                finally:
+                                    survivor = _pid_exists(int(proc.pid))
+                                    _observe(
+                                        "operator.teardown.survivors_measured",
+                                        component="operatord",
+                                        operator=operator_id,
+                                        operation="operator_teardown",
+                                        operation_id=_observation_id("operation", operator_id, proc.pid, "task_timeout", "teardown"),
+                                        phase="point",
+                                        status="survivors" if survivor else "clear",
+                                        data={"survivor_count": int(survivor), "survivor_pids": [int(proc.pid)] if survivor else []},
+                                        provenance="observed",
+                                    )
+                            else:
+                                _observe(
+                                    "operator.teardown.survivors_measured",
+                                    component="operatord",
+                                    operator=operator_id,
+                                    operation="operator_teardown",
+                                    operation_id=_observation_id("operation", operator_id, proc.pid, "task_timeout", "teardown"),
+                                    phase="point",
+                                    status="clear",
+                                    data={"survivor_count": 0, "survivor_pids": []},
+                                    provenance="observed",
+                                )
                             break
 
                         if line_queue is not None:
@@ -1111,16 +1817,41 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                                 continue
                             lines = [key.fileobj.readline() for key, _mask in events]
 
+                        saw_eof = False
                         for line in lines:
                             if not line:
+                                saw_eof = True
                                 continue
+                            if not first_output_observed:
+                                first_output_observed = True
+                                _observe(
+                                    "operator.worker.first_output",
+                                    component="operatord",
+                                    operator=operator_id,
+                                    operation="operator_worker",
+                                    operation_id=worker_operation_id,
+                                    phase="progress",
+                                    identifiers=worker_ids,
+                                    data={
+                                        "elapsed_ms": (
+                                            time.monotonic_ns() - worker_started_ns
+                                        )
+                                        / 1_000_000,
+                                    },
+                                    provenance="observed",
+                                )
                             from operator_runtime import scrub_secrets  # noqa: E402
                             scrubbed = scrub_secrets(line)
                             log_f.write(scrubbed)
                             log_f.flush()
                             log_lines.append(scrubbed.rstrip())
 
-                        if proc.poll() is not None:
+                        # A short-lived worker can exit after filling the pipe but
+                        # before the daemon consumes it.  ``poll()`` only says the
+                        # process is terminal; buffered output (including quota or
+                        # auth errors) may still be unread.  Stop only after EOF so
+                        # failure flow-control classifies the actual trailing error.
+                        if saw_eof and proc.poll() is not None:
                             break
 
                 proc.wait()
@@ -1130,12 +1861,55 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                     result_status = "failed_timeout"
                 else:
                     result_status = "completed" if exit_code == 0 else "failed"
+                _observe(
+                    "operator.worker.exited",
+                    component="operatord",
+                    operator=operator_id,
+                    operation="operator_worker",
+                    operation_id=worker_operation_id,
+                    phase="completed",
+                    terminal=True,
+                    identifiers=worker_ids,
+                    data={
+                        "exit_code": exit_code,
+                        "status": result_status,
+                        "timed_out": timed_out,
+                        "active_duration_ms": (
+                            time.monotonic_ns() - worker_started_ns
+                        )
+                        / 1_000_000,
+                        "first_output_observed": first_output_observed,
+                    },
+                    provenance="observed",
+                )
+                worker_terminal_emitted = True
 
             except Exception as exc:
                 _info(f"Execution error: {exc}")
                 log_lines.append(f"[ERROR] {exc}")
                 result_status = "error"
             finally:
+                if worker_started and not worker_terminal_emitted:
+                    _observe(
+                        "operator.worker.exited",
+                        component="operatord",
+                        operator=operator_id,
+                        operation="operator_worker",
+                        operation_id=worker_operation_id,
+                        phase="completed",
+                        terminal=True,
+                        status="error",
+                        identifiers=worker_ids,
+                        data={
+                            "exit_code": exit_code,
+                            "status": "error",
+                            "timed_out": False,
+                            "active_duration_ms": (
+                                time.monotonic_ns() - worker_started_ns
+                            ) / 1_000_000,
+                        },
+                        provenance="observed",
+                    )
                 _state["current_proc"] = None
                 _state["current_task_id"] = None
 
@@ -1163,6 +1937,17 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                 result_status = "failed_nonfinal_output"
                 exit_code = exit_code or 65
 
+            if result_status == "completed":
+                publish_attempted = True
+                try:
+                    published_outputs = _publish_staged_outputs(exec_env)
+                    for published_path in published_outputs:
+                        log_lines.append(f"[output-publish] {published_path}")
+                except Exception as exc:
+                    log_lines.append(f"[ERROR] declared output publish failed: {exc}")
+                    result_status = "failed_contract_closeout"
+                    exit_code = exit_code or 67
+
             if result_status == "completed" and pm_result_path is not None:
                 if not pm_result_path.exists():
                     log_lines.append(f"[ERROR] missing pm_result: {pm_result_path}")
@@ -1183,6 +1968,22 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                         pass
 
             if result_status == "completed" and pm_result_path is not None:
+                closeout_started_ns = time.monotonic_ns()
+                closeout_operation_id = _observation_id("operation", task_operation_id, "closeout")
+                closeout_ids = dict(observation_ids)
+                closeout_ids["span_id"] = _observation_id("span", closeout_operation_id)
+                closeout_ids["parent_span_id"] = task_span_id
+                _observe(
+                    "operator.closeout.started",
+                    component="operatord",
+                    operator=operator_id,
+                    operation="operator_closeout",
+                    operation_id=closeout_operation_id,
+                    phase="started",
+                    identifiers=closeout_ids,
+                    data={"hook": "pm_dispatch.complete"},
+                    provenance="observed",
+                )
                 try:
                     completed = subprocess.run(
                         _pm_dispatch_complete_command(task_id),
@@ -1207,26 +2008,140 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                     log_lines.append(f"[WARN] pm_dispatch complete hook failed: {exc}")
                     result_status = "failed_contract_closeout"
                     exit_code = exit_code or 67
+                _observe(
+                    "operator.closeout.completed",
+                    component="operatord",
+                    operator=operator_id,
+                    operation="operator_closeout",
+                    operation_id=closeout_operation_id,
+                    phase="completed",
+                    terminal=True,
+                    identifiers=closeout_ids,
+                    data={
+                        "hook": "pm_dispatch.complete",
+                        "status": result_status,
+                        "duration_ms": (
+                            time.monotonic_ns() - closeout_started_ns
+                        )
+                        / 1_000_000,
+                    },
+                    provenance="observed",
+                )
 
             # ── Write result artifact ─────────────────────────────────────────────
             log_tail = "\n".join(log_lines[-50:])
+            provider_receipt = _validated_provider_invocation_receipt(result_dir, envelope)
             flow_control_decision: dict[str, Any] | None = None
-            if result_status != "completed" and log_tail.strip():
-                try:
-                    flow_control_decision = _apply_failure_runtime_override(
-                        operator_id=operator_id,
-                        config=config,
-                        envelope=envelope,
-                        task_dir=result_dir,
-                        failure_text=log_tail,
-                    )
-                except Exception as exc:
-                    log_lines.append(f"[WARN] failure flow control hook failed: {exc}")
+            if result_status != "completed" and (log_tail.strip() or provider_receipt is not None):
+                structured_stream = (
+                    provider_receipt.get("structured_stream")
+                    if isinstance(provider_receipt, dict)
+                    and isinstance(provider_receipt.get("structured_stream"), dict)
+                    else {}
+                )
+                structured_failure = str(
+                    structured_stream.get("terminal_error_message") or ""
+                ).strip()
+                if provider_receipt is not None and provider_receipt.get("provider_admission_refusal") is not True:
+                    skip_reason = "provider_receipt_not_admission_refusal"
                 else:
-                    runtime_state = str((flow_control_decision or {}).get("runtime_state") or "").strip()
-                    if runtime_state:
-                        log_lines.append(f"[flow-control] runtime_state={runtime_state}")
+                    skip_reason = _failure_runtime_override_skip_reason(
+                        structured_failure if provider_receipt is not None else log_tail
+                    )
+                if skip_reason:
+                    flow_control_decision = {
+                        "runtime_state": "",
+                        "task_control": None,
+                        "skipped": True,
+                        "reason": skip_reason,
+                    }
+                    log_lines.append(f"[flow-control] skipped={skip_reason}")
+                else:
+                    try:
+                        flow_control_decision = _apply_failure_runtime_override(
+                            operator_id=operator_id,
+                            config=config,
+                            envelope=envelope,
+                            task_dir=result_dir,
+                            failure_text=(
+                                structured_failure
+                                if provider_receipt is not None
+                                else log_tail
+                            ),
+                        )
+                    except Exception as exc:
+                        log_lines.append(f"[WARN] failure flow control hook failed: {exc}")
+                    else:
+                        runtime_state = str((flow_control_decision or {}).get("runtime_state") or "").strip()
+                        if runtime_state:
+                            log_lines.append(f"[flow-control] runtime_state={runtime_state}")
+                        task_control = (flow_control_decision or {}).get("task_control")
+                        action = (
+                            str(task_control.get("action") or "defer")
+                            if isinstance(task_control, dict)
+                            else "operator_blocked_no_defer"
+                            if runtime_state in {"cooldown", "auth_expired"}
+                            else "no_retry"
+                        )
+                        flow_operation_id = _observation_id(
+                            "operation", observation_ids.get("dispatch_id"), observation_ids.get("attempt_id"), "flow-control"
+                        )
+                        _observe(
+                            "flow_control.decision",
+                            component="operatord",
+                            operator=operator_id,
+                            operation="flow_control",
+                            operation_id=flow_operation_id,
+                            phase="point",
+                            status=runtime_state or "unclassified",
+                            identifiers={
+                                **observation_ids,
+                                "span_id": _observation_id("span", flow_operation_id),
+                                "parent_span_id": worker_span_id,
+                            },
+                            data={"runtime_state": runtime_state or "unclassified", "decision": action},
+                            provenance="observed",
+                        )
                 log_tail = "\n".join(log_lines[-50:])
+            persistent_after = _persistent_writable_snapshot(
+                exec_env,
+                ephemeral_root=result_dir.resolve(strict=False),
+            )
+            effects_receipt = _persistent_effects_receipt(
+                persistent_before,
+                persistent_after,
+                published_outputs=published_outputs,
+                publish_attempted=publish_attempted,
+            )
+            typed_error: dict[str, Any] | None = None
+            typed_flow_control: dict[str, Any] | None = None
+            if provider_receipt and provider_receipt.get("provider_admission_refusal") is True:
+                raw_error = provider_receipt.get("error")
+                if isinstance(raw_error, dict):
+                    typed_error = dict(raw_error)
+                raw_flow = provider_receipt.get("failure_flow_control")
+                if isinstance(raw_flow, dict):
+                    typed_flow_control = dict(raw_flow)
+                    typed_flow_control["expires_at"] = str(
+                        (flow_control_decision or {}).get("expires_at") or ""
+                    )
+                    if flow_control_decision:
+                        typed_flow_control["runtime_state"] = str(
+                            flow_control_decision.get("runtime_state")
+                            or typed_flow_control.get("runtime_state")
+                            or ""
+                        )
+            result_identifiers = {
+                key: envelope.get(key)
+                for key in (
+                    "dispatch_id",
+                    "attempt_id",
+                    "correlation_id",
+                    "graph_dispatch_id",
+                    "scheduler_input_sha256",
+                    "frozen_candidate_ids",
+                )
+            }
             result_path = write_result(
                 operator_id=operator_id,
                 task_id=task_id,
@@ -1238,8 +2153,26 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                 finished_at=finished_at,
                 log_tail=log_tail,
                 model_route=model_route,
+                graph_path=envelope.get("graph_path"),
+                error=typed_error,
+                failure_flow_control=typed_flow_control,
+                identifiers=result_identifiers,
+                effects_receipt=effects_receipt,
+                provider_invocation_receipt=provider_receipt,
             )
             _info(f"Result written: {result_path}")
+            _observe(
+                "operator.result.persisted",
+                component="operatord",
+                operator=operator_id,
+                identifiers=observation_ids,
+                data={
+                    "status": result_status,
+                    "exit_code": exit_code,
+                    "result_filename": Path(result_path).name,
+                },
+                provenance="observed",
+            )
 
             if pm_result_path is not None and result_status != "completed":
                 try:
@@ -1282,6 +2215,29 @@ def cmd_daemon(args: argparse.Namespace) -> int:
                 release_operator_lease(operator_id, reason=result_status)
             except Exception:
                 pass
+            else:
+                _observe(
+                    "operator.lease.released",
+                    component="operatord",
+                    operator=operator_id,
+                    identifiers=observation_ids,
+                    data={"reason": result_status},
+                    provenance="observed",
+                )
+
+            _observe(
+                "operator.task.completed",
+                component="operatord",
+                operator=operator_id,
+                operation="operator_task",
+                operation_id=task_operation_id,
+                phase="completed",
+                terminal=True,
+                status=result_status,
+                identifiers=observation_ids,
+                data={"exit_code": exit_code, "result_status": result_status},
+                provenance="observed",
+            )
 
             processed += 1
             _state["current_state"] = "idle"

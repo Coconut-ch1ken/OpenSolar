@@ -145,7 +145,8 @@ def test_build_pm_intake_emits_capsule_plan_for_research_request():
     by_id = {node["id"]: node for node in nodes}
     assert by_id["R1"]["capability_capsule_id"] == "cap.research-retrieval"
     assert by_id["R4"]["capability_capsule_id"] == "cap.requirement-research-synthesizer"
-    assert by_id["R5"]["capability_capsule_id"] == "cap.requirement-compiler-verification"
+    assert by_id["R5"]["capability_capsule_id"] == "cap.requirement-research-synthesizer"
+    assert by_id["R6"]["capability_capsule_id"] == "cap.requirement-compiler-verification"
 
 
 def test_general_user_research_prompts_share_the_frontdoor_classification_contract():
@@ -163,6 +164,33 @@ def test_general_user_research_prompts_share_the_frontdoor_classification_contra
 
     assert all(router.classify_request_type(prompt) == router.RESEARCH for prompt in research_prompts)
     assert all(router.classify_request_type(prompt) != router.RESEARCH for prompt in delivery_prompts)
+
+
+def test_simple_explanation_preserves_direct_answer_through_pm_compilation():
+    router = _load_router()
+
+    payload = router.build_pm_intake(
+        "explain photosynthesis to a 5 year old",
+        sprint_id="sprint-direct-answer",
+        target_system="solar-harness",
+    )
+    requirement_ir = payload["requirement_ir"]
+    proposal = payload["compiled_artifacts"]["task_dag"]
+
+    assert payload["classification"] == router.DIRECT_ANSWER
+    assert payload["canonical_request_type"] == "direct_answer"
+    assert requirement_ir["request_type"] == "direct_answer"
+    assert requirement_ir["planner_hints"]["response_authority"] == "planner"
+    assert requirement_ir["planner_hints"]["preferred_outcome"] == "direct_answer"
+    assert requirement_ir["planner_hints"]["runtime_handoff_allowed"] is False
+    assert proposal["dag_variant"] == "direct_answer_candidate"
+    assert proposal["proposal_only"] is True
+    assert proposal["runtime_handoff_allowed"] is False
+    assert all(
+        row["verification_method"] == "direct_response_review"
+        for row in requirement_ir["requirements"]
+    )
+    assert router.validate_compiled_package(payload)["ok"] is True
 
 
 def test_live_dashboard_research_prompt_with_negative_scope_compiles_as_research():
@@ -211,8 +239,12 @@ def test_research_fallback_graph_is_valid_parallel_retrieval():
         assert {item["target"] for item in node["validation"]} == outputs
     assert set(by_id["R1"]["outputs"]).isdisjoint(by_id["R2"]["outputs"])
     assert by_id["R4"]["depends_on"] == ["R1", "R2", "R3"]
-    assert {
+    assert set(by_id["R4"]["outputs"]) == {
         "workspace/research/report/synthesis_plan.json",
+        "workspace/research/report/evidence_gaps.json",
+    }
+    assert by_id["R5"]["depends_on"] == ["R4"]
+    assert {
         "workspace/research/report/claims.jsonl",
         "workspace/research/report/claim_evidence.jsonl",
         "workspace/research/report/sections.jsonl",
@@ -221,8 +253,9 @@ def test_research_fallback_graph_is_valid_parallel_retrieval():
         "workspace/research/report/final.bibliography.json",
         "workspace/research/report/final.md",
         "workspace/research/report/research_eval.json",
-    }.issubset(set(by_id["R4"]["outputs"]))
-    assert {item["target"] for item in by_id["R4"]["validation"]} == set(by_id["R4"]["outputs"])
+    }.issubset(set(by_id["R5"]["outputs"]))
+    assert {item["target"] for item in by_id["R5"]["validation"]} == set(by_id["R5"]["outputs"])
+    assert by_id["R6"]["logical_operator"] == "Verifier"
 
 
 def test_general_research_contract_describes_evidence_not_dag_experiments():
@@ -362,12 +395,12 @@ def test_code_understanding_request_rewrites_research_graph_goals():
     assert payload["dag_variant"] == "research"
     assert "knowledge graph" in by_id["R1"]["goal"].lower()
     assert "architecture map" in by_id["R2"]["goal"].lower()
-    assert "onboarding" in by_id["R4"]["goal"].lower()
+    assert "onboarding" in by_id["R5"]["goal"].lower()
     assert by_id["R1"]["gate"] == "G_SOURCE"
     assert by_id["R2"]["gate"] == "G_EVIDENCE"
     assert by_id["R3"]["gate"] == "G_EVIDENCE"
     assert by_id["R4"]["gate"] == "G_SYNTHESIS"
-    assert by_id["R5"]["gate"] == "G_REVIEW"
+    assert by_id["R5"]["gate"] == "G_SYNTHESIS"
     assert by_id["R6"]["gate"] == "G_REVIEW"
 
 
@@ -446,6 +479,35 @@ Codex bridge should capture RawIntent and auto consume into sprint package.
     assert requirement_ir["normalized_goal"] == "让 Codex bridge 捕获 RawIntent 并自动编译成 sprint package。"
     assert requirement_ir["problem_statement"] == "Codex bridge should capture RawIntent and auto consume into sprint package."
     assert "RawIntent Consumer Request" not in prd
+
+
+def test_defect_repair_contract_preserves_declared_project_scope_and_test_command():
+    router = _load_router()
+    text = """# RawIntent Consumer Request - repair checkout discounts
+
+## Rewritten Objective
+
+Fix the checkout discount defect.
+
+## Raw User Intent
+
+Target repository path: /tmp/j16/discount_project
+Scope: repair only the checkout rule in discounts.py and update tests only if their intent is wrong.
+Constraints: stdlib only, no new dependencies, no network calls
+Acceptance: running `/opt/venv/bin/python -m pytest -q` passes. Trial users always receive 0 percent.
+"""
+
+    payload = router.build_pm_intake(text, sprint_id="sprint-j16-contract")
+    agent = payload["requirement_ir"]["contracts"]["agent_execution"]
+    contract = payload["compiled_artifacts"]["contract_markdown"]
+
+    assert agent["project_dir"] == "/tmp/j16/discount_project"
+    assert agent["allowed_paths"] == ["discounts.py", "tests/**"]
+    assert agent["commands"]["test"] == ["/opt/venv/bin/python -m pytest -q"]
+    assert agent["declared_constraints"] == ["stdlib only", "no new dependencies", "no network calls"]
+    assert "Project: /tmp/j16/discount_project" in contract
+    assert "apps/pm-pane/**" not in contract
+    assert "Trial users always receive 0 percent" in contract
 
 
 def test_validate_compiled_package_rejects_raw_metadata_pollution():

@@ -1,0 +1,645 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "solar.scheduler_input.v1",
+  "title": "Solar Scheduler Input",
+  "description": "Frozen executable graph produced before runtime. The scheduler may select only dependency-ready nodes and pre-admitted physical candidates; mutable status, leases, and dispatch decisions are separate artifacts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_role",
+    "scheduler_input_id",
+    "sprint_id",
+    "planning_authority",
+    "graph"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "solar.scheduler_input.v1"
+    },
+    "artifact_role": {
+      "enum": [
+        "runtime_execution_authority",
+        "metadata_contract_example_not_runtime_authority"
+      ]
+    },
+    "scheduler_input_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sprint_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "planning_authority": {
+      "const": "frozen_execution_plan_v1"
+    },
+    "workspace_authority_ref": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "authority_id",
+        "path",
+        "sha256",
+        "workspace_root"
+      ],
+      "properties": {
+        "authority_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "workspace_root": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graph_id",
+        "nodes"
+      ],
+      "properties": {
+        "graph_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      }
+    },
+    "test_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "const": "rapid_smoke"
+        },
+        "semantic_evaluation_budget": {
+          "const": 0
+        },
+        "deterministic_gates_required": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "goal",
+        "logical_operator",
+        "dispatch_task_type",
+        "depends_on",
+        "requirement_ids",
+        "capability_capsule_id",
+        "capsule_binding",
+        "physical_candidates",
+        "artifact_contract",
+        "output_routes",
+        "workspace_reads",
+        "evaluation_binding",
+        "resource_requirements",
+        "effects",
+        "priority",
+        "failure_policy"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "logical_operator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dispatch_task_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "requirement_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "capability_capsule_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Primary execution capsule selected by the Planner. It must also appear in capsule_binding.capsule_ids."
+        },
+        "capsule_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capsule_ids",
+            "contract_sha256"
+          ],
+          "properties": {
+            "capsule_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "composition_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "contract_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "physical_candidates": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Pre-admitted candidates. The scheduler evaluates current availability in ascending rank order and may not select an operator absent from this list.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "operator_id",
+              "rank",
+              "admission_state"
+            ],
+            "properties": {
+              "operator_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "admission_state": {
+                "const": "ELIGIBLE"
+              }
+            }
+          }
+        },
+        "artifact_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consumes",
+            "produces"
+          ],
+          "properties": {
+            "consumes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "produces": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "output_routes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "artifact_type",
+              "route_kind",
+              "relative_path",
+              "materialization_kind"
+            ],
+            "properties": {
+              "artifact_type": {
+                "type": "string",
+                "minLength": 1
+              },
+              "route_kind": {
+                "enum": [
+                  "sprint_private",
+                  "workspace_publish"
+                ]
+              },
+              "relative_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "materialization_kind": {
+                "enum": [
+                  "file",
+                  "directory"
+                ]
+              },
+              "private_scope": {
+                "description": "Optional logical owner for a sprint-private materialization. Generated composition support steps use their PlanIR parent node ID so ordered collection-producing stages accumulate in one private directory. It is forbidden on workspace_publish routes.",
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_.-]+$"
+              }
+            }
+          }
+        },
+        "workspace_reads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "relative_path",
+              "sha256"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "file",
+                  "directory"
+                ]
+              },
+              "relative_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "evaluation_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "deterministic_gate_ids",
+            "semantic_evaluator_ids"
+          ],
+          "properties": {
+            "deterministic_gate_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "semantic_evaluator_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "anyOf": [
+            {
+              "properties": {
+                "deterministic_gate_ids": {
+                  "minItems": 1
+                }
+              }
+            },
+            {
+              "properties": {
+                "semantic_evaluator_ids": {
+                  "minItems": 1
+                }
+              }
+            }
+          ]
+        },
+        "evaluator_gate": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "evaluation_policy": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "resource_requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cpu_cores_min",
+            "memory_mb_min",
+            "gpu_required",
+            "network"
+          ],
+          "properties": {
+            "cpu_cores_min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "memory_mb_min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "gpu_required": {
+              "type": "boolean"
+            },
+            "network": {
+              "enum": [
+                "required",
+                "optional",
+                "forbidden"
+              ]
+            },
+            "minimum_context_tokens": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "read",
+              "write",
+              "execute",
+              "network",
+              "irreversible"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "priority": {
+          "type": "integer",
+          "description": "Higher values run before lower values when multiple dependency-ready nodes compete for capacity."
+        },
+        "failure_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Runtime attempt budget and terminal behavior. This does not authorize the scheduler to redesign or semantically repair the node.",
+          "required": [
+            "max_attempts",
+            "on_exhausted"
+          ],
+          "properties": {
+            "max_attempts": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "on_exhausted": {
+              "enum": [
+                "fail_run",
+                "block_dependents",
+                "continue_independent"
+              ]
+            }
+          }
+        },
+        "retrieval_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contract_id",
+            "subject",
+            "search_queries",
+            "source_refs",
+            "inclusion_criteria",
+            "exclusion_criteria",
+            "coverage",
+            "time_range",
+            "minimum_candidates"
+          ],
+          "properties": {
+            "contract_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1
+            },
+            "search_queries": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "maxItems": 8
+            },
+            "source_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "inclusion_criteria": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "field",
+                  "any_of",
+                  "source_refs"
+                ],
+                "properties": {
+                  "field": {
+                    "enum": [
+                      "title_abstract",
+                      "publication_type"
+                    ]
+                  },
+                  "any_of": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1
+                  },
+                  "source_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1
+                  }
+                }
+              }
+            },
+            "exclusion_criteria": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "field",
+                  "any_of",
+                  "source_refs"
+                ],
+                "properties": {
+                  "field": {
+                    "enum": [
+                      "title_abstract",
+                      "publication_type"
+                    ]
+                  },
+                  "any_of": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1
+                  },
+                  "source_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1
+                  }
+                }
+              }
+            },
+            "coverage": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "label",
+                  "any_of",
+                  "required"
+                ],
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "any_of": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1
+                  },
+                  "required": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "time_range": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start_year",
+                "end_year"
+              ],
+              "properties": {
+                "start_year": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1000,
+                  "maximum": 9999
+                },
+                "end_year": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1000,
+                  "maximum": 9999
+                }
+              }
+            },
+            "minimum_candidates": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "execution_authority": {
+          "type": "object",
+          "required": [
+            "schema_version",
+            "capsules",
+            "operators",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": "solar.node_execution_authority.v1"
+            },
+            "capsules": {
+              "type": "object"
+            },
+            "operators": {
+              "type": "object"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$comment": "Cross-field validation before scheduler handoff must additionally prove unique node ids, acyclicity, dependency resolution, unique candidate ranks, capsule/operator/check registration, requirement trace resolution, and effect-policy admission. The frozen run contract records this artifact's digest; this artifact does not point back to the run contract, avoiding a circular hash dependency. The scheduler must not accept mutable node status, a selected operator, lease identity, or attempt identity in this artifact."
+}

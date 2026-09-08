@@ -29,6 +29,7 @@ HARNESS_DIR = (Path(__file__).resolve().parents[3] / 'harness')
 sys.path.insert(0, str(HARNESS_DIR / "lib"))
 
 import multi_task_runner as mtr  # noqa: E402
+import node_runstate  # noqa: E402
 import operator_runtime as optime  # noqa: E402
 
 
@@ -116,6 +117,78 @@ def _make_args() -> mock.MagicMock:
     args.model = ""
     args.backend = ""
     return args
+
+
+def test_terminal_attribution_ignores_historical_task_for_same_node(tmp_harness) -> None:
+    sid = "sprint-attribution-correlation"
+    node_id = "N1"
+    node_runstate.record(
+        mtr.SPRINTS_DIR,
+        sid,
+        node_id,
+        "attribution",
+        {
+            "dispatch_id": "task-current",
+            "operator_id": "operator-current",
+            "phase": "running",
+            "status": "running",
+            "role": "builder",
+        },
+    )
+
+    mtr._finalize_terminal_attribution(
+        {
+            "id": "task-historical",
+            "sprint_id": sid,
+            "node_id": node_id,
+            "status": "failed",
+            "exit_code": 1,
+            "operator_id": "operator-historical",
+            "role": "builder",
+        }
+    )
+
+    attribution = node_runstate.read_snapshot(mtr.SPRINTS_DIR, sid, node_id)["build_attribution"]
+    assert attribution["dispatch_id"] == "task-current"
+    assert attribution["operator_id"] == "operator-current"
+    assert attribution["phase"] == "running"
+
+
+def test_terminal_attribution_finalizes_only_correlated_current_task(tmp_harness) -> None:
+    sid = "sprint-attribution-current"
+    node_id = "N1"
+    node_runstate.record(
+        mtr.SPRINTS_DIR,
+        sid,
+        node_id,
+        "attribution",
+        {
+            "dispatch_id": "task-current",
+            "operator_id": "operator-current",
+            "phase": "running",
+            "status": "running",
+            "role": "builder",
+        },
+    )
+
+    mtr._finalize_terminal_attribution(
+        {
+            "id": "task-current",
+            "sprint_id": sid,
+            "node_id": node_id,
+            "status": "completed",
+            "exit_code": 0,
+            "operator_id": "operator-current",
+            "role": "builder",
+        }
+    )
+
+    attribution = node_runstate.read_snapshot(mtr.SPRINTS_DIR, sid, node_id)["build_attribution"]
+    assert attribution["dispatch_id"] == "task-current"
+    assert attribution["operator_id"] == "operator-current"
+    assert attribution["phase"] == "completed"
+    assert attribution["status"] == "completed"
+    assert attribution["exit_code"] == 0
 
 
 def _base_patches(profile):
@@ -284,6 +357,467 @@ class TestSubmitPathRejection:
 
         assert mtr._operator_submit_rejection_reason(OtherSubmitError("bad envelope")) == ""
 
+    def test_frozen_candidates_cannot_escape_through_legacy_quota_profile(self, monkeypatch):
+        """Stale quota/profile history cannot replace the planner's ranked assignment."""
+        node = {
+            "id": "N1",
+            "role": "builder",
+            "preferred_profile": "legacy-escape",
+            "quota_failure_reason": "quota_exhausted",
+            "quota_fallback_from": "legacy-escape",
+            "quota_blocked_profiles": ["builder"],
+            "physical_candidates": [
+                {"rank": 1, "operator_id": "frozen-operator"},
+            ],
+        }
+        config = {
+            "defaults": {"profile": "builder", "backend": "command"},
+            "profiles": {
+                "builder": {
+                    "role": "builder",
+                    "backend": "command",
+                    "model": "base-model",
+                    "operator_id": "legacy-builder-operator",
+                },
+                "legacy-escape": {
+                    "role": "builder",
+                    "backend": "command",
+                    "model": "legacy-model",
+                    "operator_id": "legacy-escape-operator",
+                },
+            },
+        }
+        monkeypatch.setattr(mtr, "load_profiles", lambda: config)
+        select = mock.Mock(return_value=({
+            "operator_id": "frozen-operator",
+            "backend": "command",
+            "model": "frozen-model",
+            "scheduler_candidate_rank": 1,
+            "scheduler_candidate_observations": [
+                {"operator_id": "frozen-operator", "rank": 1, "state": "READY"},
+            ],
+        }, ""))
+        monkeypatch.setattr(mtr, "select_operator", select)
+
+        selected = mtr.select_profile(node)
+
+        select.assert_called_once()
+        assert selected["operator_id"] == "frozen-operator"
+        assert selected["model"] == "frozen-model"
+        assert selected["scheduler_candidate_rank"] == 1
+        assert "quota_fallback_from" not in selected
+
+    def test_frozen_capsule_profile_drives_model_service_envelope(self, monkeypatch):
+        """A specialized frozen node must not fall back to the generic builder model."""
+        node = {
+            "id": "artifact_review",
+            "logical_operator": "ScientificArtifactReviewer",
+            "capsule_binding": {"capsule_ids": ["cap.research-report-plan-review"]},
+            "execution_authority": {
+                "capsules": {
+                    "cap.research-report-plan-review": {
+                        "default_operator_profile": "codex-evaluator"
+                    }
+                }
+            },
+            "physical_candidates": [
+                {"rank": 1, "operator_id": "autosci-artifact-review-worker"},
+            ],
+        }
+        config = {
+            "defaults": {"profile": "codex-builder", "backend": "command"},
+            "profiles": {
+                "codex-builder": {
+                    "role": "builder",
+                    "backend": "command",
+                    "model": "wrong-builder-model",
+                    "reasoning_effort": "medium",
+                },
+                "codex-evaluator": {
+                    "role": "evaluator",
+                    "backend": "command",
+                    "model": "gpt-5.5",
+                    "reasoning_effort": "high",
+                },
+            },
+        }
+        monkeypatch.setattr(mtr, "load_profiles", lambda: config)
+        monkeypatch.setattr(
+            mtr,
+            "select_operator",
+            lambda *_: ({
+                "operator_id": "autosci-artifact-review-worker",
+                "backend": "research_operator_registry",
+                "role": "lab-evaluator",
+                "runtime_binding": {"registry": "example", "node_id": "artifact_review"},
+                "scheduler_candidate_rank": 1,
+            }, ""),
+        )
+
+        selected = mtr.select_profile(node)
+        envelope = mtr._build_operator_envelope(
+            "dispatch-1",
+            "sprint-1",
+            "artifact_review",
+            node,
+            selected,
+            {"work_dir": "/tmp/work"},
+        )
+
+        assert selected["name"] == "codex-evaluator"
+        assert envelope["model"] == "gpt-5.5"
+        assert envelope["reasoning_effort"] == "high"
+
+    def test_frozen_physical_operator_default_is_not_treated_as_model_profile(self, monkeypatch):
+        """An overloaded capsule default that names its native worker stays a physical binding."""
+        node = {
+            "id": "paper_preparation_ingestion",
+            "role": "builder",
+            "capsule_binding": {"capsule_ids": ["cap.research-source-assess"]},
+            "execution_authority": {
+                "capsules": {
+                    "cap.research-source-assess": {
+                        "default_operator_profile": "source_assess_worker"
+                    }
+                },
+                "operators": {
+                    "source_assess_worker": {
+                        "backend": "research_operator_registry",
+                        "role": "scientific-source-assessor",
+                    }
+                },
+            },
+            "physical_candidates": [
+                {"rank": 1, "operator_id": "source_assess_worker"},
+            ],
+        }
+        config = {
+            "defaults": {"profile": "codex-builder", "backend": "command"},
+            "profiles": {
+                "codex-builder": {
+                    "role": "builder",
+                    "backend": "command",
+                    "model": "gpt-5.5",
+                    "reasoning_effort": "medium",
+                }
+            },
+        }
+        monkeypatch.setattr(mtr, "load_profiles", lambda: config)
+        monkeypatch.setattr(
+            mtr,
+            "select_operator",
+            lambda *_: ({
+                "operator_id": "source_assess_worker",
+                "backend": "research_operator_registry",
+                "role": "scientific-source-assessor",
+                "runtime_binding": {"registry": "example", "node_id": "source_assess"},
+                "scheduler_candidate_rank": 1,
+            }, ""),
+        )
+
+        assert mtr._frozen_default_operator_profile(node) == ""
+        selected = mtr.select_profile(node)
+
+        assert selected["name"] == "codex-builder"
+        assert selected["operator_id"] == "source_assess_worker"
+        assert selected["model"] == "gpt-5.5"
+
+    @pytest.mark.parametrize(
+        ("submit_error", "expected_reason"),
+        [
+            (RuntimeError("operator not dispatchable: state=leased"), "operator_busy"),
+            (RuntimeError("operator not dispatchable: state=cooldown"), "operator_unavailable"),
+        ],
+    )
+    def test_frozen_classified_rejection_remains_retryable_by_ranked_scheduler(
+        self,
+        tmp_harness,
+        sample_node,
+        profile_with_operator,
+        sample_graph,
+        monkeypatch,
+        submit_error,
+        expected_reason,
+    ):
+        """Busy/unavailable races stay ready for the next ranked-candidate tick."""
+        monkeypatch.setattr(mtr, "OPERATORD_SUBMIT_ENABLED", True)
+        monkeypatch.setattr(mtr, "OPERATORD_RESULT_TIMEOUT_SEC", 0)
+        sample_graph["nodes"][0]["physical_candidates"] = [
+            {"rank": 1, "operator_id": "test-operator-1"},
+            {"rank": 2, "operator_id": "test-operator-2"},
+        ]
+        graph_path = tmp_harness / "sprints" / "scheduler-runtime.json"
+        patches = _base_patches(profile_with_operator)
+        with patches["select_profile"], patches["capability_for_profile"], \
+             patches["build_dispatch_text"], patches["set_node_status"], \
+             patches["save_graph"], patches["set_last_launch"], \
+             mock.patch.object(mtr, "tmux_start") as mock_tmux, \
+             mock.patch("operator_runtime.submit", side_effect=submit_error):
+            result = mtr.launch_node(graph_path, sample_graph, sample_node, _make_args())
+
+        assert result["status"] == "submit_rejected"
+        assert result["operator_submit_reason"] == expected_reason
+        assert "blocking_reason" not in result
+        assert "operator_submit_fallback" not in result
+        assert sample_graph["nodes"][0]["status"] == "ready"
+        mock_tmux.assert_not_called()
+
+    @pytest.mark.parametrize(
+        ("graph_contract", "submit_error"),
+        [
+            ("frozen_candidates", RuntimeError("operator submit transport broke")),
+            ("runtime_projection", ValueError("malformed submit response")),
+        ],
+    )
+    def test_frozen_dispatch_fails_closed_on_unclassified_submit_error(
+        self,
+        tmp_harness,
+        sample_node,
+        profile_with_operator,
+        sample_graph,
+        monkeypatch,
+        graph_contract,
+        submit_error,
+    ):
+        """A planner-frozen node must never bypass operatord lease ownership."""
+        monkeypatch.setattr(mtr, "OPERATORD_SUBMIT_ENABLED", True)
+        monkeypatch.setattr(mtr, "OPERATORD_RESULT_TIMEOUT_SEC", 0)
+        monkeypatch.setattr(mtr, "_plan_validator_launch_refusal", lambda *_args, **_kwargs: None)
+        if graph_contract == "frozen_candidates":
+            sample_graph["nodes"][0]["physical_candidates"] = [
+                {"rank": 1, "operator_id": "test-operator-1"},
+                {"rank": 2, "operator_id": "test-operator-2"},
+            ]
+        else:
+            sample_graph["schema_version"] = "solar.scheduler_runtime_projection.v1"
+
+        graph_path = tmp_harness / "sprints" / "scheduler-runtime.json"
+        patches = _base_patches(profile_with_operator)
+        with patches["select_profile"], patches["capability_for_profile"], \
+             patches["build_dispatch_text"], patches["save_graph"], \
+             patches["set_last_launch"], \
+             mock.patch.object(mtr, "tmux_start") as mock_tmux, \
+             mock.patch.object(mtr, "runner_script") as mock_runner, \
+             mock.patch("operator_runtime.submit", side_effect=submit_error):
+            result = mtr.launch_node(graph_path, sample_graph, sample_node, _make_args())
+
+        assert result["status"] == "submit_rejected"
+        assert result["submit_mode"] == "operatord"
+        assert result["dispatch_mode"] == "operatord"
+        assert result["operator_submit_reason"] == "operator_submit_failed"
+        assert result["blocking_reason"].startswith(
+            f"operator_submit_failed:{type(submit_error).__name__}:"
+        )
+        assert "operator_submit_fallback" not in result
+        assert "lease_id" not in result
+        assert "inbox_path" not in result
+        assert sample_graph["nodes"][0]["status"] == "needs_human_review"
+        assert sample_graph["nodes"][0]["blocking_reason"] == result["blocking_reason"]
+        assert sample_graph["node_results"]["N1"]["blocking_reason"] == result["blocking_reason"]
+        on_disk = json.loads(
+            (tmp_harness / "run" / "multi-task" / result["id"] / "status.json").read_text()
+        )
+        assert on_disk["blocking_reason"] == result["blocking_reason"]
+        mock_tmux.assert_not_called()
+        mock_runner.assert_not_called()
+
+    def test_schedule_once_persists_frozen_candidate_preflight_queue(
+        self,
+        tmp_harness,
+        monkeypatch,
+    ):
+        """Candidate exhaustion is inspectable and remains retryable."""
+        graph_path = tmp_harness / "sprints" / "frozen.task_graph.json"
+        node = {
+            "id": "N1",
+            "status": "pending",
+            "physical_candidates": [
+                {"rank": 1, "operator_id": "planner-primary"},
+                {"rank": 2, "operator_id": "planner-fallback"},
+            ],
+        }
+        graph = {
+            "schema_version": "solar.scheduler_runtime_projection.v1",
+            "sprint_id": "frozen",
+            "runtime_state_filename": "frozen.task_graph_state.json",
+            "nodes": [node],
+        }
+        graph_path.write_text(json.dumps(graph), encoding="utf-8")
+        args = types.SimpleNamespace(
+            graph=[str(graph_path)],
+            max_workers=1,
+            memory_reserve_gb=0,
+            cooldown_sec=0,
+            quota_backoff_sec=0,
+            dry_run=False,
+            profile="",
+            model="",
+            backend="",
+        )
+        monkeypatch.setattr(mtr, "AUTO_ADVANCE_ENABLED", False)
+        monkeypatch.setattr(mtr, "graph_files", lambda _value: [graph_path])
+        monkeypatch.setattr(mtr, "load_graph", lambda _path: graph)
+        monkeypatch.setattr(mtr, "recover_quota_failed_nodes", lambda *_args: 0)
+        monkeypatch.setattr(mtr, "launch_guard", lambda *_args: {"ok": True})
+        monkeypatch.setattr(mtr, "active_tasks", lambda: [])
+        monkeypatch.setattr(mtr, "active_parallel_counts", lambda _rows: {})
+        monkeypatch.setattr(mtr, "capability_summary", lambda: {})
+        monkeypatch.setattr(mtr, "status_summary_for_graph", lambda _path: {})
+        monkeypatch.setattr(mtr, "ready_nodes", lambda _graph: [dict(node)])
+        monkeypatch.setattr(mtr, "_plan_validator_launch_refusal", lambda *_args: None)
+        monkeypatch.setattr(
+            mtr,
+            "select_profile",
+            mock.Mock(side_effect=ValueError("frozen_physical_candidates_unavailable:planner-primary=busy")),
+        )
+        monkeypatch.setattr(mtr, "list_harness_panes", lambda: [])
+        monkeypatch.setattr(mtr, "recent_dispatch_rows", lambda: [])
+
+        result = mtr.schedule_once(args)
+
+        assert result["skipped"][0]["reason"] == "frozen_scheduler_preflight_unavailable"
+        assert Path(result["skipped"][0]["failure_record"]).is_file()
+        state = json.loads((tmp_harness / "sprints" / "frozen.task_graph_state.json").read_text())
+        queued = state["node_results"]["N1"]
+        assert queued["status"] == "queued"
+        assert queued["blocking_reason"].startswith("frozen_scheduler_preflight_unavailable:")
+
+    def test_launch_persists_scheduler_input_verification_refusal(
+        self,
+        tmp_harness,
+        sample_node,
+        sample_graph,
+        monkeypatch,
+    ):
+        graph_path = tmp_harness / "sprints" / "refused.task_graph.json"
+        monkeypatch.setattr(
+            mtr,
+            "_plan_validator_launch_refusal",
+            lambda *_args: {
+                "reason": "scheduler_input_dispatch_refused",
+                "errors": ["SCHEDULER_RUNTIME_PROJECTION_TAMPERED"],
+            },
+        )
+
+        result = mtr.launch_node(graph_path, sample_graph, sample_node, _make_args())
+
+        assert result["status"] == "plan_validator_dispatch_refused"
+        record_path = Path(result["failure_record"])
+        assert record_path.is_file()
+        record = json.loads(record_path.read_text())
+        assert record["reason"] == "scheduler_input_dispatch_refused"
+        assert record["errors"] == ["SCHEDULER_RUNTIME_PROJECTION_TAMPERED"]
+
+    def test_frozen_quota_recovery_retries_candidates_without_legacy_profile(
+        self,
+        tmp_harness,
+        monkeypatch,
+    ):
+        graph_path = tmp_harness / "sprints" / "retry.task_graph.json"
+        graph = {
+            "schema_version": "solar.scheduler_runtime_projection.v1",
+            "sprint_id": "retry",
+            "runtime_state_filename": "retry.task_graph_state.json",
+            "nodes": [{
+                "id": "N1",
+                "status": "failed",
+                "dispatch_id": "dispatch-1",
+                "preferred_profile": "legacy-escape",
+                "physical_candidates": [
+                    {"rank": 1, "operator_id": "planner-primary"},
+                    {"rank": 2, "operator_id": "planner-fallback"},
+                ],
+                "failure_policy": {"max_attempts": 2, "on_exhausted": "block_dependents"},
+                "execution_attempt": {"sequence": 1, "task_id": "dispatch-1"},
+            }],
+        }
+        monkeypatch.setattr(mtr, "output_log_failure_kind", lambda _task_id: "quota_exhausted")
+        monkeypatch.setattr(
+            __import__("scheduler_input"),
+            "verify_runtime_projection",
+            lambda *_args, **_kwargs: {"ok": True, "errors": []},
+        )
+        monkeypatch.setattr(
+            mtr,
+            "load_profiles",
+            mock.Mock(side_effect=AssertionError("legacy profile ladder must not be consulted")),
+        )
+
+        changed = mtr.recover_quota_failed_nodes(graph_path, graph)
+
+        assert changed == 1
+        assert graph["nodes"][0]["status"] == "pending"
+        assert graph["nodes"][0]["preferred_profile"] == "legacy-escape"
+        assert graph["nodes"][0]["execution_attempt"]["sequence"] == 1
+        mtr.load_profiles.assert_not_called()
+
+    def test_frozen_quota_recovery_stops_at_planner_attempt_budget(
+        self,
+        tmp_harness,
+        monkeypatch,
+    ):
+        graph_path = tmp_harness / "sprints" / "exhausted.task_graph.json"
+        graph = {
+            "schema_version": "solar.scheduler_runtime_projection.v1",
+            "sprint_id": "exhausted",
+            "runtime_state_filename": "exhausted.task_graph_state.json",
+            "nodes": [{
+                "id": "N1",
+                "status": "failed",
+                "dispatch_id": "dispatch-1",
+                "physical_candidates": [{"rank": 1, "operator_id": "planner-primary"}],
+                "failure_policy": {"max_attempts": 1, "on_exhausted": "block_dependents"},
+                "execution_attempt": {"sequence": 1, "task_id": "dispatch-1"},
+            }],
+        }
+        monkeypatch.setattr(mtr, "output_log_failure_kind", lambda _task_id: "quota_exhausted")
+        monkeypatch.setattr(
+            __import__("scheduler_input"),
+            "verify_runtime_projection",
+            lambda *_args, **_kwargs: {"ok": True, "errors": []},
+        )
+        monkeypatch.setattr(
+            mtr,
+            "load_profiles",
+            mock.Mock(side_effect=AssertionError("legacy profile ladder must not be consulted")),
+        )
+
+        changed = mtr.recover_quota_failed_nodes(graph_path, graph)
+
+        assert changed == 1
+        assert graph["nodes"][0]["status"] == "failed"
+        exhausted = graph["nodes"][0]["failure_policy_exhausted"]
+        assert exhausted["attempt"] == exhausted["max_attempts"] == 1
+        assert exhausted["on_exhausted"] == "block_dependents"
+        mtr.load_profiles.assert_not_called()
+
+    def test_providerless_command_bridge_defaults_to_local_auth(self, monkeypatch):
+        """Local Harness command bridges must not require a provider key_ref."""
+        operator = {
+            "operator_id": "autosci-literature-discover-worker",
+            "backend": "command",
+            "command": "python autosci_bridge.py run --action discover_literature",
+            "enabled": True,
+            "available": True,
+        }
+        monkeypatch.setattr(optime, "get_operator_runtime_state", lambda _operator_id: "idle")
+
+        assert mtr.operator_dispatchable(operator) == (True, "ready")
+
+    def test_external_provider_command_still_requires_key_ref(self, monkeypatch):
+        """The local-bridge default must not admit an uncredentialed provider worker."""
+        operator = {
+            "operator_id": "external-provider-worker",
+            "backend": "command",
+            "provider": "openai",
+            "command": "python provider_worker.py",
+            "enabled": True,
+            "available": True,
+        }
+        monkeypatch.setattr(optime, "get_operator_runtime_state", lambda _operator_id: "idle")
+
+        assert mtr.operator_dispatchable(operator) == (False, "key_ref_missing")
+
     @pytest.mark.parametrize("state", ["leased", "running", "draining", "cooldown"])
     def test_non_dispatchable_operator_is_filtered_before_submit(self, monkeypatch, state):
         """Selection must not keep choosing a busy or cooling-down operator."""
@@ -328,7 +862,7 @@ class TestSubmitPathRejection:
         assert "leased" in result["operator_submit_error"]
         mock_tmux.assert_not_called()
 
-    def test_falls_back_to_legacy_on_submit_value_error(
+    def test_unknown_operator_fails_closed_without_legacy_dispatch(
         self,
         tmp_harness,
         sample_node,
@@ -336,7 +870,7 @@ class TestSubmitPathRejection:
         sample_graph,
         monkeypatch,
     ):
-        """ValueError from submit (e.g. unknown operator) → falls back to legacy."""
+        """An admission failure cannot bypass the lease path through legacy tmux."""
         monkeypatch.setattr(mtr, "OPERATORD_SUBMIT_ENABLED", True)
         monkeypatch.setattr(mtr, "OPERATORD_RESULT_TIMEOUT_SEC", 0)
 
@@ -352,8 +886,10 @@ class TestSubmitPathRejection:
 
             result = mtr.launch_node(graph_path, sample_graph, sample_node, _make_args())
 
-        assert result["operator_submit_fallback"] == "legacy"
-        mock_tmux.assert_called_once()
+        assert result["status"] == "submit_rejected"
+        assert result["operator_submit_reason"] == "operator_admission_failed"
+        assert "operator_submit_fallback" not in result
+        mock_tmux.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -676,3 +1212,65 @@ class TestAutoAdvanceStatusSync:
             "actor": "multi_task_runner",
             "event": "multi_task_auto_advance_reconciled",
         }]
+
+
+class TestSchedulerCapabilityAndRuntimeIsolation:
+    def test_leased_command_profile_does_not_require_scheduler_local_codex(self, monkeypatch):
+        profile = {
+            "backend": "command",
+            "model": "gpt-5.5",
+            "command": "python3 worker.py",
+            "operator_id": "autosci-literature-discover-worker",
+        }
+        monkeypatch.setattr(mtr.shutil, "which", lambda _name: None)
+
+        capability = mtr.capability_for_profile(profile, include_probe=False)
+
+        assert capability["status"] == "ok"
+        assert capability["evidence"] == (
+            "operator=autosci-literature-discover-worker command=configured"
+        )
+
+    def test_local_openai_command_uses_shared_portable_codex_resolver(self, tmp_path, monkeypatch):
+        codex = tmp_path / "codex"
+        codex.write_text("#!/bin/sh\n", encoding="utf-8")
+        monkeypatch.setattr(
+            mtr,
+            "resolve_codex_cli",
+            lambda *_args, **_kwargs: (codex, "user_local_bin"),
+        )
+
+        capability = mtr.capability_for_profile(
+            {"backend": "command", "model": "gpt-5.5"},
+            include_probe=False,
+        )
+
+        assert capability["status"] == "ok"
+        assert f"cli={codex}" in capability["evidence"]
+        assert "resolution=user_local_bin" in capability["evidence"]
+
+    def test_terminal_attribution_uses_the_task_owned_runtime_root(self, tmp_path, monkeypatch):
+        current_runtime = tmp_path / "current"
+        task_runtime = tmp_path / "task-owned"
+        calls = []
+        fake_runstate = types.SimpleNamespace(
+            read_snapshot=lambda root, sid, node: calls.append(("read", Path(root), sid, node)) or {},
+            record=lambda root, sid, node, kind, payload: calls.append(
+                ("record", Path(root), sid, node, kind, payload)
+            ),
+        )
+        monkeypatch.setattr(mtr, "SPRINTS_DIR", current_runtime)
+        monkeypatch.setitem(sys.modules, "node_runstate", fake_runstate)
+
+        mtr._finalize_terminal_attribution({
+            "id": "dispatch-old",
+            "status": "completed",
+            "sprint_id": "sprint-old",
+            "node_id": "N1",
+            "node_runstate_root": str(task_runtime),
+            "exit_code": 0,
+        })
+
+        assert calls[0][1] == task_runtime
+        assert calls[1][1] == task_runtime
+        assert all(call[1] != current_runtime for call in calls)

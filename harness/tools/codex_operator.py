@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import atexit
+import hashlib
 import json
 import os
 import shutil
@@ -12,16 +13,480 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from pathlib import Path
 
+_HARNESS_LIB_DIR = str(Path(__file__).resolve().parents[1] / "lib")
+if _HARNESS_LIB_DIR not in sys.path:
+    sys.path.insert(0, _HARNESS_LIB_DIR)
 
+from codex_cli_runtime import resolve_codex_cli
+
+try:
+    from developer_observability import observe as _observe, stable_id as _observation_id
+except Exception:  # Observability must never become a CLI dependency.
+    def _observe(*_args, **_kwargs) -> bool:
+        return False
+
+    def _observation_id(kind: str, *parts) -> str:
+        return f"{kind}-unavailable"
+
+
+_SKILL_BRIDGE_CAPSULE_ID = "cap.skill-execution-bridge"
+_DEFAULT_SKILL_WORKFLOW_PHASES = [
+    "frame_objective_and_constraints",
+    "apply_skill_workflow",
+    "validate_against_acceptance",
+    "summarize_decisions_and_evidence",
+]
+
+
+def _read_operator_envelope() -> dict[str, object]:
+    raw = os.environ.get("SOLAR_OPERATOR_ENVELOPE_JSON") or ""
+    if not raw.strip():
+        return {}
+    candidate = Path(raw).expanduser()
+    if candidate.is_file():
+        try:
+            raw = candidate.read_text(encoding="utf-8")
+        except OSError:
+            return {}
+    try:
+        payload = json.loads(raw)
+    except (TypeError, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _selected_skills(envelope: dict[str, object]) -> list[str]:
+    candidates: list[object] = [envelope.get("selected_skills")]
+    for key in ("capsule_plan", "resolved_capability_capsule", "task_graph_node"):
+        nested = envelope.get(key)
+        if isinstance(nested, dict):
+            candidates.extend(
+                [
+                    nested.get("selected_skills"),
+                    nested.get("required_skills"),
+                ]
+            )
+    selected: list[str] = []
+    for candidate in candidates:
+        if not isinstance(candidate, list):
+            continue
+        for item in candidate:
+            skill_id = str(item or "").strip()
+            if skill_id and skill_id not in selected:
+                selected.append(skill_id)
+    return selected
+
+
+def _materialize_skill_bridge_evidence(task_dir: Path, dispatch: str) -> dict[str, object]:
+    envelope = _read_operator_envelope()
+    capsule = envelope.get("resolved_capability_capsule")
+    capsule_id = ""
+    if isinstance(capsule, dict):
+        capsule_id = str(capsule.get("id") or capsule.get("capsule_id") or "").strip()
+    if not capsule_id:
+        capsule_id = str(envelope.get("capability_capsule_id") or "").strip()
+    if capsule_id != _SKILL_BRIDGE_CAPSULE_ID:
+        return {}
+
+    selected_skills = _selected_skills(envelope)
+    try:
+        from skill_capsule_bridge import resolve_skill_records
+
+        records = resolve_skill_records(selected_skills)
+    except Exception as exc:
+        records = []
+        resolution_error = f"{type(exc).__name__}: {exc}"
+    else:
+        resolution_error = ""
+
+    resolved_skill_ids = [
+        str(record.get("skill_id") or "").strip()
+        for record in records
+        if isinstance(record, dict) and str(record.get("skill_id") or "").strip()
+    ]
+    primary = records[0] if records and isinstance(records[0], dict) else {}
+    workflow_phases = [
+        str(item).strip()
+        for item in primary.get("workflow_phases", [])
+        if str(item).strip()
+    ] or list(_DEFAULT_SKILL_WORKFLOW_PHASES)
+    selection_mode = "resolved_skill_record" if records else "direct_command_fallback"
+    fallback_reason = ""
+    if not records:
+        fallback_reason = resolution_error or "selected_skill_not_resolved"
+
+    evidence = {
+        "schema": "solar.skill_bridge.direct_command.v1",
+        "capsule_id": capsule_id,
+        "selected_skills": selected_skills,
+        "resolved_skill_ids": resolved_skill_ids,
+        "selection_mode": selection_mode,
+        "fallback_reason": fallback_reason,
+        "command_protocol": {
+            "mode": str(primary.get("template_profile") or "prompt_context_skill"),
+            "execution_surface": "direct_command_operator",
+            "record_exact_commands": True,
+        },
+        "workflow_contract": {
+            "phases": workflow_phases,
+            "delivery_expectation": str(
+                primary.get("delivery_expectation") or "phase_checklist_and_decision_log"
+            ),
+        },
+    }
+    task_dir.mkdir(parents=True, exist_ok=True)
+    prompt = (
+        "# Skill dispatch pane prompt\n\n"
+        f"- capsule: `{capsule_id}`\n"
+        f"- selected_skills: `{json.dumps(selected_skills, ensure_ascii=False)}`\n"
+        f"- selection_mode: `{selection_mode}`\n"
+        f"- fallback_reason: `{fallback_reason or 'none'}`\n"
+        "- execution_surface: `direct_command_operator`\n\n"
+        "## Dispatch\n\n"
+        f"{dispatch.rstrip()}\n"
+    )
+    (task_dir / "skill-dispatch-pane-prompt.md").write_text(prompt, encoding="utf-8")
+    (task_dir / "skill-dispatch-selection-proof.json").write_text(
+        json.dumps(
+            {
+                "schema": evidence["schema"],
+                "capsule_id": capsule_id,
+                "selected_skills": selected_skills,
+                "resolved_skill_ids": resolved_skill_ids,
+                "selection_mode": selection_mode,
+                "fallback_reason": fallback_reason,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (task_dir / "skill-dispatch-bridge-contract.json").write_text(
+        json.dumps(
+            {
+                "schema": evidence["schema"],
+                "capsule_id": capsule_id,
+                "command_protocol": evidence["command_protocol"],
+                "workflow_contract": evidence["workflow_contract"],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return evidence
+
+
+def _write_skill_bridge_result(task_dir: Path, evidence: dict[str, object], exit_code: int) -> None:
+    if not evidence:
+        return
+    payload = dict(evidence)
+    payload.update(
+        {
+            "status": "completed" if exit_code == 0 else "failed",
+            "exit_code": exit_code,
+        }
+    )
+    (task_dir / "skill-dispatch-result.json").write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _provider_jsonl_limit_bytes() -> int:
+    try:
+        return max(65536, int(os.environ.get("SOLAR_CODEX_PROVIDER_JSONL_MAX_BYTES", "1048576")))
+    except (TypeError, ValueError):
+        return 1048576
+
+
+def _bounded_provider_log(task_dir: Path, provider_output: str) -> tuple[str, bool]:
+    """Retain a bounded raw JSONL log; overflow makes admission proof incomplete."""
+    raw = provider_output.encode("utf-8", errors="replace")
+    limit = _provider_jsonl_limit_bytes()
+    overflow = len(raw) > limit
+    if overflow:
+        marker = b"\n[provider JSONL omitted: bounded log overflow]\n"
+        remaining = max(0, limit - len(marker))
+        head = remaining // 2
+        bounded = raw[:head] + marker + raw[-(remaining - head):]
+    else:
+        bounded = raw
+    path = task_dir / "codex-cli-output.log"
+    temporary = path.with_suffix(".log.tmp")
+    temporary.write_bytes(bounded)
+    os.replace(temporary, path)
+    return bounded.decode("utf-8", errors="replace"), overflow
+
+
+def _structured_provider_admission(provider_output: str, *, overflow: bool = False) -> dict[str, object]:
+    """Parse Codex ``exec --json`` output without treating message text as events."""
+    events: list[dict[str, object]] = []
+    malformed = bool(overflow)
+    malformed_line = 0
+    for line_number, raw_line in enumerate(provider_output.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except (TypeError, ValueError):
+            malformed = True
+            malformed_line = malformed_line or line_number
+            continue
+        if not isinstance(event, dict):
+            malformed = True
+            malformed_line = malformed_line or line_number
+            continue
+        events.append(event)
+
+    event_types = [str(event.get("type") or "").strip() for event in events]
+    supported_event_types = {
+        "thread.started",
+        "turn.started",
+        "turn.completed",
+        "turn.failed",
+        "item.started",
+        "item.updated",
+        "item.completed",
+        "error",
+    }
+    supported_item_types = {
+        "agent_message",
+        "reasoning",
+        "command_execution",
+        "file_change",
+        "mcp_tool_call",
+        "web_search",
+        "todo_list",
+        "error",
+    }
+    unknown_event_types: set[str] = set()
+    unknown_item_types: set[str] = set()
+    final_event = events[-1] if events else {}
+    terminal_failed = bool(event_types and event_types[-1] == "turn.failed")
+    turn_completed = "turn.completed" in event_types
+    agent_message = False
+    tool_or_external = False
+    tool_markers = (
+        "command_execution",
+        "tool_call",
+        "mcp",
+        "web_search",
+        "web_",
+        "computer_",
+        "file_change",
+    )
+    for event in events:
+        event_type = str(event.get("type") or "").strip().lower()
+        item = event.get("item") if isinstance(event.get("item"), dict) else {}
+        item_type = str(item.get("type") or "").strip().lower()
+        if event_type not in supported_event_types:
+            unknown_event_types.add(event_type or "<missing>")
+        if event_type.startswith("item.") and item_type not in supported_item_types:
+            unknown_item_types.add(item_type or "<missing>")
+        if item_type == "agent_message":
+            agent_message = True
+        if any(marker in event_type or marker in item_type for marker in tool_markers):
+            tool_or_external = True
+
+    terminal_error = final_event.get("error") if isinstance(final_event.get("error"), dict) else {}
+    terminal_message = str(terminal_error.get("message") or "").strip()
+    runtime_state = ""
+    if terminal_failed and terminal_message:
+        try:
+            import operator_flow_control as ofc
+
+            runtime_state = str(ofc.classify_failure_state(terminal_message) or "")
+        except Exception:
+            runtime_state = ""
+    lowered_error = terminal_message.lower()
+    if runtime_state == "auth_expired":
+        error_type = "provider_auth"
+    elif runtime_state in {"cooldown", "quota_exhausted"}:
+        capacity_only = "capacity" in lowered_error and not any(
+            token in lowered_error for token in ("quota", "usage limit", "rate limit", "rate-limit")
+        )
+        error_type = "provider_capacity" if capacity_only else "provider_quota"
+    else:
+        error_type = ""
+    complete = bool(events) and not malformed and not unknown_event_types and not unknown_item_types
+    admission_refusal = bool(
+        complete
+        and terminal_failed
+        and error_type
+        and not turn_completed
+        and not agent_message
+        and not tool_or_external
+    )
+    return {
+        "complete": complete,
+        "malformed": malformed,
+        "malformed_line": malformed_line,
+        "event_count": len(events),
+        "unknown_event_types": sorted(unknown_event_types),
+        "unknown_item_types": sorted(unknown_item_types),
+        "terminal_event_type": event_types[-1] if event_types else "",
+        "terminal_failed": terminal_failed,
+        "turn_completed": turn_completed,
+        "agent_message_observed": agent_message,
+        "tool_or_external_event_observed": tool_or_external,
+        "terminal_error_message": terminal_message[:1000],
+        "runtime_state": runtime_state,
+        "error_type": error_type,
+        "provider_admission_refusal": admission_refusal,
+    }
+
+
+def _write_provider_invocation_receipt(
+    task_dir: Path,
+    output_file: Path,
+    provider_output: str,
+    exit_code: int,
+    *,
+    invocation_id: str,
+    status: str,
+) -> dict[str, object]:
+    """Persist wrapper-observed provider admission evidence.
+
+    The graph runtime must never infer quota/auth state from stdout.  This
+    wrapper is the provider boundary, so it records whether the provider
+    refused the invocation before producing a final assistant message.  It
+    intentionally makes no claim about filesystem effects; operatord records
+    those independently around the whole writable grant.
+    """
+    _bounded, overflow = _bounded_provider_log(task_dir, provider_output)
+    structured = _structured_provider_admission(provider_output, overflow=overflow)
+    runtime_state = str(structured.get("runtime_state") or "")
+    try:
+        final_message = output_file.read_bytes() if output_file.is_file() else b""
+    except OSError:
+        final_message = b""
+    final_present = bool(final_message.strip())
+    error_type = str(structured.get("error_type") or "")
+    admission_refusal = bool(
+        exit_code != 0
+        and structured.get("provider_admission_refusal") is True
+        and not final_present
+    )
+    try:
+        candidates = json.loads(os.environ.get("FROZEN_CANDIDATE_IDS_JSON") or "[]")
+    except (TypeError, ValueError):
+        candidates = []
+    if not isinstance(candidates, list):
+        candidates = []
+    identifiers = {
+        "task_id": os.environ.get("TASK_ID") or "",
+        "dispatch_id": os.environ.get("DISPATCH_ID") or "",
+        "attempt_id": os.environ.get("ATTEMPT_ID") or "",
+        "correlation_id": os.environ.get("CORRELATION_ID") or "",
+        "graph_dispatch_id": os.environ.get("GRAPH_DISPATCH_ID") or "",
+        "scheduler_input_sha256": os.environ.get("SCHEDULER_INPUT_SHA256") or "",
+        "frozen_candidate_ids": [str(value) for value in candidates if str(value).strip()],
+    }
+    receipt: dict[str, object] = {
+        "schema_version": "solar.provider_invocation_receipt.v1",
+        "provider": "openai",
+        "invocation_id": invocation_id,
+        "status": status,
+        "exit_code": int(exit_code),
+        "identifiers": identifiers,
+        "provider_admission_refusal": admission_refusal,
+        "structured_stream": structured,
+        "final_assistant_message": {
+            "present": final_present,
+            "sha256": hashlib.sha256(final_message).hexdigest() if final_message else "",
+        },
+        "tool_evidence": {
+            "observed": bool(structured.get("tool_or_external_event_observed")),
+            "basis": (
+                "provider_refusal_before_final_assistant_message"
+                if admission_refusal
+                else "plain_stream_does_not_prove_tool_absence"
+            ),
+            "complete": bool(structured.get("complete")),
+        },
+    }
+    if admission_refusal:
+        receipt["error"] = {
+            "type": error_type,
+            "phase": "admission",
+            "retryable": True,
+            "retry_scope": "frozen_operator_alternative",
+        }
+        receipt["failure_flow_control"] = {
+            "runtime_state": runtime_state,
+            "reason": (
+                "capacity"
+                if error_type == "provider_capacity"
+                else "rate_limit"
+                if error_type == "provider_quota"
+                else runtime_state
+            ),
+        }
+    path = task_dir / "provider-invocation-receipt.json"
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+    return receipt
+
+
+def _declared_output_guidance() -> str:
+    try:
+        outputs = json.loads(os.environ.get("SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON") or "[]")
+        publish_map = json.loads(
+            os.environ.get("SOLAR_OPERATOR_OUTPUT_PUBLISH_MAP_JSON") or "[]"
+        )
+    except (TypeError, ValueError):
+        return ""
+    paths = [str(item).strip() for item in outputs if isinstance(item, str) and item.strip()]
+    if not paths:
+        return ""
+    rendered = "\n".join(f"- `{path}`" for path in paths)
+    publish_guidance = ""
+    if isinstance(publish_map, list) and publish_map:
+        mappings = []
+        for item in publish_map:
+            if not isinstance(item, dict):
+                continue
+            write_path = str(item.get("write_path") or "").strip()
+            publish_path = str(item.get("publish_path") or "").strip()
+            if write_path and publish_path:
+                mappings.append(f"- Write `{write_path}`; Solar publishes it to `{publish_path}`")
+        if mappings:
+            publish_guidance = (
+                "\n\nSome canonical outputs are concurrently maintained by the Solar control plane. "
+                "Do not write their canonical publish paths directly. Write the task-local paths "
+                "below; operatord will atomically publish them after you exit successfully:\n"
+                + "\n".join(mappings)
+            )
+    return (
+        "## Solar filesystem output contract\n\n"
+        "Solar may pre-create the exact declared output paths as zero-byte placeholders so "
+        "Landlock can grant file-level write access. A placeholder is not a completed artifact. "
+        "Write these files in place; do not delete and recreate them. When using apply_patch on "
+        "an existing placeholder, use Update File rather than Add File.\n\n"
+        "Declared writable outputs:\n"
+        f"{rendered}"
+        f"{publish_guidance}"
+    )
 def _read_dispatch() -> str:
     dispatch_file = os.environ.get("DISPATCH_FILE") or os.environ.get("SOLAR_MULTI_TASK_DISPATCH_FILE")
     if dispatch_file:
         path = Path(dispatch_file).expanduser()
         if path.exists():
-            return path.read_text(encoding="utf-8", errors="replace")
-    return sys.stdin.read()
+            dispatch = path.read_text(encoding="utf-8", errors="replace")
+        else:
+            dispatch = sys.stdin.read()
+    else:
+        dispatch = sys.stdin.read()
+    guidance = _declared_output_guidance()
+    return f"{dispatch.rstrip()}\n\n{guidance}\n" if guidance else dispatch
 
 
 def _write_pm_result(task_dir: Path, output_file: Path, output: str, exit_code: int) -> None:
@@ -55,6 +520,30 @@ def _write_pm_result(task_dir: Path, output_file: Path, output: str, exit_code: 
         ),
         encoding="utf-8",
     )
+
+
+def _forwarded_cli_output(combined: str, output_file: Path, max_chars: int = 20000) -> str:
+    """Return bounded closeout text; the complete provider stream stays on disk.
+
+    Codex can emit multi-megabyte event streams. Forwarding that entire stream
+    through a nested Windows venv-launcher pipe can block the operator before
+    operatord has a chance to write ``result.json``.
+    """
+    final_message = ""
+    try:
+        if output_file.is_file():
+            final_message = output_file.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        final_message = ""
+    selected = final_message or combined.strip()
+    if len(selected) > max_chars:
+        selected = selected[-max_chars:]
+    if len(combined) > len(selected):
+        return (
+            "[codex-cli-output truncated; full stream retained in codex-cli-output.log]\n"
+            + selected
+        )
+    return selected
 
 
 def _timeout_seconds() -> float:
@@ -134,7 +623,29 @@ def _codex_exec_env(task_dir: Path) -> dict[str, str]:
     env["SOLAR_HARNESS_CMD"] = str(shim_dir / "solar-harness")
     env["SOLAR_CODEX_SOURCE_HOME"] = str(source_codex_home)
     env["CODEX_SQLITE_HOME"] = str(state_home)
-    _prepend_env_path(env, "PATH", [shim_dir, harness_dir / "bin", harness_dir])
+    project_python_dirs: list[Path] = []
+    sid = str(env.get("SID") or "").strip()
+    if sid:
+        try:
+            import workspace_binding
+
+            workspace = workspace_binding.sprint_workspace_root(
+                sprints_dir,
+                sid,
+                harness_dir=harness_dir,
+            )
+        except Exception:
+            workspace = None
+        if workspace is not None:
+            for candidate in (workspace / ".venv" / "bin", workspace / "venv" / "bin"):
+                if (candidate / "python").is_file() or (candidate / "python3").is_file():
+                    project_python_dirs.append(candidate)
+                    break
+    _prepend_env_path(
+        env,
+        "PATH",
+        [shim_dir, *project_python_dirs, harness_dir / "bin", harness_dir],
+    )
     _prepend_env_path(env, "PYTHONPATH", [harness_dir / "lib", harness_dir / "tools"])
     return env
 
@@ -158,14 +669,29 @@ def _codex_live_search_requested() -> bool:
     return "--search" in tokens
 
 
-def _codex_exec_command(model: str, effort: str, cwd: str, output_file: Path) -> list[str]:
-    cmd = ["codex"]
+def _codex_model() -> str:
+    """Resolve the model while honoring the harness-wide Codex policy."""
+    policy_model = os.environ.get("SOLAR_CODEX_MODEL", "").strip()
+    configured_model = os.environ.get("CODEX_MODEL", "").strip()
+    return policy_model or configured_model or "gpt-5.5"
+
+
+def _codex_exec_command(
+    model: str,
+    effort: str,
+    cwd: str,
+    output_file: Path,
+    codex_binary: str = "codex",
+) -> list[str]:
+    cmd = [codex_binary]
     if _codex_live_search_requested():
         cmd.append("--search")
     cmd.append("exec")
     if _truthy_env("SOLAR_CODEX_OPERATOR_EPHEMERAL", "1"):
         cmd.append("--ephemeral")
+    cmd.append("--json")
     cmd.extend([
+        "--skip-git-repo-check",
         "--model",
         model,
         "--config",
@@ -194,6 +720,129 @@ def _existing_paths(values: list[Path]) -> list[Path]:
     return result
 
 
+def _codex_workspace_write_command(
+    command: list[str],
+    writable_dirs: list[Path] | None = None,
+) -> list[str]:
+    """Replace external bypass with Codex's native, bounded workspace sandbox."""
+    result = [
+        item
+        for item in command
+        if item != "--dangerously-bypass-approvals-and-sandbox"
+    ]
+    try:
+        insert_at = result.index("exec") + 1
+    except ValueError:
+        insert_at = 1 if result else 0
+    options: list[str] = []
+    if "--sandbox" not in result:
+        options.extend(["--sandbox", "workspace-write"])
+    seen: set[str] = set()
+    for raw in writable_dirs or []:
+        path = str(raw.expanduser().resolve(strict=False))
+        if path and path not in seen:
+            options.extend(["--add-dir", path])
+            seen.add(path)
+    result[insert_at:insert_at] = options
+    return result
+
+
+def _native_workspace_write_dirs(
+    *,
+    task_dir: Path,
+    cwd: Path,
+    env: dict[str, str],
+) -> list[Path]:
+    """Project operatord-validated output files into native directory grants.
+
+    Codex's native sandbox accepts additional writable directories, not exact
+    files. Operatord already validates every declared output against Solar's
+    runtime roots and pre-creates it; this second check prevents a standalone
+    wrapper invocation from turning an arbitrary environment value into a
+    write grant.
+    """
+    harness_dir = Path(env["HARNESS_DIR"]).expanduser().resolve(strict=False)
+    authorized_roots = (
+        harness_dir,
+        task_dir.expanduser().resolve(strict=False),
+        cwd.expanduser().resolve(strict=False),
+    )
+    try:
+        declared = json.loads(env.get("SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON") or "[]")
+    except (TypeError, ValueError):
+        declared = []
+    result: list[Path] = []
+    seen: set[str] = set()
+    workspace = cwd.expanduser().resolve(strict=False)
+    for value in declared:
+        if not isinstance(value, str) or not value.strip():
+            continue
+        output = Path(value).expanduser().resolve(strict=False)
+        if not any(output == root or output.is_relative_to(root) for root in authorized_roots):
+            continue
+        parent = output.parent
+        if parent == workspace or parent.is_relative_to(workspace):
+            continue
+        key = str(parent)
+        if key not in seen:
+            result.append(parent)
+            seen.add(key)
+    return result
+
+
+def _declared_read_scope_paths(env: dict[str, str], cwd: Path) -> list[Path]:
+    """Resolve the operator envelope's exact read grants.
+
+    Relative graph scopes are anchored to the sprint workdir. Evaluator
+    snapshots may add absolute published paths after their bytes and digest
+    have been frozen by graph dispatch.
+    """
+    try:
+        declared = json.loads(env.get("SOLAR_OPERATOR_READ_SCOPE_JSON") or "[]")
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(declared, list):
+        return []
+    paths: list[Path] = []
+    for value in declared:
+        if not isinstance(value, str) or not value.strip():
+            continue
+        path = Path(value).expanduser()
+        paths.append(path if path.is_absolute() else cwd / path)
+    return _existing_paths(paths)
+
+
+def _path_filesystem_type(path: Path) -> str:
+    """Return the Linux mount type containing path, using longest-prefix match."""
+    try:
+        resolved = path.expanduser().resolve(strict=False)
+        best: tuple[int, str] | None = None
+        for line in Path("/proc/self/mountinfo").read_text(encoding="utf-8").splitlines():
+            fields = line.split()
+            separator = fields.index("-")
+            mountpoint = Path(
+                fields[4]
+                .replace("\\040", " ")
+                .replace("\\011", "\t")
+                .replace("\\012", "\n")
+                .replace("\\134", "\\")
+            )
+            if resolved == mountpoint or resolved.is_relative_to(mountpoint):
+                candidate = (len(mountpoint.parts), fields[separator + 1].lower())
+                if best is None or candidate[0] > best[0]:
+                    best = candidate
+        return best[1] if best else ""
+    except (OSError, ValueError):
+        return ""
+
+
+def _default_operator_state_root() -> Path:
+    """Return a per-user state root on Unix and a per-process root on Windows."""
+    getuid = getattr(os, "getuid", None)
+    identity = str(getuid()) if callable(getuid) else f"pid-{os.getpid()}"
+    return Path(tempfile.gettempdir()) / f"solar-codex-operator-state-{identity}"
+
+
 def _filesystem_isolated_command(
     command: list[str],
     *,
@@ -204,25 +853,31 @@ def _filesystem_isolated_command(
     """Wrap a strict Solar operator in a kernel-enforced filesystem allowlist."""
     strict = _truthy_env("SOLAR_OPERATOR_STRICT_FS_SCOPE", "0")
     mode = env.get("SOLAR_CODEX_OPERATOR_FS_ISOLATION", "landlock").strip().lower()
+    if mode in {"codex", "builtin", "workspace-write"}:
+        writable_dirs = _native_workspace_write_dirs(task_dir=task_dir, cwd=cwd, env=env)
+        return _codex_workspace_write_command(command, writable_dirs), {
+            "mode": "codex_workspace_write",
+            "strict": False,
+            "read_write": [str(path) for path in writable_dirs],
+        }
     if mode in {"0", "off", "disabled", "none"}:
         if strict:
             raise RuntimeError("strict operator filesystem scope cannot disable Landlock")
         return command, {"mode": "disabled", "strict": False}
-    if sys.platform != "linux":
-        if strict:
-            raise RuntimeError("strict operator filesystem scope requires Linux Landlock")
-        return command, {"mode": "unsupported", "strict": False}
 
     harness_dir = Path(env["HARNESS_DIR"]).expanduser().resolve(strict=False)
     state_root = Path(
         env.get("SOLAR_CODEX_OPERATOR_STATE_ROOT")
-        or f"/tmp/solar-codex-operator-state-{os.getuid()}"
+        or _default_operator_state_root()
     ).expanduser()
     state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
     state_root.chmod(0o700)
     state_home = Path(tempfile.mkdtemp(prefix=f"{os.getpid()}-", dir=state_root))
     atexit.register(shutil.rmtree, state_home, ignore_errors=True)
     env["CODEX_SQLITE_HOME"] = str(state_home)
+    # Login shells spawned by Codex must not probe the operator user's real
+    # profile, which is intentionally outside the Landlock read boundary.
+    env["HOME"] = str(state_home)
     tmp_dir = task_dir / "tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
     env["TMPDIR"] = str(tmp_dir)
@@ -241,10 +896,33 @@ def _filesystem_isolated_command(
     config.write_text('cli_auth_credentials_store = "file"\n', encoding="utf-8")
     config.chmod(0o600)
     env["CODEX_HOME"] = str(codex_home)
+
+    if sys.platform != "linux":
+        if strict:
+            raise RuntimeError("strict operator filesystem scope requires Linux Landlock")
+        if sys.platform == "darwin":
+            writable_dirs = _native_workspace_write_dirs(task_dir=task_dir, cwd=cwd, env=env)
+            return _codex_workspace_write_command(command, writable_dirs), {
+                "mode": "codex_workspace_write",
+                "strict": False,
+                "read_write": [str(path) for path in writable_dirs],
+            }
+        # Preserve the Windows execution path that is already proven by the
+        # E2E run. Windows may run through native Codex or WSL; forcing the
+        # macOS workspace-write projection here changes that proven contract.
+        return command, {"mode": "unsupported", "strict": False}
+
     codex_arg0_dir = codex_home / "tmp" / "arg0"
     codex_arg0_dir.mkdir(parents=True, exist_ok=True)
-    codex_binary = Path(shutil.which("codex", path=env.get("PATH")) or "codex")
+    command_binary = Path(command[0]).expanduser() if command else Path("codex")
+    codex_binary = (
+        command_binary
+        if command_binary.is_file()
+        else Path(shutil.which("codex", path=env.get("PATH")) or "codex")
+    )
     resolved_binary = codex_binary.resolve(strict=False)
+    if command and Path(command[0]).name == codex_binary.name:
+        command = [str(resolved_binary), *command[1:]]
     # WSL resolves /etc/resolv.conf into /mnt/wsl. Landlock authorizes the
     # resolved inode, so /etc by itself is insufficient for DNS/token refresh.
     resolved_system_network_files = [
@@ -257,6 +935,12 @@ def _filesystem_isolated_command(
         )
         if path.exists()
     ]
+    declared_read_scope = _declared_read_scope_paths(env, cwd)
+    node_runtime_paths: list[Path] = []
+    node_binary = shutil.which("node", path=env.get("PATH"))
+    if node_binary:
+        resolved_node = Path(node_binary).expanduser().resolve(strict=False)
+        node_runtime_paths.extend([resolved_node, resolved_node.parent])
     read_only = _existing_paths(
         [
             Path("/usr"),
@@ -266,11 +950,17 @@ def _filesystem_isolated_command(
             Path("/lib64"),
             Path("/etc"),
             codex_binary,
+            resolved_binary.parent.parent,
             resolved_binary.parent,
+            *node_runtime_paths,
             *resolved_system_network_files,
             harness_dir,
+            harness_dir.parent / "AGENTS.md",
+            harness_dir.parent / ".agents",
+            *declared_read_scope,
         ]
     )
+    read_directories = _existing_paths([harness_dir.parent])
     try:
         declared_outputs = json.loads(env.get("SOLAR_OPERATOR_ALLOWED_OUTPUTS_JSON") or "[]")
     except (TypeError, ValueError):
@@ -296,15 +986,37 @@ def _filesystem_isolated_command(
     wrapper = Path(__file__).with_name("landlock_exec.py").resolve(strict=False)
     if not wrapper.is_file():
         raise RuntimeError(f"Landlock wrapper is missing: {wrapper}")
+    drvfs = _path_filesystem_type(harness_dir) in {"9p", "v9fs"}
     wrapped = [sys.executable, str(wrapper)]
+    if drvfs:
+        unshare = shutil.which("unshare", path=env.get("PATH"))
+        mount_wrapper = Path(__file__).with_name("mount_namespace_exec.py").resolve(strict=False)
+        if not unshare or not mount_wrapper.is_file():
+            raise RuntimeError("strict WSL operator scope requires unshare and mount_namespace_exec.py")
+        wrapped = [
+            unshare,
+            "--user",
+            "--map-root-user",
+            "--mount",
+            sys.executable,
+            str(mount_wrapper),
+        ]
+        for path in read_write:
+            if path == Path("/dev") or path.is_relative_to(Path("/dev")):
+                continue
+            wrapped.extend(["--read-write", str(path)])
+        wrapped.extend(["--", sys.executable, str(wrapper), "--read-scope-only"])
+    for path in read_directories:
+        wrapped.extend(["--read-directory", str(path)])
     for path in read_only:
         wrapped.extend(["--read-only", str(path)])
     for path in read_write:
         wrapped.extend(["--read-write", str(path)])
     wrapped.extend(["--", *command])
     return wrapped, {
-        "mode": "landlock",
+        "mode": "mount_namespace+landlock-read" if drvfs else "landlock",
         "strict": strict,
+        "read_directories": [str(path) for path in read_directories],
         "read_only": [str(path) for path in read_only],
         "read_write": [str(path) for path in read_write],
     }
@@ -319,6 +1031,38 @@ def _pm_result_ready(started_wall: float) -> bool:
         return path.exists() and path.stat().st_size > 0 and path.stat().st_mtime >= started_wall
     except OSError:
         return False
+
+
+def _path_has_fresh_output(path: Path, started_wall: float) -> bool:
+    try:
+        if path.is_file():
+            stat = path.stat()
+            return stat.st_size > 0 and stat.st_mtime >= started_wall
+        if path.is_dir():
+            return any(
+                child.is_file()
+                and child.stat().st_size > 0
+                and child.stat().st_mtime >= started_wall
+                for child in path.rglob("*")
+            )
+    except OSError:
+        return False
+    return False
+
+
+def _declared_closeout_ready(output_file: Path, started_wall: float) -> bool:
+    """True once the model has durably completed its declared node contract."""
+    if not _path_has_fresh_output(output_file, started_wall):
+        return False
+    handoff = str(os.environ.get("HANDOFF") or "").strip()
+    if not handoff or not _path_has_fresh_output(Path(handoff).expanduser(), started_wall):
+        return False
+    try:
+        write_scope = json.loads(os.environ.get("SOLAR_OPERATOR_WRITE_SCOPE_JSON") or "[]")
+    except (TypeError, ValueError):
+        return False
+    declared = [Path(str(value)).expanduser() for value in write_scope if str(value).strip()]
+    return bool(declared) and all(_path_has_fresh_output(path, started_wall) for path in declared)
 
 
 def _terminate_process_group(proc: subprocess.Popen[str]) -> None:
@@ -351,6 +1095,11 @@ def _register_codex_process_group(pid: int) -> bool:
     try:
         import run_process_registry as registry
 
+        signal_scope = (
+            "process_group"
+            if callable(getattr(os, "getpgid", None)) and callable(getattr(os, "getsid", None))
+            else "pid"
+        )
         registry.register(
             "harness",
             "operator-task-child",
@@ -362,7 +1111,7 @@ def _register_codex_process_group(pid: int) -> bool:
                 "backend": "codex",
             },
             harness_dir=harness_dir,
-            signal_scope="process_group",
+            signal_scope=signal_scope,
         )
         return True
     except Exception as exc:
@@ -381,8 +1130,9 @@ def main() -> int:
 
     task_dir = Path(os.environ.get("TASK_DIR") or ".").expanduser()
     task_dir.mkdir(parents=True, exist_ok=True)
+    skill_bridge_evidence = _materialize_skill_bridge_evidence(task_dir, dispatch)
     output_file = task_dir / "codex-last-message.md"
-    model = os.environ.get("CODEX_MODEL", "gpt-5.5").strip() or "gpt-5.5"
+    model = _codex_model()
     effort = os.environ.get("CODEX_REASONING_EFFORT", "medium").strip() or "medium"
     cwd = str(Path(os.environ.get("CODEX_WORKDIR") or os.environ.get("WORK_DIR") or os.getcwd()).expanduser())
     if not Path(cwd).is_dir():
@@ -390,7 +1140,15 @@ def main() -> int:
         return 72
 
     codex_env = _codex_exec_env(task_dir)
-    raw_cmd = _codex_exec_command(model, effort, cwd, output_file)
+    codex_binary, resolution = resolve_codex_cli(
+        Path(codex_env["HARNESS_DIR"]),
+        env=codex_env,
+        configured_path=os.environ.get("SOLAR_CODEX_BIN", ""),
+    )
+    if codex_binary is None:
+        print(f"ERROR: Codex CLI unavailable: {resolution}", file=sys.stderr)
+        return 69
+    raw_cmd = _codex_exec_command(model, effort, cwd, output_file, str(codex_binary))
     try:
         cmd, fs_scope = _filesystem_isolated_command(
             raw_cmd,
@@ -403,6 +1161,80 @@ def main() -> int:
         return 78
     timeout_seconds = _timeout_seconds()
     pm_result_grace = float(os.environ.get("CODEX_PM_RESULT_GRACE_SECONDS", "20"))
+    declared_closeout_grace = float(
+        os.environ.get("CODEX_DECLARED_CLOSEOUT_GRACE_SECONDS", "10")
+    )
+    invocation_id = str(uuid.uuid4())
+    dispatch_id = os.environ.get("DISPATCH_ID") or os.environ.get("TASK_ID") or "dispatch-unknown"
+    attempt_id = os.environ.get("ATTEMPT_ID") or "1"
+    operation_id = _observation_id("operation", dispatch_id, attempt_id, invocation_id, "codex-cli")
+    span_id = _observation_id("span", operation_id)
+    observation_ids = {
+        "sprint_id": os.environ.get("SID") or os.environ.get("SPRINT_ID"),
+        "node_id": os.environ.get("NODE_ID"),
+        "task_id": os.environ.get("TASK_ID"),
+        "dispatch_id": dispatch_id,
+        "attempt_id": attempt_id,
+        "invocation_id": invocation_id,
+        "correlation_id": os.environ.get("CORRELATION_ID") or os.environ.get("TASK_ID"),
+        "causation_id": os.environ.get("CAUSATION_ID") or dispatch_id,
+        "span_id": span_id,
+        "parent_span_id": os.environ.get("SOLAR_OBSERVABILITY_SPAN_ID"),
+    }
+    started = time.monotonic()
+    terminal_emitted = False
+
+    def _complete_invocation(status: str, exit_code: int | None, **extra) -> None:
+        nonlocal terminal_emitted
+        if terminal_emitted:
+            return
+        terminal_emitted = True
+        _observe(
+            "codex_cli.invocation.completed",
+            component="codex_operator",
+            operation="codex_cli_invocation",
+            operation_id=operation_id,
+            phase="completed",
+            terminal=True,
+            status=status,
+            identifiers=observation_ids,
+            data={
+                "exit_code": exit_code,
+                "codex_cli_elapsed_ms": (time.monotonic() - started) * 1000,
+                "provider_latency_ms": None,
+                "model_latency_ms": None,
+                "input_tokens": None,
+                "output_tokens": None,
+                "tool_calls": None,
+                **extra,
+            },
+            provenance="observed",
+        )
+
+    atexit.register(_complete_invocation, "wrapper_exit", None)
+
+    _observe(
+        "codex_cli.invocation.started",
+        component="codex_operator",
+        operation="codex_cli_invocation",
+        operation_id=operation_id,
+        phase="started",
+        identifiers=observation_ids,
+        data={
+            "provider": "openai",
+            "model": model,
+            "reasoning_effort": effort,
+            "dispatch_bytes": len(dispatch.encode("utf-8", errors="replace")),
+            "dispatch_sha256": hashlib.sha256(
+                dispatch.encode("utf-8", errors="replace")
+            ).hexdigest(),
+            "structured_stream": True,
+            "structured_stream_reason": "codex_exec_jsonl",
+            "provider_latency_ms": None,
+            "model_latency_ms": None,
+        },
+        provenance="observed",
+    )
     print(
         "codex_operator: env "
         f"cwd={shlex.quote(cwd)} "
@@ -415,19 +1247,45 @@ def main() -> int:
         f"mode={fs_scope.get('mode')} strict={str(bool(fs_scope.get('strict'))).lower()} "
         f"ro={len(fs_scope.get('read_only', []))} rw={len(fs_scope.get('read_write', []))}"
     )
-    print("codex_operator: invoking " + " ".join(shlex.quote(part) for part in cmd[:-1]) + " <dispatch>")
+    print(
+        "codex_operator: invoking "
+        + " ".join(shlex.quote(part) for part in cmd[:-1])
+        + " <dispatch>",
+        flush=True,
+    )
     cli_log = task_dir / "codex-cli-output.log"
-    started = time.monotonic()
     started_wall = time.time()
     with open(cli_log, "w", encoding="utf-8") as log_f:
-        proc = subprocess.Popen(
-            cmd,
-            stdin=subprocess.PIPE,
-            stdout=log_f,
-            stderr=subprocess.STDOUT,
-            text=True,
-            start_new_session=True,
-            env=codex_env,
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stdout=log_f,
+                stderr=subprocess.STDOUT,
+                text=True,
+                start_new_session=True,
+                env=codex_env,
+            )
+        except Exception as exc:
+            _write_provider_invocation_receipt(
+                task_dir,
+                output_file,
+                str(exc),
+                70,
+                invocation_id=invocation_id,
+                status="spawn_error",
+            )
+            _complete_invocation("spawn_error", None, failure_class=type(exc).__name__)
+            raise
+        _observe(
+            "codex_cli.process.started",
+            component="codex_operator",
+            operation="codex_cli_invocation",
+            operation_id=operation_id,
+            phase="progress",
+            identifiers=observation_ids,
+            data={"pid": int(proc.pid), "provider": "openai", "model": model},
+            provenance="observed",
         )
         if not _register_codex_process_group(proc.pid):
             _terminate_process_group(proc)
@@ -439,6 +1297,15 @@ def main() -> int:
                 except Exception:
                     proc.kill()
                 proc.wait(timeout=5)
+            _complete_invocation("registration_failed", 75)
+            _write_provider_invocation_receipt(
+                task_dir,
+                output_file,
+                "process registration failed",
+                75,
+                invocation_id=invocation_id,
+                status="registration_failed",
+            )
             return 75
         try:
             assert proc.stdin is not None
@@ -448,7 +1315,25 @@ def main() -> int:
             pass
 
         pm_ready_since: float | None = None
+        declared_ready_since: float | None = None
+        first_output_observed = False
         while True:
+            if not first_output_observed:
+                try:
+                    first_output_observed = cli_log.stat().st_size > 0
+                except OSError:
+                    first_output_observed = False
+                if first_output_observed:
+                    _observe(
+                        "codex_cli.first_output",
+                        component="codex_operator",
+                        operation="codex_cli_invocation",
+                        operation_id=operation_id,
+                        phase="progress",
+                        identifiers=observation_ids,
+                        data={"elapsed_ms": (time.monotonic() - started) * 1000},
+                        provenance="observed",
+                    )
             if proc.poll() is not None:
                 break
             elapsed = time.monotonic() - started
@@ -459,6 +1344,21 @@ def main() -> int:
                         f"codex_operator: PM result ready; terminating lingering codex exec after {pm_result_grace:.0f}s grace"
                     )
                     _terminate_process_group(proc)
+                    _observe(
+                        "codex_cli.termination_requested",
+                        component="codex_operator",
+                        operation="codex_cli_invocation",
+                        operation_id=operation_id,
+                        phase="progress",
+                        status="pm_result_ready",
+                        identifiers=observation_ids,
+                        data={
+                            "signal": "SIGTERM",
+                            "grace_seconds": pm_result_grace,
+                            "elapsed_ms": (time.monotonic() - started) * 1000,
+                        },
+                        provenance="observed",
+                    )
                     try:
                         proc.wait(timeout=5)
                     except subprocess.TimeoutExpired:
@@ -467,9 +1367,78 @@ def main() -> int:
                         except Exception:
                             proc.kill()
                         proc.wait(timeout=5)
+                    _write_skill_bridge_result(task_dir, skill_bridge_evidence, 0)
+                    combined = (
+                        cli_log.read_text(encoding="utf-8", errors="replace")
+                        if cli_log.exists()
+                        else ""
+                    )
+                    _write_provider_invocation_receipt(
+                        task_dir,
+                        output_file,
+                        combined,
+                        int(proc.returncode or 0),
+                        invocation_id=invocation_id,
+                        status="pm_result_ready",
+                    )
+                    _complete_invocation(
+                        "pm_result_ready",
+                        int(proc.returncode or 0),
+                        first_output_observed=first_output_observed,
+                    )
                     return 0
+            if _declared_closeout_ready(output_file, started_wall):
+                declared_ready_since = declared_ready_since or time.monotonic()
+                if (time.monotonic() - declared_ready_since) >= declared_closeout_grace:
+                    print(
+                        "codex_operator: declared artifact, handoff, and final message ready; "
+                        f"terminating lingering codex exec after {declared_closeout_grace:.0f}s grace"
+                    )
+                    _terminate_process_group(proc)
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        try:
+                            os.killpg(proc.pid, signal.SIGKILL)
+                        except Exception:
+                            proc.kill()
+                        proc.wait(timeout=5)
+                    combined = (
+                        cli_log.read_text(encoding="utf-8", errors="replace")
+                        if cli_log.exists()
+                        else ""
+                    )
+                    _write_pm_result(task_dir, output_file, combined, 0)
+                    _write_skill_bridge_result(task_dir, skill_bridge_evidence, 0)
+                    _write_provider_invocation_receipt(
+                        task_dir,
+                        output_file,
+                        combined,
+                        0,
+                        invocation_id=invocation_id,
+                        status="declared_closeout_ready",
+                    )
+                    _complete_invocation(
+                        "declared_closeout_ready",
+                        0,
+                        first_output_observed=first_output_observed,
+                    )
+                    return 0
+            else:
+                declared_ready_since = None
             if timeout_seconds > 0 and elapsed >= timeout_seconds:
                 _terminate_process_group(proc)
+                _observe(
+                    "codex_cli.termination_requested",
+                    component="codex_operator",
+                    operation="codex_cli_invocation",
+                    operation_id=operation_id,
+                    phase="progress",
+                    status="timeout",
+                    identifiers=observation_ids,
+                    data={"signal": "SIGTERM", "elapsed_ms": elapsed * 1000},
+                    provenance="observed",
+                )
                 try:
                     proc.wait(timeout=5)
                 except subprocess.TimeoutExpired:
@@ -489,15 +1458,42 @@ def main() -> int:
                 )
                 print(combined, file=sys.stderr)
                 _write_pm_result(task_dir, output_file, combined, 124)
+                _write_skill_bridge_result(task_dir, skill_bridge_evidence, 124)
+                _write_provider_invocation_receipt(
+                    task_dir,
+                    output_file,
+                    combined,
+                    124,
+                    invocation_id=invocation_id,
+                    status="timeout",
+                )
+                _complete_invocation("timeout", 124, first_output_observed=first_output_observed)
                 return 124
             time.sleep(1)
 
     combined = cli_log.read_text(encoding="utf-8", errors="replace") if cli_log.exists() else ""
-    if combined:
-        print(combined, end="" if combined.endswith("\n") else "\n")
+    forwarded = _forwarded_cli_output(combined, output_file)
+    if forwarded:
+        print(forwarded, end="" if forwarded.endswith("\n") else "\n", flush=True)
     if proc.returncode == 0:
         _write_pm_result(task_dir, output_file, combined, int(proc.returncode))
-    return int(proc.returncode or 0)
+    exit_code = int(proc.returncode or 0)
+    _write_skill_bridge_result(task_dir, skill_bridge_evidence, exit_code)
+    _write_provider_invocation_receipt(
+        task_dir,
+        output_file,
+        combined,
+        exit_code,
+        invocation_id=invocation_id,
+        status="completed" if exit_code == 0 else "failed",
+    )
+    _complete_invocation(
+        "completed" if exit_code == 0 else "failed",
+        exit_code,
+        first_output_observed=first_output_observed,
+        structured_stream=True,
+    )
+    return exit_code
 
 
 if __name__ == "__main__":

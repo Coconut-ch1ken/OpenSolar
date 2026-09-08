@@ -1,0 +1,27 @@
+{
+  "schema_version": "solar.requirement_validation.v1",
+  "validation_id": "requirement-validation-20260825-091412-a3f8",
+  "requirement_ir_ref": {
+    "requirement_ir_id": "requirement-ir-20260825-091412-a3f8",
+    "sha256": "96adcb11c4660914bf2e4cf2f4d1bc0985125baf58cddae0429e8b6d41164d3f"
+  },
+  "dependencies": [
+    {"artifact": "intent_validation.json", "allowed_statuses": ["pass", "pass_with_warnings"]},
+    {"artifact": "intent_fidelity.json", "allowed_statuses": ["pass", "pass_with_warnings"]},
+    {"artifact": "intent_acceptance.json", "required_decision": "accepted"}
+  ],
+  "attempt": 1,
+  "repair_count": 0,
+  "status": "pass",
+  "checks": [
+    {"check_id": "RV1", "kind": "requirement_identifier_uniqueness", "status": "pass"},
+    {"check_id": "RV2", "kind": "intent_reference_integrity", "status": "pass"},
+    {"check_id": "RV3", "kind": "acceptance_specification_presence", "status": "pass"},
+    {"check_id": "RV4", "kind": "registered_check_reference", "status": "pass"},
+    {"check_id": "RV5", "kind": "checkability_disposition_integrity", "status": "pass"},
+    {"check_id": "RV6", "kind": "scope_and_conflict_integrity", "status": "pass"},
+    {"check_id": "RV7", "kind": "intent_gate_dependencies", "status": "pass"}
+  ],
+  "errors": [],
+  "failure_policy": "Return defects for one bounded model repair; a second failure clarifies or rejects."
+}

@@ -52,7 +52,10 @@ def require_request_identity(context: OperatorContext, expected_node_id: str) ->
     for field in ("task_id", "run_id", "workflow_id", "node_id"):
         if not str(context.node_request.get(field) or "").strip():
             raise ResearchOperatorError(f"Missing required request identity: {field}", error_type="invalid_input")
-    actual = str(context.node_request["node_id"])
+    actual = str(
+        context.node_request.get("implementation_node_id")
+        or context.node_request["node_id"]
+    )
     if actual != expected_node_id:
         raise ResearchOperatorError(
             f"Operator expected node_id={expected_node_id}, got {actual}",
@@ -63,10 +66,21 @@ def require_request_identity(context: OperatorContext, expected_node_id: str) ->
 def output_target(context: OperatorContext, filename: str) -> Path:
     if not context.write_scope:
         raise ResearchOperatorError("No write scope declared", error_type="scope_violation")
-    raw = context.write_scope[0]
-    candidate = Path(raw)
-    path_text = raw if candidate.suffix.lower() == ".json" else f"{raw.rstrip('/\\')}/{filename}"
-    return validate_scoped_path(path_text, context.write_scope, workspace_root=context.workspace_root)
+    raw = str(context.write_scope[0])
+    explicit_directory_scope = raw.endswith(("/", "\\"))
+    normalized = raw.rstrip("/\\") if explicit_directory_scope else raw
+    candidate = Path(normalized)
+    path_text = (
+        normalized
+        if not explicit_directory_scope and candidate.suffix.lower() == ".json"
+        else f"{normalized}/{filename}"
+    )
+    scoped_paths = (
+        [f"{normalized}/", *context.write_scope[1:]]
+        if explicit_directory_scope
+        else context.write_scope
+    )
+    return validate_scoped_path(path_text, scoped_paths, workspace_root=context.workspace_root)
 
 
 def load_evidence_inputs(
@@ -115,6 +129,12 @@ def load_evidence_inputs(
         value = context.payload.get(key)
         if isinstance(value, dict) and str(value.get("schema") or "") in allowed:
             loaded.append(value)
+        elif isinstance(value, list):
+            loaded.extend(
+                item
+                for item in value
+                if isinstance(item, dict) and str(item.get("schema") or "") in allowed
+            )
     return loaded
 
 
@@ -138,7 +158,13 @@ def input_fingerprint(context: OperatorContext, spec: OperatorSpec) -> str:
         raw = context.payload.get(key)
         if not isinstance(raw, str) or not raw.strip() or raw.lower().startswith(("http://", "https://")):
             continue
-        path = validate_scoped_path(raw, context.read_scope, workspace_root=context.workspace_root, must_exist=True)
+        path = validate_scoped_path(
+            raw,
+            context.read_scope,
+            workspace_root=context.workspace_root,
+            must_exist=True,
+            allow_external_exact=True,
+        )
         if _is_file(path):
             direct_paths.append({"field": key, "path": display_path(path, context.workspace_root), "sha256": sha256_bytes(_read_bytes(path))})
         else:
@@ -226,19 +252,161 @@ def _existing_success(target: Path, spec: OperatorSpec, input_hash: str) -> dict
     return None
 
 
-def write_evidence(context: OperatorContext, target: Path, payload: dict[str, Any]) -> tuple[dict[str, str], str]:
+def write_evidence(
+    context: OperatorContext,
+    target: Path,
+    payload: dict[str, Any],
+    *,
+    artifact_id: str | None = None,
+) -> tuple[dict[str, str], str]:
     body = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
     _write_bytes(target, body)
     digest = sha256_bytes(_read_bytes(target))
+    resolved_artifact_id = artifact_id or f"evidence.{context.node_request['node_id']}"
     return (
         {
-            "artifact_id": f"evidence.{context.node_request['node_id']}",
+            "artifact_id": resolved_artifact_id,
             "path": display_path(target, context.workspace_root),
             "schema": str(payload["schema"]),
             "sha256": digest,
         },
         digest,
     )
+
+
+def execute_batch_spec(
+    spec: OperatorSpec,
+    node_request: dict[str, Any],
+    *,
+    services: dict[str, Any] | None = None,
+    workspace_root: Path | None = None,
+) -> dict[str, Any]:
+    """Execute one bounded operator that emits many artifacts of one schema.
+
+    The first write scope must be a directory. Every emitted file is separately
+    hash-addressed and schema-gated downstream; no synthetic collection wrapper
+    is introduced merely to carry cardinality.
+    """
+
+    context = OperatorContext.from_request(
+        node_request,
+        services=services,
+        workspace_root=workspace_root or Path.cwd(),
+    )
+    try:
+        require_request_identity(context, spec.node_id)
+        if not context.secret_verification_complete:
+            raise ResearchOperatorError(
+                "Authorized secret refs require matching in-memory secret_values",
+                error_type="secret_verification_unavailable",
+            )
+        if not context.write_scope:
+            raise ResearchOperatorError("No write scope declared", error_type="scope_violation")
+        raw_scope = str(context.write_scope[0])
+        explicit_directory_scope = raw_scope.endswith(("/", "\\"))
+        normalized_scope = raw_scope.rstrip("/\\") if explicit_directory_scope else raw_scope
+        input_hash = input_fingerprint(context, spec)
+        raw = spec.handler(context, spec)
+        evidence_items = [
+            item for item in raw.get("evidence_items") or [] if isinstance(item, dict)
+        ]
+        if not evidence_items:
+            raise ResearchOperatorError(
+                str(raw.get("error") or "Batch operator produced no accepted evidence"),
+                error_type=str(raw.get("error_type") or "product_failure"),
+            )
+        explicit_file_scope = not explicit_directory_scope and bool(Path(normalized_scope).suffix)
+        if explicit_file_scope and len(evidence_items) != 1:
+            raise ResearchOperatorError(
+                "Multi-document batch evidence output requires a directory write scope",
+                error_type="scope_violation",
+            )
+        scoped_paths = (
+            context.write_scope
+            if explicit_file_scope
+            else [f"{normalized_scope}/", *context.write_scope[1:]]
+        )
+        if explicit_file_scope:
+            target_dir = Path(normalized_scope).parent
+        else:
+            target_dir = validate_scoped_path(
+                normalized_scope,
+                scoped_paths,
+                workspace_root=context.workspace_root,
+            )
+            target_dir.mkdir(parents=True, exist_ok=True)
+        artifacts: list[dict[str, Any]] = []
+        hashes: list[dict[str, str]] = []
+        evidence_refs: list[dict[str, str]] = []
+        all_reused = True
+        for index, item in enumerate(evidence_items, start=1):
+            artifact_id = f"evidence.{spec.node_id}.{index:03d}"
+            if spec.node_id == "paper_analyze":
+                filename = (
+                    spec.output_filename
+                    if len(evidence_items) == 1
+                    else f"research_paper_analysis.{index:03d}.v1.json"
+                )
+            else:
+                filename = f"research_paper.{index:03d}.v1.json"
+            target = validate_scoped_path(
+                normalized_scope if explicit_file_scope else target_dir / filename,
+                scoped_paths,
+                workspace_root=context.workspace_root,
+            )
+            typed = _existing_success(target, spec, input_hash)
+            if typed is None:
+                all_reused = False
+                typed = enrich_evidence(
+                    dict(item["evidence"]),
+                    context=context,
+                    spec=spec,
+                    input_hash=input_hash,
+                    outcome_class=SUCCESS,
+                )
+                typed.setdefault("provenance", {})["artifact_id"] = artifact_id
+            artifact, digest = write_evidence(
+                context,
+                target,
+                typed,
+                artifact_id=artifact_id,
+            )
+            artifacts.append(artifact)
+            hashes.append({"hash_id": artifact_id, "algorithm": "sha256", "value": digest})
+            evidence_refs.append(
+                evidence_ref(
+                    f"ev.{spec.node_id}.{index:03d}",
+                    spec.output_schema,
+                    str(item.get("summary") or "Ingested one discovered source."),
+                    artifact_id,
+                )
+            )
+        return build_node_result(
+            context,
+            status="completed",
+            output_artifacts=artifacts,
+            evidence=evidence_refs,
+            hashes=hashes,
+            model_provider_usage=list(raw.get("provider_usage") or []),
+            limitations=(
+                [
+                    "Idempotent replay reused the existing batch outputs because operator identity, version and input hash matched."
+                ]
+                if all_reused
+                else list(raw.get("limitations") or [])
+            ),
+        )
+    except ResearchOperatorError as exc:
+        return build_node_result(
+            context,
+            status="failed",
+            errors=[{
+                "error_id": f"operator.{spec.node_id}.product_failure",
+                "error_type": PRODUCT_FAILURE,
+                "message": f"{exc.error_type}: {str(exc)}"[:500],
+            }],
+            limitations=["The batch operator stopped before producing accepted evidence."],
+        )
 
 
 def execute_spec(

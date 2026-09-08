@@ -987,9 +987,154 @@ class TestBuildCommand:
         )
         assert cmd == ["bash", "-lc", "python3 /tmp/agent.py"]
 
+    def test_command_backend_can_use_shell_free_registry_argv(self):
+        cmd = _od._build_command(
+            {
+                "backend": "command",
+                "launch_cmd": "python3 /tmp/ignored.py",
+                "launch_argv": [sys.executable, "C:\\fixture worker.py"],
+            },
+            {"task_id": "pm-native-argv"},
+        )
+
+        assert cmd == [sys.executable, "C:\\fixture worker.py"]
+
+    def test_windows_codex_command_uses_native_python_wrapper(self, monkeypatch):
+        monkeypatch.setattr(_od.os, "name", "nt")
+        cmd = _od._build_command(
+            {
+                "backend": "command",
+                "provider": "openai",
+                "model": "gpt-5.5",
+                "model_config": "Codex CLI;gpt-5.5;reasoning=high",
+                "command": "CODEX_MODEL=gpt-5.5 python3 $HARNESS_DIR/tools/codex_operator.py",
+                "command_path": "/opt/homebrew/bin/codex",
+            },
+            {"task_id": "pm-windows-codex"},
+        )
+
+        assert cmd == [
+            sys.executable,
+            str(_od.HARNESS_DIR / "tools" / "codex_operator.py"),
+        ]
+
+    def test_windows_codex_envelope_command_still_uses_native_python_wrapper(self, monkeypatch):
+        monkeypatch.setattr(_od.os, "name", "nt")
+        config = {
+            "backend": "command",
+            "provider": "openai",
+            "model": "gpt-5.3-codex-spark",
+            "model_config": "Codex CLI;gpt-5.3-codex-spark;reasoning=medium",
+            "command": 'CODEX_MODEL=gpt-5.3-codex-spark python3 "$HARNESS_DIR/tools/codex_operator.py"',
+        }
+
+        cmd = _od._build_command(config, {"task_id": "scheduler-task", "command": config["command"]})
+
+        assert cmd == [
+            sys.executable,
+            str(_od.HARNESS_DIR / "tools" / "codex_operator.py"),
+        ]
+
+    def test_windows_fixed_research_worker_uses_native_python_adapter(self, monkeypatch):
+        monkeypatch.setattr(_od.os, "name", "nt")
+        cmd = _od._build_command(
+            {
+                "backend": "command",
+                "command": 'python3 "$HARNESS_DIR/plugins/autosci/bin/fixed_research_node_adapter.py" --envelope "$SOLAR_OPERATOR_ENVELOPE_JSON"',
+            },
+            {"task_id": "fixed-research-a4"},
+            {"SOLAR_OPERATOR_ENVELOPE_JSON": r"C:\run\operator-envelope.json"},
+        )
+
+        assert cmd == [
+            sys.executable,
+            str(_od.HARNESS_DIR / "plugins" / "autosci" / "bin" / "fixed_research_node_adapter.py"),
+            "--envelope",
+            r"C:\run\operator-envelope.json",
+        ]
+
+    def test_windows_autosci_bridge_worker_uses_native_python_adapter(self, monkeypatch):
+        monkeypatch.setattr(_od.os, "name", "nt")
+        config = {
+            "backend": "command",
+            "command": 'python3 "$HARNESS_DIR/plugins/autosci/bin/autosci_bridge.py" run --action discover_literature --envelope "$SOLAR_OPERATOR_ENVELOPE_JSON"',
+        }
+
+        cmd = _od._build_command(
+            config,
+            {"task_id": "scheduler-discovery", "command": config["command"]},
+            {"SOLAR_OPERATOR_ENVELOPE_JSON": r"C:\run\operator-envelope.json"},
+        )
+
+        assert cmd == [
+            sys.executable,
+            str(_od.HARNESS_DIR / "plugins" / "autosci" / "bin" / "autosci_bridge.py"),
+            "run",
+            "--action",
+            "discover_literature",
+            "--envelope",
+            r"C:\run\operator-envelope.json",
+        ]
+
+    def test_codex_command_environment_is_platform_neutral(self):
+        env = _od._command_operator_environment(
+            {
+                "backend": "command",
+                "provider": "openai",
+                "model": "gpt-5.5",
+                "model_config": "Codex CLI;gpt-5.5;reasoning=high;evaluator",
+            }
+        )
+
+        assert env == {
+            "CODEX_MODEL": "gpt-5.5",
+            "CODEX_REASONING_EFFORT": "high",
+            "PYTHONUTF8": "1",
+        }
+
 
 class TestFailureFlowControl:
-    def _submit_command_task(self, tmp_path: Path, env: dict, *, task_id: str, command: str) -> None:
+    def test_terminal_provider_rate_limit_exception_is_not_treated_as_local(self):
+        assert (
+            _od._failure_runtime_override_skip_reason(
+                "request failed\nRuntimeError: HTTP 429 too many requests"
+            )
+            == ""
+        )
+
+    def test_typed_provider_environment_failure_overrides_earlier_429_warning(self):
+        failure = "\n".join(
+            [
+                "Semantic Scholar returned HTTP 429 before a fallback provider ran.",
+                json.dumps(
+                    {
+                        "ok": False,
+                        "receipt": {
+                            "status": "awaiting_external",
+                            "error": {
+                                "type": "provider_environment_failure",
+                                "detail": "Authoritative coverage remained incomplete.",
+                                "retryable": True,
+                            },
+                        },
+                    }
+                ),
+            ]
+        )
+
+        assert _od._failure_runtime_override_skip_reason(failure) == (
+            "typed_non_flow_control:provider_environment_failure"
+        )
+
+    def _submit_command_task(
+        self,
+        tmp_path: Path,
+        env: dict,
+        *,
+        task_id: str,
+        command: str,
+        envelope_updates: dict | None = None,
+    ) -> None:
         envelope = {
             "task_id": task_id,
             "sprint_id": "sprint-command",
@@ -999,6 +1144,7 @@ class TestFailureFlowControl:
             "objective": "exercise failure flow control",
             "command": command,
         }
+        envelope.update(envelope_updates or {})
         envelope_path = tmp_path / f"{task_id}.json"
         envelope_path.write_text(json.dumps(envelope), encoding="utf-8")
         result = subprocess.run(
@@ -1056,6 +1202,158 @@ class TestFailureFlowControl:
         result = json.loads(result_path.read_text(encoding="utf-8"))
         assert result["status"] == "failed"
         assert "'int' object has no attribute 'seek'" not in result["log_tail"]
+
+    def test_provider_admission_refusal_persists_typed_ids_and_zero_effects(self, tmp_path):
+        env = _setup_command_harness(tmp_path)
+        work_dir = tmp_path / "sprints" / "sprint-command" / "workdir"
+        work_dir.mkdir(parents=True)
+        declared_output = work_dir / "report.md"
+        worker = (
+            "import json,os,pathlib; "
+            "ids={'task_id':os.environ['TASK_ID'],'dispatch_id':os.environ['DISPATCH_ID'],"
+            "'attempt_id':os.environ['ATTEMPT_ID'],'correlation_id':os.environ['CORRELATION_ID'],"
+            "'graph_dispatch_id':os.environ['GRAPH_DISPATCH_ID'],"
+            "'scheduler_input_sha256':os.environ['SCHEDULER_INPUT_SHA256'],"
+            "'frozen_candidate_ids':json.loads(os.environ['FROZEN_CANDIDATE_IDS_JSON'])}; "
+            "receipt={'schema_version':'solar.provider_invocation_receipt.v1','provider':'openai',"
+            "'invocation_id':'inv-test','status':'failed','exit_code':1,'identifiers':ids,"
+            "'provider_admission_refusal':True,"
+            "'structured_stream':{'complete':True,'provider_admission_refusal':True,"
+            "'terminal_failed':True,'turn_completed':False,'agent_message_observed':False,"
+            "'tool_or_external_event_observed':False,'terminal_error_message':\"You've hit your usage limit\"},"
+            "'final_assistant_message':{'present':False,'sha256':''},"
+            "'tool_evidence':{'observed':False,'complete':True,'basis':'provider_refusal_before_final_assistant_message'},"
+            "'error':{'type':'provider_quota','phase':'admission','retryable':True,"
+            "'retry_scope':'frozen_operator_alternative'},"
+            "'failure_flow_control':{'runtime_state':'cooldown','reason':'rate_limit'}}; "
+            "pathlib.Path(os.environ['TASK_DIR'],'provider-invocation-receipt.json').write_text(json.dumps(receipt)); "
+            "print(\"You've hit your usage limit\", flush=True); raise SystemExit(1)"
+        )
+        self._submit_command_task(
+            tmp_path,
+            env,
+            task_id="T-typed-provider-refusal",
+            command=_command_text([_worker_python(), "-c", worker]),
+            envelope_updates={
+                "dispatch_id": "dispatch-T-typed-provider-refusal",
+                "attempt_id": "3",
+                "correlation_id": "sprint-command:N1",
+                "graph_dispatch_id": "graph-sprint-command-N1-rank2",
+                "scheduler_input_sha256": "a" * 64,
+                "frozen_candidate_ids": ["op.rank1", "test-command-builder", "op.rank3"],
+                "work_dir": str(work_dir),
+                "expected_artifacts": [str(declared_output)],
+            },
+        )
+
+        daemon_proc = self._run_command_daemon_once(env)
+        assert daemon_proc.returncode == 0, daemon_proc.stderr
+        result_path = (
+            tmp_path
+            / "run"
+            / "operator-results"
+            / "test-command-builder"
+            / "T-typed-provider-refusal"
+            / "result.json"
+        )
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        assert result["error"] == {
+            "type": "provider_quota",
+            "phase": "admission",
+            "retryable": True,
+            "retry_scope": "frozen_operator_alternative",
+        }
+        assert result["failure_flow_control"]["runtime_state"] == "cooldown"
+        assert result["dispatch_id"] == "dispatch-T-typed-provider-refusal"
+        assert result["attempt_id"] == "3"
+        assert result["correlation_id"] == "sprint-command:N1"
+        assert result["graph_dispatch_id"] == "graph-sprint-command-N1-rank2"
+        assert result["scheduler_input_sha256"] == "a" * 64
+        assert result["frozen_candidate_ids"] == [
+            "op.rank1",
+            "test-command-builder",
+            "op.rank3",
+        ]
+        assert result["effects_receipt"]["complete"] is True
+        assert result["effects_receipt"]["effects_started"] is False
+        assert result["effects_receipt"]["changed_path_count"] == 0
+        assert result["effects_receipt"]["outputs_published"] is False
+        assert result["effects_receipt"]["publish_attempted"] is False
+
+    def test_fast_failed_quota_task_drains_trailing_error_before_classification(self, tmp_path):
+        env = _setup_command_harness(tmp_path)
+        self._submit_command_task(
+            tmp_path,
+            env,
+            task_id="T-cooldown-fast-output",
+            command=_command_text(
+                [
+                    _worker_python(),
+                    "-c",
+                    (
+                        "print('\\n'.join(['dispatch preamble'] * 200), flush=True); "
+                        "print(\"You've hit your usage limit for GPT-5.3-Codex-Spark\", flush=True); "
+                        "raise SystemExit(1)"
+                    ),
+                ]
+            ),
+        )
+
+        daemon_proc = self._run_command_daemon_once(env)
+        assert daemon_proc.returncode == 0, daemon_proc.stderr
+
+        status_path = tmp_path / "run" / "operator-status" / "test-command-builder.json"
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+        assert status["runtime_state"] == "cooldown"
+        result_path = (
+            tmp_path
+            / "run"
+            / "operator-results"
+            / "test-command-builder"
+            / "T-cooldown-fast-output"
+            / "result.json"
+        )
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        assert "usage limit for GPT-5.3-Codex-Spark" in result["log_tail"]
+        assert "[flow-control] runtime_state=cooldown" in result["log_tail"]
+
+    def test_terminal_local_failure_does_not_cooldown_operator_after_earlier_429(self, tmp_path):
+        env = _setup_command_harness(tmp_path)
+        self._submit_command_task(
+            tmp_path,
+            env,
+            task_id="T-local-path-after-429",
+            command=_command_text(
+                [
+                    _worker_python(),
+                    "-c",
+                    (
+                        "print('HTTP 429 from an earlier recoverable provider request', flush=True); "
+                        "open('definitely-missing-local-artifact.json', encoding='utf-8')"
+                    ),
+                ]
+            ),
+        )
+
+        daemon_proc = self._run_command_daemon_once(env)
+        assert daemon_proc.returncode == 0, daemon_proc.stderr
+
+        status_path = tmp_path / "run" / "operator-status" / "test-command-builder.json"
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+        assert status["runtime_state"] == "idle"
+        result_path = (
+            tmp_path
+            / "run"
+            / "operator-results"
+            / "test-command-builder"
+            / "T-local-path-after-429"
+            / "result.json"
+        )
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        assert result["status"] == "failed"
+        assert "FileNotFoundError:" in result["log_tail"]
+        assert "[flow-control] skipped=terminal_local_failure" in result["log_tail"]
+        assert "[flow-control] runtime_state=cooldown" not in result["log_tail"]
 
     def test_failed_auth_task_sets_auth_expired(self, tmp_path):
         env = _setup_command_harness(tmp_path)

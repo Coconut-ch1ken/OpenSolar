@@ -1,0 +1,108 @@
+{
+  "schema_version": "solar.requirement_ir.v2",
+  "requirement_ir_id": "requirement-ir-20260825-091412-a3f8",
+  "intent_ir_ref": {
+    "intent_ir_id": "intent-ir-20260825-091412-a3f8",
+    "sha256": "f61ae0efe3f91a70bfbaff9e2e0d5cad647533e46b1a874475d998044748bb5a"
+  },
+  "intent_acceptance_ref": {
+    "acceptance_id": "intent-acceptance-raw-intent-20260825-091412-a3f8",
+    "required_decision": "accepted"
+  },
+  "requirements": [
+    {
+      "requirement_id": "R1",
+      "origin": "user:D1",
+      "statement": "Produce a comparison covering satellite, airborne, and ground-based methane-leak measurement methods for oil and gas infrastructure.",
+      "priority": "must",
+      "source_refs": ["G1", "D1", "C1"],
+      "acceptance": {
+        "kind": "coverage",
+        "required_values": ["satellite", "airborne", "ground_based"]
+      },
+      "check": "check.method_comparison_coverage.v1",
+      "checkable": true,
+      "disposition": null
+    },
+    {
+      "requirement_id": "R2",
+      "origin": "user:D1",
+      "statement": "Assess sensitivity, false positives, weather limitations, coverage limitations, and validation conflicts for the compared methods.",
+      "priority": "must",
+      "source_refs": ["G1", "D1", "C2"],
+      "acceptance": {
+        "kind": "coverage",
+        "required_values": [
+          "sensitivity",
+          "false_positives",
+          "weather_limitations",
+          "coverage_limitations",
+          "validation_conflicts"
+        ]
+      },
+      "check": "check.evaluation_dimension_coverage.v1",
+      "checkable": true,
+      "disposition": null
+    },
+    {
+      "requirement_id": "R3",
+      "origin": "user:derived",
+      "statement": "Identify reported validation disagreements and preserve the evidence supporting each side.",
+      "priority": "must",
+      "source_refs": ["C2", "U1"],
+      "acceptance": {
+        "kind": "artifact_fields",
+        "required_values": ["claim", "supporting_evidence", "conflicting_evidence"]
+      },
+      "check": "check.contradiction_coverage.v1",
+      "checkable": true,
+      "disposition": null
+    },
+    {
+      "requirement_id": "R4",
+      "origin": "user:derived",
+      "statement": "Define and disclose the criteria used to select the most testable claims.",
+      "priority": "must",
+      "source_refs": ["G2", "C3", "U2"],
+      "acceptance": {
+        "kind": "artifact_fields",
+        "required_values": ["selection_criteria", "selected_claims", "excluded_claims"]
+      },
+      "check": "check.testability_selection_trace.v1",
+      "checkable": true,
+      "disposition": null
+    },
+    {
+      "requirement_id": "R5",
+      "origin": "user:D2",
+      "statement": "Produce a bounded reproducibility-check design for the selected claims without claiming that the experiment was executed.",
+      "priority": "must",
+      "source_refs": ["G2", "D2", "C3", "U3"],
+      "acceptance": {
+        "kind": "artifact_fields",
+        "required_values": [
+          "datasets",
+          "metrics",
+          "baselines",
+          "resource_envelope",
+          "stopping_conditions",
+          "tested_vs_not_tested"
+        ]
+      },
+      "check": "check.reproducibility_design_completeness.v1",
+      "checkable": true,
+      "disposition": null
+    }
+  ],
+  "scope": {
+    "research": {
+      "allowed": ["public_source_discovery", "source_linked_comparison", "design_document"],
+      "forbidden": ["domain_experiment_execution", "production_deployment"],
+      "network": "allowed_for_public_research"
+    }
+  },
+  "assumptions": [],
+  "conflict_scan": {"result": "clean", "detail": null},
+  "approvals": [],
+  "rollback": null
+}

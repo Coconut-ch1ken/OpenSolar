@@ -12,6 +12,7 @@ All responses use envelope: {ok, schema_version, generated_at, degraded_sources,
 from __future__ import annotations
 
 import datetime
+import hashlib
 import json
 import os
 import re
@@ -97,15 +98,8 @@ def _read_json(path: Path) -> tuple[Any, bool]:
         return None, False
 
 
-def _clean_sprint_title(sid: str, fallback: str) -> str:
-    """Human-friendly session title.
-
-    The stored title comes from the PRD's first heading, which is the user's intent
-    truncated mid-word at 80 chars (and is occasionally a non-English planner heading).
-    Prefer the user's full original intent from raw_intent.json, then truncate at a
-    word boundary. Falls back to the stored title when no raw intent is recorded.
-    """
-    fallback = re.sub(r"\s+", " ", str(fallback or "")).strip()
+def _sprint_original_prompt(sid: str) -> str:
+    """Return the exact user prompt stored by the governed RawIntent gateway."""
     full = ""
     data, ok = _read_json(SPRINTS_DIR / f"{sid}.raw_intent.json")
     if ok and isinstance(data, dict):
@@ -131,6 +125,19 @@ def _clean_sprint_title(sid: str, fallback: str) -> str:
                     full = str(parsed.get("text") or parsed.get("prompt") or "")
             else:
                 full = s
+    return full.strip()
+
+
+def _clean_sprint_title(sid: str, fallback: str) -> str:
+    """Human-friendly session title.
+
+    The stored title comes from the PRD's first heading, which is the user's intent
+    truncated mid-word at 80 chars (and is occasionally a non-English planner heading).
+    Prefer the user's full original intent from raw_intent.json, then truncate at a
+    word boundary. Falls back to the stored title when no raw intent is recorded.
+    """
+    fallback = re.sub(r"\s+", " ", str(fallback or "")).strip()
+    full = _sprint_original_prompt(sid)
     title = re.sub(r"\s+", " ", full).strip() or fallback
     if not title:
         return sid
@@ -198,24 +205,9 @@ def _sprint_status_rows(limit: int = 80) -> list[dict]:
     rows: list[dict] = []
     for item in prelim:
         sid = item["sprint_id"]
-        nodes: list = []
-        runtime_state: dict = {}
-        tg_ok = False
-        for name in (
-            f"{sid}.task_graph.json",
-            f"{sid}.task_dag.state.json",
-            f"{sid}.task_graph.state.json",
-            f"{sid}.closure.json",
-        ):
-            tg_data, tg_read = _read_json(SPRINTS_DIR / name)
-            if tg_read and isinstance(tg_data, dict):
-                tg = _normalize_task_graph_payload(tg_data)
-                raw_nodes = tg.get("nodes")
-                if isinstance(raw_nodes, list):
-                    nodes = raw_nodes
-                    runtime_state = tg.get("runtime_state") or {}
-                    tg_ok = True
-                    break
+        tg, tg_ok = _load_task_graph(sid)
+        nodes = tg.get("nodes") if isinstance(tg.get("nodes"), list) else []
+        runtime_state = _load_task_runtime_state(sid) or tg.get("runtime_state") or {}
         node_counts: dict[str, int] = {}
         for node in nodes:
             if not isinstance(node, dict):
@@ -291,6 +283,11 @@ def _task_graph_candidate_paths(sid: str) -> list[Path]:
     candidates = [SPRINTS_DIR / name for name in top_level_names]
     for root in (SPRINTS_DIR / sid, SPRINTS_DIR / sid / ".pm", SPRINTS_DIR / sid / "state"):
         candidates.extend(root / name for name in nested_names)
+    typed_runtime = SPRINTS_DIR / sid / "planning" / "runtime"
+    candidates.extend([
+        typed_runtime / f"{sid}.task_graph.json",
+        typed_runtime / f"{sid}.task_graph_state.json",
+    ])
     for pattern in (
         f"{sid}*task_graph*.json",
         f"{sid}*task_dag*.json",
@@ -333,12 +330,82 @@ def _existing_task_graph_path(sid: str) -> Path:
     return SPRINTS_DIR / f"{sid}.task_graph.json"
 
 
+def _split_runtime_state(sid: str) -> dict:
+    """Load the runtime node/gate plane stored beside a specification graph."""
+    candidates = [
+        SPRINTS_DIR / f"{sid}.task_graph_state.json",
+        SPRINTS_DIR / f"{sid}.task_dag.state.json",
+        SPRINTS_DIR / f"{sid}.task_graph.state.json",
+        SPRINTS_DIR / sid / "planning" / "runtime" / f"{sid}.task_graph_state.json",
+    ]
+    for path in candidates:
+        data, ok = _read_json(path)
+        if not ok or not isinstance(data, dict):
+            continue
+        runtime = data.get("runtime_state") if isinstance(data.get("runtime_state"), dict) else {}
+        nodes = data.get("node_results") if isinstance(data.get("node_results"), dict) else runtime.get("nodes")
+        if not isinstance(nodes, dict) and isinstance(data.get("nodes"), dict):
+            nodes = data.get("nodes")
+        gates = data.get("gate_results") if isinstance(data.get("gate_results"), dict) else runtime.get("gates")
+        if isinstance(nodes, dict) or isinstance(gates, dict):
+            return {
+                "nodes": nodes if isinstance(nodes, dict) else {},
+                "gates": gates if isinstance(gates, dict) else {},
+            }
+    return {}
+
+
+def _attach_split_runtime_state(sid: str, graph: dict) -> dict:
+    runtime = _split_runtime_state(sid)
+    if not runtime:
+        return graph
+    merged = dict(graph)
+    existing = graph.get("runtime_state") if isinstance(graph.get("runtime_state"), dict) else {}
+    merged_runtime = dict(existing)
+    for key in ("nodes", "gates"):
+        values = dict(existing.get(key) or {}) if isinstance(existing.get(key), dict) else {}
+        values.update(runtime.get(key) or {})
+        merged_runtime[key] = values
+    merged["runtime_state"] = merged_runtime
+    return merged
+
+
 def _load_task_graph(sid: str) -> tuple[dict, bool]:
     for path in _task_graph_candidate_paths(sid):
         data, ok = _read_json(path)
         if ok and isinstance(data, dict):
-            return _normalize_task_graph_payload(data), True
+            graph = _normalize_task_graph_payload(data)
+            if isinstance(graph.get("nodes"), list):
+                return _attach_split_runtime_state(sid, graph), True
     return {}, False
+
+
+def _load_task_runtime_state(sid: str) -> dict:
+    """Load scheduler-owned node state independently of the stable graph spec."""
+    candidates = [
+        SPRINTS_DIR / f"{sid}.task_graph_state.json",
+        SPRINTS_DIR / f"{sid}.task_dag.state.json",
+        SPRINTS_DIR / f"{sid}.task_graph.state.json",
+        SPRINTS_DIR / sid / "task_dag.state.json",
+        SPRINTS_DIR / sid / "task_graph.state.json",
+        SPRINTS_DIR / sid / "state" / "task_dag.state.json",
+        SPRINTS_DIR / sid / "state" / "task_graph.state.json",
+        SPRINTS_DIR / sid / "planning" / "runtime" / f"{sid}.task_graph_state.json",
+    ]
+    for path in _dedupe_paths(candidates):
+        data, ok = _read_json(path)
+        if not ok or not isinstance(data, dict):
+            continue
+        normalized = _normalize_task_graph_payload(data)
+        runtime_state = normalized.get("runtime_state")
+        if isinstance(runtime_state, dict):
+            return runtime_state
+        if isinstance(normalized.get("nodes"), dict):
+            return {
+                "nodes": normalized.get("nodes") or {},
+                "gates": normalized.get("gate_results") or {},
+            }
+    return {}
 
 
 def _display_path(path: Path) -> str:
@@ -356,13 +423,45 @@ def _is_within(path: Path, root: Path) -> bool:
         return False
 
 
+def _verified_terminal_direct_response(
+    sid: str,
+    status: dict[str, Any],
+) -> tuple[bool, str]:
+    """Verify the exact report that permits a direct response to omit a DAG."""
+    if (
+        str(status.get("execution_mode") or "") != "direct_response"
+        or str(status.get("status") or "").lower()
+        not in {"passed", "completed", "done"}
+    ):
+        return False, "not_terminal_direct_response"
+    reference = status.get("direct_response_ref")
+    if not isinstance(reference, dict):
+        return False, "reference_not_object"
+    raw_path = str(reference.get("path") or "").strip()
+    if not raw_path:
+        return False, "path_missing"
+    expected = (SPRINTS_DIR / f"{sid}.direct-response-report.md").resolve()
+    candidate = Path(raw_path).expanduser().resolve()
+    if not _is_within(expected, SPRINTS_DIR) or not _is_within(candidate, SPRINTS_DIR):
+        return False, "path_outside_sprints"
+    if candidate != expected:
+        return False, "path_not_canonical"
+    if not candidate.is_file():
+        return False, "report_missing"
+    expected_sha = str(reference.get("sha256") or "").lower()
+    actual_sha = hashlib.sha256(candidate.read_bytes()).hexdigest()
+    if expected_sha != actual_sha:
+        return False, "sha256_mismatch"
+    return True, "verified"
+
+
 def _normalize_status(status: str | None) -> str:
     value = (status or "").strip().lower()
     if value in {"passed", "completed"}:
         return "passed"
     if value in {"failed", "cancelled", "error"}:
         return "failed"
-    if value in {"blocked", "dependency_blocked", "quota_blocked", "auth_blocked"}:
+    if value in {"blocked", "worker_blocked", "dependency_blocked", "quota_blocked", "auth_blocked"}:
         return "blocked"
     if value in {"active", "dispatched", "reviewing", "ready_for_review", "in_progress"}:
         return "active"
@@ -585,6 +684,28 @@ def _build_node_cards(sid: str, nodes: list[dict], status_state: dict, routing: 
     for index, node in enumerate(nodes):
         nid = str(node.get("id") or f"N{index + 1}")
         decision = by_node.get(nid, {})
+        runtime_nodes = status_state.get("nodes") if isinstance(status_state.get("nodes"), dict) else {}
+        runtime_result = runtime_nodes.get(nid) if isinstance(runtime_nodes.get(nid), dict) else {}
+        raw_prework_refusal = (
+            runtime_result.get("pre_work_refusal")
+            if isinstance(runtime_result.get("pre_work_refusal"), dict)
+            else {}
+        )
+        refusal_error = (
+            raw_prework_refusal.get("error")
+            if isinstance(raw_prework_refusal.get("error"), dict)
+            else {}
+        )
+        prework_refusal_summary = (
+            {
+                "operator_id": str(raw_prework_refusal.get("operator_id") or ""),
+                "error_type": str(refusal_error.get("type") or ""),
+                "next_candidate_id": str(raw_prework_refusal.get("next_candidate_id") or ""),
+                "recorded_at": str(raw_prework_refusal.get("recorded_at") or ""),
+            }
+            if raw_prework_refusal
+            else {}
+        )
         executable_node = (
             node.get("executable_node")
             if isinstance(node.get("executable_node"), dict)
@@ -600,6 +721,11 @@ def _build_node_cards(sid: str, nodes: list[dict], status_state: dict, routing: 
         physical_plan = node.get("physical_plan") if isinstance(node.get("physical_plan"), dict) else {}
         physical_plan_ir = node.get("physical_plan_ir") if isinstance(node.get("physical_plan_ir"), dict) else {}
         capsule_plan_ir = node.get("capsule_plan_ir") if isinstance(node.get("capsule_plan_ir"), dict) else {}
+        required_operator = str(
+            executable_node.get("required_operator_id")
+            or node.get("required_operator_id")
+            or ""
+        ).strip()
         selected_operator = (
             physical_plan.get("suggested_operator_id")
             or physical_plan.get("selected_operator_id")
@@ -607,8 +733,45 @@ def _build_node_cards(sid: str, nodes: list[dict], status_state: dict, routing: 
             or physical_plan_ir.get("selected_operator_id")
             or node.get("suggested_operator_id")
             or node.get("selected_operator_id")
+            or required_operator
             or ""
         )
+        capsule_id = str(
+            executable_node.get("capability_capsule_id")
+            or physical_plan_ir.get("capability_capsule_id")
+            or capsule_plan_ir.get("capability_capsule_id")
+            or node.get("capability_capsule_id")
+            or ""
+        ).strip()
+        execution_candidates = physical_plan_ir.get("execution_candidates") or []
+        physical_candidates = node.get("physical_candidates") or []
+        compiled_candidate_ids = {
+            str(candidate.get("operator_id") or "").strip()
+            for candidate in [*execution_candidates, *physical_candidates]
+            if isinstance(candidate, dict)
+        }
+        if not selected_operator:
+            selected_operator = next(
+                (
+                    str(candidate.get("operator_id") or "").strip()
+                    for candidate in physical_candidates
+                    if isinstance(candidate, dict)
+                    and str(candidate.get("admission_state") or "ELIGIBLE").upper() == "ELIGIBLE"
+                    and str(candidate.get("operator_id") or "").strip()
+                ),
+                "",
+            )
+        # Fixed contracted nodes do not use the legacy autopilot pane router.  Their
+        # compiler-owned physical plan is the worker-admission evidence, so absence
+        # from autopilot-state must not be projected as a missing worker/capability.
+        contract_bound_worker = bool(
+            selected_operator
+            and selected_operator in compiled_candidate_ids
+            and (not required_operator or selected_operator == required_operator)
+            and capsule_id
+        )
+        if contract_bound_worker:
+            missing = []
         requested_role = (
             executable_node.get("dispatch_role")
             or decision.get("required_role")
@@ -643,8 +806,12 @@ def _build_node_cards(sid: str, nodes: list[dict], status_state: dict, routing: 
             "logical_operator": executable_node.get("logical_operator") or node.get("logical_operator") or physical_plan_ir.get("logical_operator") or "",
             "preferred_model": node.get("preferred_model") or "",
             "selected_operator_id": selected_operator,
-            "capability_capsule_id": executable_node.get("capability_capsule_id") or physical_plan_ir.get("capability_capsule_id") or capsule_plan_ir.get("capability_capsule_id") or "",
-            "candidate_workers_seen": bool(decision.get("any_worker_seen") or decision.get("candidate_workers_seen")),
+            "capability_capsule_id": capsule_id,
+            "candidate_workers_seen": bool(
+                decision.get("any_worker_seen")
+                or decision.get("candidate_workers_seen")
+                or contract_bound_worker
+            ),
             "role_candidates_seen": bool(decision.get("role_candidates_seen")),
             "target_pane": target_pane,
             "pane_carrier": {"pane_id": target_pane, "source": "autopilot_routing"} if target_pane else {},
@@ -653,9 +820,16 @@ def _build_node_cards(sid: str, nodes: list[dict], status_state: dict, routing: 
             "host_id": actorhost.get("host_id", "N/A") if actorhost else "N/A",
             "host_type": actorhost.get("host_type", "unknown") if actorhost else "unknown",
             "lease_state": actorhost.get("lease_state", "unknown") if actorhost else "unknown",
-            "route_decision": decision.get("decision") or "no_routing_record",
-            "blocked_reason": decision.get("blocked_reason") or "",
-            "decision": decision.get("decision") or "no_routing_record",
+            "route_decision": decision.get("decision") or ("fixed_contract_binding" if contract_bound_worker else "no_routing_record"),
+            "blocked_reason": runtime_result.get("blocking_reason") or decision.get("blocked_reason") or "",
+            "candidate_observations": runtime_result.get("candidate_observations") or [],
+            "retryable": runtime_result.get("retryable"),
+            "retry_after": runtime_result.get("retry_after") or "",
+            "next_action": runtime_result.get("next_action") or "",
+            "wait_classification": runtime_result.get("wait_classification") or "",
+            "candidate_wait_attempts": runtime_result.get("candidate_wait_attempts") or 0,
+            "pre_work_refusal": prework_refusal_summary,
+            "decision": decision.get("decision") or ("fixed_contract_binding" if contract_bound_worker else "no_routing_record"),
             "write_scope": identity.get("write_scope") or [],
             "read_scope": identity.get("read_scope") or [],
         })
@@ -816,6 +990,64 @@ def _build_stall_summary(
     active = [card for card in node_cards if str(card.get("status") or "").lower() in {"active", "running", "dispatched", "in_progress"}]
     reasons = sorted({str(card.get("blocked_reason") or card.get("decision") or "").strip() for card in blocked if str(card.get("blocked_reason") or card.get("decision") or "").strip()})
 
+    if sprint_status == "failed" and phase == "elastic_planner_failed":
+        failure = status.get("elastic_planner_failure") if isinstance(status.get("elastic_planner_failure"), dict) else {}
+        error = failure.get("error") if isinstance(failure.get("error"), dict) else {}
+        code = str(error.get("code") or failure.get("status") or "elastic_planner_failed").strip()
+        detail = str(error.get("detail") or "Elastic Planner stopped before it could publish an answer or execution plan.").strip()
+        stage = str(error.get("stage") or "").strip()
+        return {
+            "is_stalled": True,
+            "state": "elastic_planner_failed",
+            "severity": "error",
+            "title": "Planning failed",
+            "detail": detail[:500],
+            "reasons": [code],
+            "failure": {
+                "code": code,
+                "stage": stage or None,
+                "before_execution": bool(error.get("before_execution", True)),
+                "retry_safe": (
+                    error.get("retry_safe")
+                    if isinstance(error.get("retry_safe"), bool)
+                    else None
+                ),
+                "node_id": error.get("node_id") or None,
+                "receipt_ref": error.get("receipt_ref") or None,
+                "task_id": failure.get("task_id") or None,
+            },
+        }
+    if (
+        not tg_ok
+        and phase == "elastic_planning"
+        and sprint_status not in {"failed", "blocked", "cancelled", "completed", "done"}
+    ):
+        return {
+            "is_stalled": False,
+            "state": "elastic_planner_working",
+            "severity": "ok",
+            "title": "Planner is working",
+            "detail": "The Elastic Planner is compiling the request; a DAG is not expected until planning finishes.",
+            "reasons": [],
+        }
+    if not tg_ok and (
+        phase in {"spec", "prd_ready", "requirements", "requirements_ready"}
+        or (sprint_status == "drafting" and phase not in {"planning_complete", "graph_dispatch_active"})
+    ):
+        target_role = str(status.get("target_role") or status.get("handoff_to") or "planner").strip().lower()
+        role_label = "PM" if target_role in {"pm", "product_manager"} else "Planner"
+        return {
+            "is_stalled": False,
+            "state": f"awaiting_{target_role or 'planner'}",
+            "severity": "info",
+            "title": f"Waiting for {role_label}",
+            "detail": (
+                "The task graph is not expected yet. PM must finish the specification first."
+                if role_label == "PM"
+                else "The task graph is not expected until Planner finishes planning."
+            ),
+            "reasons": [],
+        }
     if not tg_ok:
         return {
             "is_stalled": True,
@@ -834,7 +1066,87 @@ def _build_stall_summary(
             "detail": "Solar reported a blocked gate. The dashboard is showing the stall rather than treating the sprint as complete.",
             "reasons": reasons,
         }
+    planner_claim = status.get("planner_dispatch_claim")
+    planner_claim_is_current = phase not in {
+        "planning_complete",
+        "graph_dispatch_active",
+        "handoff_ready",
+        "eval_completed",
+    }
+    if (
+        planner_claim_is_current
+        and isinstance(planner_claim, dict)
+        and str(planner_claim.get("state") or "").lower() == "failed"
+    ):
+        failure_reason = str(planner_claim.get("failure_reason") or "planner_dispatch_failed").strip()
+        no_operator = "no_dispatchable_operator_for_role" in failure_reason
+        return {
+            "is_stalled": True,
+            "state": "planner_dispatch_failed",
+            "severity": "warn",
+            "title": "Planner temporarily unavailable",
+            "detail": (
+                "No eligible Planner worker is available right now. Solar can retry when a compatible worker becomes ready."
+                if no_operator
+                else "Solar could not hand the task to the Planner. Solar can retry after the dispatch failure clears."
+            ),
+            "reasons": [failure_reason],
+        }
     governance_state = str((plan_governance or {}).get("state") or "").strip().lower()
+    frozen_unsat = [
+        card
+        for card in blocked
+        if str(card.get("blocked_reason") or "") == "frozen_physical_plan_unsatisfiable"
+    ]
+    if frozen_unsat:
+        return {
+            "is_stalled": True,
+            "state": "frozen_physical_plan_unsatisfiable",
+            "severity": "error",
+            "title": "No allowed worker can run this node",
+            "detail": (
+                "Every operator in the frozen plan is statically incompatible or unavailable. "
+                "Solar will not broaden the plan or retry until a new frozen plan is accepted."
+            ),
+            "reasons": reasons,
+        }
+    frozen_wait_exhausted = [
+        card
+        for card in blocked
+        if str(card.get("blocked_reason") or "") == "frozen_physical_candidate_wait_exhausted"
+    ]
+    if frozen_wait_exhausted:
+        return {
+            "is_stalled": True,
+            "state": "frozen_physical_candidate_wait_exhausted",
+            "severity": "warn",
+            "title": "Worker wait limit reached",
+            "detail": "Frozen candidates stayed busy or unavailable through the bounded wait window.",
+            "reasons": reasons,
+        }
+    frozen_waiting = [
+        card
+        for card in blocked
+        if str(card.get("blocked_reason") or "")
+        == "frozen_physical_candidates_temporarily_unavailable"
+    ]
+    if frozen_waiting:
+        retry_after = next(
+            (str(card.get("retry_after") or "") for card in frozen_waiting if card.get("retry_after")),
+            "",
+        )
+        return {
+            "is_stalled": True,
+            "state": "frozen_physical_candidates_waiting",
+            "severity": "warn",
+            "title": "Waiting for an allowed worker",
+            "detail": (
+                f"All frozen candidates are temporarily busy or cooling down. Next retry: {retry_after}."
+                if retry_after
+                else "All frozen candidates are temporarily busy or cooling down."
+            ),
+            "reasons": reasons,
+        }
     if (
         "planning_complete" in phase
         and not active
@@ -949,6 +1261,7 @@ def _projection_artifacts(sid: str) -> list[dict]:
         f"{sid}.design.md",
         f"{sid}.plan.md",
         f"{sid}.task_graph.json",
+        f"{sid}.task_graph_state.json",
         f"{sid}.task_graph.state.json",
         f"{sid}.task_dag.json",
         f"{sid}.handoff.md",
@@ -1756,11 +2069,54 @@ def _projection_events(sid: str, limit: int = 80) -> list[dict]:
     return []
 
 
+def _evaluator_waiting_details(payload: dict) -> dict:
+    """Recognize the historical event shape emitted while Builder was still running."""
+    candidate = payload
+    legacy = payload.get("legacy_event")
+    if isinstance(legacy, dict):
+        nested = legacy.get("payload")
+        candidate = nested if isinstance(nested, dict) else legacy
+    if str(candidate.get("reason") or "") == "builder_operator_result_pending":
+        node = str(candidate.get("node") or "")
+        return {"node": node, "reason": "builder_operator_result_pending"}
+    raw = candidate.get("output")
+    if not isinstance(raw, str) or not raw.strip().startswith("{"):
+        return {}
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(result, dict) or result.get("dispatched") not in (None, []):
+        return {}
+    skipped = result.get("skipped")
+    if not isinstance(skipped, list) or not skipped:
+        return {}
+    if not all(
+        isinstance(item, dict)
+        and str(item.get("reason") or "") == "builder_operator_result_pending"
+        and item.get("complete") is not True
+        for item in skipped
+    ):
+        return {}
+    nodes = [str(item.get("node") or "") for item in skipped if str(item.get("node") or "")]
+    return {
+        "node": nodes[0] if len(nodes) == 1 else "",
+        "nodes": nodes,
+        "reason": "builder_operator_result_pending",
+    }
+
+
 def _timeline_title(event_type: str, actor: str, payload: dict) -> str:
     decision = str(payload.get("decision") or "")
     node = str(payload.get("node_id") or payload.get("node") or "")
+    waiting = _evaluator_waiting_details(payload)
+    if waiting:
+        waiting_node = str(waiting.get("node") or node)
+        return f"Waiting for Builder result{f' for {waiting_node}' if waiting_node else ''}"
     if "intake" in event_type:
         return "Task intake recorded"
+    if event_type == "context_injected":
+        return "Context prepared"
     if "plan_verdict" in event_type:
         return "Plan verdict recorded"
     if "eval_pass" in event_type or "eval_failed" in event_type:
@@ -1786,7 +2142,10 @@ def _timeline_from_events(events: list[dict], dashboard: dict, generated_at: str
         actor = str(event.get("actor") or event.get("role") or payload.get("actor") or "Harness")
         decision = str(payload.get("decision") or event.get("decision") or "")
         reason = str(payload.get("reason") or payload.get("blocked_reason") or event.get("reason") or "")
-        tone = "blocked" if "blocked" in event_type or "no_matching" in f"{decision} {reason}" else "complete"
+        waiting = _evaluator_waiting_details(payload)
+        if waiting:
+            reason = "Evaluation starts after the Builder publishes its durable result."
+        tone = "working" if waiting else "blocked" if "blocked" in event_type or "no_matching" in f"{decision} {reason}" else "complete"
         rows.append({
             "id": f"event-{index}",
             "source": "event",
@@ -1832,6 +2191,77 @@ def _event_token(event: dict, payload: dict) -> str:
     return str(event.get("type") or event.get("event") or "event")
 
 
+_NARRATIVE_WAIT_REASONS = frozenset({
+    "builder_operator_result_pending",
+    "deterministic_gate_waiting_for_builder",
+    "evaluator_temporarily_busy",
+})
+
+_NARRATIVE_EVALUATOR_BLOCK_REASONS = frozenset({
+    "no_available_evaluator",
+    "insufficient_evaluator_capacity",
+    "insufficient_selected_evaluators",
+    "multi_evaluator_quorum_not_implemented",
+})
+
+
+def _embedded_json_object(value: object) -> dict:
+    """Decode structured dispatcher output embedded in an event payload.
+
+    Coordinator events often put the real dispatcher response in ``output``
+    or ``eval_output`` as a JSON string.  If we ignore it, unrelated failures
+    all collapse into the same unhelpful "Dispatch blocked" label.
+    """
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str) or not value.strip():
+        return {}
+    candidates = [value.strip(), *reversed(value.splitlines())]
+    for candidate in candidates:
+        candidate = candidate.strip()
+        if not candidate.startswith("{"):
+            continue
+        try:
+            decoded = json.loads(candidate)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            continue
+        if isinstance(decoded, dict):
+            return decoded
+    return {}
+
+
+def _dispatch_diagnostic(payload: dict, event: dict) -> dict:
+    """Return the concrete dispatch reason/node without hiding unknown bugs."""
+    reason = str(payload.get("reason") or payload.get("blocked_reason") or event.get("reason") or "")
+    node = str(payload.get("node_id") or payload.get("node") or event.get("node_id") or "")
+    details: list[dict] = []
+    for field in ("output", "eval_output", "ready_output"):
+        decoded = _embedded_json_object(payload.get(field))
+        if decoded:
+            details.append(decoded)
+    for decoded in details:
+        if not reason:
+            reason = str(decoded.get("reason") or decoded.get("blocked_reason") or "")
+        rows: list[dict] = []
+        for field in ("waiting", "skipped", "worker_blocked", "blocked_prerequisites"):
+            value = decoded.get(field)
+            if isinstance(value, list):
+                rows.extend(item for item in value if isinstance(item, dict))
+        for row in rows:
+            row_reason = str(row.get("reason") or row.get("blocked_reason") or "")
+            if row_reason:
+                reason = reason or row_reason
+                node = node or str(row.get("node_id") or row.get("node") or "")
+                break
+        if reason:
+            break
+    return {
+        "reason": reason,
+        "node": node,
+        "waiting": reason in _NARRATIVE_WAIT_REASONS,
+    }
+
+
 def _narrative_role(payload: dict, event: dict) -> str:
     raw = str(
         payload.get("role")
@@ -1865,11 +2295,14 @@ def _clean_to_state(to_status: str) -> str:
     return " / ".join(parts[:2]) if parts else to_status
 
 
-def _narrative_title(token: str, role: str, node: str, phase: str, decision: str, to_status: str) -> str:
+def _narrative_title(token: str, role: str, node: str, phase: str, decision: str, to_status: str,
+                     reason: str = "") -> str:
     """Map an internal coordinator token to a plain human title."""
     t = token.lower()
     n = f" {node}" if node else ""
     who = role if role and role != "Coordinator" else ""
+    if t == "context_injected":
+        return "Context prepared"
     if "intake" in t:
         return "Task scoped"
     if "plan_verdict" in t:
@@ -1880,8 +2313,22 @@ def _narrative_title(token: str, role: str, node: str, phase: str, decision: str
         return "Sent back for fixes"
     if "handoff" in t:
         return f"{who or 'Builder'} handed off{n}".strip()
-    if "no_matching" in decision or ("dispatch" in t and "fail" in t):
+    if t == "graph_eval_dispatch_waiting":
+        return f"Waiting for Builder result{n}"
+    if t == "plan_validator_awaiting_certificate":
+        return "Plan awaiting certification"
+    if t == "plan_validator_dispatch_refused":
+        return "Plan certification required"
+    if reason in {"builder_operator_result_pending", "deterministic_gate_waiting_for_builder"}:
+        return f"Evaluation waiting for Builder{n}"
+    if reason == "evaluator_temporarily_busy":
+        return f"Evaluation queued — Evaluator busy{n}"
+    if reason in _NARRATIVE_EVALUATOR_BLOCK_REASONS:
+        return f"Evaluation blocked{n}"
+    if "no_matching" in f"{decision} {reason}":
         return f"Dispatch blocked{n}"
+    if "dispatch" in t and "fail" in t:
+        return f"Evaluation dispatch failed{n}" if "eval" in t else f"Dispatch failed{n}"
     if t in {"dispatched", "round_dispatched", "slice_dispatched", "mixture_dispatched", "graph_nodes_dispatched", "dispatch_queued"}:
         return f"Routed{n}{f' to {who}' if who else ''}"
     if "planner_notified" in t:
@@ -1902,8 +2349,14 @@ def _narrative_title(token: str, role: str, node: str, phase: str, decision: str
     return token.replace("_", " ").strip().capitalize() or "Event"
 
 
-def _narrative_tone(token: str, decision: str, to_status: str) -> str:
-    blob = f"{token} {decision} {to_status}".lower()
+def _narrative_tone(token: str, decision: str, to_status: str, reason: str = "") -> str:
+    if token.lower() == "context_injected":
+        return "complete"
+    if reason in _NARRATIVE_WAIT_REASONS:
+        return "working"
+    blob = f"{token} {decision} {to_status} {reason}".lower()
+    if token.lower() == "plan_validator_dispatch_refused":
+        return "blocked"
     if "fail" in blob or "blocked" in blob or "no_matching" in blob or "error" in blob:
         return "blocked"
     if any(word in blob for word in ("passed", "completed", "accepted", "ended", "integrated", "done", "ready")):
@@ -1911,7 +2364,12 @@ def _narrative_tone(token: str, decision: str, to_status: str) -> str:
     return "working"
 
 
-def _narrative_from_events(events: list[dict], limit: int = 60) -> list[dict]:
+def _narrative_from_events(
+    events: list[dict],
+    limit: int = 60,
+    *,
+    plan_certified: bool = False,
+) -> list[dict]:
     """A de-noised, de-duplicated human narrative from the raw coordinator event stream.
     Each real action is double-written (a log_message plus a command/activity event, both
     carrying payload.legacy_event); we collapse those to one step, map the internal token to
@@ -1921,18 +2379,49 @@ def _narrative_from_events(events: list[dict], limit: int = 60) -> list[dict]:
     for event in events:
         payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
         token = _event_token(event, payload)
+        waiting = _evaluator_waiting_details(payload)
+        if waiting:
+            token = "graph_eval_dispatch_waiting"
+        certification_wait = False
+        if token == "plan_validator_dispatch_refused" and plan_certified:
+            legacy = payload.get("legacy_event")
+            candidate = legacy if isinstance(legacy, dict) else payload
+            data = candidate.get("data") if isinstance(candidate.get("data"), dict) else candidate
+            errors = data.get("errors") if isinstance(data, dict) else []
+            certification_wait = bool(errors) and all(
+                isinstance(error, dict)
+                and str(error.get("code") or "") == "PLAN_CERTIFICATE_MISSING"
+                for error in errors
+            )
+            if certification_wait:
+                token = "plan_validator_awaiting_certificate"
         tl = token.lower()
         actor_raw = str(event.get("actor") or payload.get("actor") or "").lower()
         if tl.startswith(_NARRATIVE_DROP) or actor_raw == "solar-autopilot":
             continue
-        node = str(payload.get("node_id") or payload.get("node") or event.get("node_id") or "")
+        diagnostic = _dispatch_diagnostic(payload, event) if "dispatch" in token.lower() else {}
+        node = str(
+            waiting.get("node")
+            or diagnostic.get("node")
+            or payload.get("node_id")
+            or payload.get("node")
+            or event.get("node_id")
+            or ""
+        )
         role = _narrative_role(payload, event)
         phase = str(payload.get("phase") or event.get("phase") or "")
         decision = str(payload.get("decision") or event.get("decision") or "")
         to_status = _clean_to_state(str(payload.get("to") or payload.get("status") or ""))
         round_num = str(payload.get("round") or "")
         ts = str(event.get("ts") or event.get("timestamp") or event.get("time") or "")
-        reason = str(payload.get("reason") or payload.get("blocked_reason") or event.get("reason") or "")
+        reason = str(
+            waiting.get("reason")
+            or diagnostic.get("reason")
+            or payload.get("reason")
+            or payload.get("blocked_reason")
+            or event.get("reason")
+            or ""
+        )
         message = str(
             payload.get("message") or payload.get("summary") or payload.get("text")
             or event.get("message") or payload.get("thought") or ""
@@ -1943,12 +2432,30 @@ def _narrative_from_events(events: list[dict], limit: int = 60) -> list[dict]:
         if token in {"log_message", "event"} and not message:
             continue
         # Collapse the dual-write: the same token+node+role+round is one human step.
-        key = (token, node, role, round_num or ts[:19])
+        # A prerequisite wait can be observed on every coordinator poll.  It
+        # is one continuing state, not dozens of distinct failures.
+        is_waiting = bool(waiting) or bool(diagnostic.get("waiting"))
+        is_recurring_dispatch_state = "dispatch" in tl and (
+            is_waiting or "fail" in tl or bool(reason)
+        )
+        key = (
+            ("dispatch_state", token, node, reason)
+            if is_recurring_dispatch_state
+            else (token, node, role, round_num or ts[:19])
+        )
         if key in seen:
             continue
         seen.add(key)
-        title = _narrative_title(token, role, node, phase, decision, to_status)
-        summary = reason or decision.replace("_", " ")
+        title = _narrative_title(token, role, node, phase, decision, to_status, reason)
+        summary = (
+            "Evaluation starts after the Builder publishes its durable result."
+            if is_waiting
+            else "Dispatch resumed after the plan certificate was recorded."
+            if certification_wait
+            else "Context preparation completed; any following delay is model work."
+            if token == "context_injected"
+            else (reason or decision).replace("_", " ")
+        )
         if token in {"log_message", "event"} and message:
             title = message[:100]
         elif message and not summary:
@@ -1961,7 +2468,7 @@ def _narrative_from_events(events: list[dict], limit: int = 60) -> list[dict]:
             "node_id": node,
             "title": title,
             "summary": summary[:240],
-            "tone": _narrative_tone(token, decision, to_status),
+            "tone": _narrative_tone(token, decision, to_status, reason),
             "token": token,
             "phase": phase,
         })
@@ -1993,18 +2500,28 @@ def build_projection_payload(sprint_id: str | None = None, mode: str = "full") -
     # The de-noised narrative is compact, so it ships in BOTH modes (the client renders it
     # instead of reverse-engineering the raw /events wall). Read independently of `events`,
     # which stays empty in fast mode.
-    narrative = _narrative_from_events(_projection_events(sid, limit=160)) if sid else []
+    plan_governance = dashboard.get("plan_governance") or {}
+    narrative = (
+        _narrative_from_events(
+            _projection_events(sid, limit=160),
+            plan_certified=bool(plan_governance.get("certified")),
+        )
+        if sid
+        else []
+    )
     requirements = _projection_requirements(sid, artifacts)
     plan = _projection_plan(dashboard, artifacts)
     task_graph = _projection_task_graph(dashboard)
     human_gates = _projection_human_gates(status, dashboard, artifacts, events)
     operators = _operator_readiness_projection(dashboard)
     evaluation = _projection_evaluation(status, artifacts)
+    original_prompt = _sprint_original_prompt(sid) if sid else ""
     return {
         "projection_schema": "solar.dashboard_projection.v1",
         "projection_mode": projection_mode,
         "sprint_id": sid,
         "title": _clean_sprint_title(sid, dashboard.get("title") or status.get("title") or ""),
+        "original_prompt": original_prompt,
         "status": status.get("status") or dashboard.get("sprint_status") or "",
         "phase": status.get("phase") or dashboard.get("phase") or "",
         "lazy_slices": _projection_lazy_slices(sid),
@@ -2012,11 +2529,12 @@ def build_projection_payload(sprint_id: str | None = None, mode: str = "full") -
             "sprint_id": sid,
             "epic_id": dashboard.get("epic_id") or status.get("epic_id") or "",
             "title": _clean_sprint_title(sid, dashboard.get("title") or status.get("title") or ""),
+            "original_prompt": original_prompt,
             "status": status.get("status") or dashboard.get("sprint_status") or "",
             "phase": status.get("phase") or dashboard.get("phase") or "",
             "raw_status": status,
         },
-        "plan_governance": dashboard.get("plan_governance") or {},
+        "plan_governance": plan_governance,
         "requirements": requirements,
         "plan": plan,
         "task_graph": task_graph,
@@ -2058,7 +2576,23 @@ def build_dashboard_payload(sprint_id: str | None = None) -> tuple[dict, list[st
         degraded.append("sprint_status:missing")
 
     tg, tg_ok = _load_task_graph(sid) if sid else ({}, False)
-    if sid and not tg_ok:
+    direct_candidate = bool(
+        str(status.get("execution_mode") or "") == "direct_response"
+        and str(status.get("status") or "").lower() in {"passed", "completed", "done"}
+    )
+    direct_terminal, direct_reason = _verified_terminal_direct_response(sid, status)
+    if sid and direct_candidate and not direct_terminal:
+        degraded.append(f"direct_response:invalid:{sid}:{direct_reason}")
+    effective_tg_ok = tg_ok or direct_terminal
+    phase = str(status.get("phase") or "").strip().lower()
+    sprint_status = str(status.get("status") or "").strip().lower()
+    elastic_planner_working = bool(
+        sid
+        and not effective_tg_ok
+        and phase == "elastic_planning"
+        and sprint_status not in {"failed", "blocked", "cancelled", "completed", "done"}
+    )
+    if sid and not effective_tg_ok and not elastic_planner_working:
         degraded.append(f"task_graph:missing:{sid}")
     nodes = tg.get("nodes") or []
     if not isinstance(nodes, list):
@@ -2069,14 +2603,21 @@ def build_dashboard_payload(sprint_id: str | None = None) -> tuple[dict, list[st
     all_routing = _load_routing_decisions()
     panes = _load_pane_state()
     registry = _capability_registry()
-    node_cards = _build_node_cards(sid, nodes, tg.get("runtime_state") or {}, routing)
-    diagnostics = _build_blocker_diagnostics(sid, status, nodes, node_cards, tg_ok)
+    runtime_state = _load_task_runtime_state(sid) or tg.get("runtime_state") or {}
+    node_cards = _build_node_cards(sid, nodes, runtime_state, routing)
+    diagnostics = _build_blocker_diagnostics(
+        sid,
+        status,
+        nodes,
+        node_cards,
+        effective_tg_ok or elastic_planner_working,
+    )
     plan_governance = _build_plan_governance(sid, status, tg)
     stall = _build_stall_summary(
         status,
         node_cards,
         diagnostics,
-        tg_ok,
+        effective_tg_ok,
         events=_recent_sprint_events(sid),
         plan_governance=plan_governance,
     )
@@ -2143,7 +2684,8 @@ def _build_plan_governance(sid: str, status: dict, tg: dict) -> dict:
     """G4 spec §3: the generic path's governance facts, surfaced truthfully.
 
     Everything derives from files the runtime actually writes (status.json,
-    task_graph.json, <sid>.plan-compile-errors.json) — never heuristics
+    task_graph.json, <sid>.plan-compile-errors.json, and the bounded Planner
+    repair record) — never heuristics
     (failure class 14). States:
       certified                -> stamped pm.generic.v1 + certificate PASS
       compiling                -> intake-born graph, not yet stamped (NEUTRAL:
@@ -2180,6 +2722,30 @@ def _build_plan_governance(sid: str, status: dict, tg: dict) -> dict:
                     error_codes.append(str(error["code"]))
         except (OSError, ValueError):
             pass
+        # A successful bounded repair removes the terminal compile-error file,
+        # but the repair record remains the authoritative history of what the
+        # Planner corrected.  Surface that history so finalized runs do not
+        # lose their repaired-issue provenance in the POC preview.
+        try:
+            repair = json.loads(
+                (
+                    SPRINTS_DIR
+                    / sid
+                    / "planning"
+                    / "semantic"
+                    / "repair_record.json"
+                ).read_text(encoding="utf-8")
+            )
+            if str(repair.get("status") or "").strip().lower() == "completed":
+                try:
+                    bounces = max(bounces, int(repair.get("generation") or 0))
+                except (TypeError, ValueError):
+                    pass
+                for defect in repair.get("defects") or []:
+                    if isinstance(defect, dict) and str(defect.get("code") or "").strip():
+                        error_codes.append(str(defect["code"]))
+        except (OSError, ValueError):
+            pass
     certified = contract_id == "pm.generic.v1" and str(cert.get("verdict") or "").upper() == "PASS"
     if sprint_status == "failed" and phase == "plan_compile_failed":
         state = "plan_compile_failed"
@@ -2205,7 +2771,7 @@ def _build_plan_governance(sid: str, status: dict, tg: dict) -> dict:
             "graph_hash": str(cert.get("graph_hash") or "")[:12],
         },
         "plan_compile_bounces": bounces,
-        "compile_error_codes": error_codes[:6],
+        "compile_error_codes": list(dict.fromkeys(error_codes))[:6],
         "birth_marker": birth_marker,
         "workflow_contract_id": contract_id,
     }
@@ -2630,7 +3196,7 @@ def get_sprint(sid: str):
     if not status_ok:
         return jsonify({"ok": False, "error": f"sprint not found: {sid}"}), 404
 
-    tg, tg_ok = _read_json(SPRINTS_DIR / f"{sid}.task_graph.json")
+    tg, tg_ok = _load_task_graph(sid)
     if not tg_ok:
         degraded.append(f"task_graph:missing:{sid}")
         tg = {}

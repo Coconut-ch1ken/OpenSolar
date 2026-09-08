@@ -570,6 +570,32 @@ def test_wrong_node_identity_fails_schema_valid_result(tmp_path: Path, monkeypat
     _validate_result(result)
 
 
+def test_composed_scheduler_node_routes_by_frozen_implementation_identity(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    request = _request(
+        tmp_path,
+        "seed_fetch",
+        payload={"seed_inputs": [{"seed_id": "topic", "seed_kind": "topic", "value": "x"}]},
+    )
+    scheduled_node_id = "source_acquisition__7fd24db4_c01"
+    request.update(
+        {
+            "node_id": scheduled_node_id,
+            "scheduled_node_id": scheduled_node_id,
+            "implementation_node_id": "seed_fetch",
+        }
+    )
+
+    result = execute_operator(request, services={})
+
+    assert result["status"] == "completed", result
+    assert result["node_id"] == scheduled_node_id
+    _validate_result(result)
+
+
 def test_hash_matches_artifact_and_secret_is_redacted(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     result = execute_operator(
@@ -903,6 +929,99 @@ def test_zero_discovery_and_zero_validation_do_not_complete(tmp_path: Path, monk
     )
     assert validation["status"] == "blocked"
     assert validation["output_artifacts"]
+
+
+def test_hybrid_discovery_preserves_pack_fallback_without_claiming_live(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    pack = {
+        "source_id": "pack-rag",
+        "canonical_id": "pack:rag",
+        "title": "Retrieval augmented generation evaluation evidence",
+        "url": "https://example.test/pack-rag",
+        "provider": "host_source_pack",
+        "content_summary": "Retrieval evaluation compares grounded answer quality and citation support.",
+        "provenance": {"provider": "host_source_pack"},
+    }
+
+    def unavailable(**_kwargs) -> dict:
+        raise ResearchOperatorError("all public providers unavailable", error_type="provider_unavailable")
+
+    discovery = execute_operator(
+        _request(
+            tmp_path,
+            "source_discovery",
+            payload={
+                "seed_snapshot": {"schema": "research_synthesis.seed_snapshot.v1", "seeds": []},
+                "task_contract": {"user_intent": "retrieval augmented generation evaluation"},
+                "acquisition_mode": "hybrid",
+                "minimum_live_sources": 3,
+                "supplied_source_candidates": [pack],
+            },
+        ),
+        services={"discover_sources": unavailable},
+    )
+    artifact = _read_artifact(tmp_path, discovery)
+
+    assert discovery["status"] == "completed"
+    assert artifact["acquisition_summary"]["source_pack_count"] == 1
+    assert artifact["acquisition_summary"]["live_source_count"] == 0
+    assert artifact["acquisition_summary"]["live_claim_allowed"] is False
+    assert any("must not claim live coverage" in item for item in artifact["limitations"])
+
+
+def test_live_relevance_accepts_topic_sources_and_rejects_obvious_off_topic(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    candidates = [
+        {
+            "source_id": f"live-{index}",
+            "canonical_id": f"doi:10.1000/live{index}",
+            "title": title,
+            "url": f"https://doi.org/10.1000/live{index}",
+            "provider": "openalex",
+            "acquisition_channel": "live_search",
+            "content_summary": summary,
+            "provenance": {"provider": "openalex", "acquisition_channel": "live_search"},
+        }
+        for index, (title, summary) in enumerate(
+            [
+                ("Retrieval augmented generation evaluation", "Evaluation methods for retrieval grounded generation."),
+                ("RAG retrieval benchmarks", "Retrieval augmented generation benchmark evidence."),
+                ("Evaluating grounded generation", "Generation evaluation with retrieval evidence."),
+                ("Marine coral reef ecology", "A field survey of tropical fish habitats."),
+            ],
+            start=1,
+        )
+    ]
+    discovery_payload = {
+        "schema": "research_synthesis.source_discovery.v1",
+        "artifact_id": "source_discovery",
+        "task_id": "task-research-synthesis",
+        "run_id": "run-research-synthesis",
+        "workflow_id": "research_synthesis_v1",
+        "node_id": "source_discovery",
+        "query": "retrieval augmented generation evaluation",
+        "acquisition_mode": "live_search",
+        "acquisition_summary": {"minimum_live_sources": 3},
+        "candidates": candidates,
+        "limitations": [],
+    }
+    path = tmp_path / "out/source_discovery/source_discovery.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(discovery_payload), encoding="utf-8")
+    ref = {
+        "artifact_id": "source_discovery",
+        "path": str(path.relative_to(tmp_path)),
+        "schema": "research_synthesis.source_discovery.v1",
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+    result = execute_operator(_request(tmp_path, "source_validation", refs=[ref]), services={})
+    artifact = _read_artifact(tmp_path, result)
+
+    assert result["status"] == "completed"
+    assert artifact["source_policy_summary"]["accepted_live_count"] == 3
+    assert artifact["source_policy_summary"]["live_claim_allowed"] is True
+    assert any(item["source_id"] == "live-4" and "relevance: no task-query token overlap" in item["reasons"] for item in artifact["rejected"])
+    assert all((item["validation"]["relevance"].get("query_binding") or {}).get("query_sha256") for item in artifact["accepted"])
 
 
 def test_external_evidence_requires_scoped_provenance_artifact(tmp_path: Path, monkeypatch) -> None:

@@ -407,6 +407,21 @@
         "singleton": false
       }
     },
+    "ScientificSourceAssessor": {
+      "operator_type": "ScientificSourceAssessor",
+      "description": "Resolve relevance and metadata credibility for discovered and ingested scientific sources while retaining explicit unresolved decisions.",
+      "primary_role": "scientific-source-assessor",
+      "required_capabilities": {
+        "scientific_evidence": 3,
+        "data_extraction": 2,
+        "research_synthesis": 2
+      },
+      "cost_hint": "low",
+      "concurrency": {
+        "max_parallel": 1,
+        "singleton": false
+      }
+    },
     "ScientificPaperAnalyzer": {
       "operator_type": "ScientificPaperAnalyzer",
       "description": "AutoSci paper analysis evidence generation from parsed source evidence.",
@@ -519,6 +534,19 @@
         "singleton": false
       }
     },
+    "ScientificDatasetPreparer": {
+      "operator_type": "ScientificDatasetPreparer",
+      "description": "Acquire and retain a real public dataset/model plus the exact runnable assets for a supported bounded scientific experiment.",
+      "candidates": [
+        {
+          "actor_id": "dataset_prepare_worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "error"
+    },
     "ScientificExperimentDesigner": {
       "operator_type": "ScientificExperimentDesigner",
       "description": "AutoSci experiment design evidence and execution-readiness boundary generation.",
@@ -619,7 +647,7 @@
     },
     "ScientificPublicationProducer": {
       "operator_type": "ScientificPublicationProducer",
-      "description": "AutoSci publication compile bundle and submission-readiness evidence generation.",
+      "description": "Materialize the exact RequirementIR delivery manifest from an accepted scientific report, preserving per-file formats, hashes, evidence lineage, and review status.",
       "primary_role": "lab-builder",
       "required_capabilities": {
         "scientific_evidence": 3,
@@ -633,7 +661,7 @@
     },
     "ScientificWorkflowEvolver": {
       "operator_type": "ScientificWorkflowEvolver",
-      "description": "AutoSci lifecycle closeout, memory-finalization, and workflow evolution evidence generation.",
+      "description": "AutoSci bounded workflow-improvement proposal generation. This operator does not perform lifecycle Closure, final status reporting, or memory finalization.",
       "primary_role": "planner",
       "required_capabilities": {
         "scientific_evidence": 3,
@@ -1462,11 +1490,23 @@
       "selection_policy": "priority_first",
       "fallback_policy": "error"
     },
+    "ScientificSourceAssessor": {
+      "operator_type": "ScientificSourceAssessor",
+      "candidates": [
+        {
+          "actor_id": "source_assess_worker",
+          "priority": 1,
+          "condition": "plugin_autosci_available"
+        }
+      ],
+      "selection_policy": "priority_first",
+      "fallback_policy": "error"
+    },
     "ScientificPaperAnalyzer": {
       "operator_type": "ScientificPaperAnalyzer",
       "candidates": [
         {
-          "actor_id": "autosci-paper-analyze-worker",
+          "actor_id": "autosci-paper-analyze-native-worker",
           "priority": 1,
           "condition": "plugin_autosci_available"
         }

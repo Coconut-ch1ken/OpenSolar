@@ -192,6 +192,13 @@ def adopt_sprint(
     events_path = sprints_dir / f"{sprint_id}.events.jsonl"
     status = _read_json(status_path)
 
+    # A sprint with no status file does not exist: it was never created, or it was
+    # removed. Adopting it anyway fabricates a session log for a sprint that has no
+    # graph and no artifacts, which then renders as a stalled run reporting
+    # "task graph missing". Requesting a dead sprint id must not create one.
+    if not status:
+        return {"ok": False, "sprint_id": sprint_id, "reason": "unknown_sprint", "appended": 0}
+
     log = SessionLog.for_sprint(sprint_id, harness_dir=str(harness_dir))
     appended = 0
 

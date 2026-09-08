@@ -22,6 +22,63 @@ def _load_gateway(name: str):
     return module
 
 
+def test_default_artifact_dirs_follow_runtime_harness(monkeypatch, tmp_path):
+    runtime = tmp_path / "runtime-harness"
+    monkeypatch.setenv("HARNESS_DIR", str(runtime))
+    monkeypatch.setenv("SOLAR_HARNESS_DIR", str(tmp_path / "stale-harness"))
+    monkeypatch.delenv("SOLAR_INTENT_GATEWAY_DIR", raising=False)
+    monkeypatch.delenv("SOLAR_HARNESS_SPRINTS_DIR", raising=False)
+
+    gateway = _load_gateway("intent_gateway_runtime_defaults")
+
+    assert gateway.HARNESS_DIR == runtime
+    assert gateway.INTENTS_DIR == runtime / "intents"
+    assert gateway.SPRINTS_DIR == runtime / "sprints"
+
+
+def test_intent_compiler_validates_without_optional_referencing(tmp_path):
+    sys.path.insert(0, str(ROOT / "lib"))
+    try:
+        import intent_compiler
+
+        schema = tmp_path / "minimal.schema.json"
+        schema.write_text(
+            json.dumps(
+                {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "type": "object",
+                    "properties": {"value": {"type": "string"}},
+                    "required": ["value"],
+                    "additionalProperties": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert intent_compiler._schema_errors({"value": "ok"}, schema) == []
+        assert intent_compiler._schema_errors({"value": 7}, schema)
+    finally:
+        sys.path.remove(str(ROOT / "lib"))
+
+
+def test_gui_and_web_channels_require_formal_llm_intent_compilation(monkeypatch):
+    gateway = _load_gateway("intent_gateway_required_llm_channels")
+    monkeypatch.delenv("SOLAR_INTENT_COMPILER_REQUIRED_CHANNELS", raising=False)
+
+    assert gateway._llm_intent_compiler_required("dashboard") is True
+    assert gateway._llm_intent_compiler_required("gui") is True
+    assert gateway._llm_intent_compiler_required("webapp") is True
+    assert gateway._llm_intent_compiler_required("cli") is False
+
+
+def test_required_llm_intent_channels_can_be_renamed(monkeypatch):
+    gateway = _load_gateway("intent_gateway_configured_llm_channels")
+    monkeypatch.setenv("SOLAR_INTENT_COMPILER_REQUIRED_CHANNELS", "portal, desktop")
+
+    assert gateway._llm_intent_compiler_required("portal") is True
+    assert gateway._llm_intent_compiler_required("desktop") is True
+    assert gateway._llm_intent_compiler_required("dashboard") is False
+
+
 def test_capture_writes_raw_rewritten_ir_and_trace(tmp_path):
     env = dict(os.environ)
     env["SOLAR_INTENT_GATEWAY_DIR"] = str(tmp_path / "intents")
@@ -89,6 +146,44 @@ def test_bind_copies_intent_artifacts_to_sprint(tmp_path):
     assert ir["sprint_id"] == sprint_id
 
 
+def test_bind_preserves_formal_compiler_artifact_identity(tmp_path):
+    gateway = _load_gateway("intent_gateway_immutable_compiler_binding")
+    gateway.INTENTS_DIR = tmp_path / "intents"
+    gateway.SPRINTS_DIR = tmp_path / "sprints"
+    intent_id = "intent-immutable"
+    sprint_id = "sprint-immutable"
+    base = gateway.INTENTS_DIR / intent_id
+    (base / "intent").mkdir(parents=True)
+    legacy = {
+        "raw_intent.json": {"intent_id": intent_id},
+        "rewritten_intent.json": {"intent_id": intent_id},
+        "requirement_ir.json": {"intent_id": intent_id},
+        "requirement_trace.json": {"intent_id": intent_id},
+    }
+    compiler_artifacts = {
+        "input.json": {"schema_version": "solar.raw_intent.v2", "value": "input"},
+        "intent_ir.json": {"schema_version": "solar.intent_ir.v3", "value": "intent"},
+        "intent_validation.json": {"schema_version": "solar.intent_validation.v1", "value": "validation"},
+        "intent_fidelity.json": {"schema_version": "solar.intent_fidelity.v1", "value": "fidelity"},
+        "intent_acceptance.json": {"schema_version": "solar.intent_acceptance.v1", "value": "acceptance"},
+    }
+    for name, payload in legacy.items():
+        gateway.write_json(base / name, payload)
+    for name, payload in compiler_artifacts.items():
+        gateway.write_json(base / "intent" / name, payload)
+
+    gateway.bind_intent_artifacts(intent_id, sprint_id)
+
+    for name in compiler_artifacts:
+        assert (base / "intent" / name).read_bytes() == (
+            gateway.SPRINTS_DIR / f"{sprint_id}.{name}"
+        ).read_bytes()
+    bound_requirement = json.loads(
+        (gateway.SPRINTS_DIR / f"{sprint_id}.requirement_ir.json").read_text()
+    )
+    assert bound_requirement["sprint_id"] == sprint_id
+
+
 def test_browser_agent_operator_intent_mode_prefers_strategy_over_research(tmp_path):
     env = dict(os.environ)
     env["SOLAR_INTENT_GATEWAY_DIR"] = str(tmp_path / "intents")
@@ -149,6 +244,46 @@ def test_capture_embeds_research_artifact_into_requirement_ir(tmp_path):
     assert ir["source_inputs"]["research_artifact"]["conversation_id"] == "conv-frontdoor-001"
 
 
+def test_capture_preserves_dashboard_uploads_as_structured_source_inputs(tmp_path):
+    attachment = tmp_path / "uploaded-report.txt"
+    attachment.write_text("source evidence", encoding="utf-8")
+    env = dict(os.environ)
+    env["SOLAR_INTENT_GATEWAY_DIR"] = str(tmp_path / "intents")
+    env["SOLAR_HARNESS_SPRINTS_DIR"] = str(tmp_path / "sprints")
+    env["SOLAR_INTAKE_ATTACHMENTS_JSON"] = json.dumps(
+        [
+            {
+                "name": attachment.name,
+                "path": str(attachment),
+                "mime_type": "text/plain",
+                "size": attachment.stat().st_size,
+                "sha256": "a" * 64,
+            }
+        ]
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "capture",
+            "--text",
+            "Summarize the uploaded report.",
+            "--json",
+        ],
+        text=True,
+        capture_output=True,
+        env=env,
+        check=True,
+    )
+    payload = json.loads(proc.stdout)
+    base = tmp_path / "intents" / payload["intent_id"]
+    raw = json.loads((base / "raw_intent.json").read_text())
+    ir = json.loads((base / "requirement_ir.json").read_text())
+
+    assert raw["raw"]["attachments"][0]["path"] == str(attachment)
+    assert ir["source_inputs"]["attachments"][0]["sha256"] == "a" * 64
+
+
 @pytest.mark.parametrize(
     "prompt",
     [
@@ -175,6 +310,83 @@ def test_general_user_research_requests_get_research_lane_and_roles(prompt):
         "ResearchSynthesizer",
         "Verifier",
     ]
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "explain photosynthesis to a 5 year old",
+        "What is 2 + 2?",
+        "Why is the sky blue?",
+    ],
+)
+def test_bounded_questions_use_direct_answer_without_runtime_dag(prompt):
+    gateway = _load_gateway(f"intent_gateway_direct_{abs(hash(prompt))}")
+
+    rewritten = gateway.deterministic_rewrite(prompt)
+    raw_intent = {
+        "raw": {"text": prompt},
+        "source": {},
+        "context": {},
+        "routing_hints": {},
+    }
+    requirement_ir = gateway.build_requirement_ir("intent-direct", raw_intent, rewritten)
+
+    assert rewritten["suggested_lane"] == "direct_answer"
+    assert "ImplementationWorker" not in rewritten["suggested_logical_operators"]
+    assert requirement_ir["compiler_next"] == "pm_elastic_planner"
+    assert requirement_ir["planner_hints"]["response_authority"] == "planner"
+    assert requirement_ir["planner_hints"]["preferred_outcome"] == "direct_answer"
+    assert requirement_ir["planner_hints"]["runtime_handoff_allowed"] is False
+    assert any("no task-graph runtime" in item for item in [rewritten["outcome"]])
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "Build a Python CLI that explains photosynthesis.",
+        "Explain the Solar runtime architecture.",
+        "Summarize the attached report.",
+        "What is the latest evidence about battery safety? Cite sources.",
+    ],
+)
+def test_effectful_or_evidence_dependent_questions_do_not_use_direct_answer(prompt):
+    gateway = _load_gateway(f"intent_gateway_not_direct_{abs(hash(prompt))}")
+
+    assert gateway.infer_mode(prompt) != "direct_answer"
+
+
+def test_research_requirement_ir_exposes_template_without_selecting_it():
+    gateway = _load_gateway("intent_gateway_planner_template_candidate")
+    prompt = "Research current agent runtime architectures and cite public sources."
+    rewritten = gateway.deterministic_rewrite(prompt)
+    raw_intent = {
+        "raw": {"text": prompt},
+        "source": {},
+        "context": {},
+        "routing_hints": {},
+    }
+
+    requirement_ir = gateway.build_requirement_ir("intent-template", raw_intent, rewritten)
+
+    assert requirement_ir["lane"] == "research"
+    assert requirement_ir["planner_hints"]["selection_authority"] == "planner"
+    assert requirement_ir["planner_hints"]["allowed_outcomes"] == [
+        "direct_answer",
+        "memoized_task_graph",
+        "new_task_graph",
+    ]
+    assert requirement_ir["planner_hints"]["workflow_candidates"] == [
+        {
+            "workflow_id": "research.evidence_to_poc.v1",
+            "candidate_kind": "memoized_task_graph",
+            "selection_authority": "planner",
+            "auto_instantiate": False,
+            "execution_profile_hint": "part_a_only",
+            "reason": "research request with no build or execute intent",
+        }
+    ]
+    assert "selected_workflow_id" not in requirement_ir
 
 
 @pytest.mark.parametrize(
@@ -273,3 +485,21 @@ def test_deterministic_rewrite_multiline_objective_keeps_middle_and_end():
     ir = gateway.build_requirement_ir("intent-test", raw_intent, rewritten)
     assert "final report" in ir["objective"]
     assert len(ir["title"]) <= 90
+
+
+def test_capture_reports_legacy_compiler_mode_when_semantic_compiler_is_unconfigured(tmp_path):
+    env = dict(os.environ)
+    env.pop("SOLAR_INTENT_COMPILER_PROVIDER", None)
+    env["SOLAR_INTENT_GATEWAY_DIR"] = str(tmp_path / "intents")
+    env["SOLAR_HARNESS_SPRINTS_DIR"] = str(tmp_path / "sprints")
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "capture", "--text", "summarize this repository", "--repo", "/tmp/Solar", "--json"],
+        text=True,
+        capture_output=True,
+        env=env,
+        check=True,
+    )
+    payload = json.loads(proc.stdout)
+    assert payload["compiler_mode"] == "legacy_deterministic"
+    assert payload["rewrite_method"] == "deterministic_fallback"
+    assert any(item.startswith("intent_compiler_unconfigured") for item in payload["warnings"])

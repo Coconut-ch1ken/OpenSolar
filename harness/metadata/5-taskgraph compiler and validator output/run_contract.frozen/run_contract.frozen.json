@@ -1,0 +1,24 @@
+{
+  "schema_version": "solar.run_contract_frozen.v1",
+  "run_contract_id": "run-contract-20260825-091412-a3f8",
+  "content_hash_algorithm": "sha256",
+  "frozen_artifacts": [
+    {"name": "raw_intent.json", "artifact_id": "raw-intent-20260825-091412-a3f8", "sha256": "6fe68e156d842726374243d0bc5529e11b693d1a9c297b7601cfefff4ba5345e"},
+    {"name": "intent_ir.json", "artifact_id": "intent-ir-20260825-091412-a3f8", "sha256": "f61ae0efe3f91a70bfbaff9e2e0d5cad647533e46b1a874475d998044748bb5a"},
+    {"name": "intent_validation.json", "artifact_id": "intent-validation-20260825-091412-a3f8", "sha256": "b71b440912e73eb9e26aee387e286c84b11c37adde42ba937fd3c1d75171a1ce"},
+    {"name": "intent_fidelity.json", "artifact_id": "intent-fidelity-20260825-091412-a3f8", "sha256": "0ff474268438ba7e20c51a41e77c8b81f1be8e67d13b23fa1e847246463fd376"},
+    {"name": "intent_acceptance.json", "artifact_id": "intent-acceptance-raw-intent-20260825-091412-a3f8", "sha256": "3094fb8b4592b4ea432f15b779cc80108afd2ee8220b09f1d71a557393b18173"},
+    {"name": "requirement_ir.json", "artifact_id": "requirement-ir-20260825-091412-a3f8", "sha256": "96adcb11c4660914bf2e4cf2f4d1bc0985125baf58cddae0429e8b6d41164d3f"},
+    {"name": "requirement_validation.json", "artifact_id": "requirement-validation-20260825-091412-a3f8", "sha256": "526d190c48f141b6919a5f6d51c76144eac4b0cc291deb2f425b72736eafcc70"},
+    {"name": "requirement_coverage.json", "artifact_id": "requirement-coverage-20260825-091412-a3f8", "sha256": "42567fa19a4cd6e536f1146e1859ab5d58b63a30ce065421881e0d460e795de5"},
+    {"name": "check_registry.json", "artifact_id": "check-registry-metadata-example-v1", "sha256": "be5ad50cadb8e239bf0091d4edf3261ae124c505316515850172caa56a708bfd"},
+    {"name": "strategy.json", "artifact_id": "strategy-20260825-091412-a3f8", "sha256": "e028fb5893ed93149322bba378bfaf6b1abfec41409efe52512b1d8266930dd1"},
+    {"name": "planning_catalog_snapshot.json", "artifact_id": "planning-catalog-20260825-example-v1", "sha256": "6a52ec8ade34e3a21305f52fcc5b612d30ad2f0b7fc9ba9709c4baa29754e350"},
+    {"name": "plan_ir.json", "artifact_id": "plan-ir-20260825-091412-a3f8", "sha256": "085c5f55df241fe2adfb065949d673b679d90b8194a15f4e58287f5ee2c2d52f"},
+    {"name": "plan_validation.json", "artifact_id": "plan-validation-20260825-091412-a3f8", "sha256": "24475869bd2fafe53e66fdff313d02e65f897549a6a6ffc5d5ad1236ebb079e5"},
+    {"name": "binding_trace.json", "artifact_id": "binding-trace-20260825-091412-a3f8", "sha256": "5eedfebb5df9b60159801b1241c8b7d481168444e2103982d622853142d90ea5"}
+  ],
+  "runtime_reads_live_repository_contracts": false,
+  "integrity_rule": "Every runtime read must resolve to a frozen artifact with the recorded content hash.",
+  "execution_status": "not_executed_metadata_example"
+}

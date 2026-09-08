@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import hashlib
 import importlib.util
 import json
 import os
@@ -48,7 +49,23 @@ if sys.path and sys.path[0] != _PM_LIB_DIR:
         sys.path.remove(_PM_LIB_DIR)
     sys.path.insert(0, _PM_LIB_DIR)
 
+from codex_cli_runtime import resolve_codex_cli
 from task_lifecycle import activate_execution_attempt
+try:
+    from developer_observability import (
+        enabled as _observability_enabled,
+        observe as _observe,
+        stable_id as _observation_id,
+    )
+except Exception:  # Observability must never become a dispatch dependency.
+    def _observe(*_args: Any, **_kwargs: Any) -> bool:
+        return False
+
+    def _observation_id(kind: str, *parts: Any) -> str:
+        return f"{kind}-unavailable"
+
+    def _observability_enabled() -> bool:
+        return False
 
 HOME = Path.home()
 HARNESS_DIR = Path(
@@ -64,7 +81,11 @@ PM_INBOX_DIR = HARNESS_DIR / "run" / "pm-inbox"
 OPERATOR_INBOX_DIR = HARNESS_DIR / "run" / "operator-inbox"
 OPERATOR_RESULTS_DIR = HARNESS_DIR / "run" / "operator-results"
 OPERATOR_STATUS_DIR = HARNESS_DIR / "run" / "operator-status"
-SPRINTS_DIR = Path(os.environ.get("SOLAR_HARNESS_SPRINTS_DIR", HARNESS_DIR / "sprints"))
+SPRINTS_DIR = Path(
+    os.environ.get("SOLAR_HARNESS_SPRINTS_DIR")
+    or os.environ.get("HARNESS_SPRINTS_DIR")
+    or HARNESS_DIR / "sprints"
+)
 REPO_HARNESS_DIR = Path(__file__).resolve().parents[1]
 
 # ── 角色别名映射 ───────────────────────────────────────────────────────────────
@@ -101,12 +122,41 @@ DEFAULT_OPERATOR_PROVIDERS = frozenset(
     if p.strip()
 )
 
+COST_TIER_RANK = {"low": 0, "medium": 1, "high": 2}
 
-def _operator_matches_provider_policy(op: dict[str, Any]) -> bool:
-    if not DEFAULT_OPERATOR_PROVIDERS:
+
+def _max_cost_tier() -> str:
+    return str(os.environ.get("SOLAR_PM_MAX_COST_TIER") or "").strip().lower()
+
+
+def _operator_matches_cost_policy(op: dict[str, Any]) -> bool:
+    ceiling = _max_cost_tier()
+    if not ceiling:
+        return True
+    if ceiling not in COST_TIER_RANK:
+        return False
+    tier = str(op.get("cost_tier") or "medium").strip().lower()
+    return COST_TIER_RANK.get(tier, COST_TIER_RANK["medium"]) <= COST_TIER_RANK[ceiling]
+
+
+def _operator_matches_provider_policy(
+    op: dict[str, Any],
+    providers: set[str] | frozenset[str] | None = None,
+) -> bool:
+    provider_policy = DEFAULT_OPERATOR_PROVIDERS if providers is None else frozenset(
+        str(item).strip().lower() for item in providers if str(item).strip()
+    )
+    if not provider_policy:
+        return True
+    # Deterministic/native operators do not make a model-provider call.  Their
+    # catalog declaration is the authority for that fact; rejecting them for
+    # having no OpenAI/Anthropic label turns a frozen scientific plan into an
+    # unsatisfiable dispatch even though its exact physical implementation is
+    # locally available.
+    if op.get("model_provider_neutral") is True:
         return True
     provider = str(op.get("provider") or op.get("vendor") or "").strip().lower()
-    return bool(provider and provider in DEFAULT_OPERATOR_PROVIDERS)
+    return bool(provider and provider in provider_policy)
 
 
 def _provider_policy_label() -> str:
@@ -143,9 +193,60 @@ def _graph_path_for_sprint(sprint_id: str) -> str:
     return str(path) if path.exists() else ""
 
 
+def _execution_attempt_id(
+    task_graph_node: dict[str, Any] | None,
+    *,
+    role: str = "",
+    explicit_attempt_id: str = "",
+) -> str:
+    """Return the scalar identity of the attempt being submitted.
+
+    ``execution_attempt`` is a structured lifecycle record, not an identifier.
+    Converting that record with ``str()`` leaks an unstable Python repr into
+    every downstream telemetry event.  A builder submission happens before
+    lifecycle activation, so its identity is the *next* monotonic sequence.
+    Evaluator attempts are generation-fenced separately and should be supplied
+    explicitly by graph dispatch; direct evaluator submissions fall back to
+    the node's current repair generation.
+    """
+    explicit = str(explicit_attempt_id or "").strip()
+    if explicit:
+        return explicit
+
+    node = task_graph_node if isinstance(task_graph_node, dict) else {}
+    if normalize_role(role) == "evaluator":
+        generation = node.get("repair_attempts")
+        if isinstance(generation, (str, int)) and not isinstance(generation, bool):
+            normalized = str(generation).strip()
+            if normalized:
+                return normalized
+        return "0"
+
+    observed_sequences: list[int] = []
+    attempt = node.get("execution_attempt")
+    if isinstance(attempt, dict):
+        try:
+            observed_sequences.append(int(attempt.get("sequence") or 0))
+        except (TypeError, ValueError):
+            pass
+    history = node.get("execution_attempt_history")
+    if isinstance(history, list):
+        for item in history:
+            if not isinstance(item, dict):
+                continue
+            try:
+                observed_sequences.append(int(item.get("sequence") or 0))
+            except (TypeError, ValueError):
+                continue
+    return str(max(observed_sequences, default=0) + 1)
+
+
 def _build_pm_operator_envelope(
     *,
     task_id: str,
+    dispatch_id: str = "",
+    attempt_id: str = "",
+    correlation_id: str = "",
     sprint_id: str,
     node_id: str,
     operator_id: str,
@@ -161,6 +262,7 @@ def _build_pm_operator_envelope(
     task_graph_node: dict[str, Any] | None = None,
     capsule_submit: dict[str, Any] | None = None,
     expected_artifacts: list[str] | None = None,
+    additional_read_scope: list[str] | None = None,
 ) -> dict[str, Any]:
     """Build the canonical PM/operator envelope.
 
@@ -169,6 +271,12 @@ def _build_pm_operator_envelope(
     workdir contract regardless of the path that submitted them.
     """
     capsule_submit = capsule_submit or {}
+    try:
+        context_payload = json.loads(context) if str(context or "").strip() else {}
+    except (TypeError, ValueError):
+        context_payload = {}
+    if not isinstance(context_payload, dict):
+        context_payload = {}
     graph_path = _graph_path_for_sprint(sprint_id)
     graph_policy: dict[str, Any] = {}
     if graph_path:
@@ -201,7 +309,32 @@ def _build_pm_operator_envelope(
         "workflow_contract": str(graph_policy.get("workflow_contract") or ""),
         "strict_filesystem_boundaries": bool(graph_policy.get("strict_filesystem_boundaries")),
         "expected_artifacts": list(expected_artifacts or []),
+        "dispatch_id": dispatch_id or task_id,
+        "attempt_id": attempt_id or "1",
+        "correlation_id": correlation_id or f"{sprint_id}:{node_id}",
     }
+    if str(context_payload.get("source") or "") == "graph_node_dispatcher":
+        for key in (
+            "graph_dispatch_id",
+            "scheduler_input_sha256",
+            "selected_frozen_operator_id",
+        ):
+            value = str(context_payload.get(key) or "").strip()
+            if value:
+                envelope[key] = value
+        candidates = context_payload.get("frozen_candidate_ids")
+        if isinstance(candidates, list):
+            envelope["frozen_candidate_ids"] = [
+                str(value).strip() for value in candidates if str(value).strip()
+            ]
+        runtime_binding = operator.get("runtime_binding")
+        if isinstance(runtime_binding, dict):
+            envelope["runtime_binding"] = dict(runtime_binding)
+    if _observability_enabled():
+        envelope.update({
+            "span_id": _observation_id("span", dispatch_id or task_id, attempt_id or "1", "pm"),
+            "parent_span_id": os.environ.get("SOLAR_OBSERVABILITY_SPAN_ID") or "",
+        })
     if not envelope["graph_path"]:
         envelope.pop("graph_path", None)
     if operator.get("borrowed_for_role"):
@@ -218,14 +351,60 @@ def _build_pm_operator_envelope(
             "acceptance": task_graph_node.get("acceptance", []),
             "requirement_ids": task_graph_node.get("requirement_ids", []),
         }
+        graph_evaluation = (
+            str(envelope.get("task_type") or "").strip().lower() == "graph_eval"
+            and str(envelope.get("requested_role") or "").strip().lower() == "evaluator"
+            and str(context_payload.get("source") or "") == "graph_node_dispatcher"
+        )
         envelope["read_scope"] = list(task_graph_node.get("read_scope") or [])
-        envelope["write_scope"] = list(task_graph_node.get("write_scope") or [])
+        envelope["write_scope"] = (
+            list(expected_artifacts or [])
+            if graph_evaluation
+            else list(task_graph_node.get("write_scope") or [])
+        )
         envelope["write_scope_root"] = envelope["work_dir"]
         envelope["write_scope_resolution"] = "relative_to_write_scope_root"
+        if str(context_payload.get("source") or "") == "graph_node_dispatcher":
+            if graph_evaluation:
+                envelope["evaluation_binding"] = dict(
+                    task_graph_node.get("evaluation_binding") or {}
+                )
+                envelope["evaluation_plan"] = dict(
+                    task_graph_node.get("evaluation_plan") or {}
+                )
+                envelope["evaluated_execution_authority_sha256"] = str(
+                    (task_graph_node.get("execution_authority") or {}).get("sha256") or ""
+                )
+            else:
+                for field in (
+                    "artifact_contract",
+                    "artifact_routes",
+                    "capsule_binding",
+                    "resource_requirements",
+                ):
+                    value = task_graph_node.get(field)
+                    envelope[field] = dict(value) if isinstance(value, dict) else {}
+                for candidate in task_graph_node.get("physical_candidates") or []:
+                    if not isinstance(candidate, dict):
+                        continue
+                    if str(candidate.get("operator_id") or "") == operator_id:
+                        envelope["physical_candidate_rank"] = candidate.get("rank")
+                        break
+            envelope["handoff_path"] = str(
+                SPRINTS_DIR / f"{sprint_id}.{node_id}-handoff.md"
+            )
+    if additional_read_scope:
+        merged_read_scope = list(envelope.get("read_scope") or [])
+        for value in additional_read_scope:
+            normalized = str(value or "").strip()
+            if normalized and normalized not in merged_read_scope:
+                merged_read_scope.append(normalized)
+        envelope["read_scope"] = merged_read_scope
     if capsule_submit.get("capability_capsule_id"):
         envelope["capability_native"] = bool(capsule_submit.get("capability_native", True))
         envelope["capability_capsule_id"] = str(capsule_submit["capability_capsule_id"])
         envelope["capsule_plan"] = capsule_submit.get("capsule_plan", {})
+        envelope["selected_skills"] = list(capsule_submit.get("selected_skills") or [])
     if capsule_submit.get("capsule_override_reason"):
         envelope["capsule_override_reason"] = str(capsule_submit["capsule_override_reason"])
     return envelope
@@ -689,6 +868,16 @@ def _command_path_available(command_path: str, op: dict[str, Any]) -> tuple[bool
         resolved = shutil.which("codex")
         if resolved:
             return True, f"command_path_resolved_via_path:{resolved}"
+        try:
+            materialized, source = resolve_codex_cli(
+                HARNESS_DIR,
+                env=os.environ,
+                configured_path=command_path,
+            )
+        except OSError:
+            materialized, source = None, ""
+        if materialized:
+            return True, f"command_path_resolved_via_{source}:{materialized}"
     return False, f"command_path_missing:{command_path}"
 
 
@@ -866,16 +1055,59 @@ def _capsule_submit_metadata(node: dict[str, Any] | None) -> dict[str, Any]:
         or node.get("capability_capsule_id")
         or node.get("execution_capsule_id")
         or node.get("capsule_plan")
+        or node.get("capsule_plan_ir")
     ):
         return {}
-    capsule_plan = dict(node.get("capsule_plan") or {})
-    return {
+    capsule_plan = dict(node.get("capsule_plan") or node.get("capsule_plan_ir") or {})
+    metadata = {
         "capability_native": bool(node.get("capability_native", True)),
         "capability_capsule_id": node.get("capability_capsule_id") or capsule_plan.get("capability_capsule_id"),
         "dispatch_task_type": node.get("dispatch_task_type") or capsule_plan.get("dispatch_task_type"),
         "logical_operator": node.get("logical_operator", ""),
         "capsule_plan": capsule_plan,
+        "selected_skills": list(
+            capsule_plan.get("selected_skills")
+            or node.get("selected_skills")
+            or node.get("required_skills")
+            or []
+        ),
     }
+    if (
+        metadata["capability_capsule_id"] == "cap.skill-execution-bridge"
+        and not metadata["selected_skills"]
+    ):
+        # Persisted graphs can outlive the planner/compiler version that
+        # created them. An empty generic skill bridge is not admissible, so
+        # repair it at the final dispatch boundary using the logical
+        # operator's stable governed capsule.
+        try:
+            from capability_capsules import default_capability_plan_for_logical_operator
+
+            fallback = default_capability_plan_for_logical_operator(
+                str(metadata.get("logical_operator") or ""),
+                request_type=str(metadata.get("dispatch_task_type") or ""),
+                node=node,
+                goal_text=str(node.get("goal") or ""),
+            )
+        except Exception:
+            fallback = {}
+        fallback_capsule = str(fallback.get("capability_capsule_id") or "")
+        if fallback_capsule and fallback_capsule != "cap.skill-execution-bridge":
+            metadata.update(
+                {
+                    "capability_native": bool(fallback.get("capability_native", True)),
+                    "capability_capsule_id": fallback_capsule,
+                    "dispatch_task_type": str(
+                        fallback.get("dispatch_task_type")
+                        or metadata.get("dispatch_task_type")
+                        or ""
+                    ),
+                    "selected_skills": list(fallback.get("selected_skills") or []),
+                    "capsule_override_reason": "invalid_empty_skill_bridge_recovered",
+                }
+            )
+            metadata["capsule_plan"] = {**capsule_plan, **fallback}
+    return metadata
 
 
 EVALUATOR_VERIFICATION_TASK_TYPES = {
@@ -888,7 +1120,9 @@ EVALUATOR_VERIFICATION_TASK_TYPES = {
     "acceptance",
 }
 PM_CLOSEOUT_KINDS = {
+    "elastic_planner",
     "planner",
+    "task_graph_compiler",
     "builder",
     "evaluator",
     "graph_node_execution",
@@ -1030,6 +1264,18 @@ def _operator_roles(op: dict[str, Any]) -> set[str]:
     return roles
 
 
+def _requires_builder_pool_membership(op: dict[str, Any]) -> bool:
+    """Return whether a builder is capacity-backed by the model pane pool.
+
+    Native research-registry operators execute behind operator_runtime using a
+    virtual pane and their own lease.  Requiring those operators to also be
+    listed in the model builder pool makes an otherwise healthy frozen
+    physical binding impossible to dispatch merely because its logical role is
+    ``builder``.
+    """
+    return str(op.get("backend") or "").strip() != "research_operator_registry"
+
+
 def _task_type_rejected(op: dict[str, Any], task_type: str) -> bool:
     if not task_type:
         return False
@@ -1061,6 +1307,14 @@ def _operator_reject_reason_for_task(op: dict[str, Any], role: str, task_type: s
             for item in (op.get(field) or [])
             if str(item or "").strip()
         }
+        runtime_binding = op.get("runtime_binding") if isinstance(op.get("runtime_binding"), dict) else {}
+        registry_name = str(runtime_binding.get("registry") or "").strip()
+        native_scientific_lifecycle = (
+            str(op.get("backend") or "").strip() == "research_operator_registry"
+            and registry_name.startswith("plugins.autosci.operators.scientific_lifecycle.")
+        )
+        if native_scientific_lifecycle:
+            declared.add("scientific-research")
         if not declared.intersection(research_markers):
             return "operator_lacks_scientific_research_capability"
     requested_code_exec = norm_role in CODE_EXEC_ROLES or task in CODE_EXEC_TASK_TYPES
@@ -1195,6 +1449,7 @@ def _role_spillover_candidates(
     policy_mod: Any | None,
     policy: dict[str, Any],
     spillover_spec: dict[str, Any],
+    provider_policy: frozenset[str],
 ) -> tuple[list[tuple[int, str, dict[str, Any]]], str]:
     max_active = int(spillover_spec.get("max_active", 0) or 0)
     if max_active <= 0:
@@ -1220,7 +1475,9 @@ def _role_spillover_candidates(
             continue
         if bool(op.get("deprecated")):
             continue
-        if not _operator_matches_provider_policy(op):
+        if not _operator_matches_provider_policy(op, provider_policy):
+            continue
+        if not _operator_matches_cost_policy(op):
             continue
         op_roles = _operator_roles(op)
         if norm_role in op_roles:
@@ -1267,6 +1524,9 @@ def select_operator_by_role(
     prefer_operator: str = "",
     resolved_capsule: dict[str, Any] | None = None,
     logical_operator: str = "",
+    allowed_providers: set[str] | frozenset[str] | None = None,
+    observation_identifiers: dict[str, Any] | None = None,
+    strict_preference: bool = False,
 ) -> tuple[str, dict[str, Any], str]:
     """选择最合适的可调度算子。
 
@@ -1285,24 +1545,106 @@ def select_operator_by_role(
     preferred_ops = set(capsule_constraints.get("preferred", []) or [])
     forbidden_ops = set(capsule_constraints.get("forbidden", []) or [])
     default_profile = str(capsule_constraints.get("default_operator_profile") or "")
+    provider_policy = DEFAULT_OPERATOR_PROVIDERS if allowed_providers is None else frozenset(
+        str(item).strip().lower() for item in allowed_providers if str(item).strip()
+    )
+
+    candidate_observations: list[dict[str, Any]] = []
+    preferred_failure = ""
+
+    def record_selection(selected: str = "", failure: str = "", *, spillover: bool = False) -> None:
+        selection_ids = dict(observation_identifiers or {})
+        selection_operation_id = _observation_id(
+            "operation",
+            selection_ids.get("dispatch_id") or selection_ids.get("task_id") or "unbound",
+            selection_ids.get("attempt_id") or "1",
+            "operator-selection",
+        )
+        selection_ids.setdefault("span_id", _observation_id("span", selection_operation_id))
+        _observe(
+            "operator.selection.completed",
+            component="pm_dispatch",
+            operation="physical_operator_selection",
+            operation_id=selection_operation_id,
+            phase="completed",
+            terminal=True,
+            status="selected" if selected else "unavailable",
+            identifiers=selection_ids,
+            data={
+                "requested_role": norm_role,
+                "task_type": task_type,
+                "logical_operator": logical_operator,
+                "preferred_operator": prefer_operator or None,
+                "selected_operator_id": selected or None,
+                "failure_class": failure or None,
+                "spillover": spillover,
+                "candidates": candidate_observations,
+            },
+        )
 
     # 1. 指定 operator 优先
     if prefer_operator:
         if prefer_operator in operators:
             op = dict(operators[prefer_operator])
             op["operator_id"] = prefer_operator
-            if not _operator_matches_provider_policy(op):
+            if not _operator_matches_provider_policy(op, provider_policy):
                 provider = str(op.get("provider") or op.get("vendor") or "unknown")
-                return "", {}, f"preferred_operator_provider_mismatch: {prefer_operator}: {provider}"
-            task_reject_reason = _operator_reject_reason_for_task(op, norm_role, task_type)
-            if task_reject_reason:
-                return "", {}, f"preferred_operator_rejected_for_task: {prefer_operator}: {task_reject_reason}"
-            ok, reason = is_dispatchable(op)
-            if ok:
-                return prefer_operator, op, ""
+                reason = f"preferred_operator_provider_mismatch: {prefer_operator}: {provider}"
+                candidate_observations.append({"operator_id": prefer_operator, "eligible": False, "reason": "provider_mismatch"})
+                preferred_failure = reason
+            elif not _operator_matches_cost_policy(op):
+                reason = (
+                    f"preferred_operator_cost_tier_exceeds_ceiling: {prefer_operator}: "
+                    f"operator={op.get('cost_tier') or 'medium'} ceiling={_max_cost_tier() or 'unset'}"
+                )
+                candidate_observations.append(
+                    {"operator_id": prefer_operator, "eligible": False, "reason": "cost_policy"}
+                )
+                preferred_failure = reason
+            elif norm_role not in _operator_roles(op):
+                reason = f"preferred_operator_role_mismatch: {prefer_operator}: {norm_role}"
+                candidate_observations.append(
+                    {"operator_id": prefer_operator, "eligible": False, "reason": "role_mismatch"}
+                )
+                preferred_failure = reason
+            elif (
+                pool_mode
+                and _requires_builder_pool_membership(op)
+                and prefer_operator not in pool_member_ids
+            ):
+                reason = f"preferred_operator_not_in_builder_pool: {prefer_operator}"
+                candidate_observations.append(
+                    {"operator_id": prefer_operator, "eligible": False, "reason": "not_in_builder_pool"}
+                )
+                preferred_failure = reason
+            elif prefer_operator in forbidden_ops:
+                reason = f"preferred_operator_capsule_forbidden: {prefer_operator}"
+                candidate_observations.append(
+                    {"operator_id": prefer_operator, "eligible": False, "reason": "capsule_forbidden"}
+                )
+                preferred_failure = reason
+            elif (task_reject_reason := _operator_reject_reason_for_task(op, norm_role, task_type)):
+                reason = f"preferred_operator_rejected_for_task: {prefer_operator}: {task_reject_reason}"
+                candidate_observations.append({"operator_id": prefer_operator, "eligible": False, "reason": task_reject_reason})
+                preferred_failure = reason
             else:
-                return "", {}, f"preferred_operator_unavailable: {prefer_operator}: {reason}"
-        return "", {}, f"preferred_operator_not_found: {prefer_operator}"
+                ok, reason = is_dispatchable(op)
+                if ok:
+                    candidate_observations.append({"operator_id": prefer_operator, "eligible": True, "score": None, "reason": "preferred"})
+                    record_selection(selected=prefer_operator)
+                    return prefer_operator, op, ""
+                preferred_failure = f"preferred_operator_unavailable: {prefer_operator}: {reason}"
+                candidate_observations.append({"operator_id": prefer_operator, "eligible": False, "reason": reason})
+        else:
+            preferred_failure = f"preferred_operator_not_found: {prefer_operator}"
+            candidate_observations.append({"operator_id": prefer_operator, "eligible": False, "reason": "not_found"})
+
+        # Planner alternatives are an authorization boundary, not a hint. A
+        # strict probe reports why this exact entry was skipped and must never
+        # fall through to an undeclared registry operator.
+        if strict_preference:
+            record_selection(failure=preferred_failure or "preferred_operator_unavailable")
+            return "", {}, preferred_failure or "preferred_operator_unavailable"
 
     # 2. 按 role 过滤；builder 默认从显式 builder_pool 中挑可用算子。
     candidates: list[tuple[int, str, dict[str, Any]]] = []
@@ -1310,26 +1652,42 @@ def select_operator_by_role(
         op = dict(spec)
         op["operator_id"] = op_id
         if bool(op.get("deprecated")):
+            candidate_observations.append({"operator_id": op_id, "eligible": False, "reason": "deprecated"})
             continue
-        if not _operator_matches_provider_policy(op):
+        if not _operator_matches_provider_policy(op, provider_policy):
+            candidate_observations.append(
+                {"operator_id": op_id, "eligible": False, "reason": "provider_policy"}
+            )
             continue
-        ok, _ = is_dispatchable(op)
+        if not _operator_matches_cost_policy(op):
+            candidate_observations.append(
+                {"operator_id": op_id, "eligible": False, "reason": "cost_policy"}
+            )
+            continue
+        ok, dispatch_reason = is_dispatchable(op)
         if not ok:
+            candidate_observations.append({"operator_id": op_id, "eligible": False, "reason": dispatch_reason or "not_dispatchable"})
             continue
         if op_id in forbidden_ops:
+            candidate_observations.append({"operator_id": op_id, "eligible": False, "reason": "capsule_forbidden"})
             continue
         op_roles = _operator_roles(op)
         if norm_role not in op_roles:
+            candidate_observations.append({"operator_id": op_id, "eligible": False, "reason": "role_mismatch"})
             continue
-        if pool_mode and op_id not in pool_member_ids:
+        if pool_mode and _requires_builder_pool_membership(op) and op_id not in pool_member_ids:
+            candidate_observations.append({"operator_id": op_id, "eligible": False, "reason": "not_in_builder_pool"})
             continue
         # Hard-reject: operators may declare task types they will not accept.
         # This prevents stub/print-once operators from receiving complex tasks
         # (e.g. runtime-hardening, implementation, refactor) that require a
         # long-running interactive session.
         if _task_type_rejected(op, task_type):
+            candidate_observations.append({"operator_id": op_id, "eligible": False, "reason": "task_type_rejected"})
             continue
-        if _operator_reject_reason_for_task(op, norm_role, task_type):
+        task_reason = _operator_reject_reason_for_task(op, norm_role, task_type)
+        if task_reason:
+            candidate_observations.append({"operator_id": op_id, "eligible": False, "reason": task_reason})
             continue
         # 评分：builder pool 用统一池优先级；旧模式保留 print_once > command > interactive_repl。
         priority = _operator_priority(
@@ -1345,6 +1703,13 @@ def select_operator_by_role(
             policy=policy,
         )
         candidates.append((priority, op_id, op))
+        candidate_observations.append({
+            "operator_id": op_id,
+            "eligible": True,
+            "score": priority,
+            "provider": str(op.get("provider") or op.get("vendor") or "") or None,
+            "model": str(op.get("model") or "") or None,
+        })
 
     if not candidates:
         # In explicit single-provider modes (Codex-only / Claude-only), role spillover is unsafe:
@@ -1356,10 +1721,14 @@ def select_operator_by_role(
             "on",
             "yes",
         }
-        if DEFAULT_OPERATOR_PROVIDERS and not provider_mode_spillover:
+        if provider_policy and not provider_mode_spillover:
             if pool_mode:
-                return "", {}, f"no_dispatchable_operator_for_role: {norm_role}; builder_pool_depleted"
-            return "", {}, f"no_dispatchable_operator_for_role: {norm_role}; provider_mode_role_spillover_disabled"
+                failure = preferred_failure or f"no_dispatchable_operator_for_role: {norm_role}; builder_pool_depleted"
+                record_selection(failure=failure)
+                return "", {}, failure
+            failure = preferred_failure or f"no_dispatchable_operator_for_role: {norm_role}; provider_mode_role_spillover_disabled"
+            record_selection(failure=failure)
+            return "", {}, failure
         spillover_spec = _role_spillover_spec(policy_mod, policy, norm_role)
         if spillover_spec and not prefer_operator:
             spillover_candidates, spillover_reason = _role_spillover_candidates(
@@ -1373,20 +1742,195 @@ def select_operator_by_role(
                 policy_mod=policy_mod,
                 policy=policy,
                 spillover_spec=spillover_spec,
+                provider_policy=provider_policy,
             )
             if spillover_candidates:
                 spillover_candidates.sort(key=lambda x: -x[0])
-                _, best_id, best_op = spillover_candidates[0]
+                _best_score, best_id, best_op = spillover_candidates[0]
+                candidate_observations.extend(
+                    {"operator_id": op_id, "eligible": True, "score": score, "spillover": True}
+                    for score, op_id, _op in spillover_candidates
+                )
+                record_selection(selected=best_id, spillover=True)
                 return best_id, best_op, ""
             if spillover_reason:
-                return "", {}, f"no_dispatchable_operator_for_role: {norm_role}; {spillover_reason}"
+                failure = preferred_failure or f"no_dispatchable_operator_for_role: {norm_role}; {spillover_reason}"
+                record_selection(failure=failure, spillover=True)
+                return "", {}, failure
         if pool_mode:
-            return "", {}, f"no_dispatchable_operator_for_role: {norm_role}; builder_pool_depleted"
-        return "", {}, f"no_dispatchable_operator_for_role: {norm_role}"
+            failure = preferred_failure or f"no_dispatchable_operator_for_role: {norm_role}; builder_pool_depleted"
+            record_selection(failure=failure)
+            return "", {}, failure
+        failure = preferred_failure or f"no_dispatchable_operator_for_role: {norm_role}"
+        record_selection(failure=failure)
+        return "", {}, failure
 
     candidates.sort(key=lambda x: -x[0])
     _, best_id, best_op = candidates[0]
+    record_selection(selected=best_id)
     return best_id, best_op, ""
+
+
+def _normalized_operator_alternatives(values: list[str] | tuple[str, ...] | None) -> list[str]:
+    """Keep planner order while dropping blanks and duplicate operator IDs."""
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for raw in values or []:
+        operator_id = str(raw or "").strip()
+        if not operator_id or operator_id in seen:
+            continue
+        seen.add(operator_id)
+        ordered.append(operator_id)
+    return ordered
+
+
+def _graph_dispatch_refusal_identity(
+    context: str,
+    authorized_alternatives: list[str],
+) -> dict[str, str]:
+    """Extract the dispatcher-owned identity needed for crash reconciliation.
+
+    The PM attempt has its own task/dispatch identity.  A frozen graph dispatch
+    also has an earlier scheduler identity which must survive a pre-admission
+    refusal so a restarted coordinator can compare-and-reset only that exact
+    assignment.  Treat arbitrary PM context as opaque; only the structured
+    graph dispatcher context may populate these correlation fields.
+    """
+    try:
+        payload = json.loads(str(context or ""))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict) or payload.get("source") != "graph_node_dispatcher":
+        return {}
+    graph_dispatch_id = str(payload.get("dispatch_id") or "").strip()
+    original_pane = str(payload.get("original_assigned_pane") or "").strip()
+    selected_operator_id = (
+        original_pane.split(":", 1)[1].strip()
+        if original_pane.startswith("operator:")
+        else ""
+    )
+    if (
+        not graph_dispatch_id
+        or not selected_operator_id
+        or len(authorized_alternatives) != 1
+        or authorized_alternatives[0] != selected_operator_id
+    ):
+        return {}
+    return {
+        "graph_dispatch_id": graph_dispatch_id,
+        "selected_frozen_operator_id": selected_operator_id,
+        "queue_item_id": str(payload.get("queue_item_id") or "").strip(),
+        "graph_path": str(payload.get("graph") or "").strip(),
+    }
+
+
+def _frozen_operator_selection_role(
+    context: str,
+    authorized_alternatives: list[str],
+    requested_role: str,
+) -> str:
+    """Use the frozen operator's declared host role for exact graph dispatch.
+
+    Graph nodes commonly retain the logical scheduling role ``builder`` while
+    the accepted Physical Plan binds them to a specialized native role such as
+    ``scientific-source-assessor``.  Reapplying the generic logical role during
+    PM admission rejects the exact scheduler-authorized operator and makes a
+    valid frozen plan impossible to execute.  The exception is deliberately
+    narrow: it applies only to the structured graph-dispatch context, one exact
+    selected operator, and a physical host role that the current catalog still
+    declares for that operator.
+    """
+    normalized_requested = normalize_role(requested_role)
+    identity = _graph_dispatch_refusal_identity(context, authorized_alternatives)
+    selected_operator_id = str(identity.get("selected_frozen_operator_id") or "").strip()
+    if not selected_operator_id:
+        return normalized_requested
+    try:
+        payload = json.loads(str(context or ""))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return normalized_requested
+    if not isinstance(payload, dict):
+        return normalized_requested
+    physical_role = normalize_role(str(payload.get("physical_host_role") or ""))
+    if not physical_role:
+        return normalized_requested
+    operator = dict((load_registry().get("operators") or {}).get(selected_operator_id) or {})
+    if physical_role not in _operator_roles(operator):
+        return normalized_requested
+    return physical_role
+
+
+def select_operator_from_ordered_alternatives(
+    alternatives: list[str] | tuple[str, ...],
+    *,
+    role: str,
+    task_type: str = "",
+    resolved_capsule: dict[str, Any] | None = None,
+    logical_operator: str = "",
+    allowed_providers: set[str] | frozenset[str] | None = None,
+    observation_identifiers: dict[str, Any] | None = None,
+) -> tuple[str, dict[str, Any], list[dict[str, str]], str]:
+    """Select the first dispatchable planner-authorized operator, in order."""
+    exclusions: list[dict[str, str]] = []
+    ordered = _normalized_operator_alternatives(alternatives)
+    for operator_id in ordered:
+        selected_id, operator, reason = select_operator_by_role(
+            role=role,
+            task_type=task_type,
+            prefer_operator=operator_id,
+            resolved_capsule=resolved_capsule,
+            logical_operator=logical_operator,
+            allowed_providers=allowed_providers,
+            observation_identifiers=observation_identifiers,
+            strict_preference=True,
+        )
+        if selected_id:
+            return selected_id, operator, exclusions, ""
+        exclusions.append(
+            {
+                "operator_id": operator_id,
+                "reason": reason or "operator_unavailable",
+                "stage": "selection",
+            }
+        )
+    reason = "operator_alternatives_exhausted" if ordered else "operator_alternatives_empty"
+    return "", {}, exclusions, reason
+
+
+def _capsule_excluding_operators(
+    resolved_capsule: dict[str, Any] | None,
+    excluded_operator_ids: set[str],
+) -> dict[str, Any]:
+    """Return selection constraints that cannot immediately retry a refused operator."""
+    capsule = dict(resolved_capsule or {})
+    constraints = dict(capsule.get("operator_constraints") or {})
+    forbidden = {
+        str(item)
+        for item in constraints.get("forbidden", []) or []
+        if str(item).strip()
+    }
+    forbidden.update(str(item) for item in excluded_operator_ids if str(item).strip())
+    constraints["forbidden"] = sorted(forbidden)
+    constraints["preferred"] = [
+        str(item)
+        for item in constraints.get("preferred", []) or []
+        if str(item) not in forbidden
+    ]
+    capsule["operator_constraints"] = constraints
+    return capsule
+
+
+def _operator_submit_rejection_reason(exc: BaseException) -> str:
+    """Read only the typed refusal reason; exception text is not a control input."""
+    reason = str(getattr(exc, "reason", "") or "").strip()
+    return reason if reason in {"operator_busy", "operator_unavailable"} else ""
+
+
+def _load_operator_submit():
+    """Load the lease-enforcing submit seam; dispatch must fail closed without it."""
+    from operator_runtime import submit  # type: ignore
+
+    return submit
 
 
 # ── Dispatch 文件构建 ──────────────────────────────────────────────────────────
@@ -1728,6 +2272,19 @@ def _builder_ready_nodes_for_sprint(sprint_id: str) -> tuple[list[dict[str, Any]
     graph_path = SPRINTS_DIR / f"{sprint_id}.task_graph.json"
     if not graph_path.exists():
         return [], {"ok": False, "reason": "task_graph_missing", "graph": str(graph_path)}
+    try:
+        from elastic_planner_runtime import frozen_scheduler_authority
+
+        authority = frozen_scheduler_authority(SPRINTS_DIR, sprint_id)
+    except Exception:
+        authority = {"ok": False}
+    if authority.get("ok"):
+        return [], {
+            "ok": True,
+            "reason": "frozen_scheduler_owned_by_graph_dispatcher",
+            "graph": str(graph_path),
+            "ready_count": 0,
+        }
     graph_scheduler = _load_graph_scheduler_module()
     if graph_scheduler is None:
         return [], {"ok": False, "reason": "graph_scheduler_unavailable", "graph": str(graph_path)}
@@ -1830,7 +2387,19 @@ def _pm_expected_artifacts(record: dict[str, Any]) -> list[Path]:
         kind = role
     if kind == "graph_node_execution" and node_id:
         canonical = [SPRINTS_DIR / f"{sprint_id}.{node_id}-handoff.md"]
+    elif kind == "elastic_planner":
+        canonical = [
+            SPRINTS_DIR
+            / sprint_id
+            / "elastic-planner"
+            / "planner_operator_result.json"
+        ]
     elif kind == "planner":
+        canonical = [
+            SPRINTS_DIR / f"{sprint_id}.planner-requirements.md",
+            SPRINTS_DIR / f"{sprint_id}.planner-handoff.md",
+        ]
+    elif kind == "task_graph_compiler":
         canonical = [
             SPRINTS_DIR / f"{sprint_id}.design.md",
             SPRINTS_DIR / f"{sprint_id}.plan.md",
@@ -2060,6 +2629,7 @@ def ensure_compiled_sprint_status(
         # Runtime-owned birth provenance: a planner may replace the graph,
         # but it cannot thereby turn a governed intake into legacy work.
         status["plan_compile_required"] = True
+        status["planner_role_boundary_version"] = 2
     else:
         status.pop("plan_compile_required", None)
         status.pop("planner_dispatch_claim", None)
@@ -2099,29 +2669,16 @@ def _planner_objective_for_compiled_sprint(sprint_id: str) -> str:
         - {base}.product-brief.md
         - {base}.prd.md
         - {base}.contract.md
-        - {base}.task_graph.json
         - {base}.requirement_ir.json
         - {base}.handoff.md
 
         你的任务：
-        1. 基于 compiled requirement package 产出 design.md 和 plan.md。
-        2. 如有必要，细化或修正 task_graph.json，但不得绕过 compiled contracts。
-        3. 不要直接跳 Builder；保持 PM -> Planner -> task_graph -> Builder 主链。
-        4. 如果 compiled package 缺失关键字段，先写明 blocker 和修正建议。
+        1. 整理需求、验收条件、约束、非目标和 blocker，写入 {base}.planner-requirements.md。
+        2. 写入 {base}.planner-handoff.md，供后续独立 Graph Compiler 使用。
+        3. 不得创建或修改 task_graph、design、plan、HTML；不得执行研究或评估。
+        4. 不要修改 lifecycle status，也不要直接派发 Builder/Evaluator。
         """
     ).strip()
-    # P5 G2: teach the planner the compile rules it will be checked against
-    # (env-gated inside the helper; "" when SOLAR_PLAN_VALIDATOR is off, so
-    # legacy prompts stay byte-identical). Prompt enrichment must never break
-    # dispatch — enforcement lives at the compile/dispatch seams.
-    try:
-        import plan_validator  # type: ignore
-
-        policy_block = plan_validator.planner_compile_policy_block(SPRINTS_DIR, sprint_id)
-    except Exception:
-        policy_block = ""
-    if policy_block:
-        objective = f"{objective}\n\n{policy_block}"
     return objective
 
 
@@ -2153,6 +2710,38 @@ def cmd_compile_request(args: argparse.Namespace) -> int:
 
     sprint_id = str(args.sprint or _new_sprint_id())
     workspace_root = Path(args.workspace_root or os.getcwd())
+    compile_operation_id = _observation_id("operation", sprint_id, "pm-compile")
+    compile_span_id = _observation_id("span", compile_operation_id)
+    compile_started_ns = time.monotonic_ns()
+    compile_terminal_emitted = False
+
+    def finish_compile(status: str) -> None:
+        nonlocal compile_terminal_emitted
+        if compile_terminal_emitted:
+            return
+        compile_terminal_emitted = True
+        _observe(
+            "pm.compile.completed",
+            component="pm_dispatch",
+            operation="pm_compile",
+            operation_id=compile_operation_id,
+            phase="completed",
+            terminal=True,
+            status=status,
+            identifiers={"sprint_id": sprint_id, "span_id": compile_span_id},
+            data={"duration_ms": (time.monotonic_ns() - compile_started_ns) / 1_000_000},
+            provenance="observed",
+        )
+
+    _observe(
+        "pm.compile.started",
+        component="pm_dispatch",
+        operation="pm_compile",
+        operation_id=compile_operation_id,
+        phase="started",
+        identifiers={"sprint_id": sprint_id, "span_id": compile_span_id},
+        provenance="observed",
+    )
 
     router_path = Path(__file__).resolve().parent / "codex_pm_router.py"
     spec = importlib.util.spec_from_file_location("codex_pm_router", router_path)
@@ -2172,6 +2761,7 @@ def cmd_compile_request(args: argparse.Namespace) -> int:
             target_system=str(getattr(args, "target_system", "solar-harness") or "solar-harness"),
         )
     except router.RequestTooLargeError as exc:
+        finish_compile("request_too_long")
         print(
             json.dumps(
                 {
@@ -2185,28 +2775,41 @@ def cmd_compile_request(args: argparse.Namespace) -> int:
             )
         )
         return 2
+    except Exception:
+        finish_compile("exception")
+        raise
     validation = router.validate_compiled_package(payload)
     if not validation.get("ok", False):
+        finish_compile("validation_failed")
         print("ERROR: compiled requirement package failed validation", file=sys.stderr)
         for item in validation.get("errors", []) or []:
             print(f" - {item}", file=sys.stderr)
         return 2
-    emitted = router.emit_requirement_package(
-        payload,
-        workspace_root=workspace_root,
-        sprint_root=SPRINTS_DIR,
-        sprint_id=sprint_id,
-    )
-    status_path = ensure_compiled_sprint_status(
-        sprint_id,
-        title=payload["compiled_artifacts"]["product_brief"]["title"],
-        summary=payload["compiled_artifacts"]["product_brief"]["problem"][:180],
-        status_value="drafting",
-        phase="prd_ready",
-        handoff_to="planner",
-        target_role="planner",
-    )
+    try:
+        emitted = router.emit_requirement_package(
+            payload,
+            workspace_root=workspace_root,
+            sprint_root=SPRINTS_DIR,
+            sprint_id=sprint_id,
+        )
+    except Exception:
+        finish_compile("exception")
+        raise
+    try:
+        status_path = ensure_compiled_sprint_status(
+            sprint_id,
+            title=payload["compiled_artifacts"]["product_brief"]["title"],
+            summary=payload["compiled_artifacts"]["product_brief"]["problem"][:180],
+            status_value="drafting",
+            phase="prd_ready",
+            handoff_to="planner",
+            target_role="planner",
+        )
+    except Exception:
+        finish_compile("exception")
+        raise
     emitted["status"] = str(status_path)
+    finish_compile("completed")
 
     if bool(getattr(args, "dispatch_planner", False)):
         submit_args = argparse.Namespace(
@@ -2239,23 +2842,26 @@ def cmd_compile_request(args: argparse.Namespace) -> int:
 # ── 核心 submit 逻辑 ──────────────────────────────────────────────────────────
 
 def _with_planner_compile_policy(objective: str, sprint_id: str) -> str:
-    """P5 G2b: the submit choke point every role-pool planner dispatch flows
-    through. The G2b battery proved objective-builder-level injection misses
-    live paths (the autopilot role-handoff objective reached the planner with
-    no policy block); enriching HERE covers every caller. Env-gated inside
-    the helper ("" when SOLAR_PLAN_VALIDATOR is off); idempotent so an
-    already-enriched objective (intent_consumer) is not double-appended."""
-    if "## Plan compile policy" in objective:
-        return objective
-    try:
-        import plan_validator  # type: ignore
+    """Enforce the Planner role boundary at the shared submit choke point.
 
-        policy_block = plan_validator.planner_compile_policy_block(SPRINTS_DIR, sprint_id)
-    except Exception:
-        policy_block = ""
-    if policy_block:
-        return f"{objective}\n\n{policy_block}"
-    return objective
+    DAG compile policy used to be appended here, which instructed every
+    Planner operator to create or repair the graph.  Planner now owns only
+    requirement normalization and handoff; graph compilation is a distinct
+    downstream closeout contract.
+    """
+    del sprint_id
+    marker = "## Planner role boundary"
+    if marker in objective:
+        return objective
+    return f"""{objective}
+
+{marker}
+
+- Produce only `<sid>.planner-requirements.md` and `<sid>.planner-handoff.md`.
+- Do not create or modify task_graph.json, design/plan artifacts, or HTML.
+- Do not execute research, implementation, tests, evaluation, or lifecycle transitions.
+- Finish the two Planner artifacts and return; Solar dispatches the downstream Graph Compiler.
+""".rstrip()
 
 
 def cmd_submit(args: argparse.Namespace) -> int:
@@ -2266,6 +2872,9 @@ def cmd_submit(args: argparse.Namespace) -> int:
         return 1
 
     prefer_operator = str(args.operator or "").strip()
+    authorized_alternatives = _normalized_operator_alternatives(
+        list(getattr(args, "operator_alternative", []) or [])
+    )
     requested_sprint_id = str(args.sprint or "")
     node_id_for_intent = str(args.node or "N1")
     if os.environ.get("SOLAR_PM_DISPATCH_ALLOW_DIRECT") != "1":
@@ -2291,6 +2900,17 @@ def cmd_submit(args: argparse.Namespace) -> int:
     context = str(args.context or "")
     if normalize_role(role) == "planner":
         objective = _with_planner_compile_policy(objective, sprint_id)
+        if not dry_run:
+            status_path = SPRINTS_DIR / f"{sprint_id}.status.json"
+            if status_path.exists():
+                try:
+                    status_payload = json.loads(status_path.read_text(encoding="utf-8"))
+                    if int(status_payload.get("planner_role_boundary_version") or 0) < 2:
+                        status_payload["planner_role_boundary_version"] = 2
+                        status_payload["updated_at"] = _now()
+                        _write_json_atomic(status_path, status_payload)
+                except (OSError, ValueError, TypeError):
+                    pass
     task_graph_node = load_task_graph_node(sprint_id, node_id)
     capsule_submit = _capsule_submit_metadata(task_graph_node)
     logical_operator = str(capsule_submit.get("logical_operator") or (task_graph_node or {}).get("logical_operator") or "")
@@ -2303,6 +2923,16 @@ def cmd_submit(args: argparse.Namespace) -> int:
         logical_operator=logical_operator,
     )
     task_type = _canonicalize_capsule_task_type(capsule_submit, task_type)
+    additional_read_scope = list(getattr(args, "read_scope", []) or [])
+    if additional_read_scope and (
+        task_type != "graph_eval"
+        or os.environ.get("SOLAR_PM_DISPATCH_SOURCE") != "graph_node_dispatcher"
+    ):
+        print(
+            "ERROR: --read-scope is reserved for graph-dispatch evaluator snapshots",
+            file=sys.stderr,
+        )
+        return 1
     if capsule_submit.get("capability_capsule_id"):
         capsule_submit["dispatch_task_type"] = task_type
         if isinstance(capsule_submit.get("capsule_plan"), dict):
@@ -2321,6 +2951,7 @@ def cmd_submit(args: argparse.Namespace) -> int:
                     "task_type": task_type,
                     "objective": objective[:300],
                     "capability_capsule_id": capsule_submit["capability_capsule_id"],
+                    "selected_skills": list(capsule_submit.get("selected_skills") or []),
                 }
             )
         except Exception:
@@ -2352,6 +2983,17 @@ def cmd_submit(args: argparse.Namespace) -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     task_id = f"pm-{sprint_id}-{node_id}-{_short_id()}"
+    dispatch_id = f"dispatch-{task_id}"
+    attempt_id = _execution_attempt_id(
+        task_graph_node,
+        role=role,
+        explicit_attempt_id=str(getattr(args, "attempt_id", "") or ""),
+    )
+    correlation_id = f"{sprint_id}:{node_id}"
+    admission_operation_id = _observation_id(
+        "operation", dispatch_id, attempt_id, "operator-admission"
+    )
+    admission_span_id = _observation_id("span", admission_operation_id)
     result_path = str(
         _pm_result_path_for_role(
             sprint_id,
@@ -2364,14 +3006,45 @@ def cmd_submit(args: argparse.Namespace) -> int:
     work_dir = _pm_work_dir_for_sprint(sprint_id, str(getattr(args, "work_dir", "") or ""))
 
     # 1. 选算子
-    operator_id, operator, fallback_reason = select_operator_by_role(
-        role=role,
-        task_type=task_type,
-        prefer_operator=prefer_operator,
-        resolved_capsule=resolved_capsule,
-        logical_operator=logical_operator,
-    )
+    selection_ids = {
+        "sprint_id": sprint_id,
+        "node_id": node_id,
+        "task_id": task_id,
+        "dispatch_id": dispatch_id,
+        "attempt_id": attempt_id,
+        "correlation_id": correlation_id,
+    }
+    operator_selection_exclusions: list[dict[str, str]] = []
+    if authorized_alternatives:
+        operator_selection_role = _frozen_operator_selection_role(
+            context,
+            authorized_alternatives,
+            role,
+        )
+        operator_id, operator, operator_selection_exclusions, fallback_reason = (
+            select_operator_from_ordered_alternatives(
+                authorized_alternatives,
+                role=operator_selection_role,
+                task_type=task_type,
+                resolved_capsule=resolved_capsule,
+                logical_operator=logical_operator,
+                observation_identifiers=selection_ids,
+            )
+        )
+    else:
+        operator_id, operator, fallback_reason = select_operator_by_role(
+            role=role,
+            task_type=task_type,
+            prefer_operator=prefer_operator,
+            resolved_capsule=resolved_capsule,
+            logical_operator=logical_operator,
+            observation_identifiers=selection_ids,
+        )
     if not operator_id:
+        graph_refusal_identity = _graph_dispatch_refusal_identity(
+            context,
+            authorized_alternatives,
+        )
         failure_record: dict[str, Any] = {
             "task_id": task_id,
             "sprint_id": sprint_id,
@@ -2380,6 +3053,7 @@ def cmd_submit(args: argparse.Namespace) -> int:
             "objective": objective,
             "result_path": result_path,
             "status": "failed_no_dispatchable_operator",
+            "exit_code": 1,
             "submitted_at": _now(),
             "failed_at": _now(),
             "requested_role": normalize_role(role),
@@ -2387,7 +3061,20 @@ def cmd_submit(args: argparse.Namespace) -> int:
             "closeout_kind": closeout_kind,
             "expected_artifacts": expected_artifacts,
             "failure_reason": fallback_reason or "no_dispatchable_operator_for_role",
+            "dispatch_id": dispatch_id,
+            "attempt_id": attempt_id,
+            "correlation_id": correlation_id,
         }
+        if graph_refusal_identity:
+            failure_record.update(graph_refusal_identity)
+        if authorized_alternatives:
+            failure_record["authorized_operator_alternatives"] = authorized_alternatives
+            failure_record["operator_selection_role"] = operator_selection_role
+            failure_record["operator_selection_exclusions"] = operator_selection_exclusions
+            failure_record["display_error"] = {
+                "code": "operator_alternatives_exhausted",
+                "message": "No planner-authorized operator alternative is currently dispatchable.",
+            }
         if capsule_submit.get("capability_capsule_id"):
             failure_record["capability_capsule_id"] = capsule_submit["capability_capsule_id"]
             failure_record["logical_operator"] = logical_operator
@@ -2446,6 +3133,9 @@ def cmd_submit(args: argparse.Namespace) -> int:
     # 5. 构建 task envelope → operator_runtime.submit
     envelope = _build_pm_operator_envelope(
         task_id=task_id,
+        dispatch_id=dispatch_id,
+        attempt_id=attempt_id,
+        correlation_id=correlation_id,
         sprint_id=sprint_id,
         node_id=node_id,
         operator_id=operator_id,
@@ -2461,6 +3151,7 @@ def cmd_submit(args: argparse.Namespace) -> int:
         task_graph_node=task_graph_node,
         capsule_submit=capsule_submit,
         expected_artifacts=expected_artifacts,
+        additional_read_scope=additional_read_scope,
     )
 
     record: dict[str, Any] = {
@@ -2482,6 +3173,10 @@ def cmd_submit(args: argparse.Namespace) -> int:
         "runtime_mode": envelope.get("runtime_mode", ""),
         "provider_policy": envelope.get("provider_policy", ""),
     }
+    if authorized_alternatives:
+        record["authorized_operator_alternatives"] = authorized_alternatives
+        record["operator_selection_role"] = operator_selection_role
+        record["operator_selection_exclusions"] = operator_selection_exclusions
     if operator.get("borrowed_for_role"):
         record["borrowed_for_role"] = operator.get("borrowed_for_role")
         record["borrowed_from_roles"] = operator.get("borrowed_from_roles", [])
@@ -2502,31 +3197,197 @@ def cmd_submit(args: argparse.Namespace) -> int:
         if str(tools_dir) not in sys.path:
             sys.path.insert(0, str(tools_dir))
 
-        from operator_runtime import submit  # type: ignore
+        submit = _load_operator_submit()
     except Exception as exc:
-        # fallback: 直接写 operator inbox（无 lease，operatord 会拾取）
-        inbox_dir = OPERATOR_INBOX_DIR / operator_id
-        inbox_dir.mkdir(parents=True, exist_ok=True)
-        inbox_path = inbox_dir / f"{task_id}.json"
-        tmp = str(inbox_path) + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(envelope, f, indent=2, ensure_ascii=False)
-        os.replace(tmp, str(inbox_path))
-        record["status"] = "submitted_fallback"
-        record["inbox_path"] = str(inbox_path)
+        # Never bypass operator_runtime: a direct inbox write has no atomic
+        # operator lease and can launch colliding work from concurrent ticks.
+        record["status"] = "failed_operator_runtime_unavailable"
+        record["failed_at"] = _now()
+        record["failure_reason"] = "lease_enforcing_operator_runtime_unavailable"
         record["submit_error"] = str(exc)
-        submit_mode = "direct_inbox"
+        write_pm_task_record(task_id, record)
+        _observe(
+            "operator.admission.failed",
+            component="pm_dispatch",
+            operation="operator_admission",
+            operation_id=admission_operation_id,
+            phase="completed",
+            terminal=True,
+            status="failed_operator_runtime_unavailable",
+            identifiers={
+                "sprint_id": sprint_id,
+                "node_id": node_id,
+                "task_id": task_id,
+                "dispatch_id": dispatch_id,
+                "attempt_id": attempt_id,
+                "correlation_id": correlation_id,
+                "span_id": admission_span_id,
+            },
+            data={
+                "operator_id": operator_id,
+                "decision": "fail_closed",
+                "failure_reason": "lease_enforcing_operator_runtime_unavailable",
+                "failure_class": type(exc).__name__,
+            },
+            provenance="observed",
+        )
+        print(f"ERROR: lease-enforcing operator runtime unavailable: {exc}", file=sys.stderr)
+        return 1
     else:
         try:
-            result = submit(envelope)
-        except Exception as exc:
-            record["status"] = "failed_submit_exception"
+            fallback_limit = max(0, int(os.environ.get("SOLAR_PM_OPERATOR_FALLBACK_LIMIT", "3") or 3))
+        except (TypeError, ValueError):
+            fallback_limit = 3
+        fallback_attempts: list[dict[str, str]] = []
+        excluded_operators: set[str] = set()
+        terminal_submit_error: Exception | None = None
+        result: dict[str, Any] = {}
+
+        while True:
+            try:
+                result = submit(envelope)
+                break
+            except Exception as exc:
+                rejection_reason = _operator_submit_rejection_reason(exc)
+                if not rejection_reason or (
+                    not authorized_alternatives and len(fallback_attempts) >= fallback_limit
+                ):
+                    terminal_submit_error = exc
+                    break
+
+                refused_operator_id = operator_id
+                excluded_operators.add(refused_operator_id)
+                if authorized_alternatives:
+                    operator_selection_exclusions.append(
+                        {
+                            "operator_id": refused_operator_id,
+                            "reason": rejection_reason,
+                            "stage": "lease",
+                        }
+                    )
+                    remaining_alternatives = [
+                        candidate
+                        for candidate in authorized_alternatives
+                        if candidate not in excluded_operators
+                    ]
+                    (
+                        next_operator_id,
+                        next_operator,
+                        newly_excluded,
+                        next_reason,
+                    ) = select_operator_from_ordered_alternatives(
+                        remaining_alternatives,
+                        role=role,
+                        task_type=task_type,
+                        resolved_capsule=resolved_capsule,
+                        logical_operator=logical_operator,
+                        observation_identifiers=selection_ids,
+                    )
+                    operator_selection_exclusions.extend(newly_excluded)
+                else:
+                    fallback_capsule = _capsule_excluding_operators(
+                        resolved_capsule,
+                        excluded_operators,
+                    )
+                    next_operator_id, next_operator, next_reason = select_operator_by_role(
+                        role=role,
+                        task_type=task_type,
+                        prefer_operator="",
+                        resolved_capsule=fallback_capsule,
+                        logical_operator=logical_operator,
+                        observation_identifiers=selection_ids,
+                    )
+                if not next_operator_id:
+                    terminal_submit_error = exc
+                    record["operator_fallback_exhausted_reason"] = next_reason
+                    break
+
+                fallback_attempts.append(
+                    {
+                        "from_operator_id": refused_operator_id,
+                        "to_operator_id": next_operator_id,
+                        "reason": rejection_reason,
+                    }
+                )
+                operator_id = next_operator_id
+                operator = next_operator
+                dispatch_text = build_pm_dispatch_text(
+                    task_id=task_id,
+                    operator_id=operator_id,
+                    operator=operator,
+                    objective=objective,
+                    sprint_id=sprint_id,
+                    node_id=node_id,
+                    result_path=result_path,
+                    context=context,
+                    expected_artifacts=expected_artifacts,
+                    closeout_kind=closeout_kind,
+                )
+                dispatch_file.write_text(dispatch_text, encoding="utf-8")
+                envelope = _build_pm_operator_envelope(
+                    task_id=task_id,
+                    dispatch_id=dispatch_id,
+                    attempt_id=attempt_id,
+                    correlation_id=correlation_id,
+                    sprint_id=sprint_id,
+                    node_id=node_id,
+                    operator_id=operator_id,
+                    operator=operator,
+                    task_type=task_type,
+                    objective=objective,
+                    dispatch_file=dispatch_file,
+                    result_path=result_path,
+                    context=context,
+                    role=role,
+                    work_dir=work_dir,
+                    logical_operator=logical_operator,
+                    task_graph_node=task_graph_node,
+                    capsule_submit=capsule_submit,
+                    expected_artifacts=expected_artifacts,
+                    additional_read_scope=additional_read_scope,
+                )
+                record["operator_id"] = operator_id
+                record["runtime_mode"] = envelope.get("runtime_mode", "")
+                record["provider_policy"] = envelope.get("provider_policy", "")
+
+        if terminal_submit_error is not None:
+            exc = terminal_submit_error
+            record["status"] = (
+                "failed_operator_alternatives_exhausted"
+                if authorized_alternatives and _operator_submit_rejection_reason(exc)
+                else "failed_submit_exception"
+            )
             record["failed_at"] = _now()
-            record["failure_reason"] = f"operator_runtime.submit failed: {exc}"
+            record["failure_reason"] = (
+                "operator_alternatives_exhausted"
+                if record["status"] == "failed_operator_alternatives_exhausted"
+                else f"operator_runtime.submit failed: {exc}"
+            )
             record["submit_error"] = str(exc)
+            if fallback_attempts:
+                record["operator_fallbacks"] = fallback_attempts
+            if authorized_alternatives:
+                record["operator_selection_exclusions"] = operator_selection_exclusions
+                record["display_error"] = {
+                    "code": "operator_alternatives_exhausted",
+                    "message": "All planner-authorized operator alternatives refused dispatch.",
+                }
             write_pm_task_record(task_id, record)
+            _observe(
+                "operator.admission.failed",
+                component="pm_dispatch",
+                operation="operator_admission",
+                operation_id=admission_operation_id,
+                phase="completed",
+                terminal=True,
+                status="failed_submit_exception",
+                identifiers={"sprint_id": sprint_id, "node_id": node_id, "task_id": task_id, "dispatch_id": dispatch_id, "attempt_id": attempt_id, "correlation_id": correlation_id, "span_id": admission_span_id},
+                data={"operator_id": operator_id, "failure_class": type(exc).__name__},
+            )
             print(f"ERROR: operator_runtime.submit failed: {exc}", file=sys.stderr)
             return 1
+        if fallback_attempts:
+            record["operator_fallbacks"] = fallback_attempts
         record["status"] = "submitted"
         record["lease_id"] = result.get("lease_id", "")
         record["inbox_path"] = result.get("inbox_path", "")
@@ -2536,10 +3397,34 @@ def cmd_submit(args: argparse.Namespace) -> int:
 
     # 6. 写 PM inbox 记录
     write_pm_task_record(task_id, record)
+    _observe(
+        "operator.enqueued",
+        component="pm_dispatch",
+        operation="operator_admission",
+        operation_id=admission_operation_id,
+        phase="completed",
+        terminal=True,
+        status=record["status"],
+        identifiers={"sprint_id": sprint_id, "node_id": node_id, "task_id": task_id, "dispatch_id": dispatch_id, "attempt_id": attempt_id, "correlation_id": correlation_id, "span_id": admission_span_id},
+        data={
+            "operator_id": operator_id,
+            "provider": str(operator.get("provider") or operator.get("vendor") or "") or None,
+            "model": str(operator.get("model") or "") or None,
+            "requested_role": normalize_role(role),
+            "task_type": task_type,
+            "submit_mode": submit_mode,
+            "dispatch_bytes": len(dispatch_text.encode("utf-8")),
+            "dispatch_sha256": hashlib.sha256(dispatch_text.encode("utf-8")).hexdigest(),
+            "lease_id": record.get("lease_id") or None,
+        },
+    )
 
     # 7. 输出
     print("OK: PM task submitted")
     print(f"   task_id     = {task_id}")
+    print(f"   dispatch_id = {dispatch_id}")
+    print(f"   attempt_id  = {attempt_id}")
+    print(f"   correlation = {correlation_id}")
     print(f"   operator    = {operator_id} ({operator.get('model', '?')})")
     if operator.get("borrowed_for_role"):
         print(
@@ -3189,14 +4074,82 @@ def cmd_complete(args: argparse.Namespace) -> int:
             {"ts": record["failed_at"], "action": "fail_contract_closeout", "reason": record["failure_reason"], **closeout}
         )
         write_pm_task_record(task_id, record)
+        _project_elastic_planner_failure(record)
         print(json.dumps({"ok": False, "task_id": task_id, "reason": record["failure_reason"], **closeout}, ensure_ascii=False))
         return 2
+    if str(record.get("closeout_kind") or "") == "elastic_planner":
+        try:
+            finalization = _finalize_and_handoff_elastic_planner(record, closeout)
+        except Exception as exc:
+            record["status"] = "failed_contract_closeout"
+            record["failed_at"] = _now()
+            record["failure_reason"] = f"elastic_planner_finalization_failed:{type(exc).__name__}:{exc}"
+            record["closeout_status"] = closeout
+            write_pm_task_record(task_id, record)
+            _project_elastic_planner_failure(record)
+            print(json.dumps({"ok": False, "task_id": task_id, "reason": record["failure_reason"]}, ensure_ascii=False))
+            return 2
+        closeout["finalization"] = finalization
     record["status"] = "completed"
     record["completed_at"] = _now()
     record["closeout_status"] = closeout
     write_pm_task_record(task_id, record)
     print(f"✅ 任务 {task_id} 已标记为 completed")
     return 0
+
+
+def _finalize_and_handoff_elastic_planner(
+    record: dict[str, Any],
+    closeout: dict[str, Any],
+) -> dict[str, Any]:
+    """Publish Planner authority, then explicitly enter graph dispatch."""
+    from elastic_planner_runtime import (
+        dispatch_frozen_scheduler_graph,
+        finalize_planner_result,
+    )
+
+    sprint_id = str(record.get("sprint_id") or "")
+    finalization = finalize_planner_result(
+        SPRINTS_DIR,
+        sprint_id,
+        result_path=Path(closeout["expected_artifacts"][0]),
+    )
+    if str((finalization.get("published") or {}).get("kind") or "") == "accepted":
+        finalization = dict(finalization)
+        finalization["scheduler_handoff"] = dispatch_frozen_scheduler_graph(
+            SPRINTS_DIR,
+            sprint_id,
+        )
+    return finalization
+
+
+def _project_elastic_planner_failure(record: dict[str, Any]) -> dict[str, Any] | None:
+    """Converge a persisted typed PM failure into Elastic sprint state."""
+    if str(record.get("closeout_kind") or "") != "elastic_planner":
+        return None
+    # A sprint that was closed after the planner failed (direct execution,
+    # manual completion, or a later successful plan) must not be dragged back
+    # to the failed state by every reconcile pass over the stale PM record.
+    sprint_id = str(record.get("sprint_id") or "").strip()
+    if sprint_id:
+        try:
+            current = json.loads((SPRINTS_DIR / f"{sprint_id}.status.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            current = {}
+        if str(current.get("status") or "").lower() in {"completed", "closed", "done"}:
+            return None
+    from elastic_planner_runtime import project_planner_failure
+
+    task_id = str(record.get("task_id") or "").strip()
+    return project_planner_failure(
+        SPRINTS_DIR,
+        str(record.get("sprint_id") or ""),
+        task_id=task_id,
+        failure_status=str(record.get("status") or "failed"),
+        failure_reason=str(record.get("failure_reason") or record.get("status") or "failed"),
+        record_path=pm_inbox_dir() / f"{task_id}.json",
+        record_root=pm_inbox_dir(),
+    )
 
 
 def cmd_fail(args: argparse.Namespace) -> int:
@@ -3214,6 +4167,7 @@ def cmd_fail(args: argparse.Namespace) -> int:
     record["failed_at"] = _now()
     record["failure_reason"] = str(args.reason or status).strip()[:2000]
     write_pm_task_record(task_id, record)
+    _project_elastic_planner_failure(record)
     print(f"❌ 任务 {task_id} 已标记为 {status}")
     return 0
 
@@ -3238,6 +4192,23 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
         if status == "completed":
             closeout = _pm_closeout_status(record)
             if closeout.get("ok"):
+                if str(record.get("closeout_kind") or "") == "elastic_planner" and apply_changes:
+                    try:
+                        finalization = _finalize_and_handoff_elastic_planner(record, closeout)
+                        actions.append({"task_id": task_id, "action": "finalize_elastic_planner", "finalization": finalization})
+                    except Exception as exc:
+                        reason = f"elastic_planner_finalization_failed:{type(exc).__name__}:{exc}"
+                        actions.append({"task_id": task_id, "action": "fail_elastic_planner_finalization", "reason": reason})
+                        record["task_id"] = task_id
+                        record["status"] = "failed_contract_closeout"
+                        record["failed_at"] = now
+                        record["failure_reason"] = reason
+                        record["closeout_status"] = closeout
+                        record.setdefault("reconcile_history", []).append(
+                            {"ts": now, "action": "fail_elastic_planner_finalization", "reason": reason}
+                        )
+                        write_pm_task_record(task_id, record)
+                        _project_elastic_planner_failure(record)
                 continue
             actions.append({
                 "task_id": task_id,
@@ -3255,8 +4226,37 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
                     {"ts": now, "action": "fail_contract_closeout", "reason": "completed_without_required_artifacts", **closeout}
                 )
                 write_pm_task_record(task_id, record)
+                if str(record.get("closeout_kind") or "") == "elastic_planner":
+                    _project_elastic_planner_failure(record)
             continue
         if _pm_status_is_terminal(status):
+            if (
+                apply_changes
+                and status.startswith("failed")
+                and str(record.get("closeout_kind") or "") == "elastic_planner"
+            ):
+                try:
+                    projection = _project_elastic_planner_failure(record)
+                    actions.append(
+                        {
+                            "task_id": task_id,
+                            "action": "project_elastic_planner_failure",
+                            "projection": projection,
+                        }
+                    )
+                except Exception as exc:
+                    actions.append(
+                        {
+                            "task_id": task_id,
+                            "action": "elastic_planner_failure_projection_refused",
+                            "reason": f"{type(exc).__name__}:{exc}",
+                        }
+                    )
+            continue
+
+        age = _record_age_minutes(record, path)
+        if task_id in active_task_ids:
+            actions.append({"task_id": task_id, "action": "keep_active", "age_min": round(age, 1)})
             continue
 
         result_path = Path(str(record.get("result_path") or ""))
@@ -3280,9 +4280,25 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
                         {"ts": now, "action": "fail_contract_closeout", "reason": "result_path_exists_but_required_artifacts_missing", **closeout}
                     )
                     write_pm_task_record(task_id, record)
+                    if str(record.get("closeout_kind") or "") == "elastic_planner":
+                        _project_elastic_planner_failure(record)
                 continue
             actions.append({"task_id": task_id, "action": "complete", "reason": "result_path_exists", **closeout})
             if apply_changes:
+                if str(record.get("closeout_kind") or "") == "elastic_planner":
+                    try:
+                        finalization = _finalize_and_handoff_elastic_planner(record, closeout)
+                        closeout["finalization"] = finalization
+                    except Exception as exc:
+                        record["task_id"] = task_id
+                        record["status"] = "failed_contract_closeout"
+                        record["failed_at"] = now
+                        record["failure_reason"] = f"elastic_planner_finalization_failed:{type(exc).__name__}:{exc}"
+                        record["closeout_status"] = closeout
+                        write_pm_task_record(task_id, record)
+                        _project_elastic_planner_failure(record)
+                        actions[-1] = {"task_id": task_id, "action": "fail_elastic_planner_finalization", "reason": record["failure_reason"]}
+                        continue
                 record["task_id"] = task_id
                 record["status"] = "completed"
                 record["completed_at"] = now
@@ -3293,10 +4309,6 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
                 write_pm_task_record(task_id, record)
             continue
 
-        age = _record_age_minutes(record, path)
-        if task_id in active_task_ids:
-            actions.append({"task_id": task_id, "action": "keep_active", "age_min": round(age, 1)})
-            continue
         if age >= max_age_minutes:
             actions.append(
                 {
@@ -3315,6 +4327,8 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
                     {"ts": now, "action": "fail_missing_pm_result", "age_min": round(age, 1)}
                 )
                 write_pm_task_record(task_id, record)
+                if str(record.get("closeout_kind") or "") == "elastic_planner":
+                    _project_elastic_planner_failure(record)
 
     summary: dict[str, int] = {}
     for item in actions:
@@ -3377,7 +4391,12 @@ def cmd_route_preflight(args: argparse.Namespace) -> int:
     ok = True
     for role in roles:
         task_type = _preflight_task_type_for_role(role)
-        operator_id, operator, reason = select_operator_by_role(role, task_type=task_type)
+        provider_constraint = {expected_provider} if expected_provider else None
+        operator_id, operator, reason = select_operator_by_role(
+            role,
+            task_type=task_type,
+            allowed_providers=provider_constraint,
+        )
         provider = str(operator.get("provider") or operator.get("vendor") or "").strip().lower() if operator else ""
         route_ok = bool(operator_id)
         if expected_provider:
@@ -3410,7 +4429,17 @@ def cmd_route_preflight(args: argparse.Namespace) -> int:
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
+def _configure_utf8_console() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8", errors="replace")
+            except (OSError, ValueError):
+                pass
+
 def main() -> int:
+    _configure_utf8_console()
     p = argparse.ArgumentParser(
         prog="pm_dispatch",
         description="PM 入口：默认只捕获 RawIntent；直接派发需显式 SOLAR_PM_DISPATCH_ALLOW_DIRECT=1",
@@ -3422,8 +4451,19 @@ def main() -> int:
     s.add_argument("--role", default="builder", help="目标角色 (builder/planner/evaluator/knowledge)")
     s.add_argument("--objective", required=True, help="任务描述（自然语言）")
     s.add_argument("--operator", default="", help="指定物理算子 ID（可选）")
+    s.add_argument(
+        "--operator-alternative",
+        action="append",
+        default=[],
+        help="Planner-authorized physical operator ID, repeated in fallback order",
+    )
     s.add_argument("--sprint", default="", help="关联 sprint ID（可选，默认 pm-adhoc-xxx）")
     s.add_argument("--node", default="N1", help="关联 DAG 节点 ID（默认 N1）")
+    s.add_argument(
+        "--attempt-id",
+        default="",
+        help="显式提交尝试/评审代次标识；graph dispatcher 用于保留 evaluator generation",
+    )
     s.add_argument("--task-type", default="", help="任务类型提示（用于算子评分）")
     s.add_argument(
         "--closeout-kind",
@@ -3438,6 +4478,12 @@ def main() -> int:
         help="closeout 检查的精确产物路径；仅 graph_eval 可覆盖为受限 quorum sidecar pair",
     )
     s.add_argument("--context", default="", help="额外上下文（注入 dispatch 文件）")
+    s.add_argument(
+        "--read-scope",
+        action="append",
+        default=[],
+        help="追加精确只读路径；用于 graph evaluator 冻结快照授权",
+    )
     s.add_argument("--work-dir", default="", help="算子工作目录；默认 <sprint>/workdir")
     s.add_argument("--dry-run", action="store_true", help="预览，不实际提交")
 

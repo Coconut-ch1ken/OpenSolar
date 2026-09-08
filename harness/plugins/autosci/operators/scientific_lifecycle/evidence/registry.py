@@ -11,7 +11,7 @@ from typing import Any
 
 from ...research_synthesis.base import ResearchOperatorError
 from . import operators
-from .base import OperatorSpec, execute_spec
+from .base import OperatorSpec, execute_batch_spec, execute_spec
 
 
 _VERSION = "1.1.0"
@@ -46,11 +46,25 @@ OPERATOR_SPECS: dict[str, OperatorSpec] = {
     "paper_ingest": _spec(
         "paper_ingest", "autosci-evidence-paper-ingest", "research_paper.v1", "research_paper.v1.json", operators.ingest_source
     ),
+    "discovery_ingest": _spec(
+        "discovery_ingest",
+        "autosci-evidence-discovery-ingest",
+        "research_paper.v1",
+        "research_papers",
+        operators.ingest_discovered_sources,
+    ),
+    "source_assess": _spec(
+        "source_assess",
+        "autosci-evidence-source-assess",
+        "research_source_assessment.v1",
+        "research_source_assessment.v1.json",
+        operators.assess_research_sources,
+    ),
     "material_ingest": _spec(
         "material_ingest", "autosci-evidence-material-ingest", "research_paper.v1", "research_material.v1.json", operators.ingest_source
     ),
     "paper_analyze": _spec(
-        "paper_analyze", "autosci-evidence-paper-analyze", "research_paper.v1", "research_paper_analysis.v1.json", operators.analyze_content
+        "paper_analyze", "autosci-evidence-paper-analyze", "research_paper.v1", "research_paper_analysis.v1.json", operators.analyze_papers
     ),
     "content_analyze": _spec(
         "content_analyze", "autosci-evidence-content-analyze", "research_paper.v1", "research_content_analysis.v1.json", operators.analyze_content
@@ -71,6 +85,14 @@ OPERATOR_SPECS: dict[str, OperatorSpec] = {
         "research_claims.v1.json",
         operators.extract_claims,
         version="1.2.0",
+    ),
+    "claim_select_one": _spec(
+        "claim_select_one",
+        "autosci-evidence-claim-select-one",
+        "research_claims.v1",
+        "selected_research_claim.v1.json",
+        operators.select_one_testable_claim,
+        version="1.0.0",
     ),
     "method_extract": _spec(
         "method_extract",
@@ -118,7 +140,19 @@ def execute_operator(
     services: dict[str, Any] | None = None,
     workspace_root: Path | None = None,
 ) -> dict[str, Any]:
-    spec = get_operator_spec(str(node_request.get("node_id") or ""))
+    implementation_node_id = str(
+        node_request.get("implementation_node_id")
+        or node_request.get("node_id")
+        or ""
+    )
+    spec = get_operator_spec(implementation_node_id)
+    if spec.node_id in {"discovery_ingest", "paper_analyze"}:
+        return execute_batch_spec(
+            spec,
+            node_request,
+            services=services,
+            workspace_root=workspace_root,
+        )
     return execute_spec(spec, node_request, services=services, workspace_root=workspace_root)
 
 
@@ -147,15 +181,19 @@ def _execute_named(
     services: dict[str, Any] | None = None,
     workspace_root: Path | None = None,
 ) -> dict[str, Any]:
-    if str(node_request.get("node_id") or "") != node_id:
-        request = dict(node_request)
-        request.setdefault("node_id", node_id)
-        node_request = request
-    return execute_spec(get_operator_spec(node_id), node_request, services=services, workspace_root=workspace_root)
+    request = dict(node_request)
+    request.setdefault("scheduled_node_id", str(request.get("node_id") or node_id))
+    request["implementation_node_id"] = node_id
+    node_request = request
+    return execute_operator(node_request, services=services, workspace_root=workspace_root)
 
 
 def execute_literature_discover(node_request, *, services=None, workspace_root=None):
     return _execute_named("literature_discover", node_request, services=services, workspace_root=workspace_root)
+
+
+def execute_source_assess(node_request, *, services=None, workspace_root=None):
+    return _execute_named("source_assess", node_request, services=services, workspace_root=workspace_root)
 
 
 def execute_evidence_import(node_request, *, services=None, workspace_root=None):
@@ -164,6 +202,15 @@ def execute_evidence_import(node_request, *, services=None, workspace_root=None)
 
 def execute_paper_ingest(node_request, *, services=None, workspace_root=None):
     return _execute_named("paper_ingest", node_request, services=services, workspace_root=workspace_root)
+
+
+def execute_discovery_ingest(node_request, *, services=None, workspace_root=None):
+    request = dict(node_request)
+    request.setdefault(
+        "scheduled_node_id", str(request.get("node_id") or "discovery_ingest")
+    )
+    request["implementation_node_id"] = "discovery_ingest"
+    return execute_operator(request, services=services, workspace_root=workspace_root)
 
 
 def execute_material_ingest(node_request, *, services=None, workspace_root=None):

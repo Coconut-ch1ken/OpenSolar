@@ -18,6 +18,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const http = require("http");
+const { guardOutputStream, isClosedOutputError } = require("./safe-output");
 
 // Chromium's setuid sandbox commonly can't init on Linux/WSL/headless; disabling it there keeps
 // the renderer from crashing. On Windows/macOS the sandbox works, so KEEP it (don't weaken the
@@ -66,6 +67,14 @@ const WSL_HARNESS = process.env.SOLAR_WSL_HARNESS || "$HOME/.solar/harness";
 const PRESET_URL = process.env.SOLAR_BACKEND_URL || "";
 const SELFTEST = process.env.SOLAR_DESKTOP_SELFTEST === "1";
 const { assessSelftestSnapshot } = require("./selftest-verdict");
+const {
+  buildWindowsRuntimePrewarmCommand,
+  buildWindowsRuntimeReadinessProbe,
+  prewarmSucceeded,
+} = require("./runtime-prewarm");
+const {
+  buildWindowsBundledHarnessSyncCommand,
+} = require("./runtime-sync");
 // Test hook: force the classifier to return a given mode (deterministic screenshots).
 const SIMULATE = process.env.SOLAR_SIMULATE || "";
 
@@ -86,13 +95,33 @@ function appendDesktopLog(line) {
     fs.appendFileSync(path.join(LOG_DIR, "desktop.log"), line + "\n");
   } catch {}
 }
+const stdoutState = guardOutputStream(process.stdout, (error) => {
+  appendDesktopLog(
+    `${new Date().toISOString()} [solar-desktop] stdout unavailable: ${String(
+      (error && (error.code || error.message)) || error,
+    )}`,
+  );
+});
+guardOutputStream(process.stderr, (error) => {
+  appendDesktopLog(
+    `${new Date().toISOString()} [solar-desktop] stderr unavailable: ${String(
+      (error && (error.code || error.message)) || error,
+    )}`,
+  );
+});
 function log(...a) {
   const line = "[solar-desktop] " + a.map((x) => String(x)).join(" ");
   const stamped = new Date().toISOString() + " " + line;
   LOG_RING.push(stamped);
   if (LOG_RING.length > LOG_RING_MAX) LOG_RING.shift();
-  console.log(line);
   appendDesktopLog(stamped);
+  if (stdoutState.writable) {
+    try {
+      console.log(line);
+    } catch (error) {
+      if (isClosedOutputError(error)) stdoutState.writable = false;
+    }
+  }
 }
 
 function finishSelftest(ok, details = {}) {
@@ -101,7 +130,14 @@ function finishSelftest(ok, details = {}) {
   const code = ok ? 0 : 1;
   process.exitCode = code;
   log(`SELFTEST ${ok ? "OK" : "FAIL"}`, JSON.stringify(details));
-  setTimeout(() => app.exit(code), 300);
+  const configuredDelay = Number.parseInt(
+    process.env.SOLAR_DESKTOP_SELFTEST_EXIT_DELAY_MS || "300",
+    10,
+  );
+  const exitDelay = Number.isFinite(configuredDelay)
+    ? Math.max(0, Math.min(configuredDelay, 3000))
+    : 300;
+  setTimeout(() => app.exit(code), exitDelay);
 }
 
 async function collectSelftestSnapshot(targetWebContents) {
@@ -120,12 +156,25 @@ async function collectSelftestSnapshot(targetWebContents) {
         rendererErrors = ["selftest diagnostics unavailable: " + String(error)];
       }
       const root = document.getElementById("root");
+      const homeLanding = document.querySelector('[data-testid="home-landing"]');
+      const taskInput = homeLanding && homeLanding.querySelector("textarea");
+      const labelledBy = taskInput && taskInput.getAttribute("aria-labelledby");
+      const taskInputAccessibleName = String(labelledBy || "")
+        .split(/\\s+/)
+        .map((id) => document.getElementById(id)?.textContent?.trim() || "")
+        .filter(Boolean)
+        .join(" ");
       return {
         actualURL: window.location.href,
         readyState: document.readyState,
         rootChildCount: root ? root.childElementCount : 0,
         bodyText: document.body ? (document.body.innerText || "") : "",
         rendererErrors,
+        targetMarkers: {
+          homeLanding: Boolean(homeLanding),
+          authChecking: Boolean(document.querySelector('[data-testid="auth-checking"]')),
+          taskInputAccessibleName,
+        },
       };
     })()`,
     true,
@@ -168,6 +217,7 @@ async function waitForSelftestVerdict(
     last = assessSelftestSnapshot({
       expectedURL,
       fallbackUsed,
+      requiredContract: process.env.SOLAR_DESKTOP_SELFTEST_REQUIRED_CONTRACT || "",
       ...snapshot,
     });
     if (last.ok || last.reasons.some((reason) => terminalReasons.has(reason))) {
@@ -293,6 +343,28 @@ function shQuote(s) {
   return "'" + String(s).replace(/'/g, "'\\''") + "'";
 }
 
+function shellTokenForWsl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "''";
+  // Keep shell variables (like $HOME) expandable for WSL paths; otherwise quote safely.
+  return raw.includes("$") ? `"${raw.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"` : shQuote(raw);
+}
+
+function isAbsolutePosixPath(p) {
+  const normalized = String(p || "").trim();
+  return normalized.startsWith("/");
+}
+
+function resolveWslHarnessPath() {
+  const raw = String(WSL_HARNESS || "").trim();
+  if (!raw) return "";
+  if (raw.indexOf("$HOME") === -1) return raw;
+  const home = wslExec(`printf %s "$HOME"`, 5000);
+  const homePath = String(home.stdout || "").trim();
+  if (!home.ok || !homePath) return "";
+  return raw.replaceAll("$HOME", homePath);
+}
+
 function packagedHarnessDir() {
   if (fileExists(path.join(PACKAGED_HARNESS_DIR, "lib", "symphony", "status-server.py")))
     return PACKAGED_HARNESS_DIR;
@@ -321,6 +393,16 @@ function receiptVersionPath() {
 
 function markerVersionPath() {
   return path.join(HARNESS_DIR, ".desktop-runtime-version");
+}
+
+function packagedRuntimeFingerprint() {
+  return readText(
+    path.join(packagedHarnessDir(), ".desktop-runtime-fingerprint"),
+  );
+}
+
+function markerFingerprintPath() {
+  return path.join(HARNESS_DIR, ".desktop-runtime-fingerprint");
 }
 
 function runtimeSymlinkIssue() {
@@ -357,8 +439,21 @@ function installedRuntimeVersionWindows() {
   return (wslExec(cmd, 7000).stdout || "").trim();
 }
 
+function installedRuntimeFingerprint() {
+  if (IS_WIN) {
+    return (
+      wslExec(
+        `cat ${WSL_HARNESS}/.desktop-runtime-fingerprint 2>/dev/null || true`,
+        7000,
+      ).stdout || ""
+    ).trim();
+  }
+  return readText(markerFingerprintPath());
+}
+
 function runtimeNeedsBundledSync() {
   const expected = packagedRuntimeVersion();
+  const expectedFingerprint = packagedRuntimeFingerprint();
   const bundled = packagedHarnessDir();
   if (!expected || !bundled || runtimeSymlinkIssue()) return false;
   if (IS_WIN && wslState() === "missing") return false;
@@ -366,7 +461,11 @@ function runtimeNeedsBundledSync() {
     return app.isPackaged || process.env.SOLAR_DESKTOP_ALLOW_DEV_RUNTIME_SYNC === "1";
   }
   const current = IS_WIN ? installedRuntimeVersionWindows() : installedRuntimeVersion();
-  return current !== expected;
+  if (current !== expected) return true;
+  return (
+    Boolean(expectedFingerprint) &&
+    installedRuntimeFingerprint() !== expectedFingerprint
+  );
 }
 
 // macOS/Linux first-run bootstrap: install the runtime with the bundled standalone
@@ -542,6 +641,119 @@ function runtimeInstalled() {
     ).stdout.includes("y");
   }
   return fs.existsSync(STATUS_SERVER);
+}
+
+function extractRequiredDependencyFailures(output) {
+  const text = String(output || "");
+  const misses = [];
+  const seen = new Set();
+  const failPatterns = [
+    /^\s*\[FAIL\]\s*([^:\n]+):\s*([^\n]*)$/gim,
+    /^\s*required fail:\s*([^:\n]+):?\s*([^\n]*)$/gim,
+  ];
+  for (const p of failPatterns) {
+    let match;
+    while ((match = p.exec(text)) !== null) {
+      const dep = String(match[1]).trim();
+      const reason = String(match[2]).toLowerCase();
+      const isMissing =
+        reason.includes("not found") ||
+        reason.includes("missing") ||
+        reason.includes("runtime cli missing") ||
+        reason.includes("not found on path");
+      if (!isMissing) continue;
+      if (!dep || seen.has(dep)) continue;
+      seen.add(dep);
+      misses.push(dep);
+    }
+  }
+  return misses;
+}
+
+async function ensureRuntimeRequiredDepsReady() {
+  // On a running runtime, verify required launch dependencies before opening dashboard
+  // so tasks don't sit forever in dispatch/state-transition limbo.
+  const wslHarnessHome = shellTokenForWsl(resolveWslHarnessPath());
+  if (!wslHarnessHome || wslHarnessHome === "''") {
+    return {
+      ok: false,
+      failures: ["runtime-harness-path"],
+      output: "runtime harness path is empty or unavailable in Windows session",
+    };
+  }
+  const nonWindowsFallback = IS_WIN
+    ? ""
+    : `if [ -x ${shQuote(path.join(HARNESS_DIR, "solar-harness.sh"))} ]; then ` +
+      `${shQuote(path.join(HARNESS_DIR, "solar-harness.sh"))} status --all 2>&1; ` +
+      `else echo missing solar-harness entrypoint: ${shQuote(path.join(HARNESS_DIR, "solar-harness.sh"))}; fi`;
+  const wslHarnessBase = resolveWslHarnessPath();
+  if (IS_WIN) {
+    let prewarmCommand;
+    try {
+      prewarmCommand = buildWindowsRuntimePrewarmCommand(wslHarnessBase);
+    } catch (error) {
+      return {
+        ok: false,
+        failures: ["runtime-prewarm"],
+        output: String(error),
+      };
+    }
+    const prewarm = wslExec(prewarmCommand, 120000);
+    const probe = prewarm.ok
+      ? wslExec(buildWindowsRuntimeReadinessProbe(wslHarnessBase), 15000)
+      : { ok: false, stdout: "", stderr: "prewarm start failed" };
+    if (!prewarmSucceeded(prewarm, probe)) {
+      const prewarmOutput = `${prewarm.stdout || ""}\n${prewarm.stderr || ""}\n${probe.stdout || ""}\n${probe.stderr || ""}`.trim();
+      log("Windows runtime prewarm failed:", prewarmOutput.slice(0, 1000));
+      return {
+        ok: false,
+        failures: ["runtime-prewarm"],
+        output: prewarmOutput.slice(0, 3000),
+      };
+    }
+    log("Windows runtime prewarm ready");
+  }
+  const wslSolarHarness = shellTokenForWsl(`${wslHarnessBase}/solar-harness`);
+  const wslSolarHarnessScript = shellTokenForWsl(`${wslHarnessBase}/solar-harness.sh`);
+  const wslSolarBinary = shellTokenForWsl(`${wslHarnessBase}/bin/solar`);
+  const wslPmDispatch = shellTokenForWsl(`${wslHarnessBase}/tools/pm_dispatch.py`);
+  const windowsDispatchReadiness =
+    ` && codex login status 2>&1` +
+    ` && python3 ${wslPmDispatch} route-preflight --runtime codex ` +
+    `--expect-provider openai --roles planner,builder,evaluator --pretty 2>&1`;
+  const cmd =
+    IS_WIN
+      ? `( if [ -x ${wslSolarHarness} ]; then ${wslSolarHarness} status --all 2>&1; ` +
+        `elif [ -x ${wslSolarBinary} ]; then ${wslSolarBinary} harness status --all 2>&1; ` +
+        `elif [ -f ${wslSolarHarnessScript} ]; then bash ${wslSolarHarnessScript} status --all 2>&1; ` +
+        `else echo "missing solar-harness entrypoint in ${wslHarnessHome}"; exit 127; fi )` +
+        windowsDispatchReadiness
+      : nonWindowsFallback;
+  const r = IS_WIN ? wslExec(cmd, 120000) : (() => {
+    try {
+      const pr = spawnSync("bash", ["-lc", cmd], {
+        timeout: 120000,
+        encoding: "utf8",
+      });
+      return {
+        ok: pr.status === 0,
+        stdout: String(pr.stdout || ""),
+        stderr: String(pr.stderr || ""),
+      };
+    } catch (error) {
+      return { ok: false, stdout: "", stderr: String(error) };
+    }
+  })();
+  const output = `${r.stdout || ""}\n${r.stderr || ""}`;
+  const failures = extractRequiredDependencyFailures(output);
+  if (failures.length === 0 && !r.ok) {
+    failures.push("runtime status command");
+  }
+  return {
+    ok: failures.length === 0,
+    output: output.trim().slice(0, 3000),
+    failures,
+  };
 }
 
 function stopRuntimeForBundledSync() {
@@ -729,14 +941,21 @@ function syncBundledHarnessWindows(expectedVersion) {
   const bundled = packagedHarnessDir();
   if (!bundled) return false;
   const mapped = wslExec(`wslpath -a ${shQuote(bundled)}`, 7000).stdout.trim();
-  if (!mapped) return false;
-  const cmd =
-    `set -e; src=${shQuote(mapped)}; dest=${WSL_HARNESS}; ` +
-    `mkdir -p "$dest" "$HOME/.solar/bin"; ` +
-    `cp -a "$src"/. "$dest"/; ` +
-    `chmod +x "$dest"/*.sh "$dest"/lib/*.sh "$dest"/tests/*.sh "$dest"/tools/*.sh "$dest"/tools/*.py 2>/dev/null || true; ` +
-    `if [ -f "$dest/solar-harness.sh" ]; then ln -sf "$dest/solar-harness.sh" "$HOME/.solar/bin/solar-harness"; fi; ` +
-    `printf '%s\\n' ${shQuote(expectedVersion)} > "$dest/.desktop-runtime-version"`;
+  if (!mapped) {
+    log("WSL bundled harness sync failed: unable to resolve harness source path");
+    return false;
+  }
+
+  const harnessDir = resolveWslHarnessPath();
+  if (!harnessDir || !isAbsolutePosixPath(harnessDir)) {
+    log("WSL bundled harness sync failed: runtime harness destination is not an absolute WSL path");
+    return false;
+  }
+  const cmd = buildWindowsBundledHarnessSyncCommand(
+    mapped,
+    harnessDir,
+    expectedVersion,
+  );
   const r = wslExec(cmd, 120000);
   if (!r.ok) {
     log("WSL bundled harness sync failed:", (r.stderr || r.stdout || "").slice(0, 500));
@@ -750,7 +969,16 @@ function syncBundledHarnessIfNeeded() {
   if (!runtimeNeedsBundledSync()) return true;
   const expected = packagedRuntimeVersion();
   const current = IS_WIN ? installedRuntimeVersionWindows() : installedRuntimeVersion();
-  log("runtime version mismatch; syncing bundled harness", current || "unknown", "->", expected);
+  const expectedFingerprint = packagedRuntimeFingerprint();
+  const currentFingerprint = installedRuntimeFingerprint();
+  log(
+    "runtime release mismatch; syncing bundled harness",
+    current || "unknown",
+    currentFingerprint.slice(0, 12) || "no-fingerprint",
+    "->",
+    expected,
+    expectedFingerprint.slice(0, 12) || "no-fingerprint",
+  );
   stopRuntimeForBundledSync();
   return IS_WIN
     ? syncBundledHarnessWindows(expected)
@@ -761,7 +989,8 @@ function syncBundledHarnessIfNeeded() {
 function startBackendWindows() {
   const r = wslExec(
     `systemctl --user start solar-status-server.service 2>/dev/null || ` +
-      `( setsid env HARNESS_DIR=${WSL_HARNESS} PYTHONPATH=${WSL_HARNESS}/lib ` +
+      `( setsid env PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin" ` +
+      `HARNESS_DIR=${WSL_HARNESS} PYTHONPATH=${WSL_HARNESS}/lib ` +
       `python3 ${WSL_HARNESS}/lib/symphony/status-server.py ` +
       `>/dev/null 2>&1 < /dev/null & )`,
     15000,
@@ -970,6 +1199,20 @@ const SCREENS = {
       actions: [
         { id: "retry", label: "Retry", primary: true },
         { id: "install-help", label: "Setup help" },
+        DIAG,
+      ],
+    }),
+  "runtime-dependency-missing": (d) =>
+    screenHTML({
+      title: "Solar runtime dependency missing",
+      sub:
+        `Runtime started, but required dependency check failed before worker dispatch can begin. ` +
+        `Missing: ${esc((d?.failures || []).join(", ") || "required runtime dependency")}. ` +
+        `${d?.output ? `<pre style="text-align:left;margin:14px auto 0;max-width:520px;max-height:180px;overflow:auto;background:#111114;padding:10px 12px;border-radius:8px;font-size:11px;line-height:1.45;opacity:.75;white-space:pre-wrap">${esc(d.output)}</pre>` : "Open the install guide to install the missing CLI/runtime dependency."}`,
+      tone: "#f0b429",
+      actions: [
+        { id: "install-help", label: "Open install guidance", primary: true },
+        { id: "retry", label: "Retry" },
         DIAG,
       ],
     }),
@@ -1335,6 +1578,23 @@ async function createWindow(reuse) {
   }
 
   if (state.mode === "ok" && state.baseUrl) {
+    const deps = await ensureRuntimeRequiredDepsReady();
+    if (!deps.ok) {
+      const depMode = { mode: "runtime-dependency-missing", detail: deps };
+      const depScreen = SCREENS[depMode.mode];
+      win.loadURL(
+        depScreen
+          ? depScreen(depMode.detail)
+          : SCREENS.error("Runtime dependency check failed."),
+      );
+      if (SELFTEST) {
+        finishSelftest(false, {
+          reason: "runtime_dependency_check_failed",
+          failures: deps.failures,
+        });
+      }
+      return;
+    }
     dashboardURL = state.baseUrl;
     return loadDashboard(state.baseUrl);
   }
@@ -1439,7 +1699,15 @@ function loadDashboard(url) {
   targetWebContents.on("did-finish-load", onFinish);
   targetWebContents.on("did-fail-load", onFail);
   log("loading runtime dashboard:", url);
-  void targetWebContents.loadURL(url).catch((error) => {
+  // The status server protects every dashboard request with its loopback token.
+  // Authenticate the initial navigation with a header so the server can return
+  // the HTML that injects window.__SOLAR_TOKEN__ for subsequent API calls. Keep
+  // the token out of the URL, history, diagnostics, and desktop logs.
+  const token = readToken();
+  const loadOptions = token
+    ? { extraHeaders: `X-Solar-Token: ${token}\r\n` }
+    : undefined;
+  void targetWebContents.loadURL(url, loadOptions).catch((error) => {
     if (SELFTEST) {
       cleanup();
       finishSelftest(false, {

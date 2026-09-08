@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import sys
+import threading
 from pathlib import Path
 
 HARNESS_LIB = (Path(__file__).resolve().parents[3] / 'harness') / "lib"
@@ -123,3 +124,107 @@ def test_dispatch_ready_marks_graph_active_panes_busy(tmp_path, monkeypatch):
     assert workers_by_pane["pane-a"]["busy"] is True
     assert workers_by_pane["pane-a"]["unavailable_reason"] == "graph_active_assignment"
     assert workers_by_pane["pane-b"]["busy"] is False
+
+
+def test_dispatch_ready_skips_concurrent_tick_for_same_graph(tmp_path, monkeypatch):
+    graph_path = tmp_path / "same-graph.task_graph.json"
+    graph_path.write_text(json.dumps({"sprint_id": "same-graph", "nodes": []}), encoding="utf-8")
+    monkeypatch.setattr(gnd, "HARNESS_DIR", tmp_path)
+
+    held = gnd._try_acquire_scheduler_tick_lock(str(graph_path))
+    assert held is not None
+    monkeypatch.setattr(
+        gnd,
+        "_dispatch_ready_unlocked",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("a concurrent scheduler tick must not enter dispatch")
+        ),
+    )
+
+    try:
+        result = gnd.dispatch_ready(str(graph_path))
+    finally:
+        gnd._release_scheduler_tick_lock(held)
+
+    assert result == {
+        "ok": True,
+        "reason": "scheduler_tick_in_progress",
+        "graph": str(graph_path),
+        "enqueue": {},
+        "drain": {},
+    }
+
+
+def test_dispatch_ready_releases_graph_lock_after_tick(tmp_path, monkeypatch):
+    graph_path = tmp_path / "released-graph.task_graph.json"
+    graph_path.write_text(json.dumps({"sprint_id": "released-graph", "nodes": []}), encoding="utf-8")
+    monkeypatch.setattr(gnd, "HARNESS_DIR", tmp_path)
+    calls: list[str] = []
+    monkeypatch.setattr(
+        gnd,
+        "_dispatch_ready_unlocked",
+        lambda path, **_kwargs: calls.append(path) or {"ok": True, "tick": len(calls)},
+    )
+
+    assert gnd.dispatch_ready(str(graph_path))["tick"] == 1
+    assert gnd.dispatch_ready(str(graph_path))["tick"] == 2
+    assert calls == [str(graph_path), str(graph_path)]
+
+
+def test_node_verdict_waits_for_scheduler_tick_before_mutating_graph(tmp_path, monkeypatch):
+    graph_path = tmp_path / "verdict-race.task_graph.json"
+    graph_path.write_text(json.dumps({"sprint_id": "verdict-race", "nodes": []}), encoding="utf-8")
+    monkeypatch.setattr(gnd, "HARNESS_DIR", tmp_path)
+    entered = threading.Event()
+    completed = threading.Event()
+
+    def fake_verdict(*_args, **_kwargs):
+        entered.set()
+        return {"ok": True, "status": "passed", "parent": {"ready": True}}
+
+    monkeypatch.setattr(gnd, "_node_verdict_unlocked", fake_verdict)
+    held = gnd._acquire_scheduler_tick_lock(str(graph_path))
+
+    def submit_verdict():
+        try:
+            gnd.node_verdict(
+                str(graph_path),
+                "N1",
+                "pass",
+                dispatch_downstream=False,
+            )
+        finally:
+            completed.set()
+
+    worker = threading.Thread(target=submit_verdict, daemon=True)
+    worker.start()
+    try:
+        assert entered.wait(0.2) is False
+        assert completed.is_set() is False
+    finally:
+        gnd._release_scheduler_tick_lock(held)
+
+    worker.join(timeout=2)
+    assert entered.is_set() is True
+    assert completed.is_set() is True
+
+
+def test_stale_queue_cleanup_does_not_consume_dispatch_budget(monkeypatch):
+    items = iter([{"id": "old"}, {"id": "current"}, None])
+    calls = []
+    monkeypatch.setattr(gnd, "_pop_graph_queue_item", lambda _sid: next(items))
+
+    def fake_dispatch(item, **_kwargs):
+        calls.append(item["id"])
+        if item["id"] == "old":
+            return {"ok": True, "reason": "stale_graph_item_superseded"}
+        return {"ok": True, "reason": "operator_pool_dispatched"}
+
+    monkeypatch.setattr(gnd, "dispatch_queue_item", fake_dispatch)
+
+    result = gnd.drain_queue("sprint-queue-catchup", max_items=1)
+
+    assert calls == ["old", "current"]
+    assert result["processed"] == 2
+    assert result["stale_processed"] == 1
+    assert result["dispatch_attempts"] == 1

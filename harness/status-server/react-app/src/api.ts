@@ -42,11 +42,12 @@ function withToken(url: string): string {
 }
 
 // Bound every request so a hung backend (first-run auth, a wedged runtime) can't freeze the
-// UI forever. Read endpoints return fast, so 30s is plenty. But the SHELL-OUT endpoints
-// (intake, plan/eval verdicts, handoff) run a CLI synchronously that can take 1-3 minutes —
-// they pass LONG_REQUEST_TIMEOUT_MS so a slow-but-succeeding intake isn't killed at 30s.
+// UI forever. Read endpoints return fast, so 30s is plenty. Plan/eval verdicts and handoff
+// still shell out synchronously. Intake has its own persisted asynchronous job contract below.
 const REQUEST_TIMEOUT_MS = 30000;
 const LONG_REQUEST_TIMEOUT_MS = 210000;
+const INTAKE_POLL_MAX_TRANSIENT_FAILURES = 5;
+const INTAKE_POLL_MAX_BACKOFF_MS = 5000;
 
 async function requestJson<T>(
   path: string,
@@ -272,26 +273,81 @@ export function parseIntakeDirectives(raw: string): {
   };
 }
 
-export function submitIntake(rawTask: string): Promise<IntakeResponse> {
+async function fileToBase64(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return btoa(binary);
+}
+
+export async function submitIntake(
+  rawTask: string,
+  files: File[] = [],
+): Promise<IntakeResponse> {
   const { task, workflowId, workflowInputs } = parseIntakeDirectives(rawTask);
   const body: Record<string, unknown> = {
     task,
     request_id: newRequestId("webapp-intake"),
   };
+  if (files.length) {
+    body.attachments = await Promise.all(
+      files.map(async (file) => ({
+        name: file.name,
+        mime_type: file.type || "application/octet-stream",
+        size: file.size,
+        last_modified: file.lastModified,
+        content_base64: await fileToBase64(file),
+      })),
+    );
+  }
   if (workflowId) {
     body.workflow_id = workflowId;
     if (workflowInputs) {
       body.workflow_inputs = workflowInputs;
     }
   }
-  return requestJson<IntakeResponse>(
+  const accepted = await requestJson<IntakeResponse>(
     "/intake",
     {
       method: "POST",
       body: JSON.stringify(body),
     },
-    LONG_REQUEST_TIMEOUT_MS,
   );
+  if (accepted.terminal || !accepted.request_id) return accepted;
+
+  let pollAfterMs = Math.max(250, Number(accepted.poll_after_ms) || 1000);
+  let consecutiveTransientFailures = 0;
+  while (true) {
+    await new Promise((resolve) => window.setTimeout(resolve, pollAfterMs));
+    let status: IntakeResponse;
+    try {
+      status = await requestJson<IntakeResponse>(
+        `/intake/${encodeURIComponent(accepted.request_id)}`,
+      );
+      consecutiveTransientFailures = 0;
+    } catch (err) {
+      const transient =
+        err instanceof TypeError ||
+        (err instanceof Error && err.message.startsWith("Request timed out after "));
+      if (
+        !transient ||
+        consecutiveTransientFailures >= INTAKE_POLL_MAX_TRANSIENT_FAILURES
+      ) {
+        throw err;
+      }
+      consecutiveTransientFailures += 1;
+      pollAfterMs = Math.min(
+        INTAKE_POLL_MAX_BACKOFF_MS,
+        Math.max(500, pollAfterMs * 2),
+      );
+      continue;
+    }
+    if (status.terminal) return status;
+    pollAfterMs = Math.max(250, Number(status.poll_after_ms) || pollAfterMs);
+  }
 }
 
 export interface SaveSettingsResponse {

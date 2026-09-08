@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import sys
 
@@ -11,7 +12,80 @@ sys.path.insert(0, str(ROOT / "lib"))
 import graph_node_dispatcher as gnd  # noqa: E402
 
 
-def test_plan_node_evaluation_derives_staged_mode_for_code_impl() -> None:
+def _write_artifact_review(path: Path, *, ready: bool) -> None:
+    report_path = path.with_name("scientific_report.json")
+    report_path.write_text('{"schema":"scientific_report.v1"}', encoding="utf-8")
+    report_sha256 = gnd._file_sha256(report_path)
+    payload = {
+        "schema": "artifact_review.v1",
+        "status": "completed" if ready else "inconclusive",
+        "outputs": {
+            "artifact": {
+                "path": str(report_path),
+                "schema": "scientific_report.v1",
+                "sha256": report_sha256,
+                "route_authority": "artifact_routes:scientific_report.v1",
+            },
+            "review": {
+                "review_mode": "review_llm" if ready else "local_surrogate",
+                "review_available": ready,
+                "recommendation": "pass_with_review_required" if ready else "inconclusive",
+            },
+            "final_acceptance_boundary": {
+                "schema": "autosci_review_final_acceptance_boundary.v1",
+                "status": "final_acceptance_ready" if ready else "review_llm_incomplete",
+                "final_acceptance_ready": ready,
+                "blocking_reasons": [] if ready else ["independent review is unavailable"],
+            },
+        },
+    }
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def test_scheduler_rejects_structurally_valid_but_inconclusive_artifact_review(tmp_path: Path) -> None:
+    evidence = tmp_path / "artifact_review.json"
+    _write_artifact_review(evidence, ready=False)
+    node = {"id": "review", "expected_schema": "artifact_review.v1"}
+
+    result = gnd._scheduler_autosci_artifact_admission(node, evidence)
+
+    assert result["required"] is True
+    assert result["ok"] is False
+    assert result["reason"] == "artifact_review_not_finally_admissible"
+    assert "artifact_review status is not completed" in result["reasons"]
+    assert "artifact_review is not final-acceptance ready" in result["reasons"]
+
+
+def test_scheduler_accepts_only_final_ready_artifact_review(tmp_path: Path) -> None:
+    evidence = tmp_path / "artifact_review.json"
+    _write_artifact_review(evidence, ready=True)
+    node = {"id": "review", "expected_schema": "artifact_review.v1"}
+
+    result = gnd._scheduler_autosci_artifact_admission(node, evidence)
+
+    assert result["required"] is True
+    assert result["ok"] is True
+    assert result["reasons"] == []
+
+
+def test_scheduler_rejects_review_when_reviewed_report_hash_has_drifted(tmp_path: Path) -> None:
+    evidence = tmp_path / "artifact_review.json"
+    _write_artifact_review(evidence, ready=True)
+    evidence.with_name("scientific_report.json").write_text(
+        '{"schema":"scientific_report.v1","changed":true}',
+        encoding="utf-8",
+    )
+
+    result = gnd._scheduler_autosci_artifact_admission(
+        {"id": "review", "expected_schema": "artifact_review.v1"},
+        evidence,
+    )
+
+    assert result["ok"] is False
+    assert "artifact_review reviewed-report hash is missing or stale" in result["reasons"]
+
+
+def test_plan_node_evaluation_derives_single_mode_for_code_impl() -> None:
     node = {
         "id": "N1",
         "task_type": "CODE_IMPL",
@@ -22,14 +96,55 @@ def test_plan_node_evaluation_derives_staged_mode_for_code_impl() -> None:
     plan = gnd._plan_node_evaluation({}, node)
 
     assert plan["planning_source"] == "derived"
-    assert plan["review_mode"] == "staged"
+    assert plan["review_mode"] == "single"
     assert plan["required_evaluators"] == 1
     assert "Verifier" in plan["evaluator_classes"]
     assert "patch_diff" in plan["evidence_requirements"]
     assert "test_report" in plan["evidence_requirements"]
 
 
-def test_dispatch_node_evals_falls_back_dual_plan_to_staged_with_single_evaluator(monkeypatch) -> None:
+def test_budget_waived_runtime_node_uses_policy_gate_without_evaluator(monkeypatch, tmp_path) -> None:
+    node = {
+        "id": "V1",
+        "logical_operator": "Verifier",
+        "status": "reviewing",
+        "evaluator_gate": {"kind": "none", "on_fail": "fail"},
+        "evaluation_policy": {
+            "policy_id": "risk_bounded_semantic_evaluation_v1",
+            "risk_tier": "low",
+            "semantic_review_required": False,
+            "decision_reason": "no_recursive_evaluator",
+        },
+    }
+    graph = {
+        "schema_version": "solar.scheduler_runtime_projection.v1",
+        "sprint_id": "sid-budget-waiver",
+        "nodes": [node],
+    }
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", tmp_path)
+    monkeypatch.setattr(gnd, "node_status", lambda graph, node_id: "reviewing")
+    monkeypatch.setattr(
+        gnd,
+        "_capture_eval_artifact_snapshot",
+        lambda *args, **kwargs: {
+            "ok": True,
+            "schema": "solar.eval_artifact_snapshot.v1",
+            "path": str(tmp_path / "snapshot.json"),
+            "snapshot_digest": "a" * 64,
+        },
+    )
+    monkeypatch.setattr(gnd, "_ledger_record", lambda *args, **kwargs: None)
+
+    result = gnd._maybe_execute_contract_gate(graph, "sid-budget-waiver", node)
+
+    assert result is not None
+    assert result["dispatch_mode"] == "deterministic_gate"
+    assert result["gate_kind"] == "none"
+    assert result["verdict"] == "PASS"
+    assert (tmp_path / "sid-budget-waiver.V1-eval.json").is_file()
+
+
+def test_dispatch_node_evals_normalizes_dual_request_to_single_evaluator(monkeypatch) -> None:
     graph = {
         "sprint_id": "sid-eval-plan",
         "nodes": [
@@ -74,17 +189,19 @@ def test_dispatch_node_evals_falls_back_dual_plan_to_staged_with_single_evaluato
     assert result["dispatched"][0]["node"] == "N2"
     plan = graph["nodes"][0]["evaluation_plan"]
     requested = graph["nodes"][0]["evaluation_plan_requested"]
-    assert requested["review_mode"] == "dual"
-    assert requested["required_evaluators"] == 2
-    assert plan["review_mode"] == "staged"
+    assert requested["review_mode"] == "single"
+    assert requested["required_evaluators"] == 1
+    assert requested["requested_review_mode"] == "dual"
+    assert requested["requested_required_evaluators"] == 2
+    assert plan["review_mode"] == "single"
     assert plan["required_evaluators"] == 1
-    assert plan["fallback_applied"] is True
     assert plan["requested_review_mode"] == "dual"
+    assert plan["policy_normalized"] is True
     assert plan["capacity"]["available_evaluators"] == 1
     assert plan["capacity"]["dispatchable_now"] is True
 
 
-def test_dispatch_node_evals_keeps_dual_plan_when_quorum_capacity_exists(monkeypatch) -> None:
+def test_dispatch_node_evals_uses_one_evaluator_even_when_quorum_capacity_exists(monkeypatch) -> None:
     graph = {
         "sprint_id": "sid-eval-plan-quorum",
         "nodes": [
@@ -126,17 +243,17 @@ def test_dispatch_node_evals_keeps_dual_plan_when_quorum_capacity_exists(monkeyp
     result = gnd.dispatch_node_evals("/tmp/sid-eval-plan-quorum.task_graph.json", dry_run=False)
 
     assert result["skipped"] == []
-    assert len(result["dispatched"]) == 2
-    assert {item["pane"] for item in result["dispatched"]} == {"solar-harness:0.3", "solar-harness-lab:0.3"}
+    assert len(result["dispatched"]) == 1
+    assert {item["pane"] for item in result["dispatched"]} == {"solar-harness:0.3"}
     plan = graph["nodes"][0]["evaluation_plan"]
     requested = graph["nodes"][0]["evaluation_plan_requested"]
-    assert requested["review_mode"] == "dual"
+    assert requested["review_mode"] == "single"
+    assert requested["requested_review_mode"] == "dual"
     assert requested["capacity"]["quorum_dispatch_supported"] is True
-    assert plan["review_mode"] == "dual"
-    assert plan["required_evaluators"] == 2
+    assert plan["review_mode"] == "single"
+    assert plan["required_evaluators"] == 1
     assert plan["capacity"]["dispatchable_now"] is True
     assert graph["nodes"][0]["eval_assignments"][0]["role"] == "primary"
-    assert graph["nodes"][0]["eval_assignments"][1]["role"] == "secondary"
 
 
 def test_busy_evaluator_dispatch_is_backpressure_not_a_failed_dispatch(monkeypatch, tmp_path) -> None:
@@ -160,7 +277,12 @@ def test_busy_evaluator_dispatch_is_backpressure_not_a_failed_dispatch(monkeypat
     monkeypatch.setattr(gnd, "load_graph", lambda path: graph)
     monkeypatch.setattr(gnd, "save_graph", lambda path, data: saved.setdefault("graph", data))
     monkeypatch.setattr(gnd, "_node_eval_needed", lambda *args, **kwargs: True)
-    monkeypatch.setattr(gnd, "_emit_node_proof_sidecars", lambda sid, node: emitted.append((sid, node["id"])) or {"patch_diff": "/tmp/patch.diff"})
+    monkeypatch.setattr(
+        gnd,
+        "_emit_node_proof_sidecars",
+        lambda sid, node, graph=None: emitted.append((sid, node["id"]))
+        or {"patch_diff": "/tmp/patch.diff"},
+    )
     monkeypatch.setattr(
         gnd,
         "_discover_evaluators",
@@ -174,6 +296,9 @@ def test_busy_evaluator_dispatch_is_backpressure_not_a_failed_dispatch(monkeypat
     assert emitted == [("sid-eval-busy", "N5")]
     assert result["dispatched"] == []
     assert result["skipped"][0]["reason"] == "evaluator_temporarily_busy"
+    assert result["ok"] is True
+    assert result["waiting"] == result["skipped"]
+    assert result["blocking_skips"] == []
     assert result["terminalized"] == []
     assert "eval_dispatch_failures" not in graph["nodes"][0]
     assert graph["nodes"][0]["status"] == "reviewing"
@@ -208,11 +333,68 @@ def test_missing_evaluator_capacity_still_escalates_at_the_configured_bound(monk
     assert graph["nodes"][0]["status"] == "needs_human_review"
 
 
+def test_eval_escalation_projects_parent_status_in_the_same_dispatch_tick(
+    monkeypatch, tmp_path
+) -> None:
+    graph = {
+        "sprint_id": "sid-eval-parent-projection",
+        "nodes": [
+            {"id": "N1", "status": "reviewing", "depends_on": []},
+            {"id": "N2", "status": "pending", "depends_on": ["N1"]},
+        ],
+        "node_results": {
+            "N1": {"status": "reviewing"},
+            "N2": {"status": "pending"},
+        },
+    }
+    projected: list[str] = []
+
+    monkeypatch.setattr(gnd, "GRAPH_NODE_EVAL_MAX_DISPATCH_FAILURES", 1)
+    monkeypatch.setattr(gnd, "SPRINTS_DIR", tmp_path / "sprints")
+    gnd.SPRINTS_DIR.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(gnd, "load_graph", lambda path: graph)
+    monkeypatch.setattr(gnd, "save_graph", lambda path, data: None)
+    monkeypatch.setattr(gnd, "_node_eval_needed", lambda *args, **kwargs: True)
+    monkeypatch.setattr(gnd, "_emit_node_proof_sidecars", lambda *args, **kwargs: {})
+    monkeypatch.setattr(gnd, "_discover_evaluators", lambda dry_run=False: [])
+    monkeypatch.setattr(gnd, "_append_event", lambda *args, **kwargs: None)
+    monkeypatch.setattr(gnd, "_record_node_runstate", lambda *args, **kwargs: None)
+
+    def project_parent(current_graph, graph_path, **kwargs):
+        projected.append(gnd.node_status(current_graph, "N1"))
+        return {"ok": True, "updated": True, "reason": "parent_needs_human_review"}
+
+    monkeypatch.setattr(gnd, "sync_status_cache_from_graph", project_parent)
+
+    result = gnd.dispatch_node_evals(
+        str(tmp_path / "sid-eval-parent-projection.task_graph.json"), dry_run=False
+    )
+
+    assert result["terminalized"] == [
+        {
+            "node": "N1",
+            "status": "needs_human_review",
+            "reason": "eval_dispatch_unavailable:no_available_evaluator:1_consecutive_failures",
+        }
+    ]
+    assert projected == ["needs_human_review"]
+    assert result["status_sync"] == {
+        "ok": True,
+        "updated": True,
+        "reason": "parent_needs_human_review",
+    }
+
+
 def test_build_eval_dispatch_text_includes_evaluation_plan(monkeypatch, tmp_path) -> None:
     graph = {"sprint_id": "sid-eval-text"}
     node = {
         "id": "N3",
         "goal": "review with explicit plan",
+        "eval_artifact_snapshot": {
+            "schema": "solar.eval_artifact_snapshot.v1",
+            "path": "/tmp/sid-eval-text.N3-eval-snapshot.json",
+            "snapshot_digest": "a" * 64,
+        },
         "evaluation_plan": {
             "review_mode": "single",
             "required_evaluators": 1,
@@ -235,6 +417,18 @@ def test_build_eval_dispatch_text_includes_evaluation_plan(monkeypatch, tmp_path
     assert "## Evaluation Plan" in text
     assert "Review Mode: `single`" in text
     assert '"evaluation_plan": {' in text
+    assert "canonical content digest" in text
+    assert "intentionally not the SHA-256 of the complete JSON file bytes" in text
+    assert "Do not compare it with" in text
+    assert "recomputing/validating the governed rows" in text
+    assert "Any change to the canonical snapshot material" in text
+    assert "post-verdict closeout transaction" in text
+    assert "stale sidecar records an earlier publication error" in text
+    assert "will block closeout deterministically" in text
+    assert "Evaluation is read-only over every path listed in the snapshot" in text
+    assert "do not run `solar-harness research\n  closeout`" in text
+    assert "rewrites `final_closeout.json`" in text
+    assert "Any byte change after dispatch" not in text
 
 
 def _patch_eval_dispatch_paths(monkeypatch, tmp_path, sid: str, node_id: str) -> None:
@@ -283,3 +477,113 @@ def test_build_eval_dispatch_text_requires_research_gate_for_deepresearch_node(m
     assert "solar-harness research eval-artifacts --eval-json" in text
     assert "Do not PASS unless `research_quality_gate.ok=true`" in text
     assert "DeepResearch deterministic artifact gate is **not required**" not in text
+
+
+def test_discover_evaluator_temporarily_treats_missing_managed_run_as_warning(monkeypatch, tmp_path) -> None:
+    sid = "sid-autosci-discover-partial"
+    node = {
+        "id": "node-discover",
+        "goal": "Discover source-backed literature",
+        "required_capabilities": ["cap.research-literature-discover"],
+        "write_scope": [str(tmp_path / "literature_discovery.v1.json")],
+        "autosci_scientific_gate": {
+            "json_path": str(tmp_path / "scientific-gate.json"),
+            "verdict": "PASS",
+            "sha256": "a" * 64,
+        },
+    }
+    _patch_eval_dispatch_paths(monkeypatch, tmp_path, sid, "node-discover")
+
+    text = gnd.build_eval_dispatch_text(
+        {"sprint_id": sid},
+        "/tmp/graph.json",
+        node,
+        "operator-pool:evaluator.0",
+        "did-discover",
+    )
+
+    assert "## Temporary AutoSci Partial-Coverage Evaluation Policy" in text
+    assert "missing Solar-managed run directory or empty wrapper stdout" in text
+    assert "provenance warning, not a" in text
+    assert "do not FAIL solely because managed-run provenance is absent" in text
+    assert "An actual output outside `write_scope` remains a blocking FAIL" in text
+    assert "Do not relax schema validation" in text
+
+
+def test_temporary_discover_policy_does_not_relax_other_evaluators(monkeypatch, tmp_path) -> None:
+    sid = "sid-non-discover"
+    node = {
+        "id": "node-report",
+        "goal": "Draft a report",
+        "required_capabilities": ["cap.research-report-draft"],
+    }
+    _patch_eval_dispatch_paths(monkeypatch, tmp_path, sid, "node-report")
+
+    text = gnd.build_eval_dispatch_text(
+        {"sprint_id": sid},
+        "/tmp/graph.json",
+        node,
+        "operator-pool:evaluator.0",
+        "did-report",
+    )
+
+    assert "Temporary AutoSci Partial-Coverage Evaluation Policy" not in text
+
+
+def test_synthesis_only_node_does_not_inherit_grounded_report_bundle_proofs() -> None:
+    node = {
+        "id": "R2",
+        "write_scope": ["workspace/research/synthesis/synthesis_plan.json"],
+        "proof_obligations": [
+            {
+                "kind": "self_check",
+                "source_capsule_id": "cap.requirement-research-synthesizer",
+                "requirement": "check.source_packs_verified",
+            },
+            {
+                "kind": "self_check",
+                "source_capsule_id": "cap.requirement-research-synthesizer",
+                "requirement": "check.grounded_report_bundle_written",
+            },
+            {
+                "kind": "postcondition",
+                "source_capsule_id": "cap.requirement-research-synthesizer",
+                "requirement": "output_present",
+                "field": "claims_jsonl",
+            },
+            {
+                "kind": "pass_condition",
+                "source_capsule_id": "cap.requirement-research-synthesizer",
+                "requirement": "final.md citations resolve to evidence.jsonl",
+            },
+        ],
+    }
+
+    obligations = gnd._node_proof_obligations("sid-synthesis-only", node)
+
+    assert [item["requirement"] for item in obligations] == ["check.source_packs_verified"]
+
+
+def test_deepresearch_node_keeps_grounded_report_bundle_proofs() -> None:
+    node = {
+        "id": "R3",
+        "research_quality_gate_required": True,
+        "proof_obligations": [
+            {
+                "kind": "postcondition",
+                "source_capsule_id": "cap.requirement-research-synthesizer",
+                "requirement": "output_present",
+                "field": "claims_jsonl",
+            },
+            {
+                "kind": "postcondition",
+                "source_capsule_id": "cap.requirement-research-synthesizer",
+                "requirement": "output_present",
+                "field": "research_eval_json",
+            },
+        ],
+    }
+
+    obligations = gnd._node_proof_obligations("sid-deepresearch", node)
+
+    assert [item["field"] for item in obligations] == ["claims_jsonl", "research_eval_json"]

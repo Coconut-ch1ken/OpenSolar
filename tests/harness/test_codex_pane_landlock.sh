@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "$(uname -s)" != "Linux" ]]; then
+  echo "SKIP: Landlock pane integration is Linux-only"
+  exit 0
+fi
+
 HARNESS_DIR="${HARNESS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../harness" && pwd)}"
 LAUNCHER="$HARNESS_DIR/pane-launcher.sh"
 TMP_ROOT="$(mktemp -d /tmp/solar-pane-landlock-test.XXXXXX)"
@@ -16,20 +21,29 @@ grep -Fq '"$ORIGINAL_WORK_DIR" "$WORK_DIR"' "$LAUNCHER"
 grep -Fq 'export CODEX_HOME="$sandbox_codex_home"' "$LAUNCHER"
 grep -Fq '"$source_codex_home/auth.json"' "$LAUNCHER"
 grep -Fq '"$codex_arg0_dir"' "$LAUNCHER"
+grep -Fq 'codex_package_root' "$LAUNCHER"
+grep -Fq 'node_real' "$LAUNCHER"
+grep -Fq 'codex-code-mode-host is required but unavailable' "$LAUNCHER"
+grep -Fq '$HOME/.local/bin/codex' "$LAUNCHER"
 grep -Fq '/etc/resolv.conf /etc/hosts /etc/nsswitch.conf /etc/gai.conf' "$LAUNCHER"
 
-mkdir -p "$TMP_ROOT/project" "$TMP_ROOT/denied" "$TMP_ROOT/home/.codex" "$TMP_ROOT/stale-codex-home"
+mkdir -p "$TMP_ROOT/project" "$TMP_ROOT/release/bin" "$TMP_ROOT/denied" "$TMP_ROOT/home/.codex" "$TMP_ROOT/stale-codex-home"
+mkdir -p "$TMP_ROOT/pane-state/standalone-pm/home"
 printf 'must-not-cross-scope\n' >"$TMP_ROOT/denied/secret.txt"
 printf '{"fixture":true}\n' >"$TMP_ROOT/home/.codex/auth.json"
 printf 'must_not_be_projected = true\n' >"$TMP_ROOT/home/.codex/config.toml"
 printf 'stale = true\n' >"$TMP_ROOT/stale-codex-home/config.toml"
 ln -s "$TMP_ROOT/home/.codex/auth.json" "$TMP_ROOT/stale-codex-home/auth.json"
+printf '{"stale":true}\n' >"$TMP_ROOT/pane-state/standalone-pm/home/auth.json"
+FAKE_CODEX_REAL="$TMP_ROOT/release/bin/codex"
 FAKE_CODEX="$TMP_ROOT/project/codex"
-cat >"$FAKE_CODEX" <<'SH'
+FAKE_CODE_MODE_HOST="$TMP_ROOT/release/bin/codex-code-mode-host"
+cat >"$FAKE_CODEX_REAL" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 echo "FAKE_CODEX_STARTED"
 printf '%s\n' "$@" | grep -Fxq 'cli_auth_credentials_store="file"'
+! printf '%s\n' "$@" | grep -Fxq -- '--disable'
 test "$CODEX_HOME" != "$SOURCE_CODEX_HOME"
 test -f "$CODEX_HOME/auth.json"
 test ! -L "$CODEX_HOME/auth.json"
@@ -50,7 +64,10 @@ if cat "$DENIED_FILE" >/dev/null 2>&1; then
 fi
 echo "FAKE_CODEX_SIBLING_READ_DENIED"
 SH
-chmod +x "$FAKE_CODEX"
+chmod +x "$FAKE_CODEX_REAL"
+ln -s "$FAKE_CODEX_REAL" "$FAKE_CODEX"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$FAKE_CODE_MODE_HOST"
+chmod +x "$FAKE_CODE_MODE_HOST"
 
 output="$({
   DENIED_FILE="$TMP_ROOT/denied/secret.txt" \
@@ -63,6 +80,7 @@ output="$({
   SOLAR_PANE_RUNTIME=codex \
   SOLAR_CODEX_BIN="$FAKE_CODEX" \
   SOLAR_CODEX_BYPASS=0 \
+  SOLAR_CODEX_PANE_FS_ISOLATION=landlock \
   SOLAR_CODEX_TRUST_WORKSPACE=1 \
   SOLAR_HARNESS_SESSION=solar-pane-landlock-test \
   SHELL=/bin/true \
@@ -76,5 +94,6 @@ grep -Fq 'FAKE_CODEX_STARTED' <<<"$output"
 grep -Fq 'FAKE_CODEX_SANDBOX_HOME_READY' <<<"$output"
 grep -Fq 'FAKE_CODEX_RESOLVER_READABLE' <<<"$output"
 grep -Fq 'FAKE_CODEX_SIBLING_READ_DENIED' <<<"$output"
+! grep -Fq 'codex-code-mode-host is required but unavailable' <<<"$output"
 
 echo "PASS: Codex panes route through the strict Landlock launcher"

@@ -39,19 +39,36 @@ if _HARNESS_LIB not in sys.path:
     sys.path.insert(0, _HARNESS_LIB)
 
 import graph_node_dispatcher as gnd  # noqa: E402
+import contract_gate_executor as cge  # noqa: E402
 import workflow_contract as wc  # noqa: E402
 
 WORKFLOWS_DIR = _HARNESS / "config" / "workflows"
 SID = "p3-gate-exec"
 
 
+def test_windows_gate_argv_preserves_native_path_separators(monkeypatch) -> None:
+    monkeypatch.setattr(cge.os, "name", "nt")
+    argv = cge._gate_argv(
+        r"python3 scripts/validate_evidence_to_poc.py --workspace sprints\sprint-123 --node-complete seed_fetch"
+    )
+
+    assert argv is not None
+    assert argv[3] == r"sprints\sprint-123"
+
+
 def _node(gate: dict, node_id: str = "D2", status: str = "reviewing") -> dict:
     return {
         "id": node_id,
+        "goal": f"Execute deterministic gate fixture {node_id}.",
         "status": status,
         "task_type": "evidence",
         "evaluator_gate": gate,
         "depends_on": [],
+        "acceptance": ["The declared gate completes."],
+        "priority": 1,
+        "required_phase": None,
+        "required_node_id": None,
+        "required_node_status": None,
     }
 
 
@@ -141,6 +158,60 @@ def test_gate_none_writes_policy_pass_sidecar(sandbox):
     assert md.strip()
 
 
+def test_failed_scientific_artifact_gate_overrides_none_policy_pass(sandbox):
+    node = _node({"kind": "none"}, node_id="REVIEW")
+    node["autosci_scientific_gate"] = {
+        "required": True,
+        "invocation_ok": True,
+        "ok": False,
+        "verdict": "FAIL",
+        "reason": "artifact review status is inconclusive",
+        "json_path": str(sandbox / "sprints" / "review-scientific-gate.json"),
+    }
+
+    result = cge.execute_gate(
+        sandbox / "sprints",
+        SID,
+        node,
+        node["evaluator_gate"],
+        harness_dir=sandbox,
+        artifact_snapshot={
+            "schema": "solar.eval_artifact_snapshot.v1",
+            "path": str(sandbox / "sprints" / "snapshot.json"),
+            "snapshot_digest": "a" * 64,
+        },
+    )
+    payload, md = _eval_sidecars(sandbox, "REVIEW")
+
+    assert result["ok"] is False
+    assert result["verdict"] == "FAIL"
+    assert payload["verdict"] == "FAIL"
+    assert payload["verdict_kind"] == "content"
+    assert payload["generation_mode"] == "deterministic_scientific_gate"
+    assert "required deterministic scientific artifact gate returned FAIL" in payload["summary"]
+    assert "Solar deterministic scientific artifact gate" in md
+
+
+def test_artifact_review_without_scheduler_admission_gate_fails_closed(sandbox):
+    node = _node({"kind": "none"}, node_id="REVIEW-MISSING-GATE")
+    node["evidence_policy"] = {"expected_schema": "artifact_review.v1"}
+
+    result = cge.execute_gate(
+        sandbox / "sprints",
+        SID,
+        node,
+        node["evaluator_gate"],
+        harness_dir=sandbox,
+    )
+    payload, _md = _eval_sidecars(sandbox, "REVIEW-MISSING-GATE")
+
+    assert result["ok"] is False
+    assert result["verdict"] == "FAIL"
+    assert payload["verdict"] == "FAIL"
+    assert payload["verdict_kind"] == "infrastructure"
+    assert payload["generation_mode"] == "deterministic_scientific_gate"
+
+
 def test_gate_waits_for_builder_completion(sandbox):
     """P3 live run 1: on the pool path the handoff appears while the builder
     is still in flight, and the executor fired at status=dispatched — D1
@@ -220,6 +291,7 @@ def test_repaired_node_gate_verdict_is_consumed_not_archived(sandbox):
             "on_fail": "repair_once_then_fail"}
     node = _node(gate)
     node["repair_attempts"] = 1
+    node["eval_repair_attempts"] = 1
     node["max_repair_attempts"] = 1
     node["repair_context"] = {"attempt": 1, "created_at": "2026-07-08T00:00:00Z"}
     graph = _graph([node])

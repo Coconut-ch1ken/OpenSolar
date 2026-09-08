@@ -39,6 +39,9 @@ run_gate() {
 echo; echo "-- gate: bootstrap logic --"
 run_gate node ../tests/desktop/src/runtime-detect.test.cjs
 
+echo; echo "-- gate: Windows runtime prewarm contract --"
+run_gate node ../tests/desktop/src/runtime-prewarm.test.cjs
+
 echo; echo "-- gate: bootstrap/package contract --"
 run_gate node ../tests/desktop/bootstrap-contract.test.cjs
 
@@ -53,6 +56,13 @@ if [ -d node_modules/playwright ]; then
   run_gate node verify.js
 else
   not_verified "playwright not installed; render gate did not run (run: npm ci && npx playwright install chromium)"
+fi
+
+echo; echo "-- gate: automated accessibility (WCAG 2 A/AA) --"
+if [ -d node_modules/playwright ] && [ -d node_modules/axe-core ]; then
+  run_gate node accessibility.test.js
+else
+  not_verified "playwright/axe-core not installed; accessibility audit did not run"
 fi
 
 echo; echo "-- gate: functional e2e (real backend: intake form, Settings persistence, SSE) --"

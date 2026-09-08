@@ -197,7 +197,7 @@ find_codex_bin() {
   local c
   local candidates=()
   [[ -n "${SOLAR_CODEX_BIN:-}" ]] && candidates+=("$SOLAR_CODEX_BIN")
-  candidates+=("$HOME/.npm-global/bin/codex" "$HOME/bin/codex" "$HOME/n/bin/codex")
+  candidates+=("$HOME/.local/bin/codex" "$HOME/.npm-global/bin/codex" "$HOME/bin/codex" "$HOME/n/bin/codex")
   c="$(command -v codex 2>/dev/null || true)"
   [[ -n "$c" ]] && candidates+=("$c")
 
@@ -377,8 +377,20 @@ codex_pane_state_home() {
 
 cleanup_codex_pane_state() {
   local state_home root
-  state_home="$(readlink -m "$(codex_pane_state_home)")"
-  root="$(readlink -m "${state_home%/*}")"
+  state_home="$(python3 - "$(codex_pane_state_home)" <<'PY'
+import sys
+from pathlib import Path
+
+print(Path(sys.argv[1]).expanduser().resolve(strict=False))
+PY
+)"
+  root="$(python3 - "${state_home%/*}" <<'PY'
+import sys
+from pathlib import Path
+
+print(Path(sys.argv[1]).expanduser().resolve(strict=False))
+PY
+)"
   case "$state_home" in
     "$root"/*) rm -rf -- "$state_home" ;;
     *) echo "FATAL: refusing unsafe Codex pane state cleanup: $state_home" >&2; return 78 ;;
@@ -459,10 +471,32 @@ PY
   CODEX_ARGS+=("${parsed[@]:1}")
 }
 
+landlock_rule_path() {
+  local path="$1"
+  local fs_type=""
+  fs_type="$(stat -f -c %T "$path" 2>/dev/null || true)"
+  if [[ "$fs_type" == "v9fs" ]]; then
+    # WSL's Windows mounts do not preserve Landlock beneath-rules reliably for
+    # nested paths. Scope the rule to the discovered mount root so access does
+    # not fail closed merely because the harness lives on C: or D:.
+    local mount_root=""
+    mount_root="$(findmnt -n -o TARGET --target "$path" 2>/dev/null || true)"
+    if [[ -n "$mount_root" && -e "$mount_root" ]]; then
+      printf '%s\n' "$mount_root"
+      return 0
+    fi
+  fi
+  printf '%s\n' "$path"
+}
+
 run_codex_with_filesystem_scope() {
-  local mode="${SOLAR_CODEX_PANE_FS_ISOLATION:-landlock}"
+  local default_mode="landlock"
+  [[ "$(uname -s)" == "Linux" ]] || default_mode="codex"
+  local mode="${SOLAR_CODEX_PANE_FS_ISOLATION:-$default_mode}"
+  local use_codex_sandbox=0
   case "$mode" in
     landlock) ;;
+    codex|builtin|workspace-write) use_codex_sandbox=1 ;;
     0|off|disabled|none)
       if [[ "${SOLAR_CODEX_PANE_STRICT_FS_SCOPE:-1}" == "1" ]]; then
         echo "FATAL: strict Codex pane filesystem scope cannot disable Landlock" >&2
@@ -477,11 +511,6 @@ run_codex_with_filesystem_scope() {
       ;;
   esac
 
-  local wrapper="$HARNESS_DIR/tools/landlock_exec.py"
-  [[ -f "$wrapper" ]] || {
-    echo "FATAL: Codex pane Landlock wrapper missing: $wrapper" >&2
-    return 78
-  }
   local pane_safe="${TMUX_PANE:-standalone}"
   pane_safe="${pane_safe//[^A-Za-z0-9_.-]/_}"
   local pane_tmp_root="${SOLAR_CODEX_PANE_TMP_ROOT:-$HARNESS_DIR/run/pane-tmp}"
@@ -511,11 +540,36 @@ run_codex_with_filesystem_scope() {
   export TMP="$tmp_dir"
   export TEMP="$tmp_dir"
 
+  if (( use_codex_sandbox == 1 )); then
+    local -a sandboxed_args=()
+    local arg
+    for arg in "${CODEX_ARGS[@]}"; do
+      [[ "$arg" == "--dangerously-bypass-approvals-and-sandbox" ]] || sandboxed_args+=("$arg")
+    done
+    sandboxed_args+=(--sandbox workspace-write)
+    echo -e "  Filesystem boundary: ${G}Codex workspace-write (native)${N}"
+    "${sandboxed_args[@]}"
+    return $?
+  fi
+
+  local wrapper="$HARNESS_DIR/tools/landlock_exec.py"
+  [[ -f "$wrapper" ]] || {
+    echo "FATAL: Codex pane Landlock wrapper missing: $wrapper" >&2
+    return 78
+  }
   local codex_home="$CODEX_HOME"
   local codex_arg0_dir="$codex_home/tmp/arg0"
   mkdir -p "$codex_arg0_dir" || return 78
   local codex_real=""
   codex_real="$(readlink -f "$CODEX_BIN" 2>/dev/null || true)"
+  local code_mode_host_real=""
+  code_mode_host_real="$(readlink -f "${_code_mode_host_bin:-}" 2>/dev/null || true)"
+  local codex_package_root=""
+  if [[ "$codex_real" == */bin/* ]]; then
+    codex_package_root="${codex_real%/bin/*}"
+  fi
+  local node_real=""
+  node_real="$(readlink -f "$(command -v node 2>/dev/null || true)" 2>/dev/null || true)"
   # WSL commonly makes /etc/resolv.conf a symlink into /mnt/wsl. Landlock
   # checks the resolved inode, so allowing /etc alone still blocks DNS and
   # prevents Codex from refreshing an otherwise valid cached login.
@@ -527,18 +581,22 @@ run_codex_with_filesystem_scope() {
     [[ -n "$resolved_system_file" ]] && system_network_files+=("$resolved_system_file")
   done
   local -a scoped=(python3 "$wrapper")
-  local path
+  local path scope_path
   for path in \
     /usr /bin /sbin /lib /lib64 /etc \
-    "$CODEX_BIN" "${codex_real%/*}" "${system_network_files[@]}"; do
+    "$CODEX_BIN" "$codex_package_root" "${codex_real%/*}" \
+    "$code_mode_host_real" "${code_mode_host_real%/*}" \
+    "$node_real" "${node_real%/*}" "${system_network_files[@]}"; do
     [[ -n "$path" && -e "$path" ]] || continue
-    scoped+=(--read-only "$path")
+    scope_path="$(landlock_rule_path "$path")"
+    scoped+=(--read-only "$scope_path")
   done
   for path in \
     "$HARNESS_DIR" "$ORIGINAL_WORK_DIR" "$WORK_DIR" "$state_home" "$tmp_dir" \
     "$codex_arg0_dir" /dev/null /dev/urandom /dev/random; do
     [[ -e "$path" ]] || continue
-    scoped+=(--read-write "$path")
+    scope_path="$(landlock_rule_path "$path")"
+    scoped+=(--read-write "$scope_path")
   done
   scoped+=(-- "${CODEX_ARGS[@]}")
   echo -e "  Filesystem boundary: ${G}Landlock (strict)${N}"
@@ -556,11 +614,57 @@ _prefix_policy=$(inject_prefix_policy "$PERSONA")
 record_pane_model_session "session-started" ""
 if [[ "$PANE_RUNTIME" == "codex" ]]; then
   CODEX_ARGS=("$CODEX_BIN")
+  # Standalone Linux Codex installs may not include the companion external
+  # code-mode host even when that feature defaults on. In that state the TUI
+  # accepts prompts, but every file/terminal tool fails closed. Do not start a
+  # managed pane that could falsely acknowledge work it cannot read.
+  _code_mode_host_mode="${SOLAR_CODEX_CODE_MODE_HOST:-auto}"
+  _code_mode_host_bin="${SOLAR_CODEX_CODE_MODE_HOST_BIN:-}"
+  if [[ -z "$_code_mode_host_bin" ]]; then
+    _code_mode_host_bin="$(command -v codex-code-mode-host 2>/dev/null || true)"
+  fi
+  if [[ -z "$_code_mode_host_bin" && -x "$(dirname "$CODEX_BIN")/codex-code-mode-host" ]]; then
+    _code_mode_host_bin="$(dirname "$CODEX_BIN")/codex-code-mode-host"
+  fi
+  # The managed standalone installer exposes Codex through a stable symlink
+  # (for example ~/.local/bin/codex) while keeping its companion beside the
+  # versioned, resolved executable.  Resolve that target before declaring the
+  # runtime incomplete; the symlink's parent is not the package bin directory.
+  _resolved_codex_bin="$(readlink -f "$CODEX_BIN" 2>/dev/null || true)"
+  if [[ -z "$_code_mode_host_bin" && -n "$_resolved_codex_bin" && -x "$(dirname "$_resolved_codex_bin")/codex-code-mode-host" ]]; then
+    _code_mode_host_bin="$(dirname "$_resolved_codex_bin")/codex-code-mode-host"
+  fi
+  case "$_code_mode_host_mode" in
+    0|false|off|disabled)
+      echo "FATAL: SOLAR_CODEX_CODE_MODE_HOST cannot be disabled for managed panes" >&2
+      exit 78
+      ;;
+    1|true|on|enabled)
+      if [[ -z "$_code_mode_host_bin" || ! -x "$_code_mode_host_bin" ]]; then
+        echo "FATAL: SOLAR_CODEX_CODE_MODE_HOST is enabled but codex-code-mode-host is unavailable" >&2
+        exit 78
+      fi
+      ;;
+    auto)
+      if [[ -z "$_code_mode_host_bin" || ! -x "$_code_mode_host_bin" ]]; then
+        echo "FATAL: codex-code-mode-host is required but unavailable next to the managed Codex binary" >&2
+        exit 78
+      fi
+      ;;
+    *)
+      echo "FATAL: invalid SOLAR_CODEX_CODE_MODE_HOST='$_code_mode_host_mode' (expected auto|0|1)" >&2
+      exit 64
+      ;;
+  esac
   SOLAR_CODEX_BYPASS="${SOLAR_CODEX_BYPASS:-1}"
   if [[ "$SOLAR_CODEX_BYPASS" == "1" ]]; then
     CODEX_ARGS+=("--dangerously-bypass-approvals-and-sandbox")
   fi
   trap 'cleanup_codex_trust_profile || true; cleanup_codex_pane_state || true' EXIT
+  # A hard tmux respawn does not run the previous launcher's EXIT trap. Clear
+  # only this pane/persona's bounded state directory before creating the next
+  # managed trust profile and projecting fresh credentials into it.
+  cleanup_codex_pane_state || exit $?
   SOLAR_CODEX_TRUST_WORKSPACE="${SOLAR_CODEX_TRUST_WORKSPACE:-$SOLAR_CODEX_BYPASS}"
   case "$SOLAR_CODEX_TRUST_WORKSPACE" in
     0) ;;

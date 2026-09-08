@@ -1,0 +1,526 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from harness.plugins.autosci.services.production_research import (
+    LiteratureDiscoveryService,
+    apply_discovery_relevance_gate,
+)
+
+
+def _candidate(index: int, title: str, summary: str, provider: str = "openalex") -> dict:
+    return {
+        "source_id": f"{provider}:{index}",
+        "canonical_id": f"https://example.test/{provider}/{index}",
+        "title": title,
+        "url": f"https://example.test/{provider}/{index}",
+        "provider": provider,
+        "metadata": {"year": 2026},
+        "provenance": {"provider": provider, "query": "fixture"},
+        "content_summary": summary,
+    }
+
+
+def test_grid_storage_battery_gate_rejects_unrelated_public_provider_results() -> None:
+    query = "Collect the relevant literature evidence base for grid-storage battery chemistry comparison."
+    candidates = [
+        _candidate(1, "Sodium-ion batteries for stationary grid storage", "Battery chemistry, safety, cost and lifetime."),
+        _candidate(2, "Lithium-sulfur batteries for electrical grids", "Grid storage battery performance and readiness."),
+        _candidate(3, "Water quality in the Amazon River", "A survey of pollutants and fish health."),
+        _candidate(4, "Evidence-based medicine in primary care", "Clinical decision-making methods."),
+        _candidate(5, "Exercise countermeasures for astronaut health", "Muscle loss during space flight."),
+        _candidate(6, "Cooling control for generic energy systems", "Control theory and optimization."),
+        _candidate(7, "Recycling policy and circular materials", "Waste policy across municipalities."),
+        _candidate(8, "Educational software review", "Student learning outcomes."),
+        _candidate(9, "Remote work and creativity", "Employee wellbeing and retention."),
+        _candidate(10, "Microplastics in drinking water", "Exposure pathways and public health."),
+    ]
+
+    accepted, audit = apply_discovery_relevance_gate(query, candidates)
+
+    # Two relevant papers out of ten is an honest incomplete result, not a
+    # final-ready shortlist. The audit still records both relevant papers and
+    # every rejection so the decision is reproducible.
+    assert accepted == []
+    assert audit["status"] == "incomplete"
+    assert audit["minimum_relevant_candidates"] == 3
+    assert audit["accepted_candidate_count"] == 2
+    assert audit["rejected_candidate_count"] == 8
+    amazon = next(item for item in audit["decisions"] if "Amazon" in item["title"])
+    assert amazon["accepted"] is False
+    assert amazon["reason"] == "insufficient_topic_term_overlap"
+
+
+def test_grid_storage_battery_gate_publishes_only_relevant_candidates_when_threshold_is_met() -> None:
+    query = """Collect literature for a grid-storage battery comparison.
+
+Authoritative discovery scope:
+- [R2] Compare the four specified battery chemistries. Required coverage: lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries
+- [R3] Evaluate every requested criterion. Required coverage: energy density, lifetime, safety, material availability, cost, and commercial readiness
+"""
+    candidates = [
+        _candidate(1, "Lithium-ion batteries for stationary grid storage", "Grid battery energy density and lifetime."),
+        _candidate(2, "Sodium-ion batteries for stationary grid storage", "Battery cost and material availability."),
+        _candidate(3, "Solid-state batteries for grid applications", "Storage safety and commercial readiness."),
+        _candidate(4, "Lithium-sulfur grid battery systems", "Energy storage cost and cycle life."),
+        _candidate(5, "Amazon River water quality", "Freshwater ecology."),
+    ]
+
+    accepted, audit = apply_discovery_relevance_gate(query, candidates)
+
+    assert audit["status"] == "passed"
+    assert audit["gate_mode"] == "required_coverage"
+    assert [item["source_id"] for item in accepted] == ["openalex:1", "openalex:2", "openalex:3", "openalex:4"]
+    assert audit["aggregate_coverage_missing"] == []
+    assert all(item["relevance_gate"]["status"] == "accepted" for item in accepted)
+    assert all("provider" in item["provenance"] for item in accepted)
+
+
+def test_authoritative_coverage_rejects_generic_networked_battery_control_paper() -> None:
+    query = """Collect literature for a grid-storage battery comparison.
+
+Authoritative discovery scope:
+- [R2] Compare the four specified battery chemistries. Required coverage: lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries
+- [R3] Evaluate every requested criterion. Required coverage: energy density, lifetime, safety, material availability, cost, and commercial readiness
+"""
+    generic_control = _candidate(
+        1,
+        "Distributed control of networked battery energy storage systems",
+        "A control architecture for energy storage dispatch, stability, and grid services.",
+    )
+
+    accepted, audit = apply_discovery_relevance_gate(query, [generic_control])
+
+    assert accepted == []
+    assert len(audit["coverage_anchor_groups"]) == 2
+    chemistry_group = audit["coverage_anchor_groups"][0]
+    assert {"lithium", "sodium", "solid", "sulfur"}.issubset(chemistry_group["anchor_terms"])
+    decision = audit["decisions"][0]
+    assert decision["reason"] == "required_coverage_anchor_missing"
+    assert "coverage-1" in decision["unmatched_coverage_groups"]
+
+
+def test_authoritative_coverage_rejects_captured_false_positive_titles() -> None:
+    query = """Discover a ranked, reviewable source set for comparing lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage across energy density, lifetime, safety, material availability, cost, and commercial readiness.
+
+Authoritative discovery scope:
+- [R2] Compare lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage. Required coverage: constraint_satisfied; supporting_evidence
+- [R3] Evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness. Required coverage: constraint_satisfied; supporting_evidence
+"""
+    captured_false_positives = [
+        _candidate(
+            1,
+            "High-temperature superconductivity in hydrogen-rich solid materials",
+            "Reviews solid-state materials and commercial availability for superconducting devices.",
+        ),
+        _candidate(
+            2,
+            "Selenium batteries: emerging cathode materials and redox mechanisms",
+            "Surveys safety, material availability, and cost of selenium redox chemistry.",
+        ),
+        _candidate(
+            3,
+            "Generic polyampholyte binders for electrochemical materials",
+            "A broad materials study with lifetime and safety observations.",
+        ),
+        _candidate(
+            4,
+            "Sodium-ion capacitors for high-power energy devices",
+            "Studies sodium ion electrochemical capacitors, not batteries for grid storage.",
+        ),
+        _candidate(
+            5,
+            "Multivalent redox chemistry for next-generation energy storage",
+            "Discusses material availability, cost, and commercial readiness.",
+        ),
+    ]
+
+    accepted, audit = apply_discovery_relevance_gate(query, captured_false_positives)
+
+    assert accepted == []
+    assert audit["status"] == "incomplete"
+    assert audit["accepted_candidate_count"] == 0
+    assert {item["reason"] for item in audit["decisions"]} == {
+        "required_battery_domain_missing",
+        "required_coverage_anchor_missing",
+    }
+
+
+def test_exact_failed_planner_query_extracts_all_chemistry_and_criterion_anchors() -> None:
+    query = """Retrieve and rank evidence for a comparative output limited to lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Preserve the exact comparison criteria energy density, lifetime, safety, material availability, cost, and commercial readiness, and capture the unresolved framing questions about cell level versus module/system level versus full grid-scale system level, normalized quantitative metrics versus qualitative ratings versus mixed scoring, and the cost and commercial-readiness recency boundary.
+
+Authoritative discovery scope:
+- [R2] The comparison is limited to the named chemistries lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Required coverage: constraint_satisfied; supporting_evidence
+- [R3] The comparison must evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness. Required coverage: constraint_satisfied; supporting_evidence
+"""
+    candidates = [
+        _candidate(1, "Lithium-ion batteries for grid storage", "Energy density and lifetime evidence."),
+        _candidate(2, "Sodium-ion batteries for grid storage", "Cost and material availability evidence."),
+        _candidate(3, "Solid-state batteries for grid storage", "Safety and commercial readiness evidence."),
+        _candidate(4, "Lithium-sulfur batteries for grid storage", "Lifetime and energy density evidence."),
+    ]
+
+    accepted, audit = apply_discovery_relevance_gate(query, candidates)
+
+    assert [item["source_id"] for item in accepted] == ["openalex:1", "openalex:2", "openalex:3", "openalex:4"]
+    assert audit["status"] == "passed"
+    labels = {
+        item["label"]
+        for group in audit["coverage_anchor_groups"]
+        for item in group["anchor_items"]
+    }
+    assert {
+        "lithium ion",
+        "sodium ion",
+        "solid state",
+        "lithium sulfur",
+        "energy density",
+        "lifetime",
+        "safety",
+        "material availability",
+        "cost",
+        "commercial readiness",
+    } <= labels
+    assert audit["aggregate_coverage_missing"] == []
+
+
+def test_exact_titles_from_failed_provider_run_do_not_form_a_publishable_shortlist() -> None:
+    query = """Retrieve and rank evidence for a comparative output limited to lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Preserve the exact comparison criteria energy density, lifetime, safety, material availability, cost, and commercial readiness, and capture the unresolved framing questions about cell level versus module/system level versus full grid-scale system level, normalized quantitative metrics versus qualitative ratings versus mixed scoring, and the cost and commercial-readiness recency boundary.
+
+Authoritative discovery scope:
+- [R2] The comparison is limited to the named chemistries lithium-ion, sodium-ion, solid-state, and lithium-sulfur battery technologies for grid storage. Required coverage: constraint_satisfied; supporting_evidence
+- [R3] The comparison must evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness. Required coverage: constraint_satisfied; supporting_evidence
+"""
+    captured_titles = [
+        "How quickly can sodium-ion learn? Assessing scenarios for techno-economic competitiveness against lithium-ion batteries",
+        "Engineering Polyampholytes for Energy Storage Devices: Conductivity, Selectivity, and Durability",
+        "Polymer-based solid-state electrolytes for lithium sulfur batteries",
+        "Prospects of Alkali Metal-Se Batteries and Beyond: From Redox Mechanisms to Electrode Design",
+        "Introduction to High-Temperature Superconductivity for Solid State Chemists",
+        "Review: Insight on Porous Carbon Positive Electrode for Sodium-Ion Capacitors: Interplay Between Synthesis, Properties, and Performance",
+        "Comprehensive Analysis of Thermal Dissipation in Lithium-Ion Battery Packs",
+        "Reversible multivalent carrier redox exceeding intercalation capacity boundary",
+        "Theoretical Studies on Sodium Storage Mechanism in Hard Carbon Anodes of Sodium-Ion Batteries: Molecular Simulations Based on Machine Learning Force Fields",
+    ]
+    captured = [_candidate(index, title, "") for index, title in enumerate(captured_titles, start=1)]
+
+    accepted, audit = apply_discovery_relevance_gate(query, captured)
+
+    assert accepted == []
+    assert audit["status"] == "incomplete"
+    assert audit["blocking_reasons"] == ["authoritative_coverage_incomplete"]
+    missing_labels = {
+        item["label"]
+        for group in audit["aggregate_coverage_missing"]
+        for item in group["missing_anchor_items"]
+    }
+    assert {"material availability", "commercial readiness"} <= missing_labels
+
+
+def test_authoritative_coverage_blocks_incomplete_aggregate_criteria_even_with_relevant_papers() -> None:
+    query = """Collect literature for a grid-storage battery comparison.
+
+Authoritative discovery scope:
+- [R2] Compare lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage. Required coverage: constraint_satisfied; supporting_evidence
+- [R3] Evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness. Required coverage: constraint_satisfied; supporting_evidence
+"""
+    candidates = [
+        _candidate(1, "Lithium-ion batteries for stationary grid storage", "Grid battery lifetime."),
+        _candidate(2, "Sodium-ion batteries for stationary grid storage", "Grid battery cost."),
+        _candidate(3, "Solid-state batteries for grid applications", "Storage safety and readiness."),
+        _candidate(4, "Lithium-sulfur grid battery systems", "Cycle life and cost."),
+    ]
+
+    accepted, audit = apply_discovery_relevance_gate(query, candidates)
+
+    assert accepted == []
+    assert audit["status"] == "incomplete"
+    assert audit["accepted_candidate_count"] == 4
+    assert audit["blocking_reasons"] == ["authoritative_coverage_incomplete"]
+    missing = {
+        item["label"]
+        for group in audit["aggregate_coverage_missing"]
+        for item in group["missing_anchor_items"]
+    }
+    assert {"energy density", "material availability", "commercial readiness"}.issubset(missing)
+
+
+def test_generic_research_words_do_not_make_an_unrelated_candidate_relevant() -> None:
+    accepted, audit = apply_discovery_relevance_gate(
+        "collect relevant research evidence and produce a literature report",
+        [_candidate(1, "Unrelated clinical report", "Research evidence and study results")],
+    )
+
+    assert accepted == []
+    assert audit["query_terms"] == []
+    assert audit["blocking_reasons"] == ["query_has_no_specific_topic_terms"]
+
+
+def test_semicolon_method_coverage_is_satisfied_across_kv_cache_landscape() -> None:
+    query = """Retrieve a KV-cache efficiency landscape for long-context LLM inference.
+
+Authoritative discovery scope:
+- [R5] The study must cover KV cache compression, quantization, selection, eviction, and sparsification methods. Required coverage: compression; quantization; selection; eviction; sparsification
+- [R6] The study scope is long-context large language model inference. Required coverage: long-context large language model inference
+"""
+    candidates = [
+        _candidate(1, "KV cache compression for long-context large language model inference", "Compression reduces cache memory."),
+        _candidate(2, "KV cache quantization in long-context LLM inference", "Quantization preserves generation quality."),
+        _candidate(3, "KV cache token selection for long-context language models", "Selection reduces inference memory."),
+        _candidate(4, "KV cache eviction for long-context language model inference", "Eviction retains important tokens."),
+        _candidate(5, "KV cache sparsification for efficient long-context LLM inference", "Sparsification accelerates decoding."),
+    ]
+
+    accepted, audit = apply_discovery_relevance_gate(query, candidates)
+
+    assert audit["status"] == "passed"
+    assert len(accepted) == 5
+    assert audit["aggregate_coverage_missing"] == []
+    method_items = audit["coverage_anchor_groups"][0]["anchor_items"]
+    assert [item["label"] for item in method_items] == [
+        "compression",
+        "quantization",
+        "selection",
+        "eviction",
+        "sparsification",
+    ]
+
+
+def test_sparsification_coverage_accepts_sparse_scientific_terminology() -> None:
+    query = """Retrieve a KV-cache efficiency landscape for long-context LLM inference.
+
+Authoritative discovery scope:
+- [R5] Cover KV cache compression and sparsification. Required coverage: compression; sparsification
+- [R6] Study long-context large language model inference. Required coverage: long-context large language model inference
+"""
+    candidates = [
+        _candidate(1, "KV cache compression for long-context LLM inference", "Compression reduces memory."),
+        _candidate(2, "Sparse KV cache for long-context language model inference", "Sparse attention retains selected tokens."),
+        _candidate(3, "KV cache sparsity for long-context LLM inference", "Sparsity reduces decode memory."),
+    ]
+
+    accepted, audit = apply_discovery_relevance_gate(query, candidates)
+
+    assert audit["status"] == "passed"
+    assert len(accepted) == 3
+    assert audit["aggregate_coverage_missing"] == []
+
+
+def test_service_archives_incomplete_relevance_audit_and_returns_no_candidates(tmp_path: Path) -> None:
+    raw_candidates = [
+        _candidate(1, "Sodium-ion batteries for stationary grid storage", "Battery chemistry and lifetime."),
+        _candidate(2, "Amazon River water quality", "Freshwater ecology."),
+        _candidate(3, "Astronaut health review", "Exercise countermeasures."),
+        _candidate(4, "Evidence-based medicine", "Primary care decision making."),
+    ]
+
+    def backend(**_kwargs):
+        return {
+            "status": "completed",
+            "candidates": [
+                {
+                    "candidate_id": item["source_id"],
+                    "paperId": item["source_id"],
+                    "title": item["title"],
+                    "source_ref": item["url"],
+                    "abstract": item["content_summary"],
+                    "source_channels": ["search_s2"],
+                }
+                for item in raw_candidates
+            ],
+            "limitations": [],
+        }
+
+    service = LiteratureDiscoveryService(tmp_path, backend=backend, limit=4, max_attempts_per_provider=1)
+    service._arxiv = lambda _query: ([], {"provider": "arxiv"})
+    service._europe_pmc = lambda _query: ([], {"provider": "europe_pmc"})
+    service._openalex = lambda _query: ([], {"provider": "openalex"})
+    service._crossref = lambda _query: ([], {"provider": "crossref"})
+
+    result = service(
+        seed_snapshot={"seeds": [{"seed_kind": "topic", "content": "grid storage battery chemistry"}]},
+        payload={},
+    )
+
+    assert result["status"] == "inconclusive"
+    assert result["candidates"] == []
+    gate = result["relevance_gate"]
+    assert gate["accepted_candidate_count"] == 1
+    audit_path = tmp_path / gate["audit_path"]
+    assert audit_path.is_file()
+    archived = json.loads(audit_path.read_text(encoding="utf-8"))
+    assert archived["schema"] == "autosci_discovery_relevance_audit.v1"
+    assert archived["status"] == "incomplete"
+
+
+def test_semantic_scholar_attempt_records_key_mode_without_secret(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", "test-secret-never-archive")
+    service = LiteratureDiscoveryService(tmp_path)
+
+    attempt = service._record_discovery_attempt(
+        provider="semantic_scholar",
+        url="https://api.semanticscholar.org/graph/v1/paper/search?query=battery",
+        attempt=1,
+        status="completed",
+        status_code=200,
+        body=b"{}",
+        retry_wait_seconds=0,
+    )
+
+    request_path = tmp_path / attempt["request_path"]
+    archived = json.loads(request_path.read_text(encoding="utf-8"))
+    assert archived["credential_mode"] == "api_key"
+    assert "test-secret-never-archive" not in request_path.read_text(encoding="utf-8")
+
+
+def test_service_searches_base_topic_but_gates_on_full_authoritative_scope(tmp_path: Path) -> None:
+    full_query = """Discover sources supporting a comparison of lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage. Evidence coverage must support evaluation across energy density, lifetime, safety, material availability, cost, and commercial readiness.
+
+Authoritative discovery scope:
+- [R2] Compare the four specified battery chemistries for grid storage. Required coverage: Compare lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage.
+- [R3] Evaluate the six specified criteria. Required coverage: Evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness.
+"""
+    seen_queries: list[str] = []
+    relevant = [
+        _candidate(1, "Lithium-ion batteries for stationary grid storage", "Grid battery energy density and lifetime."),
+        _candidate(2, "Sodium-ion batteries for stationary grid storage", "Battery cost and material availability."),
+        _candidate(3, "Solid-state batteries for grid applications", "Storage safety and commercial readiness."),
+        _candidate(4, "Lithium-sulfur grid battery systems", "Energy storage cost and cycle life."),
+    ]
+
+    def backend(**kwargs):
+        seen_queries.append(str(kwargs["query"]))
+        return {
+            "status": "completed",
+            "candidates": [
+                {
+                    "candidate_id": item["source_id"],
+                    "paperId": item["source_id"],
+                    "title": item["title"],
+                    "source_ref": item["url"],
+                    "abstract": item["content_summary"],
+                    "source_channels": ["search_s2"],
+                }
+                for item in relevant
+            ],
+            "limitations": [],
+        }
+
+    service = LiteratureDiscoveryService(tmp_path, backend=backend, limit=4, max_attempts_per_provider=1)
+    result = service(
+        seed_snapshot={"seeds": [{"seed_kind": "topic", "content": full_query}]},
+        payload={"task_contract": {"user_intent": full_query}},
+    )
+
+    assert seen_queries
+    assert "Authoritative discovery scope" not in seen_queries[0]
+    assert seen_queries[0] == (
+        "lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage"
+    )
+    assert result["status"] == "completed"
+    assert result["provider_query"] == seen_queries[0]
+    assert len(result["relevance_gate"]["coverage_anchor_groups"]) == 2
+
+
+def test_service_uses_human_scope_when_required_coverage_contains_verifier_labels(tmp_path: Path) -> None:
+    full_query = """Retrieve evidence for a battery comparison.
+
+Authoritative discovery scope:
+- [R2] Compare lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage. Required coverage: constraint_satisfied; supporting_evidence
+- [R3] Evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness. Required coverage: constraint_satisfied; supporting_evidence
+"""
+    seen_queries: list[str] = []
+    relevant = [
+        _candidate(1, "Lithium-ion batteries for stationary grid storage", "Grid battery energy density and lifetime."),
+        _candidate(2, "Sodium-ion batteries for stationary grid storage", "Battery cost and material availability."),
+        _candidate(3, "Solid-state batteries for grid applications", "Storage safety and commercial readiness."),
+        _candidate(4, "Lithium-sulfur grid battery systems", "Energy storage cost and cycle life."),
+    ]
+
+    def backend(**kwargs):
+        seen_queries.append(str(kwargs["query"]))
+        return {
+            "status": "completed",
+            "candidates": [
+                {
+                    "candidate_id": item["source_id"],
+                    "paperId": item["source_id"],
+                    "title": item["title"],
+                    "source_ref": item["url"],
+                    "abstract": item["content_summary"],
+                    "source_channels": ["search_s2"],
+                }
+                for item in relevant
+            ],
+            "limitations": [],
+        }
+
+    result = LiteratureDiscoveryService(
+        tmp_path,
+        backend=backend,
+        limit=4,
+        max_attempts_per_provider=1,
+    )(
+        seed_snapshot={"seeds": [{"seed_kind": "topic", "content": full_query}]},
+        payload={"task_contract": {"user_intent": full_query}},
+    )
+
+    assert seen_queries == [
+        "lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage"
+    ]
+    assert result["status"] == "completed"
+    clauses = result["relevance_gate"]["coverage_anchor_groups"]
+    assert [item["clause"] for item in clauses] == [
+        "Compare lithium-ion, sodium-ion, solid-state, and lithium-sulfur batteries for grid storage",
+        "Evaluate energy density, lifetime, safety, material availability, cost, and commercial readiness",
+    ]
+
+
+def test_service_ranks_admitted_candidates_with_specific_evidence(tmp_path: Path) -> None:
+    query = "Compare cache quantization, eviction, and sparsification for long context inference"
+    raw_candidates = [
+        _candidate(1, "Cache quantization for long context inference", "Quantized KV cache memory."),
+        _candidate(2, "Sparse cache eviction for long context inference", "Sparse token eviction."),
+        _candidate(3, "Cache compression and sparsification", "Long context inference compression."),
+    ]
+
+    def backend(**_kwargs):
+        return {
+            "status": "completed",
+            "candidates": [
+                {
+                    "candidate_id": item["source_id"],
+                    "paperId": item["source_id"],
+                    "title": item["title"],
+                    "source_ref": item["url"],
+                    "abstract": item["content_summary"],
+                    "year": 2025,
+                    "source_channels": ["search_s2"],
+                }
+                for item in raw_candidates
+            ],
+            "limitations": [],
+        }
+
+    service = LiteratureDiscoveryService(tmp_path, backend=backend, limit=3, max_attempts_per_provider=1)
+    service._arxiv = lambda _query: ([], {"provider": "arxiv"})
+    service._europe_pmc = lambda _query: ([], {"provider": "europe_pmc"})
+    service._openalex = lambda _query: ([], {"provider": "openalex"})
+    service._crossref = lambda _query: ([], {"provider": "crossref"})
+
+    result = service(
+        seed_snapshot={"seeds": [{"seed_kind": "topic", "content": query}]},
+        payload={},
+    )
+
+    assert result["status"] == "completed"
+    assert all(float(item["ranking_score"]) > 0 for item in result["candidates"])
+    assert result["candidates"] == sorted(
+        result["candidates"], key=lambda item: item["ranking_score"], reverse=True
+    )
+    assert len({item["ranking_rationale"] for item in result["candidates"]}) == 3
+    assert all("Matched " in item["ranking_rationale"] for item in result["candidates"])
